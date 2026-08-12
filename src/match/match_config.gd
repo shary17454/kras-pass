@@ -21,6 +21,10 @@ enum Context { QUICK, TOURNAMENT, ADVENTURE, TRAINING, ONLINE }
 @export var rules := {}
 ## Adventure/tournament label shown above the HUD.
 @export var subtitle_key := ""
+## Match modifiers, by id. See data/mutators.json.
+@export var mutators: PackedStringArray = []
+## Chaos mode swaps the active mutator on a seeded schedule.
+@export var chaos := false
 
 
 func rule(key: String, fallback):

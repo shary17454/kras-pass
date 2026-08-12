@@ -1,0 +1,39 @@
+{
+  "_comment": "Match modifiers. A mutator is data: a kind the MutatorSystem knows how to apply, a magnitude, and which mini-game categories it makes sense in. Combined with variants they multiply the content without multiplying the codebase. 'excludes' prevents nonsense pairings.",
+  "mutators": [
+    {"id": "low_gravity",   "kind": "gravity",       "magnitude": 0.55, "glyph": "☁", "excludes": ["heavy_gravity"],
+      "categories": ["push_out", "survival", "combat", "crates", "collect", "control", "reaction"]},
+    {"id": "heavy_gravity", "kind": "gravity",       "magnitude": 1.6,  "glyph": "▼", "excludes": ["low_gravity"],
+      "categories": ["push_out", "survival", "combat", "race"]},
+    {"id": "hyper_speed",   "kind": "speed",         "magnitude": 1.45, "glyph": "»", "excludes": ["slow_motion"]},
+    {"id": "slow_motion",   "kind": "speed",         "magnitude": 0.7,  "glyph": "≈", "excludes": ["hyper_speed"]},
+    {"id": "tiny",          "kind": "size",          "magnitude": 0.65, "glyph": "▫", "excludes": ["giant"],
+      "categories": ["push_out", "collect", "crates", "control", "survival", "combat"]},
+    {"id": "giant",         "kind": "size",          "magnitude": 1.4,  "glyph": "▪", "excludes": ["tiny"],
+      "categories": ["push_out", "collect", "crates", "control", "survival", "combat"]},
+    {"id": "ice_floor",     "kind": "friction",      "magnitude": 0.35, "glyph": "❄",
+      "categories": ["push_out", "collect", "crates", "control", "survival", "reaction"]},
+    {"id": "double_hazards","kind": "hazard_rate",   "magnitude": 1.9,  "glyph": "✷",
+      "categories": ["push_out", "survival"]},
+    {"id": "no_powerups",   "kind": "powerups_off",  "magnitude": 0.0,  "glyph": "∅", "excludes": ["powerup_rush"]},
+    {"id": "powerup_rush",  "kind": "powerup_rate",  "magnitude": 0.35, "glyph": "★", "excludes": ["no_powerups"]},
+    {"id": "glass_bones",   "kind": "knockback",     "magnitude": 1.7,  "glyph": "✱",
+      "categories": ["push_out", "combat", "ball_zone"]},
+    {"id": "close_camera",  "kind": "camera",        "magnitude": 0.78, "glyph": "◎"},
+    {"id": "short_fuse",    "kind": "round_length",  "magnitude": 0.6,  "glyph": "⏱"}
+  ],
+
+  "_presets_comment": "Party presets. 'games' empty means the whole unlocked library; 'categories' filters it.",
+  "presets": [
+    {"id": "quick",   "games_count": 5,  "mutators": [],                              "difficulty": 1, "powerups": true},
+    {"id": "normal",  "games_count": 10, "mutators": [],                              "difficulty": 1, "powerups": true},
+    {"id": "long",    "games_count": 20, "mutators": [],                              "difficulty": 2, "powerups": true},
+    {"id": "chaos",   "games_count": 10, "mutators": ["powerup_rush", "double_hazards"], "difficulty": 1, "powerups": true, "chaos": true},
+    {"id": "skill",   "games_count": 10, "mutators": ["no_powerups"],                 "difficulty": 3, "powerups": false},
+    {"id": "races",   "games_count": 5,  "categories": ["race"],                      "difficulty": 2, "powerups": true},
+    {"id": "survival","games_count": 5,  "categories": ["survival", "push_out"],      "difficulty": 2, "powerups": true},
+    {"id": "reflex",  "games_count": 5,  "categories": ["reaction"],                  "difficulty": 2, "powerups": false},
+    {"id": "family",  "games_count": 8,  "categories": ["collect", "crates", "control", "reaction", "race"],
+      "difficulty": 0, "powerups": true, "family": true}
+  ]
+}

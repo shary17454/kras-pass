@@ -69,6 +69,13 @@ var mods := {
 	"magnet": 0.0, "shield": 0.0, "frozen": 0.0, "jump": 1.0, "dash": 1.0,
 }
 
+## Match-wide modifiers owned by MutatorSystem. Kept separate from `mods` so a
+## power-up and a mutator can both be active without either clobbering the
+## other, and so re-applying a mutator set is idempotent.
+var mutator := {
+	"speed": 1.0, "gravity": 1.0, "friction": 1.0, "knockback_taken": 1.0, "size": 1.0,
+}
+
 var _tuning := {}
 
 
@@ -270,7 +277,7 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	# Damage scales knockback the way arcade fighters do: the longer you last
 	# without being reset, the further each hit sends you.
 	var scale := 1.0 + damage_percent * float(_tuning.get("damage_knock_scale", 0.011))
-	var push := strength * scale / maxf(0.3, knock_resist * float(mods["weight"]))
+	var push := strength * scale * float(mutator["knockback_taken"]) / maxf(0.3, knock_resist * float(mods["weight"]))
 	_impulse += direction * push
 	_impulse.y += push * float(_tuning.get("knock_lift", 0.22))
 	damage_percent += damage
@@ -388,7 +395,7 @@ func celebrate(win: bool) -> void:
 # --- integration -----------------------------------------------------------
 
 func _integrate_walk(wish: Vector3, delta: float) -> void:
-	var speed := top_speed * float(mods["speed"])
+	var speed := top_speed * float(mods["speed"]) * float(mutator["speed"])
 	var target := wish * speed
 	var control := 1.0 if is_on_floor() else air_control
 	var a := acceleration * control * delta
@@ -411,7 +418,7 @@ func _integrate_drive(wish: Vector3, delta: float) -> void:
 	_steer -= wish.x * steer_rate * delta
 	var forward := Vector3(sin(_steer), 0.0, cos(_steer))
 	var throttle := -wish.z
-	var target := forward * throttle * top_speed * float(mods["speed"])
+	var target := forward * throttle * top_speed * float(mods["speed"]) * float(mutator["speed"])
 	var a := acceleration * delta
 	velocity.x = move_toward(velocity.x, target.x, a if absf(throttle) > 0.05 else friction * 0.7 * delta)
 	velocity.z = move_toward(velocity.z, target.z, a if absf(throttle) > 0.05 else friction * 0.7 * delta)
@@ -423,7 +430,7 @@ func _integrate_drive(wish: Vector3, delta: float) -> void:
 
 
 func _integrate_float(wish: Vector3, delta: float) -> void:
-	var speed := top_speed * float(mods["speed"]) * 0.85
+	var speed := top_speed * float(mods["speed"]) * float(mutator["speed"]) * 0.85
 	var target := wish * speed
 	velocity.x = move_toward(velocity.x, target.x, acceleration * 0.7 * delta)
 	velocity.z = move_toward(velocity.z, target.z, acceleration * 0.7 * delta)
@@ -442,7 +449,27 @@ func _apply_impulse(delta: float) -> void:
 
 
 func _gravity() -> float:
-	return float(ProjectSettings.get_setting("physics/3d/default_gravity", 26.0))
+	return float(ProjectSettings.get_setting("physics/3d/default_gravity", 26.0)) * float(mutator["gravity"])
+
+
+## Scale the whole body, visual and collision, for the tiny/giant mutators.
+func set_body_scale(value: float) -> void:
+	value = clampf(value, 0.4, 2.0)
+	if is_equal_approx(float(mutator["size"]), value):
+		return
+	mutator["size"] = value
+	if _visual != null and is_instance_valid(_visual):
+		_visual.scale = Vector3.ONE * value
+	var shape := get_node_or_null("Body") as CollisionShape3D
+	if shape == null:
+		return
+	if shape.shape is CapsuleShape3D:
+		var c: CapsuleShape3D = shape.shape
+		c.radius = 0.42 * value
+		c.height = maxf(1.5 * value, c.radius * 2.0 + 0.01)
+		shape.position.y = 0.75 * value
+	elif shape.shape is BoxShape3D:
+		(shape.shape as BoxShape3D).size = Vector3(1.4, 0.9, 2.0) * value
 
 
 func _update_visual(delta: float, wish: Vector3) -> void:

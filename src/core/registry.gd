@@ -154,6 +154,9 @@ func validate(check_localization: bool = true) -> PackedStringArray:
 		if seen.has("g" + m.id):
 			problems.append("duplicate mini-game id '%s'" % m.id)
 		seen["g" + m.id] = true
+		# The full completeness checklist lives in MiniGameValidator so that
+		# adding a game fails loudly at build time rather than quietly in a menu.
+		problems.append_array(MiniGameValidator.validate(m, check_localization))
 		if not ResourceLoader.exists(m.controller_script):
 			problems.append("mini-game '%s' script not found: %s" % [m.id, m.controller_script])
 		if m.arena_ids.is_empty():

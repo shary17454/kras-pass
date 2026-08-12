@@ -30,6 +30,8 @@ var start_z := 0.0
 
 var _hazards: Array = []
 var _shrink: ArenaHazards.ShrinkRing
+## Original speeds, so a hazard multiplier is idempotent rather than cumulative.
+var _base_hazard_speed := {}
 var _water: ArenaHazards.RisingWater
 var _static_root: Node3D
 var _light: DirectionalLight3D
@@ -143,6 +145,18 @@ func check_water(fighters: Array) -> void:
 
 func water_level() -> float:
 	return _water.level if _water != null and is_instance_valid(_water) else -INF
+
+
+## Multiplies every moving hazard's speed. Used by the double_hazards mutator;
+## arenas without moving parts simply ignore it.
+func set_hazard_speed(scale: float) -> void:
+	for h in _hazards:
+		if not is_instance_valid(h):
+			continue
+		if h is ArenaHazards.Sweeper:
+			h.speed = _base_hazard_speed.get(h.get_instance_id(), h.speed) * scale
+		elif h is ArenaHazards.RisingWater:
+			h.speed = _base_hazard_speed.get(h.get_instance_id(), h.speed) * scale
 
 
 func reset_hazards() -> void:
@@ -481,6 +495,7 @@ func _build_hazards() -> void:
 					add_child(s)
 					s.build(def.accent_color, float(h.get("length", def.radius * 0.8)), float(h.get("height", 0.9)))
 					s.rotation.y = TAU * i / float(maxi(count, 1))
+					_base_hazard_speed[s.get_instance_id()] = s.speed
 					_hazards.append(s)
 			"bumper":
 				var count := int(h.get("count", 4))
@@ -526,6 +541,7 @@ func _build_hazards() -> void:
 				add_child(_water)
 				_water.build(def.accent_color, def.radius, float(h.get("start_y", -6.0)))
 				_water.submerged.connect(func(f): fighter_submerged.emit(f))
+				_base_hazard_speed[_water.get_instance_id()] = _water.speed
 				_hazards.append(_water)
 
 

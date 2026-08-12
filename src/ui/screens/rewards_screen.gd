@@ -17,7 +17,7 @@ func build() -> void:
 	var completion := Progression.completion_percent()
 	body.add_child(Widgets.progress_row(Loc.t("adventure.completion"), "%.1f%%" % completion, completion / 100.0, UIKit.ACCENT))
 
-	var claimed: Dictionary = SaveSystem.profile().get(BRANCH, {})
+	var claimed: Dictionary = SaveSystem.player_branch(BRANCH)
 	var next_tier := -1
 	for tier in Balance.list("adventure", "completion_rewards"):
 		var pct := float(tier.get("percent", 0))
@@ -68,8 +68,7 @@ func _tier_row(tier: Dictionary, claimed: bool, completion: float) -> Control:
 ## Grants any tier the player has reached but not yet been paid for. Idempotent,
 ## so it is safe to call every time the screen opens.
 func _claim_due() -> void:
-	var profile := SaveSystem.profile()
-	var claimed: Dictionary = profile.get(BRANCH, {})
+	var claimed: Dictionary = SaveSystem.player_branch(BRANCH)
 	var completion := Progression.completion_percent()
 	var changed := false
 	for tier in Balance.list("adventure", "completion_rewards"):
@@ -86,7 +85,6 @@ func _claim_due() -> void:
 			_:
 				EventBus.notify(Loc.t("rewards.title"), "★")
 	if changed:
-		profile[BRANCH] = claimed
-		SaveSystem.set_profile(profile)
+		SaveSystem.set_player_branch(BRANCH, claimed)
 		SaveSystem.flush()
 		AudioManager.play_ui("unlock")

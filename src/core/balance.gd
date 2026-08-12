@@ -20,6 +20,7 @@ const FILES := [
 	"achievements",
 	"adventure",
 	"ai",
+	"mutators",
 ]
 
 var _tables := {}

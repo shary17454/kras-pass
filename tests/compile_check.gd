@@ -6,12 +6,16 @@ extends Node
 ## The editor's import pass does not surface every runtime compile error (it
 ## applies a different warning policy), so this walks the tree explicitly. It is
 ## the first thing to run after a large refactor.
+##
+## Walks src/, tests/ **and tools/**: a tool script that fails to compile does
+## not error loudly, it just runs a scene with no script attached and spins
+## forever, which is a far more expensive way to find out.
 
 
 func _ready() -> void:
 	var failures: Array[String] = []
 	var checked := 0
-	for path in _scripts("res://src") + _scripts("res://tests"):
+	for path in _scripts("res://src") + _scripts("res://tests") + _scripts("res://tools"):
 		checked += 1
 		var script: Script = ResourceLoader.load(path, "Script")
 		if script == null:

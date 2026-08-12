@@ -10,6 +10,8 @@ func run(t: TestHarness) -> void:
 	t.suite("save & progression")
 	_round_trip(t)
 	_corruption(t)
+	_migration(t)
+	_profiles(t)
 	_unlocks(t)
 	_completion(t)
 	_settings(t)
@@ -56,6 +58,70 @@ func _corruption(t: TestHarness) -> void:
 	t.ok(fresh is Dictionary, "returns a usable dictionary")
 	t.equal(fresh.get("generation", null), null, "and it is empty rather than garbage")
 	SaveSystem.erase(SLOT)
+
+
+## A version-1 save must survive the upgrade to per-player profiles. Losing
+## someone's progress on an update is the one save bug that is never forgiven.
+func _migration(t: TestHarness) -> void:
+	t.test("a schema-1 save migrates into a named profile")
+	var v1 := {
+		"schema": 1,
+		"progress": {"trophies": 12, "gems": 40, "characters": ["nabta", "barq"]},
+		"stats": {"matches": 33, "wins": 11},
+		"achievements": {"first_win": 1700000000},
+		"daily_done": "20260101",
+		"replays": [{"id": "old_one"}],
+	}
+	var migrated := SaveSystem._migrate(v1.duplicate(true))
+	t.equal(int(migrated["schema"]), SaveSystem.SCHEMA_VERSION, "stamped with the current schema")
+	t.ok(migrated.has("profiles"), "profiles were created")
+	var moved: Dictionary = migrated["profiles"][SaveSystem.DEFAULT_PROFILE]
+	t.equal(int(moved["progress"]["trophies"]), 12, "trophies survived")
+	t.equal(int(moved["stats"]["matches"]), 33, "statistics survived")
+	t.ok(moved["achievements"].has("first_win"), "achievements survived")
+	t.equal(String(moved["daily_done"]), "20260101", "the daily record survived")
+	t.ok(not migrated.has("progress"), "the old top-level branch is gone")
+	t.equal(String(migrated["active_profile"]), SaveSystem.DEFAULT_PROFILE, "the migrated player is active")
+
+	t.test("device-wide branches stay device-wide")
+	t.ok(migrated.has("replays"), "the replay library is not moved into a player")
+	t.equal(migrated["replays"].size(), 1, "and keeps its contents")
+
+	t.test("migration is idempotent")
+	var twice := SaveSystem._migrate(migrated.duplicate(true))
+	t.equal(twice["profiles"].size(), 1, "running it again changes nothing")
+
+
+## Several people share a console; they should not share a save.
+func _profiles(t: TestHarness) -> void:
+	t.test("profiles isolate progress from each other")
+	var original := SaveSystem.active_profile_id()
+	var guest := SaveSystem.create_profile("Guest", true)
+	t.ok(SaveSystem.profile_ids().has(guest), "the guest exists")
+	t.ok(bool(SaveSystem.profile_meta(guest)["guest"]), "and is marked a guest")
+
+	SaveSystem.switch_profile(original)
+	Progression.reset_progress()
+	Progression.grant_trophies(7)
+	var host_trophies := Progression.trophies()
+	t.at_least(host_trophies, 7, "the host has trophies")
+
+	SaveSystem.switch_profile(guest)
+	t.equal(Progression.trophies(), 0, "the guest starts clean")
+	Progression.grant_trophies(2)
+	t.equal(Progression.trophies(), 2, "and earns their own")
+
+	SaveSystem.switch_profile(original)
+	t.equal(Progression.trophies(), host_trophies, "the host's progress is untouched")
+
+	t.test("deleting a profile cannot leave the device with none")
+	SaveSystem.delete_profile(guest)
+	t.ok(not SaveSystem.profile_ids().has(guest), "the guest is gone")
+	var only := SaveSystem.profile_ids()
+	for id in only:
+		SaveSystem.delete_profile(id)
+	t.at_least(SaveSystem.profile_ids().size(), 1, "at least one profile always remains")
+	Progression.reset_progress()
 
 
 func _unlocks(t: TestHarness) -> void:

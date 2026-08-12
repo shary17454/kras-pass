@@ -31,7 +31,7 @@ func _roll() -> void:
 	_def = pool[rng.randi_range(0, pool.size() - 1)]
 	_arena_id = _def.arena_ids[rng.randi_range(0, _def.arena_ids.size() - 1)] if _def.arena_ids.size() > 0 else ""
 	_difficulty = rng.randi_range(1, 3)
-	_done_today = String(SaveSystem.profile().get("daily_done", "")) == key
+	_done_today = String(SaveSystem.player_branch("daily_done").get("key", "")) == key
 
 
 func build() -> void:
@@ -98,9 +98,7 @@ class DailyReward extends RefCounted:
 
 	func on_match_finished(result: MatchResult) -> void:
 		if result.place_of(0) == 1 and not already_done:
-			var profile := SaveSystem.profile()
-			profile["daily_done"] = day_key
-			SaveSystem.set_profile(profile)
+			SaveSystem.set_player_branch("daily_done", {"key": day_key})
 			SaveSystem.flush()
 			Progression.grant_gems(REWARD_GEMS)
 		SceneRouter.go_to("results", {"result": result, "config": config}, false)

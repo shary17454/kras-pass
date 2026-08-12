@@ -20,8 +20,7 @@ func _ready() -> void:
 
 
 func _load() -> void:
-	var profile := SaveSystem.profile()
-	_s = profile.get(BRANCH, {})
+	_s = SaveSystem.player_branch(BRANCH)
 	var defaults := {
 		"matches": 0, "wins": 0, "losses": 0, "draws": 0,
 		"rounds": 0, "play_seconds": 0.0,
@@ -41,9 +40,7 @@ func _load() -> void:
 
 
 func _commit() -> void:
-	var profile := SaveSystem.profile()
-	profile[BRANCH] = _s
-	SaveSystem.set_profile(profile)
+	SaveSystem.set_player_branch(BRANCH, _s)
 
 
 # --- reporting -------------------------------------------------------------
@@ -225,9 +222,7 @@ func summary_rows() -> Array:
 
 
 func reset() -> void:
-	var profile := SaveSystem.profile()
-	profile.erase(BRANCH)
-	SaveSystem.set_profile(profile)
+	SaveSystem.set_player_branch(BRANCH, {})
 	_s = {}
 	_load()
 	updated.emit()

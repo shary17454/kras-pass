@@ -28,6 +28,7 @@ var camera: ArenaCamera
 var hud: MatchHUD
 var touch: TouchSource
 var powerups: PowerUpSystem
+var mutators: MutatorSystem
 
 var phase: int = P.LOADING
 var _phase_timer := 0.0
@@ -157,6 +158,10 @@ func _build() -> void:
 
 	controller.setup(ctx)
 	powerups.setup(ctx)
+	# Mutators go on after the game has built itself, so a game that spawns its
+	# own objects is never surprised mid-construction.
+	mutators = MutatorSystem.new()
+	mutators.setup(ctx, config.mutators, config.chaos)
 	powerups.enabled = powerups.enabled and controller.uses_powerups()
 
 	camera = ArenaCamera.new()
@@ -350,9 +355,10 @@ func _begin_play() -> void:
 func _round_duration() -> float:
 	if config.context == MatchConfig.Context.TRAINING:
 		return 999.0
+	var scale := mutators.round_length_scale() if mutators != null else 1.0
 	if config.duration_override > 0.0:
-		return config.duration_override
-	return ctx.definition.duration
+		return config.duration_override * scale
+	return ctx.definition.duration * scale
 
 
 # --- main loop -------------------------------------------------------------
@@ -454,6 +460,7 @@ func _tick_live(delta: float) -> void:
 	controller.process_respawns(delta)
 	controller.tick(delta)
 	powerups.tick(delta)
+	mutators.tick(delta)
 	# 5. bounds
 	_check_out_of_bounds()
 	# 6. clock

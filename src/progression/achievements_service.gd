@@ -24,14 +24,11 @@ func _ready() -> void:
 
 
 func _load() -> void:
-	var profile := SaveSystem.profile()
-	_earned = profile.get(BRANCH, {})
+	_earned = SaveSystem.player_branch(BRANCH)
 
 
 func _commit() -> void:
-	var profile := SaveSystem.profile()
-	profile[BRANCH] = _earned
-	SaveSystem.set_profile(profile)
+	SaveSystem.set_player_branch(BRANCH, _earned)
 
 
 func definitions() -> Array:

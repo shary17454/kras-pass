@@ -12,6 +12,8 @@ const POOL_KEY := "powerup_pickup"
 var ctx: MatchContext
 var pool: Array[PowerUpDef] = []
 var enabled := true
+## Multiplies the spawn interval; the powerup_rush mutator drives it below 1.
+var interval_scale := 1.0
 
 var _active_pickups: Array[PowerUpPickup] = []
 var _effects: Array = []   # {slot, def, remaining}
@@ -52,7 +54,7 @@ func tick(delta: float) -> void:
 	_apply_magnets(delta)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
-		_spawn_timer = _interval + ctx.rng.randf_range(-_jitter, _jitter)
+		_spawn_timer = (_interval + ctx.rng.randf_range(-_jitter, _jitter)) * interval_scale
 		if _active_pickups.size() < _max_active:
 			_spawn_one()
 

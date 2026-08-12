@@ -21,7 +21,7 @@ func _ready() -> void:
 
 
 func _load_index() -> void:
-	_index = SaveSystem.profile().get(INDEX_BRANCH, [])
+	_index = SaveSystem.shared_branch(INDEX_BRANCH, [])
 	# Drop entries whose file has gone: a user deleting files by hand should not
 	# leave the library full of ghosts.
 	var alive: Array = []
@@ -34,9 +34,7 @@ func _load_index() -> void:
 
 
 func _commit() -> void:
-	var profile := SaveSystem.profile()
-	profile[INDEX_BRANCH] = _index
-	SaveSystem.set_profile(profile)
+	SaveSystem.set_shared_branch(INDEX_BRANCH, _index)
 	SaveSystem.flush()
 
 

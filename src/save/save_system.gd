@@ -9,15 +9,30 @@ extends Node
 ## good file to `<name>.bak` and rename the tmp into place. A load walks
 ## main -> backup -> empty, so a power cut mid-write costs at most one session
 ## rather than the whole profile.
+##
+## **The MD5 envelope is corruption detection, not security.** It catches a
+## truncated or half-written file; it does not and is not meant to stop anyone
+## editing their own save. If tamper resistance is ever needed — for a
+## leaderboard, say — that is an HMAC with a server-held key, not this.
+##
+## The document holds several *player profiles* so a household can share a
+## device without sharing progress, plus a few shared branches (the replay
+## library, saved party presets) that belong to the machine rather than to a
+## person.
 
 signal profile_loaded(data: Dictionary)
 signal profile_saved()
 signal recovered_from_backup(which: String)
+signal active_profile_changed(id: String)
+signal profiles_changed()
 
 const DIR := "user://"
 const PROFILE := "profile"
 const SETTINGS := "settings"
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
+const DEFAULT_PROFILE := "default"
+## Branches stored per player rather than per device.
+const PLAYER_BRANCHES := ["progress", "stats", "achievements", "rewards_claimed", "daily_done"]
 
 var _cache := {}
 var _dirty := {}
@@ -42,8 +57,135 @@ func _process(delta: float) -> void:
 		flush()
 
 
+## The whole document, including every player profile and the shared branches.
 func profile() -> Dictionary:
 	return _cache.get(PROFILE, {})
+
+
+# --- player profiles -------------------------------------------------------
+
+func _profiles() -> Dictionary:
+	var doc := profile()
+	if not doc.has("profiles"):
+		doc["profiles"] = {}
+	return doc["profiles"]
+
+
+func active_profile_id() -> String:
+	var doc := profile()
+	var id := String(doc.get("active_profile", DEFAULT_PROFILE))
+	if not _profiles().has(id):
+		id = DEFAULT_PROFILE
+		_ensure_profile(id, "player.you")
+		doc["active_profile"] = id
+	return id
+
+
+func profile_ids() -> Array:
+	return _profiles().keys()
+
+
+func profile_meta(id: String) -> Dictionary:
+	var p: Dictionary = _profiles().get(id, {})
+	return {
+		"id": id,
+		"name": String(p.get("name", id)),
+		"guest": bool(p.get("guest", false)),
+		"created": int(p.get("created", 0)),
+	}
+
+
+func _ensure_profile(id: String, name: String, guest := false) -> Dictionary:
+	var all := _profiles()
+	if not all.has(id):
+		all[id] = {
+			"name": name,
+			"guest": guest,
+			"created": int(Time.get_unix_time_from_system()),
+		}
+		mark_dirty(PROFILE)
+	return all[id]
+
+
+## Guests exist so nobody has to make an account to join a party. Their progress
+## is kept for the session and can be discarded without touching anyone else.
+func create_profile(name: String, guest := false) -> String:
+	var base := name.to_lower().replace(" ", "_")
+	if base == "":
+		base = "guest" if guest else "player"
+	var id := base
+	var n := 2
+	while _profiles().has(id):
+		id = "%s%d" % [base, n]
+		n += 1
+	_ensure_profile(id, name, guest)
+	flush()
+	profiles_changed.emit()
+	return id
+
+
+func switch_profile(id: String) -> void:
+	if not _profiles().has(id) or id == active_profile_id():
+		return
+	var doc := profile()
+	doc["active_profile"] = id
+	mark_dirty(PROFILE)
+	flush()
+	active_profile_changed.emit(id)
+	profile_loaded.emit(doc)
+
+
+func rename_profile(id: String, name: String) -> void:
+	var all := _profiles()
+	if not all.has(id):
+		return
+	all[id]["name"] = name
+	mark_dirty(PROFILE)
+	flush()
+	profiles_changed.emit()
+
+
+func delete_profile(id: String) -> void:
+	var all := _profiles()
+	if all.size() <= 1 or not all.has(id):
+		return
+	all.erase(id)
+	if String(profile().get("active_profile", "")) == id:
+		profile()["active_profile"] = all.keys()[0]
+		active_profile_changed.emit(String(all.keys()[0]))
+	mark_dirty(PROFILE)
+	flush()
+	profiles_changed.emit()
+	profile_loaded.emit(profile())
+
+
+## Read one branch of the *active* player. This is what Progression, Stats and
+## Achievements use, so switching profile switches all of them at once.
+func player_branch(name: String) -> Dictionary:
+	var p := _ensure_profile(active_profile_id(), "player.you")
+	if not p.has(name):
+		p[name] = {}
+	return p[name]
+
+
+func set_player_branch(name: String, data) -> void:
+	var p := _ensure_profile(active_profile_id(), "player.you")
+	p[name] = data
+	mark_dirty(PROFILE)
+
+
+## Shared across every profile on this device.
+func shared_branch(name: String, fallback = {}):
+	var doc := profile()
+	if not doc.has(name):
+		doc[name] = fallback
+	return doc[name]
+
+
+func set_shared_branch(name: String, data) -> void:
+	var doc := profile()
+	doc[name] = data
+	mark_dirty(PROFILE)
 
 
 func settings() -> Dictionary:
@@ -157,10 +299,26 @@ func _read(path: String):
 	return inner.data if inner.data is Dictionary else null
 
 
-## Forward-compatibility hook. Each future schema bump adds one clause here so
-## an old profile is upgraded rather than discarded.
+## Each schema bump adds one clause, so an old save is upgraded rather than
+## discarded. Migrations run oldest-first and are idempotent.
 func _migrate(data: Dictionary) -> Dictionary:
 	var v := int(data.get("schema", 0))
 	if v < 1:
-		data["schema"] = 1
+		v = 1
+	if v < 2:
+		# v1 kept a single player's branches at the top level. Move them into a
+		# named profile and leave device-wide branches where they are.
+		var moved := {}
+		for branch in PLAYER_BRANCHES:
+			if data.has(branch):
+				moved[branch] = data[branch]
+				data.erase(branch)
+		moved["name"] = "player.you"
+		moved["guest"] = false
+		moved["created"] = int(Time.get_unix_time_from_system())
+		data["profiles"] = {DEFAULT_PROFILE: moved}
+		data["active_profile"] = DEFAULT_PROFILE
+		Log.i("migrated save from schema 1 to 2", "Save")
+		v = 2
+	data["schema"] = SCHEMA_VERSION
 	return data

@@ -20,8 +20,7 @@ func _ready() -> void:
 
 
 func _load() -> void:
-	var profile := SaveSystem.profile()
-	_p = profile.get(BRANCH, {})
+	_p = SaveSystem.player_branch(BRANCH)
 	var defaults := {
 		"characters": [],
 		"games": [],
@@ -50,9 +49,7 @@ func _load() -> void:
 
 
 func _commit() -> void:
-	var profile := SaveSystem.profile()
-	profile[BRANCH] = _p
-	SaveSystem.set_profile(profile)
+	SaveSystem.set_player_branch(BRANCH, _p)
 
 
 func save_now() -> void:
@@ -258,9 +255,7 @@ func adventure_complete() -> bool:
 
 
 func reset_progress() -> void:
-	var profile := SaveSystem.profile()
-	profile.erase(BRANCH)
-	SaveSystem.set_profile(profile)
+	SaveSystem.set_player_branch(BRANCH, {})
 	_p = {}
 	_load()
 	completion_changed.emit(completion_percent())
