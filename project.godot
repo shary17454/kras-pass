@@ -31,6 +31,7 @@ Achievements="*res://src/progression/achievements_service.gd"
 Net="*res://src/net/net_service.gd"
 Pool="*res://src/core/object_pool.gd"
 Platform="*res://src/core/platform_service.gd"
+Replays="*res://src/replay/replay_store.gd"
 SceneRouter="*res://src/core/scene_router.gd"
 DevTools="*res://src/debug/dev_tools.gd"
 

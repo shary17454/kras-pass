@@ -42,7 +42,7 @@ func build() -> void:
 	var secondary := UIKit.hbox(10)
 	modes.add_child(secondary)
 	for entry in [["menu.characters", "characters"], ["menu.achievements", "achievements"],
-			["menu.stats", "stats"], ["menu.settings", "settings"]]:
+			["replay.title", "replays"], ["menu.stats", "stats"], ["menu.settings", "settings"]]:
 		var b := UIKit.button(Loc.t(String(entry[0])), UIKit.SIZE_SMALL)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func(): SceneRouter.go_to(String(entry[1])))

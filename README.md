@@ -80,6 +80,8 @@ All keyboard bindings are remappable in **Settings → Controls**.
 | Achievements | 42 |
 | Modes | Adventure, Quick Play, Tournament, Local Party, Training, Daily Challenge |
 | Languages | Arabic (RTL) and English, at full parity |
+| Input | Gamepad, two keyboard profiles, and on-screen touch with a per-game layout |
+| Replays | Every match recorded, watchable with scrub / speed / highlights |
 | Players | 1–4 local, human or AI in any mix |
 
 ### The mini-games
@@ -542,9 +544,14 @@ Stated plainly, because a list of caveats is more useful than an optimistic one:
 1. **Online multiplayer is not implemented.** The abstraction layer, lobby,
    room codes and input transport contract exist and work locally; the network
    transport does not. See [Multiplayer](#multiplayer).
-2. **Replays are recorded but not played back.** Every match captures its input
-   frames (~1.2 KB/s for four players) and the format round-trips correctly, but
-   there is no playback UI. `InputRouter.playback_mode` is the hook.
+2. **Replays are hybrid, not deterministic — measured, not assumed.** Replaying
+   identical inputs through Godot's physics diverges within half a second: four
+   bodies shoving each other resolve in an order the solver does not guarantee,
+   and one launched fighter turns a centimetre into metres. So a recording
+   carries inputs every tick *and* a position keyframe ten times a second that
+   playback snaps to. Drift is bounded to a tenth of a second and the outcome
+   reproduces exactly; the cost is ~2.2 KB per second (26 KB for a 12-second
+   four-player round).
 3. **Art is procedural placeholder-quality by design.** The look is deliberate
    and consistent, but these are primitives with toon shading, not authored
    models. `MeshFactory` is the single swap point.

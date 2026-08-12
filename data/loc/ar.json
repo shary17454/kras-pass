@@ -484,5 +484,21 @@
   "settings.touch.off": "إيقاف",
   "settings.touch_scale": "حجم الأزرار",
   "settings.touch_opacity": "شفافية الأزرار",
-  "settings.touch_left_handed": "تخطيط لليد اليسرى"
+  "settings.touch_left_handed": "تخطيط لليد اليسرى",
+  "replay.title": "الإعادات",
+  "replay.empty": "لا توجد إعادات بعد. كل مباراة تلعبها تُسجَّل تلقائياً.",
+  "replay.watch": "شاهد",
+  "replay.restart": "من البداية",
+  "replay.hud": "الواجهة",
+  "replay.camera": "الكاميرا",
+  "replay.delete_all": "حذف كل الإعادات",
+  "replay.missing": "تعذّر تحميل هذه الإعادة.",
+  "replay.unverified": "مسجّلة بإصدار أقدم — لا يمكن التحقق منها.",
+  "replay.desync": "اختلفت عند {t} ثانية — هذا الإصدار لم يعد يُنتج نفس التسجيل.",
+  "highlight.narrow_win": "فوز بفارق شعرة",
+  "highlight.late_swing": "انقلاب متأخر",
+  "highlight.comeback": "عودة من الأخير",
+  "highlight.early_exit": "خروج مبكر",
+  "highlight.multi_knockout": "خروج مزدوج",
+  "highlight.big_hit": "ضربة قوية"
 }

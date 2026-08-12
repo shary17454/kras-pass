@@ -52,7 +52,7 @@ func tick(delta: float) -> void:
 	_apply_magnets(delta)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
-		_spawn_timer = _interval + randf_range(-_jitter, _jitter)
+		_spawn_timer = _interval + ctx.rng.randf_range(-_jitter, _jitter)
 		if _active_pickups.size() < _max_active:
 			_spawn_one()
 

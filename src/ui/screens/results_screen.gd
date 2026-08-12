@@ -138,6 +138,15 @@ func _add_actions() -> void:
 		row.add_child(again)
 		if first_focus == null:
 			first_focus = again
+	if Replays.count() > 0:
+		var watch := UIKit.button(Loc.t("replay.watch"), UIKit.SIZE_BODY)
+		watch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		watch.pressed.connect(func():
+			var latest: Array = Replays.index()
+			if latest.is_empty():
+				return
+			SceneRouter.go_to("replay_player", {"id": String(latest[0]["id"])}))
+		row.add_child(watch)
 	var menu := UIKit.button(Loc.t("results.quit"), UIKit.SIZE_BODY)
 	menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	menu.pressed.connect(func(): SceneRouter.go_to("main_menu", {}, false))

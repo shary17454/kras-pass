@@ -44,15 +44,43 @@ var _on_finished: Callable = Callable()
 var _tuning := {}
 var _replay: Array = []
 var _replay_enabled := false
+## tick -> state hash, written while recording and checked while replaying.
+var _checkpoints := {}
+## tick -> authoritative positions/scores, written while recording.
+var _keyframes := {}
+## Largest positional correction playback had to apply, in metres.
+var playback_drift := 0.0
+## Notable events with tick stamps, fed to the highlight detector at the end.
+var _timeline: Array = []
+
+# --- playback --------------------------------------------------------------
+## Set to replay a recording instead of playing. Every slot becomes virtual and
+## is driven from the recorded frames; no AI brain thinks.
+var playback: ReplayData = null
+var playback_paused := false
+var playback_speed := 1.0
+var playback_tick := 0
+var desync_tick := -1
+var _speed_accum := 0.0
+var _playback_frames: Array[InputFrame] = []
+
+signal playback_progress(tick: int, total: int)
+signal playback_finished()
+signal desync_detected(tick: int)
 var _tick_index := 0
 var _aborted := false
 var _sudden_death_used := false
+var _noted_leader := -1
+var _noted_last := -1
 
 
 # --- lifecycle -------------------------------------------------------------
 
 func setup(args: Dictionary) -> void:
+	playback = args.get("replay")
 	config = args.get("config")
+	if playback != null:
+		config = playback.to_config()
 	_on_finished = args.get("on_finished", Callable())
 	if config == null:
 		Log.e("match started without a config", "Match")
@@ -60,7 +88,9 @@ func setup(args: Dictionary) -> void:
 		return
 	_tuning = Balance.table("tuning").get("match", {})
 	_total_rounds = maxi(1, config.rounds)
-	_replay_enabled = bool(UserSettings.get_value("replay_capture")) and config.context != MatchConfig.Context.TRAINING
+	_replay_enabled = playback == null \
+		and bool(UserSettings.get_value("replay_capture")) \
+		and config.context != MatchConfig.Context.TRAINING
 	DevTools.register_match(self)
 	_build()
 
@@ -175,6 +205,10 @@ func _spawn_fighters(def: MiniGameDef) -> void:
 
 func _create_brains() -> void:
 	_brains.clear()
+	if playback != null:
+		for p in config.players:
+			_brains.append(null)
+		return
 	for p in config.players:
 		if p.is_human:
 			_brains.append(null)
@@ -187,6 +221,17 @@ func _create_brains() -> void:
 
 func _assign_inputs() -> void:
 	InputRouter.clear_all()
+	if playback != null:
+		# The recording is the only input source; nothing polls hardware and no
+		# brain thinks, which is what makes playback reproduce rather than
+		# re-simulate.
+		InputRouter.playback_mode = true
+		_playback_frames.clear()
+		for p in config.players:
+			InputRouter.assign_virtual(p.slot)
+			_playback_frames.append(InputFrame.new())
+		return
+	InputRouter.playback_mode = false
 	for p in config.players:
 		if not p.is_human:
 			InputRouter.assign_virtual(p.slot)
@@ -200,7 +245,7 @@ func _assign_inputs() -> void:
 ## Built from the mini-game's declared control profile, so no game knows it is
 ## being played with a thumb.
 func _create_touch_controls() -> void:
-	if not TouchSource.should_show():
+	if playback != null or not TouchSource.should_show():
 		return
 	var humans := config.human_slots()
 	if humans.is_empty():
@@ -218,6 +263,7 @@ func _create_touch_controls() -> void:
 
 
 func teardown() -> void:
+	InputRouter.playback_mode = false
 	if controller != null and is_instance_valid(controller):
 		controller.cleanup()
 	InputRouter.clear_all()
@@ -322,7 +368,10 @@ func _physics_process(delta: float) -> void:
 		P.COUNTDOWN:
 			_tick_countdown(delta)
 		P.PLAYING, P.SUDDEN_DEATH:
-			_tick_live(delta)
+			if playback != null:
+				_tick_playback(delta)
+			else:
+				_tick_live(delta)
 		P.FINISH:
 			_phase_timer -= delta
 			if _phase_timer <= 0.0:
@@ -332,6 +381,24 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if hud != null and is_instance_valid(hud) and ctx != null:
 		hud.tick(delta)
+
+
+## Playback runs the same tick function, just more or fewer times per frame.
+## Speeds are exact multiples of the recorded rate, so 2x is genuinely every
+## tick twice rather than a bigger delta — the simulation never sees a
+## different timestep.
+func _tick_playback(delta: float) -> void:
+	if playback_paused:
+		return
+	_speed_accum += playback_speed
+	var steps := int(_speed_accum)
+	_speed_accum -= float(steps)
+	for i in steps:
+		if phase == P.DONE:
+			break
+		_tick_live(delta)
+	if playback_tick >= playback.tick_count():
+		playback_finished.emit()
 
 
 func _advance_timed_phase(delta: float) -> void:
@@ -366,15 +433,20 @@ func _tick_countdown(delta: float) -> void:
 
 func _tick_live(delta: float) -> void:
 	_tick_index += 1
-	# 1. AI thinks
-	for b in _brains:
-		if b != null:
-			b.tick(delta)
+	# 1. AI thinks — or, in playback, the recording speaks for it
+	if playback != null:
+		_feed_playback_tick()
+	else:
+		for b in _brains:
+			if b != null:
+				b.tick(delta)
 	# 2. fighters integrate (InputRouter has already refreshed frames)
 	for f in _fighters:
 		if is_instance_valid(f):
 			f.tick(InputRouter.frame(f.slot), delta)
 	_record_replay_tick()
+	_checkpoint_or_verify()
+	_record_or_apply_keyframe()
 	# 3. arena
 	arena.tick(delta)
 	arena.check_water(_fighters)
@@ -390,6 +462,101 @@ func _tick_live(delta: float) -> void:
 	EventBus.match_time_changed.emit(ctx.time_left)
 	hud.set_time(ctx.time_left, float(_tuning.get("hurry_time", 5.0)))
 	_evaluate_end(delta)
+
+
+## Records a state fingerprint every N ticks while playing, and compares
+## against it while replaying. Godot physics is not bit-exact across builds, so
+## rather than claim determinism this reports the exact tick where a replay
+## stopped matching.
+func _checkpoint_or_verify() -> void:
+	if _tick_index % ReplayData.HASH_INTERVAL != 0:
+		return
+	var h := _state_hash()
+	if playback == null:
+		if _replay_enabled:
+			_checkpoints[str(_tick_index)] = h
+		return
+	if desync_tick >= 0 or not playback.has_checkpoint(_tick_index):
+		return
+	if playback.checkpoint(_tick_index) != h and not playback.correctable():
+		# Only meaningful for input-only recordings from before keyframes: a
+		# correctable replay is re-synchronised every sixth tick, so a hash
+		# mismatch between corrections is expected and not worth reporting.
+		desync_tick = _tick_index
+		Log.w("replay diverged at tick %d" % _tick_index, "Replay")
+		desync_detected.emit(_tick_index)
+
+
+## Deliberately coarse: a quarter of a metre horizontally, and vertical position
+## ignored entirely.
+##
+## Godot's physics is not bit-exact — solver iteration order across four
+## touching bodies varies enough that positions drift by centimetres even from
+## identical inputs. A fingerprint tight enough to catch that would report a
+## divergence on every replay while the match played out identically. This
+## catches what actually matters: a fighter somewhere *else*, a different score,
+## a different set of survivors.
+const HASH_UNITS_PER_METRE := 4.0
+
+
+func _state_hash() -> int:
+	var acc := 2166136261
+	for f in _fighters:
+		if not is_instance_valid(f):
+			continue
+		for v in [f.global_position.x, f.global_position.z]:
+			acc = (acc ^ int(round(v * HASH_UNITS_PER_METRE))) * 16777619
+	for s in ctx.scores:
+		acc = (acc ^ s) * 16777619
+	for a in ctx.alive:
+		acc = (acc ^ (1 if a else 0)) * 16777619
+	return acc & 0x7FFFFFFF
+
+
+## The hybrid half of replay. While recording, an authoritative snapshot is
+## written ten times a second. While replaying, that snapshot is applied, which
+## bounds drift to a tenth of a second instead of letting one shove compound
+## into a different match.
+func _record_or_apply_keyframe() -> void:
+	if _tick_index % ReplayData.KEYFRAME_INTERVAL != 0:
+		return
+	if playback == null:
+		if _replay_enabled:
+			_keyframes[str(_tick_index)] = ReplayData.encode_keyframe(_fighters, ctx.scores, ctx.alive)
+		return
+	var frame := playback.keyframe(_tick_index)
+	if frame.is_empty():
+		return
+	for i in mini(frame.size(), _fighters.size()):
+		var f := _fighters[i]
+		if not is_instance_valid(f):
+			continue
+		var want: Vector3 = frame[i]["position"]
+		playback_drift = maxf(playback_drift, f.global_position.distance_to(want))
+		f.global_position = want
+		var should_live: bool = bool(frame[i]["alive"])
+		if should_live != ctx.alive[i]:
+			# Elimination is authoritative too: a replay must not keep someone
+			# alive that the recording removed.
+			if should_live:
+				ctx.revive(i)
+				f.visible = true
+				f.alive = true
+			else:
+				ctx.eliminate(i)
+		ctx.scores[i] = int(frame[i]["score"])
+
+
+func _feed_playback_tick() -> void:
+	if playback == null:
+		return
+	if not playback.apply_tick(playback_tick, _playback_frames):
+		ctx.early_finish = true
+		return
+	for i in _playback_frames.size():
+		InputRouter.apply_playback_frame(i, _playback_frames[i])
+	playback_tick += 1
+	playback_progress.emit(playback_tick, playback.tick_count())
 
 
 func _evaluate_end(_delta: float) -> void:
@@ -424,9 +591,16 @@ func _check_out_of_bounds() -> void:
 			f.apply_impulse(Vector3(f.global_position.x, 0, f.global_position.z).normalized() * 4.0)
 
 
+func _note(kind: String, slot: int, value: float = 0.0, other: int = -1) -> void:
+	if not _replay_enabled or _timeline.size() > 512:
+		return
+	_timeline.append({"tick": _tick_index, "type": kind, "slot": slot, "value": value, "other": other})
+
+
 func _on_fell_out(slot: int) -> void:
 	if not MatchPhase.is_live(phase):
 		return
+	_note("fell", slot)
 	controller.on_fighter_fell(slot)
 
 
@@ -488,11 +662,18 @@ func _complete_match() -> void:
 	var aggregate := MatchResult.aggregate(config.minigame_id, _round_results, ctx.definition.higher_is_better())
 	aggregate.arena_id = config.arena_id
 	aggregate.finished_naturally = not _aborted
-	Stats.record_match(config, aggregate)
-	Achievements.evaluate_all()
+	if playback == null:
+		Stats.record_match(config, aggregate)
+		Achievements.evaluate_all()
+		_store_replay(aggregate)
 	EventBus.match_finished.emit(aggregate)
 	_set_phase(P.DONE)
 	finished.emit(aggregate)
+	if playback != null:
+		# A replay ends where the recording ends. It must not push the player
+		# into a results screen for a match they did not just play.
+		playback_finished.emit()
+		return
 	if _on_finished.is_valid():
 		# Tournament / adventure own the follow-up screen.
 		_on_finished.call(aggregate)
@@ -502,6 +683,64 @@ func _complete_match() -> void:
 			"config": config,
 			"replay": _replay if _replay_enabled else [],
 		}, false)
+
+
+## Turn the recording into a stored replay, with its highlights already found.
+func _store_replay(result: MatchResult) -> void:
+	if not _replay_enabled or _replay.is_empty():
+		return
+	var data := ReplayData.from_match(config, _replay, _checkpoints, _keyframes, result)
+	data.highlights = ReplayHighlights.detect(_timeline, result, _replay.size(), data.tick_rate)
+	Replays.save(data)
+
+
+# --- playback controls -----------------------------------------------------
+
+func pb_toggle_pause() -> void:
+	playback_paused = not playback_paused
+
+
+func pb_set_speed(value: float) -> void:
+	playback_speed = clampf(value, 0.25, 4.0)
+
+
+## Seeking re-simulates from the start rather than storing snapshots: the whole
+## point of an input recording is that the state is derivable, and a 90-second
+## round fast-forwards in well under a second.
+func pb_seek(target_tick: int) -> void:
+	if playback == null:
+		return
+	target_tick = clampi(target_tick, 0, playback.tick_count())
+	if target_tick < playback_tick:
+		_restart_playback()
+	var guard := 0
+	while playback_tick < target_tick and phase != P.DONE and guard < 60 * 60 * 10:
+		_tick_live(1.0 / 60.0)
+		guard += 1
+
+
+func _restart_playback() -> void:
+	playback_tick = 0
+	desync_tick = -1
+	playback_drift = 0.0
+	_round_index = 0
+	_round_results.clear()
+	_phase_locked = false
+	ctx.early_finish = false
+	ctx.elimination_order.clear()
+	ctx.alive.fill(true)
+	ctx.scores.fill(0)
+	for i in ctx.details.size():
+		ctx.details[i] = {}
+	arena.reset_hazards()
+	powerups.clear_all()
+	controller.reset_lives()
+	for f in _fighters:
+		if is_instance_valid(f):
+			f.reset_damage()
+			f.respawn_at(arena.global_position + arena.spawn_points[f.slot % arena.spawn_points.size()])
+			f.control_enabled = true
+			f.carrying = 0
 
 
 func _start_next_round() -> void:
@@ -601,6 +840,29 @@ func _show_pause_menu(message: String = "") -> void:
 func _ready() -> void:
 	EventBus.player_device_lost.connect(_on_device_lost)
 	Platform.app_backgrounded.connect(_on_app_backgrounded)
+	EventBus.player_hit.connect(func(by, victim, strength): _note("hit", by, strength, victim))
+	EventBus.player_eliminated.connect(func(slot, place): _note("eliminated", slot, float(place)))
+	EventBus.score_changed.connect(_on_score_noted)
+
+
+## Lead and last-place changes are what the comeback and late-swing detectors
+## look for, so they are derived here rather than polled.
+func _on_score_noted(_slot: int, _value: int) -> void:
+	if ctx == null or not _replay_enabled:
+		return
+	var leader := ctx.leader_slot()
+	if leader != _noted_leader:
+		_noted_leader = leader
+		_note("lead", leader)
+	var worst := -1
+	var worst_score := 2147483647
+	for i in ctx.scores.size():
+		if ctx.scores[i] < worst_score:
+			worst_score = ctx.scores[i]
+			worst = i
+	if worst != _noted_last:
+		_noted_last = worst
+		_note("last_place", worst)
 
 
 ## iOS can take the app away at any moment. Pausing on the way out means the

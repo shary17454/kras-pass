@@ -66,6 +66,11 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if playback_mode:
+		# The replay owns the frames and writes them directly, in the same tick
+		# they are consumed. Going through the pending buffer would delay every
+		# input by one tick and the playback would drift from the recording.
+		return
 	for slot in MAX_SLOTS:
 		var f: InputFrame = _frames[slot]
 		match _sources[slot]:
@@ -136,6 +141,14 @@ func push_virtual(slot: int, move: Vector2, aim: Vector2, bits: int) -> void:
 	v.move = move.limit_length(1.0)
 	v.aim = aim
 	v.bits = bits
+
+
+## Write a frame straight into a slot for this tick. Only the replay player
+## uses this, and only while `playback_mode` is on.
+func apply_playback_frame(slot: int, source: InputFrame) -> void:
+	if slot < 0 or slot >= MAX_SLOTS:
+		return
+	_frames[slot].copy_from(source)
 
 
 ## Devices currently able to drive a player, for the "press any button to join"

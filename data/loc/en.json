@@ -484,5 +484,21 @@
   "settings.touch.off": "Off",
   "settings.touch_scale": "Control size",
   "settings.touch_opacity": "Control opacity",
-  "settings.touch_left_handed": "Left-handed layout"
+  "settings.touch_left_handed": "Left-handed layout",
+  "replay.title": "Replays",
+  "replay.empty": "No replays yet. Every match you play is recorded.",
+  "replay.watch": "Watch",
+  "replay.restart": "Restart",
+  "replay.hud": "HUD",
+  "replay.camera": "Camera",
+  "replay.delete_all": "Delete all replays",
+  "replay.missing": "That replay could not be loaded.",
+  "replay.unverified": "Recorded by an older build — cannot be verified.",
+  "replay.desync": "Diverged at {t}s — this build no longer reproduces the recording.",
+  "highlight.narrow_win": "Photo finish",
+  "highlight.late_swing": "Late swing",
+  "highlight.comeback": "Comeback",
+  "highlight.early_exit": "Early exit",
+  "highlight.multi_knockout": "Double out",
+  "highlight.big_hit": "Big hit"
 }

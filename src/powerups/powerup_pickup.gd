@@ -72,7 +72,7 @@ func tick(delta: float, spin: float, bob_height: float) -> void:
 func place(p: Vector3) -> void:
 	_base_y = p.y
 	position = p
-	_bob = randf() * TAU
+	_bob = float(_base_y * 7.13) + float(p.x * 1.31 + p.z * 2.17)
 
 
 func _on_body_entered(body: Node) -> void:

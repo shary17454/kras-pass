@@ -54,7 +54,7 @@ func configure(item_kind: String, color: Color, item_value: int = 1, size: float
 func place(p: Vector3) -> void:
 	global_position = p
 	_base_y = p.y
-	_bob = randf() * TAU
+	_bob = float(p.x * 1.31 + p.z * 2.17)
 	_age = 0.0
 	available = true
 	visible = true

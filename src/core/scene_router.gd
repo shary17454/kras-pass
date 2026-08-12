@@ -27,6 +27,8 @@ const SCREENS := {
 	"settings": "res://src/ui/screens/settings_screen.gd",
 	"profile": "res://src/ui/screens/profile_screen.gd",
 	"results": "res://src/ui/screens/results_screen.gd",
+	"replays": "res://src/ui/screens/replay_library.gd",
+	"replay_player": "res://src/ui/screens/replay_player.gd",
 	"standings": "res://src/ui/screens/standings_screen.gd",
 	"match": "res://src/match/match_scene.gd",
 }
