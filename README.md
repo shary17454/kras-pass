@@ -493,6 +493,28 @@ It exits non-zero on failure, so it can gate CI directly.
 The QA scenarios that are checked on every run are listed in
 `docs/qa-scenarios.md`, along with the manual ones that are not.
 
+### Performance probe
+
+Needs a real window, so it is a separate tool rather than part of the suite:
+
+```bash
+godot --path . tests/perf.tscn
+```
+
+It plays four contrasting mini-games with four Hard AI competitors and reports
+mean / p95 / worst frame time, node count and memory. Measured on an M-series
+Mac at 1920×1080:
+
+| Game | Mean | p95 | Worst | Nodes |
+|---|---|---|---|---|
+| Ring Rumble | 16.67 ms (vsync-locked 60) | 16.67 ms | 16.67 ms | 173 |
+| Crate Smash | 6.90 ms (145 fps) | 6.94 ms | 7.09 ms | 238 |
+| Goal Guard | 6.94 ms (144 fps) | 6.94 ms | 9.84 ms | 183 |
+| Scrap Karts | 6.93 ms (144 fps) | 7.14 ms | 14.53 ms | 209 |
+
+Memory moved 83.0 → 85.5 MB across all four, and the node count returned to
+exactly its starting value after every teardown — no leaks between matches.
+
 ---
 
 ## Platforms
