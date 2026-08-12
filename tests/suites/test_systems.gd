@@ -5,6 +5,7 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("systems")
 	_input_frames(t)
+	_platform(t)
 	_ai_profiles(t)
 	_pooling(t)
 	await _powerups(t, host)
@@ -41,6 +42,36 @@ func _input_frames(t: TestHarness) -> void:
 	t.equal(InputRouter.source_of(0), InputRouter.Source.VIRTUAL, "slot is virtual")
 	t.ok(not InputRouter.is_human(0), "a virtual slot is not human")
 	InputRouter.clear_all()
+
+
+## Safe-area and lifecycle handling. On a desktop the insets are zero, which is
+## itself worth asserting: a bug here would silently pad every menu on every
+## platform.
+func _platform(t: TestHarness) -> void:
+	t.test("safe-area insets are sane")
+	var insets := Platform.safe_insets()
+	for v in [insets.x, insets.y, insets.z, insets.w]:
+		t.ok(v >= 0.0, "no negative inset")
+	if not Platform.is_mobile:
+		t.near(insets.x + insets.y + insets.z + insets.w, 0.0, 0.001,
+			"desktop has no safe-area insets")
+	var m := Platform.ui_margin(56)
+	for side in ["left", "top", "right", "bottom"]:
+		t.at_least(int(m[side]), 56, "%s margin is at least the base" % side)
+
+	t.test("backgrounding suspends audio and flushing, resuming restores it")
+	var was_suspended := AudioManager.is_suspended()
+	AudioManager.set_suspended(true)
+	t.ok(AudioManager.is_suspended(), "audio reports suspended")
+	AudioManager.set_suspended(false)
+	t.ok(not AudioManager.is_suspended(), "and unsuspended")
+	AudioManager.set_suspended(was_suspended)
+
+	t.test("a memory warning drains the pools rather than dying")
+	Pool.define("warn_probe", func(): return Node3D.new(), 4)
+	t.at_least(int(Pool.stats().get("warn_probe", {}).get("free", 0)), 4, "the probe pool is warm")
+	Platform._on_memory_warning()
+	t.ok(not Pool.stats().has("warn_probe"), "the pool is gone after a memory warning")
 
 
 func _ai_profiles(t: TestHarness) -> void:

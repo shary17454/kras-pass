@@ -30,6 +30,7 @@ Stats="*res://src/progression/stats_service.gd"
 Achievements="*res://src/progression/achievements_service.gd"
 Net="*res://src/net/net_service.gd"
 Pool="*res://src/core/object_pool.gd"
+Platform="*res://src/core/platform_service.gd"
 SceneRouter="*res://src/core/scene_router.gd"
 DevTools="*res://src/debug/dev_tools.gd"
 
@@ -52,6 +53,8 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation="sensor_landscape"
+window/size/resizable=true
 
 [input]
 
@@ -89,6 +92,8 @@ common/physics_ticks_per_second=60
 [rendering]
 
 renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
 textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=1
 environment/defaults/default_clear_color=Color(0.05, 0.06, 0.11, 1)

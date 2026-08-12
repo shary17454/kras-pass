@@ -20,6 +20,7 @@ var _current_track := ""
 var _next_voice := 0
 var _fade_tween: Tween
 var enabled := true
+var _suspended := false
 
 ## Minimum gap between two triggers of the same sfx, in seconds. Stops a
 ## four-way pile-up from producing a wall of identical hit sounds.
@@ -66,7 +67,28 @@ func _on_setting_changed(key: String, _value) -> void:
 		_apply_volumes()
 
 
+## Silence everything while backgrounded without touching the player's
+## settings, so resuming restores exactly what they had.
+func set_suspended(value: bool) -> void:
+	if _suspended == value:
+		return
+	_suspended = value
+	_apply_volumes()
+	if value:
+		for p in _sfx_players:
+			p.stop()
+		_ui_player.stop()
+
+
+func is_suspended() -> bool:
+	return _suspended
+
+
 func _apply_volumes() -> void:
+	if _suspended:
+		for name in ["Master", "Music", "SFX", "UI"]:
+			_set_bus_db(name, 0.0)
+		return
 	_set_bus_db("Master", 1.0)
 	_set_bus_db("Music", UserSettings.volume_linear("music"))
 	_set_bus_db("SFX", UserSettings.volume_linear("sfx"))

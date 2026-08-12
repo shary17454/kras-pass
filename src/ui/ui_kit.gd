@@ -265,11 +265,14 @@ static func screen_root() -> Control:
 	return root
 
 
+## Full-screen margin that respects the device safe area, so a landscape
+## iPhone never puts a button under the notch or the home indicator.
 static func margin(child: Control, m: int = 56) -> MarginContainer:
 	var mc := MarginContainer.new()
 	mc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var insets := Platform.ui_margin(m)
 	for side in ["left", "right", "top", "bottom"]:
-		mc.add_theme_constant_override("margin_" + side, m)
+		mc.add_theme_constant_override("margin_" + side, int(insets[side]))
 	mc.add_child(child)
 	return mc
 

@@ -73,12 +73,13 @@ func drain(key: String = "") -> void:
 		for n in _pools.get(k, []):
 			if is_instance_valid(n):
 				n.queue_free()
-		_pools[k] = []
-		_live[k] = 0
-		if key != "":
-			_factories.erase(k)
-	if key == "":
-		_factories.clear()
+		# Erase the bookkeeping too, not just the contents: leaving empty keys
+		# behind made stats() report pools that no longer exist, and a memory
+		# warning would look like it had freed nothing.
+		_pools.erase(k)
+		_live.erase(k)
+		_peak.erase(k)
+		_factories.erase(k)
 
 
 func stats() -> Dictionary:

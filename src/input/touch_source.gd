@@ -39,6 +39,9 @@ var _move_origin := Vector2.ZERO
 var _aim_origin := Vector2.ZERO
 var _move_knob := Vector2.ZERO
 var _aim_knob := Vector2.ZERO
+var _inset_left := 0.0
+var _inset_right := 0.0
+var _inset_bottom := 0.0
 var _font: Font
 
 
@@ -61,6 +64,11 @@ func setup(player_slot: int, def: MiniGameDef) -> void:
 func _fit_to_viewport() -> void:
 	position = Vector2.ZERO
 	size = get_viewport_rect().size
+	# Keep the thumb targets clear of the notch and the home indicator.
+	var insets := Platform.safe_insets()
+	_inset_left = insets.x
+	_inset_right = insets.z
+	_inset_bottom = insets.w
 	queue_redraw()
 
 
@@ -90,31 +98,43 @@ static func should_show() -> bool:
 
 # --- geometry --------------------------------------------------------------
 
+func _left_edge() -> float:
+	return EDGE_MARGIN + _inset_left
+
+
+func _right_edge() -> float:
+	return size.x - EDGE_MARGIN - _inset_right
+
+
+func _bottom_edge() -> float:
+	return size.y - EDGE_MARGIN - _inset_bottom
+
+
 func _stick_centre() -> Vector2:
 	var r := STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)
-	var x := EDGE_MARGIN + r
+	var x := _left_edge() + r
 	if _left_handed:
-		x = size.x - EDGE_MARGIN - r
-	return Vector2(x, size.y - EDGE_MARGIN - r)
+		x = _right_edge() - r
+	return Vector2(x, _bottom_edge() - r)
 
 
 func _aim_centre() -> Vector2:
 	var r := STICK_RADIUS * _scale
-	var x := size.x - EDGE_MARGIN - r
+	var x := _right_edge() - r
 	if _left_handed:
-		x = EDGE_MARGIN + r
-	return Vector2(x, size.y - EDGE_MARGIN - r)
+		x = _left_edge() + r
+	return Vector2(x, _bottom_edge() - r)
 
 
 ## Buttons fan out in an arc away from the stick hand.
 func _button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
-	var base_x := size.x - EDGE_MARGIN - r * 1.2
+	var base_x := _right_edge() - r * 1.2
 	var dir := -1.0
 	if _left_handed:
-		base_x = EDGE_MARGIN + r * 1.2
+		base_x = _left_edge() + r * 1.2
 		dir = 1.0
-	var base := Vector2(base_x, size.y - EDGE_MARGIN - r * 1.2)
+	var base := Vector2(base_x, _bottom_edge() - r * 1.2)
 	var angles := [0.0, -55.0, -110.0, -165.0]
 	var a := deg_to_rad(float(angles[index % angles.size()]))
 	var spread := r * 2.35
@@ -124,14 +144,14 @@ func _button_centre(index: int) -> Vector2:
 func _steer_rects() -> Array:
 	var w := size.x * 0.22
 	var h := size.y * 0.34
-	var y := size.y - EDGE_MARGIN - h
-	var left := Rect2(EDGE_MARGIN, y, w, h)
-	var right := Rect2(EDGE_MARGIN + w + 18.0, y, w, h)
-	var throttle := Rect2(size.x - EDGE_MARGIN - w, y, w, h)
+	var y := _bottom_edge() - h
+	var left := Rect2(_left_edge(), y, w, h)
+	var right := Rect2(_left_edge() + w + 18.0, y, w, h)
+	var throttle := Rect2(_right_edge() - w, y, w, h)
 	if _left_handed:
-		throttle = Rect2(EDGE_MARGIN, y, w, h)
-		left = Rect2(size.x - EDGE_MARGIN - w * 2.0 - 18.0, y, w, h)
-		right = Rect2(size.x - EDGE_MARGIN - w, y, w, h)
+		throttle = Rect2(_left_edge(), y, w, h)
+		left = Rect2(_right_edge() - w * 2.0 - 18.0, y, w, h)
+		right = Rect2(_right_edge() - w, y, w, h)
 	return [left, right, throttle]
 
 

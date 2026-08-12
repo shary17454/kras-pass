@@ -600,6 +600,16 @@ func _show_pause_menu(message: String = "") -> void:
 
 func _ready() -> void:
 	EventBus.player_device_lost.connect(_on_device_lost)
+	Platform.app_backgrounded.connect(_on_app_backgrounded)
+
+
+## iOS can take the app away at any moment. Pausing on the way out means the
+## player comes back to the round they left, not to a result they never saw.
+func _on_app_backgrounded() -> void:
+	if ctx == null or not MatchPhase.is_live(phase) or _paused:
+		return
+	_paused = true
+	_show_pause_menu()
 
 
 func _on_device_lost(slot: int) -> void:
