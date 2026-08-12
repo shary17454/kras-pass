@@ -1,6 +1,5 @@
 {
   "_comment": "Every gameplay constant lives here. Nothing in src/ hard-codes a balance number. Times are seconds, speeds are metres/second.",
-
   "fighter": {
     "base_speed": 7.4,
     "speed_range": 3.4,
@@ -9,8 +8,8 @@
     "friction": 36.0,
     "base_jump": 8.4,
     "jump_range": 2.8,
-    "resist_base": 0.70,
-    "resist_range": 0.80,
+    "resist_base": 0.7,
+    "resist_range": 0.8,
     "power_base": 0.72,
     "power_range": 0.72,
     "turn_base": 7.0,
@@ -18,19 +17,16 @@
     "air_base": 0.28,
     "air_range": 0.42,
     "base_health": 100.0,
-
     "dash_impulse": 15.5,
     "dash_cooldown": 0.85,
     "dash_duration": 0.22,
-    "dash_invuln": 0.10,
-
+    "dash_invuln": 0.1,
     "attack_cooldown": 0.55,
-    "attack_duration": 0.20,
+    "attack_duration": 0.2,
     "attack_range": 2.15,
     "attack_arc_deg": 105.0,
     "attack_knockback": 11.5,
     "attack_damage": 9.0,
-
     "hit_stun": 0.16,
     "hit_invuln": 0.12,
     "hitstop": 0.05,
@@ -38,12 +34,10 @@
     "impulse_damping": 9.0,
     "damage_knock_scale": 0.011,
     "assist_window": 5.0,
-
     "drive_speed_mult": 1.55,
     "drive_accel_mult": 0.55,
     "drive_steer": 3.1
   },
-
   "match": {
     "intro_seconds": 1.6,
     "instructions_seconds": 4.0,
@@ -58,7 +52,6 @@
     "warn_time": 10.0,
     "hurry_time": 5.0
   },
-
   "camera": {
     "height": 15.5,
     "distance": 15.0,
@@ -66,13 +59,13 @@
     "follow_lerp": 3.6,
     "zoom_lerp": 2.4,
     "min_zoom": 0.72,
-    "max_zoom": 1.85,
+    "max_zoom": 2.25,
     "padding": 7.5,
     "shake_decay": 5.5,
     "max_shake": 0.9,
-    "solo_distance": 12.0
+    "solo_distance": 12.0,
+    "arena_fit": 1.45
   },
-
   "powerups": {
     "spawn_interval": 7.0,
     "spawn_interval_jitter": 2.5,
@@ -82,16 +75,23 @@
     "spin_speed": 1.8,
     "pickup_radius": 1.15
   },
-
   "scoring": {
-    "tournament_points": [5, 3, 2, 1],
+    "tournament_points": [
+      5,
+      3,
+      2,
+      1
+    ],
     "tournament_points_tie_share": true,
     "adventure_trophy_place": 1,
-    "star_thresholds": [0.4, 0.7, 1.0],
+    "star_thresholds": [
+      0.4,
+      0.7,
+      1.0
+    ],
     "gems_per_win": 3,
     "gems_per_participation": 1
   },
-
   "arena": {
     "wall_bounce": 0.55,
     "shrink_warn_seconds": 3.0,
@@ -100,7 +100,6 @@
     "hazard_knockback": 15.0,
     "hazard_damage": 12.0
   },
-
   "ball": {
     "radius": 0.55,
     "mass": 1.0,
@@ -113,7 +112,6 @@
     "explosive_fuse": 5.0,
     "explosive_radius": 5.0
   },
-
   "vehicle": {
     "ram_damage": 18.0,
     "ram_speed_threshold": 7.0,
@@ -124,7 +122,6 @@
     "projectile_damage": 14.0,
     "projectile_cooldown": 0.9
   },
-
   "reaction": {
     "prompt_lead": 1.5,
     "prompt_hold": 2.6,
@@ -134,7 +131,6 @@
     "sequence_start_length": 3,
     "sequence_step_time": 0.62
   },
-
   "performance": {
     "max_burst_effects": 24,
     "pool_prewarm_pickups": 12,

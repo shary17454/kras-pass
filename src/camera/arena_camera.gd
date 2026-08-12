@@ -23,6 +23,8 @@ var _zoom_lerp := 2.4
 var _min_zoom := 0.72
 var _max_zoom := 1.85
 var _padding := 7.5
+## How much of the arena diameter to keep framed, as a multiple of its radius.
+var _arena_fit := 1.45
 var _zoom := 1.0
 var _target_zoom := 1.0
 var _shake := 0.0
@@ -42,6 +44,7 @@ func _ready() -> void:
 	_min_zoom = float(t.get("min_zoom", 0.72))
 	_max_zoom = float(t.get("max_zoom", 1.85))
 	_padding = float(t.get("padding", 7.5))
+	_arena_fit = float(t.get("arena_fit", 1.45))
 	_shake_decay = float(t.get("shake_decay", 5.5))
 	_max_shake = float(t.get("max_shake", 0.9))
 	fov = 58.0
@@ -144,8 +147,12 @@ func _update_focus_and_zoom(instant: bool) -> void:
 
 	var spread := maxf(max_p.x - min_p.x, max_p.y - min_p.y)
 	_target_zoom = clampf((spread + _padding) / 18.0, _min_zoom, _max_zoom)
-	if arena != null:
-		_target_zoom = maxf(_target_zoom, arena.current_radius / 15.0)
+	if arena != null and mode != Mode.RACE:
+		# Keep the arena boundary in shot even when everyone is bunched up. In a
+		# push-out game the edge is the most important pixel on screen, and a
+		# zoom driven only by player spread will happily crop it away.
+		var fit := (arena.current_radius * _arena_fit + _padding) / 18.0
+		_target_zoom = clampf(maxf(_target_zoom, fit), _min_zoom, _max_zoom)
 	if instant:
 		_zoom = _target_zoom
 

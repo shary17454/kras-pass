@@ -2,7 +2,6 @@
   "app.title": "KRAS PASS",
   "app.subtitle": "The Grand Mini-Game Cup",
   "app.tagline": "Eight realms. One vortex. No mercy.",
-
   "menu.adventure": "Adventure",
   "menu.quick_play": "Quick Play",
   "menu.tournament": "Tournament",
@@ -17,7 +16,6 @@
   "menu.settings": "Settings",
   "menu.profile": "Profile",
   "menu.quit": "Quit",
-
   "common.back": "Back",
   "common.confirm": "Confirm",
   "common.cancel": "Cancel",
@@ -41,7 +39,6 @@
   "common.soon": "Coming soon",
   "common.of": "of",
   "common.total": "Total",
-
   "hud.time": "Time",
   "hud.round": "Round {n}",
   "hud.round_of": "Round {n} / {total}",
@@ -54,7 +51,6 @@
   "hud.get_ready": "Get ready",
   "hud.eliminated": "Out!",
   "hud.lap": "Lap {n}/{total}",
-
   "results.title": "Results",
   "results.winner": "{name} wins!",
   "results.draw": "It's a draw!",
@@ -78,7 +74,6 @@
   "results.stat.mistakes": "Mistakes",
   "results.stat.damage": "Damage dealt",
   "results.stat.crates": "Crates",
-
   "tournament.title": "Tournament",
   "tournament.players": "Competitors",
   "tournament.games": "Games",
@@ -94,7 +89,6 @@
   "tournament.start": "Start tournament",
   "tournament.next_game": "Next game",
   "tournament.finish": "Finish",
-
   "quick.title": "Quick Play",
   "quick.game": "Mini-game",
   "quick.character": "Competitor",
@@ -104,7 +98,6 @@
   "quick.rounds": "Rounds",
   "quick.powerups": "Power-ups",
   "quick.start": "Play",
-
   "adventure.title": "Adventure",
   "adventure.world": "Realm",
   "adventure.stage": "Stage",
@@ -116,7 +109,6 @@
   "adventure.play": "Enter",
   "adventure.cleared": "Cleared",
   "adventure.requires": "Requires {n} trophies",
-
   "char.select.title": "Choose your competitor",
   "char.select.hint": "Every competitor has the same stat budget, spent differently.",
   "char.stat.speed": "Speed",
@@ -125,7 +117,6 @@
   "char.stat.jump": "Jump",
   "char.stat.power": "Power",
   "char.stat.control": "Control",
-
   "char.nabta.name": "Nabta",
   "char.nabta.realm": "Green Vale",
   "char.nabta.tagline": "Grows through every crack.",
@@ -150,7 +141,6 @@
   "char.turs.name": "Turs",
   "char.turs.realm": "Cogworks",
   "char.turs.tagline": "Built to outlast the round.",
-
   "world.greenvale.name": "Green Vale",
   "world.greenvale.desc": "Where every competitor's first cup is won.",
   "world.tidehollow.name": "Tide Hollow",
@@ -166,7 +156,6 @@
   "stage.boss.embersouq": "Souq Championship",
   "stage.boss.skyloft": "Loft Championship",
   "stage.boss.cogworks": "Grand Final",
-
   "game.ring_rumble.name": "Ring Rumble",
   "game.ring_rumble.desc": "Four competitors, one shrinking ring.",
   "game.ring_rumble.rules": "Shove everyone else off the edge. The ring shrinks as time runs out. Last one standing takes the round.",
@@ -230,7 +219,6 @@
   "game.duel_pit.name": "Duel Pit",
   "game.duel_pit.desc": "Three lives. Use them well.",
   "game.duel_pit.rules": "Damage builds up: the more a rival has taken, the further your next hit sends them. Knock them out three times.",
-
   "arena.vortex_ring.name": "Vortex Ring",
   "arena.storm_ring.name": "Storm Ring",
   "arena.crumble_court.name": "Crumble Court",
@@ -254,7 +242,6 @@
   "arena.sweeper_ring.name": "Sweeper Ring",
   "arena.duel_pit.name": "Duel Pit",
   "arena.glass_terrace.name": "Glass Terrace",
-
   "powerup.speed.name": "Rush",
   "powerup.shield.name": "Shield",
   "powerup.power.name": "Heavy Hand",
@@ -267,7 +254,6 @@
   "powerup.bomb.name": "Shockwave",
   "powerup.repair.name": "Repair",
   "powerup.boost.name": "Boost",
-
   "controls.move": "Move",
   "controls.jump": "Jump",
   "controls.action": "Action",
@@ -278,17 +264,14 @@
   "controls.boost": "Boost",
   "controls.shoot": "Shoot",
   "controls.pause": "Pause",
-
   "difficulty.easy": "Easy",
   "difficulty.medium": "Medium",
   "difficulty.hard": "Hard",
   "difficulty.expert": "Expert",
-
   "ordinal.1": "1st",
   "ordinal.2": "2nd",
   "ordinal.3": "3rd",
   "ordinal.4": "4th",
-
   "pause.title": "Paused",
   "pause.resume": "Resume",
   "pause.restart": "Restart round",
@@ -297,7 +280,6 @@
   "pause.quit_match": "Quit match",
   "pause.confirm_quit": "Leave this match?",
   "pause.device_lost": "Controller disconnected — reconnect it or press a button on another device.",
-
   "local.title": "Local Party",
   "local.join_hint": "Press a button on a controller to join. Empty slots are filled by AI.",
   "local.slot_empty": "Empty",
@@ -307,7 +289,6 @@
   "local.add_ai": "Add AI",
   "local.remove": "Remove",
   "local.start": "Start party",
-
   "online.title": "Online",
   "online.unavailable": "Online play is not enabled in this build. The lobby, room codes and ready-up flow below run on the local session layer so the feature can be switched on without changing the games.",
   "online.create": "Create room",
@@ -320,29 +301,24 @@
   "online.friends": "Invite friends",
   "online.rematch": "Rematch",
   "online.disconnected": "Connection lost. The empty slot is taken over by AI.",
-
   "training.title": "Training",
   "training.pick": "Pick any mini-game and practise with no score pressure.",
   "training.hint": "The timer is off and rounds restart instantly.",
-
   "daily.title": "Daily Challenge",
   "daily.today": "Today's challenge",
   "daily.reward": "Reward: {n} gems",
   "daily.completed": "Completed today",
   "daily.seeded": "Everyone gets the same setup today.",
-
   "profile.title": "Profile",
   "profile.completion": "Completion",
   "profile.trophies": "Trophies",
   "profile.gems": "Gems",
   "profile.favourite": "Favourite",
-
   "rewards.title": "Rewards",
   "rewards.trophies": "Trophies",
   "rewards.gems": "Gems",
   "rewards.next_at": "Next reward at {n}%",
   "rewards.claimed": "Claimed",
-
   "stats.title": "Statistics",
   "stats.matches": "Matches played",
   "stats.wins": "Wins",
@@ -358,7 +334,6 @@
   "stats.per_game": "By mini-game",
   "stats.plays": "Plays",
   "stats.best": "Best",
-
   "settings.title": "Settings",
   "settings.audio": "Audio",
   "settings.master": "Master volume",
@@ -395,11 +370,9 @@
   "settings.reset_progress": "Erase all progress",
   "settings.confirm_reset": "This cannot be undone. Continue?",
   "settings.replay_capture": "Record match replays",
-
   "achievement.unlocked": "Achievement: {name}",
   "achievements.progress": "{n} of {total}",
   "achievements.secret": "Secret achievement",
-
   "unlock.character": "{name} joined the cup!",
   "unlock.minigame": "New mini-game: {name}",
   "unlock.hint.trophies": "Earn {n} trophies",
@@ -409,7 +382,6 @@
   "unlock.hint.tournaments": "Win {n} tournaments",
   "unlock.hint.completion": "Reach {n}% completion",
   "unlock.hint.generic": "Keep playing to unlock",
-
   "player.you": "You",
   "player.p1": "Player 1",
   "player.p2": "Player 2",
@@ -418,10 +390,8 @@
   "keyboard.profile.1": "Keyboard (WASD)",
   "keyboard.profile.2": "Keyboard (Arrows)",
   "device.gamepad": "Gamepad",
-
   "toast.saved": "Progress saved",
   "toast.save_recovered": "Save file was damaged — restored from backup.",
-
   "achievement.first_win.name": "First Blood",
   "achievement.first_win.desc": "Win your first match.",
   "achievement.ten_wins.name": "Regular",
@@ -505,5 +475,14 @@
   "achievement.survivor.name": "Survivor",
   "achievement.survivor.desc": "Win Rising Tide five times.",
   "achievement.quickest.name": "Fastest Hand",
-  "achievement.quickest.desc": "Score 8 in Quick Draw."
+  "achievement.quickest.desc": "Score 8 in Quick Draw.",
+  "touch.tap_anywhere": "TAP",
+  "settings.touch": "Touch controls",
+  "settings.touch_controls": "On-screen controls",
+  "settings.touch.auto": "Automatic",
+  "settings.touch.on": "Always on",
+  "settings.touch.off": "Off",
+  "settings.touch_scale": "Control size",
+  "settings.touch_opacity": "Control opacity",
+  "settings.touch_left_handed": "Left-handed layout"
 }

@@ -27,6 +27,10 @@ const DEFAULTS := {
 	"tutorials_seen": {},
 	"bindings": {},
 	"replay_capture": true,
+	"touch_controls": "auto",   # auto | on | off
+	"touch_scale": 1.0,
+	"touch_opacity": 0.5,
+	"touch_left_handed": false,
 }
 
 var _values := {}

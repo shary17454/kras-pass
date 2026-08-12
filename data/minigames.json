@@ -5,251 +5,490 @@
       "id": "ring_rumble",
       "category": "push_out",
       "scoring": "survival",
-      "arenas": ["vortex_ring", "storm_ring"],
+      "arenas": [
+        "vortex_ring",
+        "storm_ring"
+      ],
       "duration": 95.0,
       "rounds": 3,
-      "controls": ["move", "attack", "dash"],
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "◎",
-      "tags": ["chaos", "melee"],
+      "tags": [
+        "chaos",
+        "melee"
+      ],
       "difficulty_curve": 1.0
     },
     {
       "id": "crumble_court",
       "category": "push_out",
       "scoring": "survival",
-      "arenas": ["crumble_court"],
+      "arenas": [
+        "crumble_court"
+      ],
       "duration": 90.0,
       "rounds": 2,
-      "controls": ["move", "jump", "dash"],
+      "controls": [
+        "move",
+        "jump",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "▦",
-      "tags": ["platform", "nerve"],
-      "unlock": {"type": "trophies", "amount": 2}
+      "tags": [
+        "platform",
+        "nerve"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 2
+      }
     },
     {
       "id": "bumper_bowl",
       "category": "push_out",
       "scoring": "points",
-      "arenas": ["bumper_bowl"],
+      "arenas": [
+        "bumper_bowl"
+      ],
       "duration": 80.0,
       "rounds": 2,
-      "controls": ["move", "dash", "attack"],
+      "controls": [
+        "move",
+        "dash",
+        "attack"
+      ],
+      "control_profile": "movement_action",
       "glyph": "◍",
-      "tags": ["physics"],
-      "unlock": {"type": "trophies", "amount": 4}
+      "tags": [
+        "physics"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 4
+      }
     },
     {
       "id": "goal_guard",
       "category": "ball_zone",
       "scoring": "points",
-      "arenas": ["quad_court"],
+      "arenas": [
+        "quad_court"
+      ],
       "duration": 100.0,
       "rounds": 1,
-      "controls": ["move", "attack", "dash"],
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "aim_and_move",
       "glyph": "⛉",
-      "tags": ["defence", "reflex"]
+      "tags": [
+        "defence",
+        "reflex"
+      ]
     },
     {
       "id": "blast_ball",
       "category": "ball_zone",
       "scoring": "survival",
-      "arenas": ["ember_pit"],
+      "arenas": [
+        "ember_pit"
+      ],
       "duration": 90.0,
       "rounds": 3,
-      "controls": ["move", "attack", "dash"],
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "☢",
-      "tags": ["hot_potato"],
-      "unlock": {"type": "trophies", "amount": 8}
+      "tags": [
+        "hot_potato"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 8
+      }
     },
     {
       "id": "scrap_karts",
       "category": "vehicle",
       "scoring": "survival",
-      "arenas": ["scrap_yard"],
+      "arenas": [
+        "scrap_yard"
+      ],
       "duration": 100.0,
       "rounds": 2,
-      "controls": ["drive", "boost"],
+      "controls": [
+        "drive",
+        "boost"
+      ],
+      "control_profile": "steering",
       "glyph": "⛝",
-      "tags": ["vehicle", "destruction"],
-      "unlock": {"type": "trophies", "amount": 5}
+      "tags": [
+        "vehicle",
+        "destruction"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 5
+      }
     },
     {
       "id": "turret_duel",
       "category": "vehicle",
       "scoring": "points",
-      "arenas": ["iron_flats"],
+      "arenas": [
+        "iron_flats"
+      ],
       "duration": 95.0,
       "rounds": 2,
-      "controls": ["drive", "shoot", "boost"],
+      "controls": [
+        "drive",
+        "shoot",
+        "boost"
+      ],
+      "control_profile": "steering",
       "glyph": "⌖",
-      "tags": ["vehicle", "shooting"],
-      "unlock": {"type": "trophies", "amount": 11}
+      "tags": [
+        "vehicle",
+        "shooting"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 11
+      }
     },
     {
       "id": "gem_grab",
       "category": "collect",
       "scoring": "points",
-      "arenas": ["gem_hollow", "glass_terrace"],
+      "arenas": [
+        "gem_hollow",
+        "glass_terrace"
+      ],
       "duration": 85.0,
       "rounds": 1,
-      "controls": ["move", "jump", "attack"],
+      "controls": [
+        "move",
+        "jump",
+        "attack"
+      ],
+      "control_profile": "movement_action",
       "glyph": "◈",
-      "tags": ["greed", "steal"]
+      "tags": [
+        "greed",
+        "steal"
+      ]
     },
     {
       "id": "star_rush",
       "category": "collect",
       "scoring": "points",
-      "arenas": ["star_meadow"],
+      "arenas": [
+        "star_meadow"
+      ],
       "duration": 90.0,
       "rounds": 1,
-      "controls": ["move", "dash", "attack"],
+      "controls": [
+        "move",
+        "dash",
+        "attack"
+      ],
+      "control_profile": "movement_action",
       "glyph": "✦",
-      "tags": ["deposit", "risk"],
-      "unlock": {"type": "trophies", "amount": 3}
+      "tags": [
+        "deposit",
+        "risk"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 3
+      }
     },
     {
       "id": "paint_grid",
       "category": "control",
       "scoring": "points",
-      "arenas": ["paint_grid"],
+      "arenas": [
+        "paint_grid"
+      ],
       "duration": 80.0,
       "rounds": 1,
-      "controls": ["move", "dash"],
+      "controls": [
+        "move",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "▩",
-      "tags": ["territory"]
+      "tags": [
+        "territory"
+      ]
     },
     {
       "id": "zone_hold",
       "category": "control",
       "scoring": "points",
-      "arenas": ["dune_ring"],
+      "arenas": [
+        "dune_ring"
+      ],
       "duration": 90.0,
       "rounds": 1,
-      "controls": ["move", "attack", "dash"],
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "◉",
-      "tags": ["territory", "melee"],
-      "unlock": {"type": "trophies", "amount": 7}
+      "tags": [
+        "territory",
+        "melee"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 7
+      }
     },
     {
       "id": "crate_smash",
       "category": "crates",
       "scoring": "points",
-      "arenas": ["crate_yard"],
+      "arenas": [
+        "crate_yard"
+      ],
       "duration": 75.0,
       "rounds": 1,
-      "controls": ["move", "attack", "dash"],
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "▣",
-      "tags": ["smash", "risk"]
+      "tags": [
+        "smash",
+        "risk"
+      ]
     },
     {
       "id": "crate_relay",
       "category": "crates",
       "scoring": "points",
-      "arenas": ["relay_docks"],
+      "arenas": [
+        "relay_docks"
+      ],
       "duration": 85.0,
       "rounds": 1,
-      "controls": ["move", "action", "dash"],
+      "controls": [
+        "move",
+        "action",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "⬓",
-      "tags": ["carry", "steal"],
-      "unlock": {"type": "trophies", "amount": 9}
+      "tags": [
+        "carry",
+        "steal"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 9
+      }
     },
     {
       "id": "hurdle_dash",
       "category": "race",
       "scoring": "race_time",
-      "arenas": ["hurdle_track"],
+      "arenas": [
+        "hurdle_track"
+      ],
       "duration": 70.0,
       "rounds": 2,
       "sudden_death": false,
-      "controls": ["move", "jump", "dash"],
+      "controls": [
+        "move",
+        "jump",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "⇥",
-      "tags": ["race", "timing"]
+      "tags": [
+        "race",
+        "timing"
+      ]
     },
     {
       "id": "kart_sprint",
       "category": "race",
       "scoring": "race_time",
-      "arenas": ["circuit_loop"],
+      "arenas": [
+        "circuit_loop"
+      ],
       "duration": 120.0,
       "rounds": 1,
       "sudden_death": false,
-      "controls": ["drive", "boost"],
+      "controls": [
+        "drive",
+        "boost"
+      ],
+      "control_profile": "steering",
       "glyph": "⛿",
-      "tags": ["race", "vehicle"],
-      "unlock": {"type": "trophies", "amount": 6}
+      "tags": [
+        "race",
+        "vehicle"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 6
+      }
     },
     {
       "id": "color_stand",
       "category": "reaction",
       "scoring": "survival",
-      "arenas": ["color_floor"],
+      "arenas": [
+        "color_floor"
+      ],
       "duration": 90.0,
       "rounds": 1,
       "sudden_death": false,
-      "controls": ["move"],
+      "controls": [
+        "move"
+      ],
+      "control_profile": "memory",
       "glyph": "◑",
-      "tags": ["reflex", "party"]
+      "tags": [
+        "reflex",
+        "party"
+      ]
     },
     {
       "id": "symbol_echo",
       "category": "reaction",
       "scoring": "points",
-      "arenas": ["echo_hall"],
+      "arenas": [
+        "echo_hall"
+      ],
       "duration": 95.0,
       "rounds": 1,
       "sudden_death": false,
-      "controls": ["move", "action"],
+      "controls": [
+        "move",
+        "action"
+      ],
+      "control_profile": "memory",
       "glyph": "☰",
-      "tags": ["memory"],
-      "unlock": {"type": "trophies", "amount": 10}
+      "tags": [
+        "memory"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 10
+      }
     },
     {
       "id": "quick_draw",
       "category": "reaction",
       "scoring": "points",
-      "arenas": ["draw_stage"],
+      "arenas": [
+        "draw_stage"
+      ],
       "duration": 75.0,
       "rounds": 1,
       "sudden_death": false,
-      "controls": ["attack"],
+      "controls": [
+        "attack"
+      ],
+      "control_profile": "reaction",
       "glyph": "⚡",
-      "tags": ["reflex", "nerve"],
-      "unlock": {"type": "trophies", "amount": 12}
+      "tags": [
+        "reflex",
+        "nerve"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 12
+      }
     },
     {
       "id": "rising_tide",
       "category": "survival",
       "scoring": "survival",
-      "arenas": ["tide_spire"],
+      "arenas": [
+        "tide_spire"
+      ],
       "duration": 120.0,
       "rounds": 1,
-      "controls": ["move", "jump", "dash"],
+      "controls": [
+        "move",
+        "jump",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "≋",
-      "tags": ["climb", "nerve"],
-      "unlock": {"type": "trophies", "amount": 13}
+      "tags": [
+        "climb",
+        "nerve"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 13
+      }
     },
     {
       "id": "sweeper_storm",
       "category": "survival",
       "scoring": "survival",
-      "arenas": ["sweeper_ring"],
+      "arenas": [
+        "sweeper_ring"
+      ],
       "duration": 110.0,
       "rounds": 1,
-      "controls": ["move", "jump", "dash"],
+      "controls": [
+        "move",
+        "jump",
+        "dash"
+      ],
+      "control_profile": "movement_action",
       "glyph": "✷",
-      "tags": ["dodge"]
+      "tags": [
+        "dodge"
+      ]
     },
     {
       "id": "duel_pit",
       "category": "combat",
       "scoring": "lives",
-      "arenas": ["duel_pit", "iron_flats"],
+      "arenas": [
+        "duel_pit",
+        "iron_flats"
+      ],
       "duration": 110.0,
       "rounds": 1,
-      "controls": ["move", "attack", "dash", "jump"],
+      "controls": [
+        "move",
+        "attack",
+        "dash",
+        "jump"
+      ],
+      "control_profile": "dual_action",
       "glyph": "⚔",
-      "tags": ["fighting"],
-      "unlock": {"type": "trophies", "amount": 15}
+      "tags": [
+        "fighting"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 15
+      }
     }
   ]
 }

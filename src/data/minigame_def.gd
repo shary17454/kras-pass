@@ -51,6 +51,8 @@ const CATEGORY_NAMES := {
 @export var supports_teams := false
 ## Control glyphs shown on the pre-round card, e.g. ["move", "dash", "attack"].
 @export var control_hints: PackedStringArray = []
+## Which on-screen layout this game wants. See ControlProfile.
+@export var control_profile: ControlProfile.Kind = ControlProfile.Kind.MOVEMENT_ACTION
 @export var tags: PackedStringArray = []
 @export var unlock := {}
 @export var difficulty_curve := 1.0  # multiplies AI aggression in adventure
@@ -74,6 +76,7 @@ static func from_dict(d: Dictionary) -> MiniGameDef:
 	m.supports_sudden_death = bool(d.get("sudden_death", true))
 	m.supports_teams = bool(d.get("teams", false))
 	m.control_hints = PackedStringArray(d.get("controls", ["move"]))
+	m.control_profile = ControlProfile.from_string(String(d.get("control_profile", "movement_action")))
 	m.tags = PackedStringArray(d.get("tags", []))
 	m.unlock = d.get("unlock", {})
 	m.difficulty_curve = float(d.get("difficulty_curve", 1.0))

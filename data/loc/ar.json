@@ -2,7 +2,6 @@
   "app.title": "كراس باس",
   "app.subtitle": "كأس الألعاب الكبرى",
   "app.tagline": "ثمانية أقاليم. حلبة واحدة. ولا مجاملة.",
-
   "menu.adventure": "المغامرة",
   "menu.quick_play": "لعب سريع",
   "menu.tournament": "بطولة",
@@ -17,7 +16,6 @@
   "menu.settings": "الإعدادات",
   "menu.profile": "الملف الشخصي",
   "menu.quit": "خروج",
-
   "common.back": "رجوع",
   "common.confirm": "تأكيد",
   "common.cancel": "إلغاء",
@@ -41,7 +39,6 @@
   "common.soon": "قريبًا",
   "common.of": "من",
   "common.total": "الإجمالي",
-
   "hud.time": "الوقت",
   "hud.round": "الجولة {n}",
   "hud.round_of": "الجولة {n} / {total}",
@@ -54,7 +51,6 @@
   "hud.get_ready": "استعد",
   "hud.eliminated": "خرج!",
   "hud.lap": "اللفة {n}/{total}",
-
   "results.title": "النتائج",
   "results.winner": "{name} هو الفائز!",
   "results.draw": "تعادل!",
@@ -78,7 +74,6 @@
   "results.stat.mistakes": "أخطاء",
   "results.stat.damage": "الضرر",
   "results.stat.crates": "صناديق",
-
   "tournament.title": "البطولة",
   "tournament.players": "المتنافسون",
   "tournament.games": "الألعاب",
@@ -94,7 +89,6 @@
   "tournament.start": "ابدأ البطولة",
   "tournament.next_game": "اللعبة التالية",
   "tournament.finish": "إنهاء",
-
   "quick.title": "لعب سريع",
   "quick.game": "اللعبة",
   "quick.character": "الشخصية",
@@ -104,7 +98,6 @@
   "quick.rounds": "عدد الجولات",
   "quick.powerups": "عناصر التعزيز",
   "quick.start": "العب",
-
   "adventure.title": "المغامرة",
   "adventure.world": "الإقليم",
   "adventure.stage": "المرحلة",
@@ -116,7 +109,6 @@
   "adventure.play": "ادخل",
   "adventure.cleared": "مكتملة",
   "adventure.requires": "يتطلب {n} كؤوس",
-
   "char.select.title": "اختر متنافسك",
   "char.select.hint": "كل شخصية لها نفس مجموع القدرات، لكن موزّعة بشكل مختلف.",
   "char.stat.speed": "السرعة",
@@ -125,7 +117,6 @@
   "char.stat.jump": "القفز",
   "char.stat.power": "القوة",
   "char.stat.control": "التحكم",
-
   "char.nabta.name": "نبتة",
   "char.nabta.realm": "وادي الخضرة",
   "char.nabta.tagline": "تنبت من أضيق شق.",
@@ -150,7 +141,6 @@
   "char.turs.name": "ترس",
   "char.turs.realm": "دار التروس",
   "char.turs.tagline": "مصنوع ليصمد حتى النهاية.",
-
   "world.greenvale.name": "وادي الخضرة",
   "world.greenvale.desc": "هنا يفوز كل متنافس بكأسه الأولى.",
   "world.tidehollow.name": "غور المدّ",
@@ -166,7 +156,6 @@
   "stage.boss.embersouq": "بطولة السوق",
   "stage.boss.skyloft": "بطولة العلّية",
   "stage.boss.cogworks": "النهائي الكبير",
-
   "game.ring_rumble.name": "زحام الحلقة",
   "game.ring_rumble.desc": "أربعة متنافسين وحلقة تضيق.",
   "game.ring_rumble.rules": "ادفع الباقين خارج الحافة. الحلقة تضيق كلما تقدّم الوقت، والباقي أخيرًا يكسب الجولة.",
@@ -230,7 +219,6 @@
   "game.duel_pit.name": "حفرة النزال",
   "game.duel_pit.desc": "ثلاث محاولات، أحسن استخدامها.",
   "game.duel_pit.rules": "الضرر يتراكم: كلما زاد ضرر المنافس طارت به ضربتك أبعد. أخرجه ثلاث مرات.",
-
   "arena.vortex_ring.name": "حلقة الزوبعة",
   "arena.storm_ring.name": "حلقة العاصفة",
   "arena.crumble_court.name": "الساحة المنهارة",
@@ -254,7 +242,6 @@
   "arena.sweeper_ring.name": "حلقة الأذرع",
   "arena.duel_pit.name": "حفرة النزال",
   "arena.glass_terrace.name": "شرفة الزجاج",
-
   "powerup.speed.name": "اندفاع",
   "powerup.shield.name": "درع",
   "powerup.power.name": "يد ثقيلة",
@@ -267,7 +254,6 @@
   "powerup.bomb.name": "موجة صدمية",
   "powerup.repair.name": "إصلاح",
   "powerup.boost.name": "تسريع",
-
   "controls.move": "حركة",
   "controls.jump": "قفز",
   "controls.action": "تنفيذ",
@@ -278,17 +264,14 @@
   "controls.boost": "تسريع",
   "controls.shoot": "إطلاق",
   "controls.pause": "إيقاف مؤقت",
-
   "difficulty.easy": "سهل",
   "difficulty.medium": "متوسط",
   "difficulty.hard": "صعب",
   "difficulty.expert": "خبير",
-
   "ordinal.1": "الأول",
   "ordinal.2": "الثاني",
   "ordinal.3": "الثالث",
   "ordinal.4": "الرابع",
-
   "pause.title": "إيقاف مؤقت",
   "pause.resume": "متابعة",
   "pause.restart": "إعادة الجولة",
@@ -297,7 +280,6 @@
   "pause.quit_match": "الخروج من المباراة",
   "pause.confirm_quit": "تبغى تترك المباراة؟",
   "pause.device_lost": "انقطعت وحدة التحكم — أعد توصيلها أو اضغط زرًا على جهاز آخر.",
-
   "local.title": "حفلة محلية",
   "local.join_hint": "اضغط أي زر على وحدة التحكم للانضمام. الخانات الفارغة يملؤها الذكاء الاصطناعي.",
   "local.slot_empty": "فارغ",
@@ -307,7 +289,6 @@
   "local.add_ai": "أضف ذكاءً اصطناعيًا",
   "local.remove": "إزالة",
   "local.start": "ابدأ الحفلة",
-
   "online.title": "عبر الإنترنت",
   "online.unavailable": "اللعب عبر الإنترنت غير مفعّل في هذا الإصدار. الغرفة ورمز الدخول وحالة الجاهزية أدناه تعمل على طبقة الجلسة المحلية، بحيث يمكن تفعيل الميزة دون تغيير أي لعبة.",
   "online.create": "إنشاء غرفة",
@@ -320,29 +301,24 @@
   "online.friends": "دعوة الأصدقاء",
   "online.rematch": "إعادة المباراة",
   "online.disconnected": "انقطع الاتصال. الخانة الفارغة يتولاها الذكاء الاصطناعي.",
-
   "training.title": "التدريب",
   "training.pick": "اختر أي لعبة وتمرّن بدون ضغط النتيجة.",
   "training.hint": "المؤقّت متوقف والجولات تُعاد فورًا.",
-
   "daily.title": "تحدّي اليوم",
   "daily.today": "تحدّي اليوم",
   "daily.reward": "الجائزة: {n} جوهرة",
   "daily.completed": "أُنجز اليوم",
   "daily.seeded": "الجميع يحصل على نفس الإعداد اليوم.",
-
   "profile.title": "الملف الشخصي",
   "profile.completion": "نسبة الإكمال",
   "profile.trophies": "الكؤوس",
   "profile.gems": "الجواهر",
   "profile.favourite": "المفضّل",
-
   "rewards.title": "الجوائز",
   "rewards.trophies": "الكؤوس",
   "rewards.gems": "الجواهر",
   "rewards.next_at": "الجائزة التالية عند {n}%",
   "rewards.claimed": "مستلمة",
-
   "stats.title": "الإحصاءات",
   "stats.matches": "المباريات",
   "stats.wins": "الانتصارات",
@@ -358,7 +334,6 @@
   "stats.per_game": "حسب اللعبة",
   "stats.plays": "مرات اللعب",
   "stats.best": "الأفضل",
-
   "settings.title": "الإعدادات",
   "settings.audio": "الصوت",
   "settings.master": "الصوت العام",
@@ -395,11 +370,9 @@
   "settings.reset_progress": "مسح كل التقدم",
   "settings.confirm_reset": "لا يمكن التراجع عن هذا. تكمل؟",
   "settings.replay_capture": "تسجيل إعادات المباريات",
-
   "achievement.unlocked": "إنجاز: {name}",
   "achievements.progress": "{n} من {total}",
   "achievements.secret": "إنجاز سرّي",
-
   "unlock.character": "{name} انضم للبطولة!",
   "unlock.minigame": "لعبة جديدة: {name}",
   "unlock.hint.trophies": "اجمع {n} كؤوس",
@@ -409,7 +382,6 @@
   "unlock.hint.tournaments": "افز بـ{n} بطولة",
   "unlock.hint.completion": "اوصل إلى {n}% إكمال",
   "unlock.hint.generic": "واصل اللعب لفتحه",
-
   "player.you": "أنت",
   "player.p1": "اللاعب 1",
   "player.p2": "اللاعب 2",
@@ -418,10 +390,8 @@
   "keyboard.profile.1": "لوحة المفاتيح (WASD)",
   "keyboard.profile.2": "لوحة المفاتيح (الأسهم)",
   "device.gamepad": "يد تحكم",
-
   "toast.saved": "تم حفظ التقدم",
   "toast.save_recovered": "ملف الحفظ كان تالفًا — تمت الاستعادة من النسخة الاحتياطية.",
-
   "achievement.first_win.name": "الفوز الأول",
   "achievement.first_win.desc": "افز بأول مباراة لك.",
   "achievement.ten_wins.name": "منتظم",
@@ -505,5 +475,14 @@
   "achievement.survivor.name": "الناجي",
   "achievement.survivor.desc": "افز بالمدّ الصاعد خمس مرات.",
   "achievement.quickest.name": "أسرع يد",
-  "achievement.quickest.desc": "سجّل 8 في أسرع يد."
+  "achievement.quickest.desc": "سجّل 8 في أسرع يد.",
+  "touch.tap_anywhere": "اضغط",
+  "settings.touch": "التحكم باللمس",
+  "settings.touch_controls": "أزرار الشاشة",
+  "settings.touch.auto": "تلقائي",
+  "settings.touch.on": "تشغيل دائم",
+  "settings.touch.off": "إيقاف",
+  "settings.touch_scale": "حجم الأزرار",
+  "settings.touch_opacity": "شفافية الأزرار",
+  "settings.touch_left_handed": "تخطيط لليد اليسرى"
 }

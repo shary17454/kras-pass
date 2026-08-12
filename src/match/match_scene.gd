@@ -26,6 +26,7 @@ var controller: MiniGameController
 var arena: Arena
 var camera: ArenaCamera
 var hud: MatchHUD
+var touch: TouchSource
 var powerups: PowerUpSystem
 
 var phase: int = P.LOADING
@@ -143,6 +144,7 @@ func _build() -> void:
 
 	_create_brains()
 	_assign_inputs()
+	_create_touch_controls()
 	AudioManager.play_music(controller.music_track())
 	EventBus.match_started.emit(config)
 	_set_phase(P.INTRO)
@@ -192,6 +194,27 @@ func _assign_inputs() -> void:
 			InputRouter.assign_pad(p.slot, p.device_id)
 		else:
 			InputRouter.assign_keyboard(p.slot, p.device_id)
+
+
+## On-screen controls for the first local human, when the platform wants them.
+## Built from the mini-game's declared control profile, so no game knows it is
+## being played with a thumb.
+func _create_touch_controls() -> void:
+	if not TouchSource.should_show():
+		return
+	var humans := config.human_slots()
+	if humans.is_empty():
+		return
+	var slot: int = humans[0]
+	InputRouter.assign_touch(slot)
+	var layer := CanvasLayer.new()
+	layer.layer = 8   # under the HUD, over the world
+	layer.name = "TouchLayer"
+	add_child(layer)
+	touch = TouchSource.new()
+	touch.name = "TouchControls"
+	layer.add_child(touch)
+	touch.setup(slot, ctx.definition)
 
 
 func teardown() -> void:

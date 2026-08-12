@@ -31,6 +31,17 @@ func build() -> void:
 	_slider(v, "settings.camera_sensitivity", "camera_sensitivity", 0.4, 2.0)
 	_slider(v, "settings.camera_shake", "camera_shake", 0.0, 1.5)
 
+	_section(v, "settings.touch")
+	var touch_values := ["auto", "on", "off"]
+	var touch := UIKit.option([
+		Loc.t("settings.touch.auto"), Loc.t("settings.touch.on"), Loc.t("settings.touch.off"),
+	], maxi(0, touch_values.find(String(UserSettings.get_value("touch_controls")))))
+	touch.item_selected.connect(func(i): UserSettings.set_value("touch_controls", touch_values[i]))
+	v.add_child(UIKit.row(Loc.t("settings.touch_controls"), touch))
+	_slider(v, "settings.touch_scale", "touch_scale", 0.7, 1.6)
+	_slider(v, "settings.touch_opacity", "touch_opacity", 0.15, 1.0)
+	_toggle(v, "settings.touch_left_handed", "touch_left_handed")
+
 	_section(v, "settings.graphics")
 	var quality := UIKit.option([
 		Loc.t("settings.quality.low"), Loc.t("settings.quality.medium"), Loc.t("settings.quality.high"),

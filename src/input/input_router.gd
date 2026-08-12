@@ -14,7 +14,7 @@ const MAX_SLOTS := 4
 const STICK_DEADZONE := 0.22
 const Btn := InputFrame.Btn
 
-enum Source { NONE, KEYBOARD, PAD, VIRTUAL }
+enum Source { NONE, KEYBOARD, PAD, VIRTUAL, TOUCH }
 
 const DEFAULT_KEY_PROFILES := [
 	{
@@ -73,7 +73,9 @@ func _physics_process(_delta: float) -> void:
 				_poll_keyboard(slot, f)
 			Source.PAD:
 				_poll_pad(slot, f)
-			Source.VIRTUAL:
+			Source.VIRTUAL, Source.TOUCH:
+				# Touch and AI publish through the same pending buffer; the only
+				# difference is that touch counts as a human at the slot level.
 				f.copy_from(_virtual_pending[slot])
 			_:
 				f.clear()
@@ -90,7 +92,7 @@ func source_of(slot: int) -> Source:
 
 
 func is_human(slot: int) -> bool:
-	return _sources[slot] == Source.KEYBOARD or _sources[slot] == Source.PAD
+	return _sources[slot] in [Source.KEYBOARD, Source.PAD, Source.TOUCH]
 
 
 func assign_keyboard(slot: int, profile_index: int = 0) -> void:
@@ -106,6 +108,13 @@ func assign_pad(slot: int, device_id: int) -> void:
 
 func assign_virtual(slot: int) -> void:
 	_sources[slot] = Source.VIRTUAL
+	_device_ids[slot] = -1
+
+
+## On-screen controls. Identical plumbing to a virtual slot, but reported as a
+## human so pause-on-device-loss and the join flow treat it correctly.
+func assign_touch(slot: int) -> void:
+	_sources[slot] = Source.TOUCH
 	_device_ids[slot] = -1
 
 
