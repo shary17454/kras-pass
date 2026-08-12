@@ -22,7 +22,7 @@ var _settings_backup := {}
 func _ready() -> void:
 	await get_tree().process_frame
 	_t = TestHarness.new()
-	print("\nDAWWAMA test suite — Godot %s, %s" % [
+	print("\nKRAS PASS test suite — Godot %s, %s" % [
 		Engine.get_version_info().string, OS.get_name()])
 	_backup()
 	var started := Time.get_ticks_msec()

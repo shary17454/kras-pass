@@ -1,4 +1,4 @@
-; Dawwama — Party Clash
+; Kras Pass — party mini-game collection
 ; Godot 4 project configuration.
 ; See docs/architecture.md for the reasoning behind this layout.
 
@@ -6,8 +6,8 @@ config_version=5
 
 [application]
 
-config/name="Dawwama"
-config/description="دوّامة — لعبة حفلات ومنافسات مصغّرة / An original party mini-game collection."
+config/name="Kras Pass"
+config/description="كراس باس — لعبة حفلات ومنافسات مصغّرة / An original party mini-game collection."
 config/version="1.0.0"
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "Mobile")

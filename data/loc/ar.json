@@ -1,7 +1,7 @@
 {
-  "app.title": "دوّامة",
-  "app.subtitle": "كأس الدوّامة الكبرى",
-  "app.tagline": "ثمانية أقاليم. دوّامة واحدة. ولا مجاملة.",
+  "app.title": "كراس باس",
+  "app.subtitle": "كأس الألعاب الكبرى",
+  "app.tagline": "ثمانية أقاليم. حلبة واحدة. ولا مجاملة.",
 
   "menu.adventure": "المغامرة",
   "menu.quick_play": "لعب سريع",
@@ -160,7 +160,7 @@
   "world.skyloft.name": "علّية السماء",
   "world.skyloft.desc": "لا شيء هنا مضمون أن يحملك.",
   "world.cogworks.name": "دار التروس",
-  "world.cogworks.desc": "الآلة التي في قلب الدوّامة.",
+  "world.cogworks.desc": "الآلة التي في قلب الحلبة.",
   "stage.boss.greenvale": "بطولة الوادي",
   "stage.boss.tidehollow": "بطولة الغور",
   "stage.boss.embersouq": "بطولة السوق",
@@ -231,7 +231,7 @@
   "game.duel_pit.desc": "ثلاث محاولات، أحسن استخدامها.",
   "game.duel_pit.rules": "الضرر يتراكم: كلما زاد ضرر المنافس طارت به ضربتك أبعد. أخرجه ثلاث مرات.",
 
-  "arena.vortex_ring.name": "حلقة الدوّامة",
+  "arena.vortex_ring.name": "حلقة الزوبعة",
   "arena.storm_ring.name": "حلقة العاصفة",
   "arena.crumble_court.name": "الساحة المنهارة",
   "arena.bumper_bowl.name": "وعاء المصدّات",
@@ -478,7 +478,7 @@
   "achievement.completion_50.desc": "اوصل إلى 50% إكمال.",
   "achievement.completion_75.name": "ثلاثة أرباع",
   "achievement.completion_75.desc": "اوصل إلى 75% إكمال.",
-  "achievement.completion_100.name": "الدوّامة كاملة",
+  "achievement.completion_100.name": "الحلبة كاملة",
   "achievement.completion_100.desc": "اوصل إلى 100% إكمال.",
   "achievement.knockout_ten.name": "دفعة قوية",
   "achievement.knockout_ten.desc": "أخرج عشرة منافسين.",

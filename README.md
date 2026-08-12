@@ -1,9 +1,9 @@
-# DAWWAMA — دوّامة
+# KRAS PASS — كراس باس
 
 **An original party game of competitive mini-games.**
-*كأس الدوّامة الكبرى — لعبة حفلات ومنافسات مصغّرة.*
+*كأس الألعاب الكبرى — لعبة حفلات ومنافسات مصغّرة.*
 
-Eight competitors from eight realms are pulled into the Dawwama, a great vortex
+Eight competitors from eight realms are pulled into the Whirl, a great vortex
 that hosts a tournament of short, chaotic contests. Twenty-one mini-games, five
 realms of adventure, local multiplayer for up to four, and an AI that plays by
 the same rules you do.

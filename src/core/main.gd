@@ -7,7 +7,7 @@ extends Node
 
 
 func _ready() -> void:
-	Log.i("Dawwama %s starting (%s)" % [
+	Log.i("Kras Pass %s starting (%s)" % [
 		ProjectSettings.get_setting("application/config/version", "?"),
 		OS.get_name(),
 	], "Main")

@@ -1,5 +1,5 @@
 {
-  "_comment": "Adventure Mode: five realms of the Dawwama Cup, five stages each (four qualifiers + one championship). 'stars' are earned by placing 1st (3), 2nd (2) or finishing (1). A championship is a 3-round match at a raised difficulty floor.",
+  "_comment": "Adventure Mode: five realms of the Kras Pass cup, five stages each (four qualifiers + one championship). 'stars' are earned by placing 1st (3), 2nd (2) or finishing (1). A championship is a 3-round match at a raised difficulty floor.",
   "worlds": [
     {
       "id": "w_greenvale",

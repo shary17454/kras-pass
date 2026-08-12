@@ -1,5 +1,5 @@
 {
-  "_comment": "The eight competitors of the Dawwama Cup. Stats are 0..1 and every roster entry sums to 3.00 — enforced by tests/test_balance.gd — so no character is strictly better than another.",
+  "_comment": "The eight competitors of the Kras Pass cup. Stats are 0..1 and every roster entry sums to 3.00 — enforced by tests/test_balance.gd — so no character is strictly better than another.",
   "characters": [
     {
       "id": "nabta",

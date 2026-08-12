@@ -1,12 +1,12 @@
-# DAWWAMA — design bible
+# KRAS PASS — design bible
 
-*دوّامة — الدليل التصميمي*
+*كراس باس — الدليل التصميمي*
 
 ---
 
 ## The pitch
 
-Four competitors are pulled into **the Dawwama**, a vortex that sits at the
+Four competitors are pulled into **the Whirl**, a vortex that sits at the
 meeting point of eight realms. Whatever falls in is judged by contest: a rapid
 sequence of short, unfair, entirely winnable games. Nobody dies. Everybody
 loses, repeatedly, in front of their friends.
@@ -33,7 +33,7 @@ usually wins.
 
 ## The world
 
-The Dawwama is a slow vortex of stone and light. Eight realms feed into it, and
+The Whirl is a slow vortex of stone and light. Eight realms feed into it, and
 each sends one competitor to the Grand Cup. The realms are places, not factions:
 there is no lore to read and no villain. The tournament is the story.
 
