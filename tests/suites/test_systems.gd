@@ -1,0 +1,174 @@
+extends RefCounted
+## Input frames, AI profiles, power-up stacking, object pooling and navigation.
+
+
+func run(t: TestHarness, host: Node) -> void:
+	t.suite("systems")
+	_input_frames(t)
+	_ai_profiles(t)
+	_pooling(t)
+	await _powerups(t, host)
+	await _navigation(t, host)
+
+
+func _input_frames(t: TestHarness) -> void:
+	t.test("input frame edge detection")
+	var f := InputFrame.new()
+	f.bits = InputFrame.Btn.JUMP
+	t.ok(f.just_pressed(InputFrame.Btn.JUMP), "a newly set bit is a press")
+	t.ok(f.held(InputFrame.Btn.JUMP), "and is held")
+	f.prev_bits = f.bits
+	t.ok(not f.just_pressed(InputFrame.Btn.JUMP), "a held button is not pressed again")
+	f.bits = 0
+	t.ok(f.just_released(InputFrame.Btn.JUMP), "clearing the bit is a release")
+
+	t.test("input frames encode and decode losslessly enough for replay")
+	var a := InputFrame.new()
+	a.move = Vector2(0.5, -1.0)
+	a.aim = Vector2(-0.25, 0.75)
+	a.bits = InputFrame.Btn.DASH | InputFrame.Btn.ATTACK
+	var b := InputFrame.new()
+	b.decode(a.encode())
+	t.near(b.move.x, 0.5, 0.01, "move x survives quantisation")
+	t.near(b.move.y, -1.0, 0.01, "move y survives")
+	t.near(b.aim.y, 0.75, 0.01, "aim survives")
+	t.equal(b.bits, a.bits, "buttons survive exactly")
+	t.equal(a.encode().size(), 5, "five bytes per player per tick")
+
+	t.test("virtual slots accept AI input")
+	InputRouter.assign_virtual(0)
+	InputRouter.push_virtual(0, Vector2(2.0, 0.0), Vector2.ZERO, InputFrame.Btn.DASH)
+	t.equal(InputRouter.source_of(0), InputRouter.Source.VIRTUAL, "slot is virtual")
+	t.ok(not InputRouter.is_human(0), "a virtual slot is not human")
+	InputRouter.clear_all()
+
+
+func _ai_profiles(t: TestHarness) -> void:
+	t.test("four difficulty profiles exist and are ordered")
+	var profiles := Balance.list("ai", "profiles")
+	t.equal(profiles.size(), 4, "easy, medium, hard, expert")
+	var previous_reaction := 99.0
+	var previous_accuracy := -1.0
+	for p in profiles:
+		var reaction := float(p.get("reaction_time", 0.0))
+		var accuracy := float(p.get("accuracy", 0.0))
+		t.ok(reaction < previous_reaction, "%s reacts faster than the tier below" % p.get("id", "?"))
+		t.ok(accuracy > previous_accuracy, "%s aims better than the tier below" % p.get("id", "?"))
+		t.ok(reaction > 0.05, "%s is not superhuman" % p.get("id", "?"))
+		previous_reaction = reaction
+		previous_accuracy = accuracy
+
+	t.test("every mini-game's AI script loads")
+	for def in Registry.minigames():
+		var script: Script = load(def.controller_script)
+		var controller = script.new()
+		var brain_script = controller.ai_script()
+		t.not_null(brain_script, "%s names an AI script" % def.id)
+		if brain_script != null:
+			var brain = brain_script.new()
+			t.ok(brain is AIBrain, "%s's brain extends AIBrain" % def.id)
+		controller.free()
+
+
+func _pooling(t: TestHarness) -> void:
+	t.test("object pool reuses instances instead of allocating")
+	Pool.drain()
+	# GDScript lambdas capture locals by value, so the allocation counter has to
+	# be something shared by reference.
+	var made := [0]
+	Pool.define("test_item", func():
+		made[0] += 1
+		return Node3D.new())
+	var first := Pool.acquire("test_item")
+	t.equal(made[0], 1, "first acquire allocates")
+	Pool.release("test_item", first)
+	var second := Pool.acquire("test_item")
+	t.equal(made[0], 1, "second acquire reuses")
+	t.equal(second, first, "and hands back the same instance")
+	Pool.release("test_item", second)
+	var stats := Pool.stats()
+	t.equal(int(stats["test_item"]["live"]), 0, "released instances are not counted as live")
+	Pool.drain()
+
+
+func _powerups(t: TestHarness, host: Node) -> void:
+	t.test("power-up effects stack, refresh and expire cleanly")
+	var cfg := MatchConfig.build("ring_rumble", ["nabta", "sakhra", "fanoos", "ramla"], 0, 0, 5)
+	var ctx := MatchContext.new()
+	ctx.config = cfg
+	ctx.definition = cfg.definition()
+	ctx.arena_def = Registry.arena(cfg.arena_id)
+	ctx.rng = cfg.make_rng()
+	ctx.scores = [0, 0, 0, 0]
+	ctx.alive = [true, true, true, true]
+	ctx.details = [{}, {}, {}, {}]
+	var fighter := Fighter.new()
+	host.add_child(fighter)
+	fighter.setup(0, Registry.character("fanoos"))
+	ctx.fighters = [fighter]
+
+	var system := PowerUpSystem.new()
+	host.add_child(system)
+	system.setup(ctx)
+	ctx.powerups = system
+
+	var speed := Registry.powerup("speed")
+	system._apply(0, speed)
+	t.near(float(fighter.mods["speed"]), speed.magnitude, 0.001, "speed modifier applied")
+	system._apply(0, speed)
+	t.near(float(fighter.mods["speed"]), speed.magnitude, 0.001,
+		"taking the same power-up twice refreshes rather than stacking")
+
+	var shield := Registry.powerup("shield")
+	system._apply(0, shield)
+	t.near(float(fighter.mods["shield"]), 1.0, 0.001, "shield applied alongside speed")
+	var blocked := fighter.take_hit(1, Vector3.RIGHT, 20.0, 10.0)
+	t.ok(not blocked, "the shield absorbs the first hit")
+	t.near(float(fighter.mods["shield"]), 0.0, 0.001, "and is consumed")
+
+	system._tick_effects(speed.duration + 0.1)
+	t.near(float(fighter.mods["speed"]), 1.0, 0.001, "effects expire back to the baseline")
+
+	t.test("clearing effects between rounds leaves no residue")
+	system._apply(0, Registry.powerup("double"))
+	system.clear_all()
+	t.near(float(fighter.mods["points"]), 1.0, 0.001, "point multiplier reset")
+	t.equal(system.active_effects_for(0).size(), 0, "no effects remain")
+
+	system.queue_free()
+	fighter.queue_free()
+	await host.get_tree().process_frame
+
+
+## Walks every registered screen, confirming each one builds and can get back to
+## the main menu. This is the automated form of "no dead ends in navigation".
+func _navigation(t: TestHarness, host: Node) -> void:
+	t.test("every screen builds and offers a way back")
+	var errors_before := Log.error_count()
+	for id in SceneRouter.SCREENS.keys():
+		if id == "match":
+			continue  # covered by the match integration suite
+		var script: Script = load(SceneRouter.SCREENS[id])
+		t.not_null(script, "screen '%s' has a loadable script" % id)
+		if script == null:
+			continue
+		var node: Node = script.new()
+		host.add_child(node)
+		node.setup({})
+		await host.get_tree().process_frame
+		t.ok(node.has_method("go_back"), "screen '%s' implements go_back" % id)
+		node.queue_free()
+		await host.get_tree().process_frame
+	t.equal(Log.error_count() - errors_before, 0, "no screen logged an error while building")
+
+	# Regression: the router's holder used to be attached with call_deferred, so
+	# the very first screen opened from Main._ready landed outside the tree and
+	# every get_tree() call in it returned null.
+	t.test("the router's screen holder is live before the first navigation")
+	t.not_null(SceneRouter.holder, "holder exists")
+	t.ok(SceneRouter.holder != null and SceneRouter.holder.is_inside_tree(),
+		"holder is inside the scene tree")
+	await SceneRouter.go_to("main_menu", {}, false, 0.0)
+	t.not_null(SceneRouter.current_node, "a screen was opened")
+	t.ok(SceneRouter.current_node != null and SceneRouter.current_node.is_inside_tree(),
+		"the opened screen is inside the tree")

@@ -1,0 +1,19 @@
+# Godot 4
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+*.translation
+
+# Build output
+build/
+exports/
+*.dmg
+*.app
+*.exe
+*.pck
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db

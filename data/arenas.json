@@ -1,0 +1,202 @@
+{
+  "_comment": "Arena recipes. ArenaBuilder generates geometry from these at load time — the project contains no scene or model files for venues. shape: disc|square|ring|cross|tiles|grid|track|oval|pit|islands",
+  "arenas": [
+    {
+      "id": "vortex_ring",
+      "shape": "disc",
+      "radius": 13.0,
+      "thickness": 1.2,
+      "wall_height": 0.0,
+      "palette": {"floor": "#2e3358", "accent": "#f2a03f", "sky_top": "#141a3c", "sky_bottom": "#6b3d6b"},
+      "hazards": [{"type": "shrink", "start_delay": 18.0, "rate": 0.28, "min_radius": 5.0}]
+    },
+    {
+      "id": "storm_ring",
+      "shape": "disc",
+      "radius": 11.5,
+      "thickness": 1.2,
+      "wall_height": 0.0,
+      "palette": {"floor": "#25324f", "accent": "#7be5ff", "sky_top": "#0d1430", "sky_bottom": "#2b5c7a"},
+      "hazards": [
+        {"type": "sweeper", "count": 2, "speed": 1.15, "length": 9.0, "height": 0.9},
+        {"type": "shrink", "start_delay": 26.0, "rate": 0.2, "min_radius": 6.0}
+      ]
+    },
+    {
+      "id": "crumble_court",
+      "shape": "tiles",
+      "radius": 12.0,
+      "thickness": 0.8,
+      "wall_height": 0.0,
+      "palette": {"floor": "#4a3b55", "accent": "#ff9f6b", "sky_top": "#241736", "sky_bottom": "#7a4160"},
+      "hazards": [{"type": "crumble", "delay": 0.9, "respawn": 6.0}]
+    },
+    {
+      "id": "bumper_bowl",
+      "shape": "disc",
+      "radius": 13.0,
+      "thickness": 1.0,
+      "wall_height": 0.0,
+      "palette": {"floor": "#33405e", "accent": "#ff5f8d", "sky_top": "#16193a", "sky_bottom": "#54376e"},
+      "hazards": [{"type": "bumper", "count": 5, "radius": 1.1, "power": 17.0}]
+    },
+    {
+      "id": "quad_court",
+      "shape": "square",
+      "radius": 13.0,
+      "thickness": 1.0,
+      "wall_height": 2.2,
+      "palette": {"floor": "#25455a", "accent": "#57e0c0", "sky_top": "#0f2a38", "sky_bottom": "#2f6d78"}
+    },
+    {
+      "id": "ember_pit",
+      "shape": "disc",
+      "radius": 12.0,
+      "thickness": 1.0,
+      "wall_height": 1.6,
+      "palette": {"floor": "#4b2a2a", "accent": "#ff8b3d", "sky_top": "#2a1220", "sky_bottom": "#8a3b2e"}
+    },
+    {
+      "id": "scrap_yard",
+      "shape": "square",
+      "radius": 17.0,
+      "thickness": 1.0,
+      "wall_height": 1.6,
+      "palette": {"floor": "#3d3f45", "accent": "#e2b23c", "sky_top": "#1c1e26", "sky_bottom": "#5a4b3a"},
+      "hazards": [{"type": "pillars", "count": 6, "radius": 1.2, "height": 2.4}]
+    },
+    {
+      "id": "iron_flats",
+      "shape": "disc",
+      "radius": 16.0,
+      "thickness": 1.0,
+      "wall_height": 0.9,
+      "palette": {"floor": "#38414d", "accent": "#9fd8ff", "sky_top": "#161c26", "sky_bottom": "#3c5266"},
+      "hazards": [{"type": "pillars", "count": 8, "radius": 1.0, "height": 2.2}]
+    },
+    {
+      "id": "gem_hollow",
+      "shape": "islands",
+      "radius": 14.0,
+      "thickness": 1.0,
+      "wall_height": 0.0,
+      "palette": {"floor": "#33305c", "accent": "#b98cff", "sky_top": "#191436", "sky_bottom": "#4d3a7a"}
+    },
+    {
+      "id": "star_meadow",
+      "shape": "disc",
+      "radius": 14.0,
+      "thickness": 1.0,
+      "wall_height": 0.8,
+      "palette": {"floor": "#2c4a38", "accent": "#ffe066", "sky_top": "#132a20", "sky_bottom": "#3f7a52"}
+    },
+    {
+      "id": "paint_grid",
+      "shape": "grid",
+      "radius": 12.0,
+      "thickness": 0.6,
+      "wall_height": 0.7,
+      "palette": {"floor": "#3a3550", "accent": "#ffffff", "sky_top": "#1c1730", "sky_bottom": "#5b4a80"}
+    },
+    {
+      "id": "dune_ring",
+      "shape": "ring",
+      "radius": 14.5,
+      "thickness": 1.0,
+      "wall_height": 0.8,
+      "palette": {"floor": "#5a4a2e", "accent": "#ffd98a", "sky_top": "#2b2016", "sky_bottom": "#8a6b3a"}
+    },
+    {
+      "id": "crate_yard",
+      "shape": "square",
+      "radius": 13.0,
+      "thickness": 1.0,
+      "wall_height": 1.4,
+      "palette": {"floor": "#463b2e", "accent": "#ffc46b", "sky_top": "#241c14", "sky_bottom": "#6b5334"}
+    },
+    {
+      "id": "relay_docks",
+      "shape": "cross",
+      "radius": 15.0,
+      "thickness": 1.0,
+      "wall_height": 0.0,
+      "palette": {"floor": "#2b4150", "accent": "#6be0ff", "sky_top": "#111f2b", "sky_bottom": "#33636f"}
+    },
+    {
+      "id": "hurdle_track",
+      "shape": "track",
+      "radius": 13.0,
+      "thickness": 1.0,
+      "wall_height": 0.9,
+      "palette": {"floor": "#43304a", "accent": "#ff7ab8", "sky_top": "#1d1226", "sky_bottom": "#6a3565"},
+      "hazards": [{"type": "hurdles", "rows": 7, "height": 0.85}]
+    },
+    {
+      "id": "circuit_loop",
+      "shape": "oval",
+      "radius": 20.0,
+      "thickness": 1.0,
+      "wall_height": 1.2,
+      "palette": {"floor": "#333a44", "accent": "#7bffd0", "sky_top": "#141a20", "sky_bottom": "#356057"}
+    },
+    {
+      "id": "color_floor",
+      "shape": "grid",
+      "radius": 11.0,
+      "thickness": 0.6,
+      "wall_height": 0.7,
+      "palette": {"floor": "#2f3a4d", "accent": "#ffffff", "sky_top": "#131a26", "sky_bottom": "#3e5a72"}
+    },
+    {
+      "id": "echo_hall",
+      "shape": "square",
+      "radius": 10.5,
+      "thickness": 1.0,
+      "wall_height": 2.4,
+      "palette": {"floor": "#2b2b46", "accent": "#a0f0ff", "sky_top": "#12122a", "sky_bottom": "#3a3a6b"}
+    },
+    {
+      "id": "draw_stage",
+      "shape": "disc",
+      "radius": 9.5,
+      "thickness": 1.0,
+      "wall_height": 1.1,
+      "palette": {"floor": "#3d2f3f", "accent": "#ffd23f", "sky_top": "#1c1420", "sky_bottom": "#5e3c50"}
+    },
+    {
+      "id": "tide_spire",
+      "shape": "pit",
+      "radius": 11.5,
+      "thickness": 0.8,
+      "wall_height": 0.0,
+      "fall_y": -6.0,
+      "palette": {"floor": "#26485c", "accent": "#66e0ff", "sky_top": "#0e2230", "sky_bottom": "#2c6b80"},
+      "hazards": [{"type": "rising", "speed": 0.42, "start_y": -6.0}]
+    },
+    {
+      "id": "sweeper_ring",
+      "shape": "disc",
+      "radius": 13.0,
+      "thickness": 1.0,
+      "wall_height": 0.0,
+      "palette": {"floor": "#3b2f52", "accent": "#ff6b6b", "sky_top": "#1a1130", "sky_bottom": "#5c3568"},
+      "hazards": [{"type": "sweeper", "count": 3, "speed": 1.0, "length": 11.0, "height": 0.85}]
+    },
+    {
+      "id": "duel_pit",
+      "shape": "pit",
+      "radius": 12.0,
+      "thickness": 1.0,
+      "wall_height": 0.0,
+      "palette": {"floor": "#402a34", "accent": "#ff9bb0", "sky_top": "#1e1018", "sky_bottom": "#6b3244"}
+    },
+    {
+      "id": "glass_terrace",
+      "shape": "islands",
+      "radius": 13.0,
+      "thickness": 0.7,
+      "wall_height": 0.0,
+      "palette": {"floor": "#2f4a5c", "accent": "#bff0ff", "sky_top": "#12222c", "sky_bottom": "#3d6f7d"}
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "_comment": "AI difficulty profiles. No tier reads state a human cannot see; higher tiers differ only in how fast they react, how accurately they aim, how far ahead they predict and how much risk they accept. 'input_noise' keeps even Expert human-looking rather than frame-perfect.",
+  "profiles": [
+    {
+      "id": "easy",
+      "reaction_time": 0.46,
+      "decision_interval": 0.34,
+      "accuracy": 0.55,
+      "prediction": 0.15,
+      "aggression": 0.28,
+      "risk": 0.20,
+      "strategy": 0.20,
+      "input_noise": 0.24,
+      "dash_chance": 0.18,
+      "attack_chance": 0.35,
+      "powerup_interest": 0.4,
+      "edge_awareness": 0.45,
+      "mistake_chance": 0.22
+    },
+    {
+      "id": "medium",
+      "reaction_time": 0.30,
+      "decision_interval": 0.22,
+      "accuracy": 0.72,
+      "prediction": 0.38,
+      "aggression": 0.48,
+      "risk": 0.38,
+      "strategy": 0.50,
+      "input_noise": 0.14,
+      "dash_chance": 0.34,
+      "attack_chance": 0.55,
+      "powerup_interest": 0.65,
+      "edge_awareness": 0.7,
+      "mistake_chance": 0.11
+    },
+    {
+      "id": "hard",
+      "reaction_time": 0.20,
+      "decision_interval": 0.15,
+      "accuracy": 0.85,
+      "prediction": 0.62,
+      "aggression": 0.68,
+      "risk": 0.55,
+      "strategy": 0.78,
+      "input_noise": 0.08,
+      "dash_chance": 0.52,
+      "attack_chance": 0.72,
+      "powerup_interest": 0.82,
+      "edge_awareness": 0.88,
+      "mistake_chance": 0.05
+    },
+    {
+      "id": "expert",
+      "reaction_time": 0.13,
+      "decision_interval": 0.10,
+      "accuracy": 0.94,
+      "prediction": 0.85,
+      "aggression": 0.82,
+      "risk": 0.70,
+      "strategy": 0.95,
+      "input_noise": 0.04,
+      "dash_chance": 0.68,
+      "attack_chance": 0.85,
+      "powerup_interest": 0.95,
+      "edge_awareness": 0.97,
+      "mistake_chance": 0.02
+    }
+  ],
+  "adventure_scaling": {
+    "_comment": "World index -> difficulty floor used when an adventure stage does not pin one.",
+    "floors": [0, 1, 1, 2, 3]
+  }
+}

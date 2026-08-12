@@ -1,0 +1,89 @@
+{
+  "_comment": "The eight competitors of the Dawwama Cup. Stats are 0..1 and every roster entry sums to 3.00 — enforced by tests/test_balance.gd — so no character is strictly better than another.",
+  "characters": [
+    {
+      "id": "nabta",
+      "color": "#4ec96a",
+      "accent": "#b6f27f",
+      "starter": true,
+      "stats": {"speed": 0.70, "accel": 0.65, "weight": 0.30, "jump": 0.55, "power": 0.35, "control": 0.45},
+      "body": {"shape": "capsule", "head": "sphere", "height": 1.0, "girth": 0.92, "accessory": "leaf"},
+      "voice_pitch": 1.25,
+      "celebration": "leap"
+    },
+    {
+      "id": "sakhra",
+      "color": "#9a7b5a",
+      "accent": "#d8c09a",
+      "starter": true,
+      "stats": {"speed": 0.30, "accel": 0.35, "weight": 0.90, "jump": 0.30, "power": 0.85, "control": 0.30},
+      "body": {"shape": "boulder", "head": "cube", "height": 1.05, "girth": 1.25, "accessory": "crack"},
+      "voice_pitch": 0.72,
+      "celebration": "flex"
+    },
+    {
+      "id": "fanoos",
+      "color": "#ff7a3d",
+      "accent": "#ffd9a0",
+      "starter": true,
+      "stats": {"speed": 0.50, "accel": 0.50, "weight": 0.50, "jump": 0.50, "power": 0.50, "control": 0.50},
+      "body": {"shape": "drum", "head": "cone", "height": 1.0, "girth": 1.0, "accessory": "flame"},
+      "voice_pitch": 1.0,
+      "celebration": "spin"
+    },
+    {
+      "id": "ramla",
+      "color": "#e8c46a",
+      "accent": "#fff0c2",
+      "starter": true,
+      "stats": {"speed": 0.65, "accel": 0.85, "weight": 0.35, "jump": 0.40, "power": 0.45, "control": 0.30},
+      "body": {"shape": "capsule", "head": "sphere", "height": 0.95, "girth": 1.05, "accessory": "grain"},
+      "voice_pitch": 1.1,
+      "celebration": "shimmer"
+    },
+    {
+      "id": "barq",
+      "color": "#ffd23f",
+      "accent": "#7be5ff",
+      "starter": false,
+      "unlock": {"type": "trophies", "amount": 6},
+      "stats": {"speed": 0.90, "accel": 0.80, "weight": 0.20, "jump": 0.50, "power": 0.35, "control": 0.25},
+      "body": {"shape": "shard", "head": "cone", "height": 1.08, "girth": 0.82, "accessory": "spark"},
+      "voice_pitch": 1.45,
+      "celebration": "shimmer"
+    },
+    {
+      "id": "mowja",
+      "color": "#3fa9f5",
+      "accent": "#a6e7ff",
+      "starter": false,
+      "unlock": {"type": "trophies", "amount": 14},
+      "stats": {"speed": 0.55, "accel": 0.45, "weight": 0.40, "jump": 0.45, "power": 0.45, "control": 0.70},
+      "body": {"shape": "orb", "head": "sphere", "height": 0.98, "girth": 1.08, "accessory": "wave"},
+      "voice_pitch": 1.15,
+      "celebration": "bow"
+    },
+    {
+      "id": "ghaim",
+      "color": "#c9a7ff",
+      "accent": "#f2e9ff",
+      "starter": false,
+      "unlock": {"type": "wins", "amount": 15},
+      "stats": {"speed": 0.60, "accel": 0.40, "weight": 0.25, "jump": 0.85, "power": 0.30, "control": 0.60},
+      "body": {"shape": "orb", "head": "sphere", "height": 1.02, "girth": 1.0, "accessory": "puff"},
+      "voice_pitch": 1.3,
+      "celebration": "leap"
+    },
+    {
+      "id": "turs",
+      "color": "#8892a6",
+      "accent": "#ff9f4a",
+      "starter": false,
+      "unlock": {"type": "tournaments", "amount": 2},
+      "stats": {"speed": 0.35, "accel": 0.40, "weight": 0.80, "jump": 0.35, "power": 0.75, "control": 0.35},
+      "body": {"shape": "drum", "head": "cube", "height": 1.02, "girth": 1.15, "accessory": "cog"},
+      "voice_pitch": 0.8,
+      "celebration": "flex"
+    }
+  ]
+}

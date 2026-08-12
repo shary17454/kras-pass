@@ -1,0 +1,28 @@
+{
+  "_comment": "Power-up framework. 'kind' selects the behaviour PowerUpSystem applies; everything else is tuning. 'categories' empty = allowed in every mini-game that enables power-ups.",
+  "powerups": [
+    {"id": "speed",     "kind": "speed",   "duration": 6.0,  "magnitude": 1.45, "color": "#7be5ff", "glyph": "»",  "weight": 1.2},
+    {"id": "shield",    "kind": "shield",  "duration": 9.0,  "magnitude": 1.0,  "color": "#9ad8ff", "glyph": "◇",  "weight": 1.0},
+    {"id": "power",     "kind": "push",    "duration": 7.0,  "magnitude": 1.85, "color": "#ff7a3d", "glyph": "✱",  "weight": 1.0,
+      "categories": ["push_out", "combat", "control", "crates", "ball_zone"]},
+    {"id": "heavy",     "kind": "weight",  "duration": 7.0,  "magnitude": 1.9,  "color": "#9a7b5a", "glyph": "▼",  "weight": 0.8,
+      "categories": ["push_out", "combat", "ball_zone"]},
+    {"id": "double",    "kind": "points",  "duration": 8.0,  "magnitude": 2.0,  "color": "#ffd23f", "glyph": "×2", "weight": 0.9,
+      "categories": ["collect", "crates", "control", "ball_zone", "reaction"]},
+    {"id": "magnet",    "kind": "magnet",  "duration": 7.0,  "magnitude": 5.5,  "color": "#c9a7ff", "glyph": "∪",  "weight": 0.9,
+      "categories": ["collect", "crates"]},
+    {"id": "quickdash", "kind": "dash",    "duration": 8.0,  "magnitude": 2.2,  "color": "#4ec96a", "glyph": "≫",  "weight": 1.0},
+    {"id": "freeze",    "kind": "freeze",  "duration": 1.7,  "magnitude": 1.0,  "color": "#a6e7ff", "glyph": "❄",  "weight": 0.7,
+      "instant": true, "targets_rivals": true},
+    {"id": "slow",      "kind": "slow",    "duration": 4.5,  "magnitude": 0.6,  "color": "#8892a6", "glyph": "≈",  "weight": 0.7,
+      "targets_rivals": true},
+    {"id": "bomb",      "kind": "bomb",    "duration": 0.0,  "magnitude": 16.0, "color": "#ff5f8d", "glyph": "✺",  "weight": 0.8,
+      "instant": true,
+      "categories": ["push_out", "combat", "control", "crates", "collect", "vehicle"]},
+    {"id": "repair",    "kind": "heal",    "duration": 0.0,  "magnitude": 38.0, "color": "#57e0c0", "glyph": "✚",  "weight": 0.9,
+      "instant": true,
+      "categories": ["combat", "vehicle"]},
+    {"id": "boost",     "kind": "boost",   "duration": 1.8,  "magnitude": 1.75, "color": "#ffb347", "glyph": "▶",  "weight": 1.1,
+      "categories": ["vehicle", "race"]}
+  ]
+}
