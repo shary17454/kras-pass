@@ -524,5 +524,17 @@
   "preset.reflex": "Reflex only",
   "preset.family": "Family",
   "party.mutators": "Modifiers",
-  "party.preset": "Preset"
+  "party.preset": "Preset",
+  "preset.custom": "Custom",
+  "party.games_count": "{n} games",
+  "category.push_out": "Push-out",
+  "category.ball_zone": "Ball & zone",
+  "category.vehicle": "Vehicles",
+  "category.collect": "Collection",
+  "category.control": "Territory",
+  "category.crates": "Crates",
+  "category.race": "Racing",
+  "category.reaction": "Reaction",
+  "category.survival": "Survival",
+  "category.combat": "Light combat"
 }

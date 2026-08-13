@@ -10,12 +10,22 @@ signal completed(champion_slot: int)
 
 var players: Array[PlayerConfig] = []
 var game_ids: Array[String] = []
+## Parallel to `game_ids`. Empty entries (or a shorter array) fall back to a
+## random arena at config-build time, so a session built the old way — before
+## presets existed — keeps working unchanged.
+var arena_ids: Array[String] = []
+## Applied to every game in the cup. A preset picks one set of modifiers for
+## the whole party rather than per-game, which matches how "a chaos cup" or
+## "a skill cup" is meant to feel — consistently, not one game at a time.
+var mutators: PackedStringArray = []
+var chaos := false
 var index := 0
 var points: Array[int] = []
 var results: Array[MatchResult] = []
 var seed_value := 1
 var allow_powerups := true
 var recorded := false
+var preset_id := ""
 
 var _points_table: Array = [5, 3, 2, 1]
 var _tie_share := true
@@ -31,6 +41,32 @@ func setup(player_list: Array[PlayerConfig], games: Array[String], rng_seed: int
 	if table.size() >= 4:
 		_points_table = table
 	_tie_share = Balance.flag("tuning", "scoring.tournament_points_tie_share", true)
+
+
+## The preset path: one call builds the whole schedule — games, arenas,
+## modifiers and the AI opponents' difficulty — from `data/mutators.json`.
+## `player_list`'s AI entries have their difficulty overwritten to match the
+## preset; the human slot (`is_human == true`) is left alone.
+static func from_preset(preset_id_: String, player_list: Array[PlayerConfig], rng_seed: int,
+		pool_override: Array = []) -> TournamentSession:
+	var plan := PlaylistGenerator.from_preset(preset_id_, rng_seed, pool_override)
+	var entries: Array = plan["entries"]
+	var games: Array[String] = []
+	var arenas: Array[String] = []
+	for e in entries:
+		games.append(String(e["game_id"]))
+		arenas.append(String(e["arena_id"]))
+	for p in player_list:
+		if not p.is_human:
+			p.ai_difficulty = int(plan["difficulty"])
+	var session := TournamentSession.new()
+	session.setup(player_list, games, rng_seed)
+	session.arena_ids = arenas
+	session.mutators = PackedStringArray(plan["mutators"])
+	session.chaos = bool(plan["chaos"])
+	session.allow_powerups = bool(plan["powerups"])
+	session.preset_id = preset_id_
+	return session
 
 
 func total_games() -> int:
@@ -57,9 +93,15 @@ func next_config() -> MatchConfig:
 	cfg.allow_powerups = allow_powerups
 	cfg.sudden_death = def.supports_sudden_death
 	cfg.seed = seed_value + index * 977
-	var rng := RandomNumberGenerator.new()
-	rng.seed = cfg.seed
-	cfg.arena_id = def.arena_ids[rng.randi_range(0, def.arena_ids.size() - 1)] if def.arena_ids.size() > 0 else ""
+	var picked := String(arena_ids[index]) if index < arena_ids.size() else ""
+	if picked != "" and def.arena_ids.has(picked):
+		cfg.arena_id = picked
+	elif def.arena_ids.size() > 0:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = cfg.seed
+		cfg.arena_id = def.arena_ids[rng.randi_range(0, def.arena_ids.size() - 1)]
+	cfg.mutators = mutators
+	cfg.chaos = chaos
 	cfg.subtitle_key = "tournament.title"
 	for p in players:
 		cfg.players.append(p)

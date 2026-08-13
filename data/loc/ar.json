@@ -524,5 +524,17 @@
   "preset.reflex": "رد فعل فقط",
   "preset.family": "ألعاب عائلية",
   "party.mutators": "المعدّلات",
-  "party.preset": "الإعداد الجاهز"
+  "party.preset": "الإعداد الجاهز",
+  "preset.custom": "مخصص",
+  "party.games_count": "{n} لعبة",
+  "category.push_out": "دفع خارج الساحة",
+  "category.ball_zone": "كرة ومنطقة",
+  "category.vehicle": "مركبات",
+  "category.collect": "تجميع",
+  "category.control": "سيطرة على مناطق",
+  "category.crates": "صناديق",
+  "category.race": "سباقات",
+  "category.reaction": "ردّ فعل",
+  "category.survival": "بقاء",
+  "category.combat": "قتال خفيف"
 }
