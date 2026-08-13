@@ -14,7 +14,15 @@ var _stage: Stage = Stage.WAIT
 var _timer := 0.0
 var _order: Array[int] = []
 var _locked := {}
-var _signal_at := 0.0
+## Simulated seconds since the signal fired. NOT wall-clock: the match runs on
+## fixed physics ticks (see MatchScene's tick order), and headless/fast-forward
+## play — the balance simulator, automated tests, a slow device — decouples
+## real time from simulated time. A brain's `reaction_time` is a delay in
+## simulated seconds, so the signal age it compares against has to be measured
+## the same way, or a bot literally never presses when ticks run faster than
+## real time (this is why every bot missed 100% of rounds until this was
+## fixed — see docs/qa-scenarios.md).
+var _signal_age := 0.0
 var _pillar: MeshInstance3D
 var _round_no := 0
 
@@ -63,6 +71,7 @@ func tick(delta: float) -> void:
 			if _timer <= 0.0:
 				_fire_signal()
 		Stage.SIGNAL:
+			_signal_age += delta
 			_watch_draws()
 			if _timer <= 0.0:
 				_resolve()
@@ -74,7 +83,7 @@ func tick(delta: float) -> void:
 func _fire_signal() -> void:
 	_stage = Stage.SIGNAL
 	_timer = 1.8
-	_signal_at = Time.get_ticks_msec() / 1000.0
+	_signal_age = 0.0
 	if _pillar != null and is_instance_valid(_pillar):
 		_pillar.material_override = MeshFactory.toon(Color("#ffd23f"), 2.4)
 	AudioManager.play_sfx("go")
@@ -101,7 +110,7 @@ func _watch_draws() -> void:
 			continue
 		if InputRouter.frame(i).just_pressed(InputFrame.Btn.ATTACK):
 			_order.append(i)
-			ctx.set_detail(i, "reaction_ms", int((Time.get_ticks_msec() / 1000.0 - _signal_at) * 1000.0))
+			ctx.set_detail(i, "reaction_ms", int(_signal_age * 1000.0))
 			AudioManager.play_sfx("correct")
 	if _order.size() >= ctx.alive_count() - _locked.size():
 		_timer = minf(_timer, 0.15)
@@ -127,7 +136,7 @@ func is_signalled() -> bool:
 
 
 func signal_age() -> float:
-	return (Time.get_ticks_msec() / 1000.0) - _signal_at
+	return _signal_age
 
 
 func is_locked(slot: int) -> bool:

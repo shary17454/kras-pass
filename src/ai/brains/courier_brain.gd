@@ -12,7 +12,11 @@ func decide(_delta: float) -> void:
 		return
 
 	var carrying: int = me.carrying
-	var bank_at: int = int(round(lerp(2.0, 6.0, risk)))
+	# Clamped to the game's real capacity: Star Rush can hold up to 8, so a
+	# greedy bot banks at 6; Crate Relay holds exactly 1, so bank_at collapses
+	# to 1 and a bot delivers the instant it is holding something instead of
+	# wandering off toward the next crate it cannot pick up.
+	var bank_at: int = mini(controller.max_carry(), int(round(lerp(2.0, 6.0, risk))))
 	var base: Vector3 = controller.call("base_position", slot) if controller.has_method("base_position") else arena.global_position
 
 	if carrying > 0 and (carrying >= bank_at or _threatened()):

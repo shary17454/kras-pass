@@ -152,6 +152,10 @@ func ai_script() -> Script:
 	return load("res://src/ai/brains/courier_brain.gd")
 
 
+func max_carry() -> int:
+	return MAX_CARRY
+
+
 func base_position(slot: int) -> Vector3:
 	for base in _bases:
 		if int(base["slot"]) == slot:

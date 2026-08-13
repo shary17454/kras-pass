@@ -35,6 +35,12 @@ var _phase_timer := 0.0
 var _phase_locked := false
 var _round_results: Array[MatchResult] = []
 var _round_index := 0
+## Actual simulated seconds spent in PLAYING/SUDDEN_DEATH this round. Recorded
+## directly rather than derived as `_round_duration() - ctx.time_left`: sudden
+## death resets `ctx.time_left` to its own, larger budget
+## (`sudden_death_seconds`), so that subtraction went negative for any round
+## that reached sudden death — see docs/qa-scenarios.md.
+var _round_elapsed := 0.0
 var _total_rounds := 1
 var _brains: Array = []
 var _fighters: Array[Fighter] = []
@@ -341,6 +347,7 @@ func _enter_phase(p: int) -> void:
 
 func _begin_play() -> void:
 	ctx.time_left = _round_duration()
+	_round_elapsed = 0.0
 	for f in _fighters:
 		f.control_enabled = true
 	hud.announce(Loc.t("hud.go"), UIKit.OK, 0.4)
@@ -466,6 +473,7 @@ func _tick_live(delta: float) -> void:
 	# 6. clock
 	if not (DevTools.available() and DevTools.freeze_timer):
 		ctx.time_left = maxf(0.0, ctx.time_left - delta)
+		_round_elapsed += delta
 	EventBus.match_time_changed.emit(ctx.time_left)
 	hud.set_time(ctx.time_left, float(_tuning.get("hurry_time", 5.0)))
 	_evaluate_end(delta)
@@ -643,7 +651,7 @@ func _finish_round() -> void:
 	var scores: Array[int] = controller.compute_scores()
 	var result := MatchResult.make(config.minigame_id, config.arena_id, scores, ctx.definition.higher_is_better())
 	result.round_index = _round_index
-	result.duration = _round_duration() - ctx.time_left
+	result.duration = _round_elapsed
 	result.elimination_order = ctx.elimination_order.duplicate()
 	result.sudden_death_used = _sudden_death_used
 	result.details = ctx.details.duplicate(true)

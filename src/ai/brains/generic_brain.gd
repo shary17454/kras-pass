@@ -58,8 +58,11 @@ func decide(_delta: float) -> void:
 		return
 
 	# 4. Idle: circle the middle rather than stand still, which keeps low-skill
-	#    bots from looking frozen.
-	var angle := float(slot) * TAU * 0.25 + Time.get_ticks_msec() * 0.0004
+	#    bots from looking frozen. Driven by simulated time (`_time`), not the
+	#    wall clock — under fast-forward play (the balance simulator, automated
+	#    tests) a wall-clock angle barely advances between ticks and bots would
+	#    look frozen anyway, which is the opposite of the point.
+	var angle := float(slot) * TAU * 0.25 + _time * 0.4
 	var r: float = arena.current_radius * 0.45
 	steer_to(arena.global_position + Vector3(cos(angle) * r, 0, sin(angle) * r), 0.7)
 	keep_off_edge(panic_margin)

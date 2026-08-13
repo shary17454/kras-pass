@@ -119,6 +119,14 @@ func allows_dash() -> bool:
 	return def == null or def.control_hints.has("dash") or def.control_hints.has("boost")
 
 
+## How many items `Fighter.carrying` can hold before it is full. Games that
+## carry-and-deliver (Star Rush, Crate Relay) override this; the AI's courier
+## brain reads it to decide when to bank rather than keep foraging. Default is
+## "effectively unlimited" for games that do not use `carrying` at all.
+func max_carry() -> int:
+	return 99
+
+
 # --- scoring ---------------------------------------------------------------
 
 ## Default: survival games rank by elimination order, everything else uses the
@@ -245,8 +253,20 @@ func on_credited_knockout(_attacker: int, _victim: int) -> void:
 
 
 func _queue_respawn(slot: int) -> void:
+	# Idempotent by construction, not just by convention: a fighter parked at
+	# the holding position is still below `fall_y` and still processed by
+	# `_check_out_of_bounds()` every tick. Without `f.alive = false`,
+	# `Fighter.on_fell_out()` has nothing to stop it firing again on the very
+	# next tick, which re-enters here, resets the countdown back to
+	# `respawn_delay`, and re-teleports to the same spot — a fighter that falls
+	# once in a non-eliminating game would never respawn at all. Setting
+	# `alive = false` makes Fighter's own guard swallow the repeat signal, and
+	# `respawn_at()` already flips it back to true when the wait is over.
+	if _respawn_timers.has(slot):
+		return
 	var f := ctx.fighter(slot)
 	if f != null and is_instance_valid(f):
+		f.alive = false
 		f.visible = false
 		f.velocity = Vector3.ZERO
 		f.global_position = Vector3(0, -500, 0)

@@ -29,7 +29,10 @@ func build() -> void:
 
 
 func _make_dock(arena: Arena, slot: int) -> Dictionary:
-	var ang := TAU * float(slot) / 4.0 + PI * 0.25
+	# Axis-aligned, matching Arena._build_cross(): the cross floor is a
+	# plus-sign with no collision on the diagonals, so a dock placed off-axis
+	# sits past the edge of the world. See the note in arena.gd.
+	var ang := TAU * float(slot) / 4.0
 	var r := arena.def.radius * 0.72
 	var pos := arena.global_position + Vector3(cos(ang) * r, 0.1, sin(ang) * r)
 	var col := UIKit.adapt(ctx.config.players[slot].color())
@@ -175,6 +178,14 @@ func hud_value(slot: int) -> String:
 
 func ai_script() -> Script:
 	return load("res://src/ai/brains/courier_brain.gd")
+
+
+## Only one crate at a time — `_on_taken` refuses a pickup while already
+## carrying. The courier brain needs to know this exactly, or its "hold a few
+## before banking" heuristic (tuned for Star Rush's stack of up to 8) never
+## triggers and bots wander forever instead of delivering.
+func max_carry() -> int:
+	return 1
 
 
 func base_position(slot: int) -> Vector3:

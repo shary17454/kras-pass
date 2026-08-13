@@ -314,9 +314,14 @@ func _build_cross() -> void:
 	_add_static_box(Vector3(w, def.thickness, arm * 2.0), Vector3(0, -def.thickness * 0.5, 0), def.floor_color)
 	_add_static_cylinder(w * 0.85, def.thickness * 1.05, Vector3(0, -def.thickness * 0.5, 0), def.accent_color.darkened(0.35))
 	# Four docks at the arm tips — used as delivery points by relay games.
+	# Axis-aligned (0°/90°/180°/270°), deliberately NOT offset by 45°: the floor
+	# built above is a plus-sign, with no collision on the diagonals between
+	# arms. A 45° offset here once put every dock past the edge of the actual
+	# floor, so a carrier walking toward its own dock fell through the world a
+	# few metres short every single time — see docs/qa-scenarios.md.
 	spawn_points.clear()
 	for i in 4:
-		var ang := TAU * i / 4.0 + PI * 0.25
+		var ang := TAU * i / 4.0
 		spawn_points.append(Vector3(cos(ang) * arm * 0.55, 1.3, sin(ang) * arm * 0.55))
 
 
