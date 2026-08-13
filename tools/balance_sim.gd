@@ -19,10 +19,17 @@ extends Node
 const OUT_DIR := "build/balance"
 const ROUND_SECONDS := 14.0
 const MAX_TICKS := 60 * 120
+## A deliberately combined, over-stuffed set — heavier than any real preset —
+## to stress MutatorSystem's compatibility/exclusion filtering: whatever does
+## not apply to a given game's category should be silently skipped rather than
+## crash it. Mirrors the "chaos" preset's own mutators for the chaos pass.
+const MUTATOR_STRESS_SET := ["low_gravity", "hyper_speed", "tiny", "double_hazards", "ice_floor", "short_fuse"]
+const CHAOS_MUTATOR_SET := ["powerup_rush", "double_hazards"]
 
 var runs := 6
 var only := ""
 var _report := []
+var _mutator_report := []
 var _started := 0
 ## Progress goes to a file as well as stdout: Godot buffers stdout when it is
 ## piped, which makes a long simulation look hung when it is merely quiet.
@@ -48,6 +55,14 @@ func _ready() -> void:
 			def.id, row["tie_rate"] * 100.0, row["slot_bias"] * 100.0, row["character_bias"] * 100.0,
 			row["avg_duration"], row["expert_edge"] * 100.0,
 			"   ⚠ " + ", ".join(row["flags"]) if not row["flags"].is_empty() else ""])
+
+	print("\nmutator & chaos smoke pass:")
+	for def in _games():
+		var mrow := await _mutator_smoke(def)
+		_mutator_report.append(mrow)
+		print("  %-16s mutated %s  chaos %s%s" % [
+			def.id, "ok" if mrow["mutated_ok"] else "FAIL", "ok" if mrow["chaos_ok"] else "FAIL",
+			"   ⚠ " + ", ".join(mrow["flags"]) if not mrow["flags"].is_empty() else ""])
 	_write_reports()
 	print("\nfinished in %.1fs — %s/report.html" % [(Time.get_ticks_msec() - _started) / 1000.0, OUT_DIR])
 	get_tree().quit(0 if _worst_severity() < 2 else 1)
@@ -180,6 +195,55 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 	return expert_total / total
 
 
+## MutatorSystem and chaos mode never went through the bot tournament before
+## they had a menu path to reach them — this is the same "does it actually
+## finish, cleanly" check the base game gets, run once with an intentionally
+## over-stuffed mutator set and once with chaos on. Not a balance measurement:
+## mutators are supposed to skew things. The bar is "completes, no new errors".
+func _mutator_smoke(def: MiniGameDef) -> Dictionary:
+	var roster := Registry.characters()
+	var chars: Array = []
+	for slot in 4:
+		chars.append(roster[slot % roster.size()].id)
+
+	var errors_before := Log.error_count()
+	var mutated_cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 5501)
+	mutated_cfg.duration_override = ROUND_SECONDS
+	mutated_cfg.rounds = 1
+	mutated_cfg.mutators = PackedStringArray(MUTATOR_STRESS_SET)
+	var mutated_result := await _play(mutated_cfg)
+	var mutated_ok := mutated_result != null
+	var errors_after_mutated := Log.error_count()
+
+	var chaos_cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 5502)
+	chaos_cfg.duration_override = ROUND_SECONDS
+	chaos_cfg.rounds = 1
+	chaos_cfg.chaos = true
+	chaos_cfg.mutators = PackedStringArray(CHAOS_MUTATOR_SET)
+	var chaos_result := await _play(chaos_cfg)
+	var chaos_ok := chaos_result != null
+	var errors_after_chaos := Log.error_count()
+
+	var flags: Array = []
+	if not mutated_ok:
+		flags.append("did not finish under a stress mutator set")
+	if not chaos_ok:
+		flags.append("did not finish under chaos mode")
+	if errors_after_mutated > errors_before:
+		flags.append("%d error(s) logged under a stress mutator set" % (errors_after_mutated - errors_before))
+	if errors_after_chaos > errors_after_mutated:
+		flags.append("%d error(s) logged under chaos mode" % (errors_after_chaos - errors_after_mutated))
+
+	return {
+		"id": def.id,
+		"name": def.display_name(),
+		"mutated_ok": mutated_ok,
+		"chaos_ok": chaos_ok,
+		"flags": flags,
+		"severity": 0 if flags.is_empty() else 2,
+	}
+
+
 func _play(cfg: MatchConfig) -> MatchResult:
 	var script: Script = load("res://src/match/match_scene.gd")
 	var scene: Node = script.new()
@@ -256,6 +320,8 @@ func _worst_severity() -> int:
 	var worst := 0
 	for row in _report:
 		worst = maxi(worst, int(row["severity"]))
+	for row in _mutator_report:
+		worst = maxi(worst, int(row["severity"]))
 	return worst
 
 
@@ -270,6 +336,7 @@ func _write_reports() -> void:
 			"runs_per_game": runs,
 			"round_seconds": ROUND_SECONDS,
 			"games": _report,
+			"mutator_smoke": _mutator_report,
 		}, "  "))
 		json.close()
 	var html := FileAccess.open("%s/report.html" % OUT_DIR, FileAccess.WRITE)
@@ -291,6 +358,14 @@ func _html() -> String:
 			float(r["character_bias"]) * 100.0, float(r["expert_edge"]) * 100.0,
 			float(r["avg_score"]), colour,
 			", ".join(r["flags"]) if not r["flags"].is_empty() else "ok"]
+	var mutator_rows := ""
+	for r in _mutator_report:
+		var colour: String = "#f55" if int(r["severity"]) > 0 else "#1d3"
+		mutator_rows += """<tr><td class="id">%s</td><td>%s</td><td>%s</td>
+<td><span class="dot" style="background:%s"></span>%s</td></tr>\n""" % [
+			r["name"], "ok" if r["mutated_ok"] else "FAIL", "ok" if r["chaos_ok"] else "FAIL",
+			colour, ", ".join(r["flags"]) if not r["flags"].is_empty() else "ok"]
+
 	return """<!doctype html><meta charset="utf-8"><title>Kras Pass — balance report</title>
 <style>
 body{background:#0d1020;color:#f2f4ff;font:14px/1.5 -apple-system,system-ui,sans-serif;margin:40px}
@@ -311,4 +386,8 @@ spawn slot or competitor sits above an even share; characters are rotated throug
 between runs so the two cannot be confused. <b>Expert share</b> is the fraction of points
 an Expert pair takes from an Easy pair with identical characters, mirrored across slots —
 50%% means the difficulty tiers do nothing in this game.</p>
-""" % [Time.get_datetime_string_from_system(), runs, ROUND_SECONDS, rows]
+<h1 style="margin-top:32px">Mutator &amp; chaos smoke pass</h1>
+<div class="sub">one run under a deliberately over-stuffed mutator set, one run with chaos mode on</div>
+<table><tr><th>Mini-game</th><th>Mutated run</th><th>Chaos run</th><th>Verdict</th></tr>
+%s</table>
+""" % [Time.get_datetime_string_from_system(), runs, ROUND_SECONDS, rows, mutator_rows]

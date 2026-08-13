@@ -75,6 +75,17 @@ code defects, so left for a human rather than guessed at:
   variance on a handful of wins per slot), not a real seat advantage. Re-run
   with `--runs=40+` before trusting it.
 
+The same tool also runs a **mutator & chaos smoke pass**: one match per game
+under a deliberately over-stuffed mutator set (`low_gravity`, `hyper_speed`,
+`tiny`, `double_hazards`, `ice_floor`, `short_fuse` all at once — heavier than
+any real preset, to stress `MutatorSystem`'s per-category compatibility
+filtering) and one under chaos mode. This is not a balance measurement —
+mutators are *meant* to skew things — the bar is just "completes, no new
+console errors." Neither MutatorSystem nor chaos mode had been through the bot
+tournament before they had a menu path to reach them (`data/mutators.json`'s
+`presets` table). As of the run that added this pass, all 21 games completed
+cleanly under both conditions.
+
 ---
 
 ## Covered automatically
