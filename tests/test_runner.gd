@@ -17,6 +17,7 @@ const SUITES := [
 	"res://tests/suites/test_mutators.gd",
 	"res://tests/suites/test_matches.gd",
 	"res://tests/suites/test_race_conditions.gd",
+	"res://tests/suites/test_lifecycle.gd",
 ]
 
 var _t: TestHarness
