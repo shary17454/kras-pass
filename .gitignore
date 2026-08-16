@@ -20,6 +20,7 @@ build/*
 !build/ios/**
 build/ios/KrasPass.xcarchive/
 build/ios/exported-appstore/
+build/ios/KrasPass.xcodeproj/project.xcworkspace/xcuserdata/
 
 # OS
 .DS_Store
