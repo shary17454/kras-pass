@@ -13,6 +13,14 @@ exports/
 *.pck
 *.zip
 
+# Xcode Cloud needs the generated iOS project, but not local archives/exports.
+!build/
+build/*
+!build/ios/
+!build/ios/**
+build/ios/KrasPass.xcarchive/
+build/ios/exported-appstore/
+
 # OS
 .DS_Store
 Thumbs.db
