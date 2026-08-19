@@ -34,12 +34,6 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
-	<key>NSCameraUsageDescription</key>
-	<string>Kras Pass does not use the camera during gameplay.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Kras Pass does not use the microphone during gameplay.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Kras Pass does not access the photo library during gameplay.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

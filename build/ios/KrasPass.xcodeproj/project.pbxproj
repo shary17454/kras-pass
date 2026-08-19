@@ -203,7 +203,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FF8DBB11FBA9DE1009DE660 /* dummy.cpp in Sources */,
-				90B4C2B62680C7E90039117A /* dummy.swift */,
+				90B4C2B62680C7E90039117A /* dummy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,4 +408,3 @@
 	};
 	rootObject = D0BCFE2C18AEBDA2004A7AAE /* Project object */;
 }
-

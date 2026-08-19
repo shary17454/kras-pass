@@ -288,9 +288,13 @@ static func from_dict(d: Dictionary) -> ReplayData:
 
 
 func _pack_keyframes() -> String:
+	if keyframes.is_empty():
+		return ""
 	var flat := PackedByteArray()
 	for k in keyframes.keys():
 		flat.append_array(keyframes[k])
+	if flat.is_empty():
+		return ""
 	return Marshalls.raw_to_base64(flat)
 
 
