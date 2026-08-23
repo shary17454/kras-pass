@@ -28,6 +28,7 @@ to this project.
 - [Localization and accessibility](#localization-and-accessibility)
 - [Tests](#tests)
 - [Platforms](#platforms)
+- [Support](#support)
 - [Known limitations](#known-limitations)
 
 ---
@@ -65,6 +66,12 @@ godot --headless --path . tests/compile_check.tscn
 | Dev menu (debug builds only) | `F1` | — | — |
 
 All keyboard bindings are remappable in **Settings → Controls**.
+
+## Support
+
+For App Store support requests, questions, or bug reports, see
+[SUPPORT.md](SUPPORT.md) or contact the developer at
+sharyalhwaid@gmail.com.
 
 ---
 

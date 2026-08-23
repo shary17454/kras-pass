@@ -29,6 +29,11 @@ SCREENSHOT_GROUPS = {
         ROOT / "assets/app_store/screenshots/ipad-02-fast-rounds.png",
         ROOT / "assets/app_store/screenshots/ipad-03-local-chaos.png",
     ],
+    "APP_IPAD_PRO_3GEN_129": [
+        ROOT / "assets/app_store/screenshots/ipad-01-party-arena.png",
+        ROOT / "assets/app_store/screenshots/ipad-02-fast-rounds.png",
+        ROOT / "assets/app_store/screenshots/ipad-03-local-chaos.png",
+    ],
 }
 
 
@@ -149,16 +154,7 @@ def get_or_create_set(display_type: str) -> str:
     return created["data"]["id"]
 
 
-def set_screenshots(set_id: str) -> dict[str, dict]:
-    response = request(
-        "GET",
-        f"{API}/appScreenshotSets/{set_id}/appScreenshots"
-        "?fields%5BappScreenshots%5D=fileName,assetDeliveryState&limit=50",
-    )
-    return {item["attributes"].get("fileName"): item for item in response.get("data", [])}
-
-
-def remove_failed_or_wrong_screenshots() -> list[str]:
+def remove_existing_screenshots() -> list[str]:
     removed: list[str] = []
     sets = request(
         "GET",
@@ -174,11 +170,9 @@ def remove_failed_or_wrong_screenshots() -> list[str]:
     for screenshot in sets.get("included", []):
         screenshot_id = screenshot["id"]
         attrs = screenshot.get("attributes", {})
-        file_name = attrs.get("fileName", "")
         state = attrs.get("assetDeliveryState", {}).get("state")
         display_type = screenshot_to_set.get(screenshot_id, "")
-        wrong_family = file_name.startswith("ipad-") and "IPAD" not in display_type
-        if state == "FAILED" or wrong_family:
+        if display_type in SCREENSHOT_GROUPS or state == "FAILED":
             delete(f"{API}/appScreenshots/{screenshot_id}")
             removed.append(screenshot_id)
     return removed
@@ -220,20 +214,15 @@ def upload_screenshot(set_id: str, path: Path) -> str:
 
 
 def main() -> None:
-    removed = remove_failed_or_wrong_screenshots()
+    removed = remove_existing_screenshots()
     uploaded: dict[str, list[str]] = {}
     skipped: dict[str, list[str]] = {}
     for display_type, files in SCREENSHOT_GROUPS.items():
         set_id = get_or_create_set(display_type)
         uploaded[display_type] = []
         skipped[display_type] = []
-        existing = set_screenshots(set_id)
         for path in files:
-            state = existing.get(path.name, {}).get("attributes", {}).get("assetDeliveryState", {}).get("state")
-            if state == "COMPLETE":
-                skipped[display_type].append(path.name)
-            else:
-                uploaded[display_type].append(upload_screenshot(set_id, path))
+            uploaded[display_type].append(upload_screenshot(set_id, path))
 
     states = {}
     for display_type, ids in uploaded.items():

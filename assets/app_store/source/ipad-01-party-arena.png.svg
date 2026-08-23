@@ -5,32 +5,55 @@
       <stop offset=".48" stop-color="#18213d"/>
       <stop offset="1" stop-color="#101013"/>
     </linearGradient>
-    <linearGradient id="arena" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#26365f"/>
-      <stop offset="1" stop-color="#11172c"/>
-    </linearGradient>
   </defs>
-  <rect width="2732" height="2048" fill="#11182f"/>
-  <rect x="0" y="0" width="2732" height="368" fill="#1c294d"/>
-  <circle cx="2267" cy="286" r="437" fill="#ffb347" opacity=".24"/>
-  <rect x="191" y="228" width="983" height="127" rx="28" fill="#f8f2de" opacity="1"/>
-  <rect x="191" y="390" width="1256" height="45" rx="13" fill="#9da8c8" opacity="1"/>
-  <rect x="191" y="611" width="655" height="266" rx="28" fill="#202942" opacity="1"/>
-  <rect x="227" y="674" width="222" height="37" rx="8" fill="#ffffff" opacity=".55"/>
-  <rect x="227" y="757" width="406" height="47" rx="8" fill="#ffb347" opacity=".92"/>
-  <rect x="1038" y="409" width="1529" height="1146" rx="42" fill="#1d2d55" stroke="#f8f2de" stroke-width="6" opacity="1"/>
+  <rect width="2732" height="2048" fill="url(#bg)"/>
+  <rect x="0" y="0" width="2732" height="245" fill="#0d1020"/>
+  <rect x="0" y="1762" width="2732" height="286" fill="#0d1020" opacity=".78"/>
+  <text x="122" y="156" font-family="Arial" font-size="51" font-weight="800" fill="#ffb347">Kras Pass</text>
+  <text x="2610" y="156" font-family="Arial" font-size="38" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English - Local Party Game</text>
+
+  <rect x="122" y="368" width="683" height="860" rx="206" fill="#1a1f3a" opacity=".95"/>
+  <text x="156" y="428" font-family="Arial" font-size="87" font-weight="800" fill="#ffb347" text-anchor="start">Ring Rumble</text>
+  <text x="156" y="480" font-family="Arial" font-size="51" font-weight="600" fill="#f2f4ff" text-anchor="start">Push rivals out of the arena</text>
+  <text x="156" y="533" font-family="Arial" font-size="51" font-weight="500" fill="#9aa2c8" text-anchor="start">Round 2 of 4</text>
+  <rect x="156" y="573" width="478" height="42" rx="10" fill="#252c52" opacity="1"/>
+  <text x="180" y="603" font-family="Arial" font-size="38" font-weight="700" fill="#57e0c0" text-anchor="start">Power-ups ON</text>
+  <rect x="156" y="638" width="532" height="42" rx="10" fill="#252c52" opacity="1"/>
+  <text x="180" y="668" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Touch controls visible</text>
+  <circle cx="1366" cy="204" r="118" fill="#1a1f3a" stroke="#ffb347" stroke-width="5"/>
+  <text x="1366" y="235" font-family="Arial" font-size="87" font-weight="800" fill="#f2f4ff" text-anchor="middle">0:42</text>
+
+  <rect x="928" y="409" width="1584" height="1146" rx="36" fill="#17264a" stroke="#f8f2de" stroke-width="6"/>
   <g opacity=".18" stroke="#ffffff" stroke-width="3">
-    <path d="M1098 787 H2507"/>
-    <path d="M1098 1165 H2507"/>
-    <path d="M1542 469 V1495"/>
-    <path d="M2047 469 V1495"/>
+    <path d="M978 787 H2462"/>
+    <path d="M978 1165 H2462"/>
+    <path d="M1450 459 V1505"/>
+    <path d="M1973 459 V1505"/>
   </g>
-  <circle cx="1420" cy="775" r="95" fill="#60e27a" stroke="#f7ffe8" stroke-width="8"/>
-  <circle cx="2169" cy="798" r="95" fill="#ff7048" stroke="#fff0e8" stroke-width="8"/>
-  <circle cx="1588" cy="1234" r="95" fill="#51d7ff" stroke="#e8fbff" stroke-width="8"/>
-  <circle cx="1985" cy="1188" r="95" fill="#ffd43b" stroke="#fff8d0" stroke-width="8"/>
-  <path d="M1313 982 C1619 661 2001 1302 2291 936" fill="none" stroke="#ffb347" stroke-width="18" stroke-linecap="round" opacity=".78"/>
-  <rect x="218" y="1699" width="2294" height="163" rx="32" fill="#202942" opacity="1"/>
-  <rect x="327" y="1757" width="491" height="36" rx="10" fill="#f8f2de" opacity="1"/>
-  <rect x="1065" y="1757" width="1092" height="28" rx="10" fill="#9da8c8" opacity="1"/>
+  <path d="M1165 1004 C1514 615 1941 1360 2258 890" fill="none" stroke="#ffb347" stroke-width="18" stroke-linecap="round" opacity=".75"/>
+  <circle cx="1324" cy="764" r="87" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
+  <circle cx="2100" cy="798" r="87" fill="#ff7048" stroke="#fff0e8" stroke-width="8"/>
+  <circle cx="1545" cy="1234" r="87" fill="#51d7ff" stroke="#e8fbff" stroke-width="8"/>
+  <circle cx="1910" cy="1188" r="87" fill="#ffd43b" stroke="#fff8d0" stroke-width="8"/>
+  <circle cx="1720" cy="982" r="49" fill="#ffffff" opacity=".9"/>
+
+  <circle cx="327" cy="1433" r="122" fill="#252c52" stroke="#9aa2c8" stroke-width="4" opacity=".92"/>
+  <circle cx="2322" cy="1392" r="98" fill="#252c52" stroke="#ffb347" stroke-width="4" opacity=".92"/>
+  <circle cx="2486" cy="1536" r="98" fill="#252c52" stroke="#57e0c0" stroke-width="4" opacity=".92"/>
+<rect x="122" y="1679" width="610" height="194" rx="46" fill="#1a1f3a" opacity=".96" stroke="#60e27a" stroke-width="4"/>
+<circle cx="156" cy="1713" r="13" fill="#60e27a"/>
+<text x="180" y="1718" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Nabta</text>
+<text x="180" y="1757" font-family="Arial" font-size="51" font-weight="800" fill="#60e27a" text-anchor="start">12</text>
+<rect x="748" y="1679" width="610" height="194" rx="46" fill="#1a1f3a" opacity=".96" stroke="#ff7048" stroke-width="4"/>
+<circle cx="782" cy="1713" r="13" fill="#ff7048"/>
+<text x="806" y="1718" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Sakhra</text>
+<text x="806" y="1757" font-family="Arial" font-size="51" font-weight="800" fill="#ff7048" text-anchor="start">8</text>
+<rect x="1374" y="1679" width="610" height="194" rx="46" fill="#1a1f3a" opacity=".96" stroke="#51d7ff" stroke-width="4"/>
+<circle cx="1408" cy="1713" r="13" fill="#51d7ff"/>
+<text x="1432" y="1718" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Mowja</text>
+<text x="1432" y="1757" font-family="Arial" font-size="51" font-weight="800" fill="#51d7ff" text-anchor="start">10</text>
+<rect x="2000" y="1679" width="610" height="194" rx="46" fill="#1a1f3a" opacity=".96" stroke="#ffd43b" stroke-width="4"/>
+<circle cx="2034" cy="1713" r="13" fill="#ffd43b"/>
+<text x="2058" y="1718" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Barq</text>
+<text x="2058" y="1757" font-family="Arial" font-size="51" font-weight="800" fill="#ffd43b" text-anchor="start">6</text>
 </svg>

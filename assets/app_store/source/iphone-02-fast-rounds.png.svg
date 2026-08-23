@@ -5,32 +5,22 @@
       <stop offset=".48" stop-color="#18213d"/>
       <stop offset="1" stop-color="#101013"/>
     </linearGradient>
-    <linearGradient id="arena" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#26365f"/>
-      <stop offset="1" stop-color="#11172c"/>
-    </linearGradient>
   </defs>
-  <rect width="2778" height="1284" fill="#11182f"/>
-  <rect x="0" y="0" width="2778" height="231" fill="#1c294d"/>
-  <circle cx="2305" cy="179" r="444" fill="#51d7ff" opacity=".24"/>
-  <rect x="194" y="105" width="1000" height="129" rx="28" fill="#f8f2de" opacity="1"/>
-  <rect x="194" y="269" width="1277" height="46" rx="13" fill="#9da8c8" opacity="1"/>
-  <rect x="194" y="493" width="666" height="166" rx="28" fill="#202942" opacity="1"/>
-  <rect x="230" y="532" width="226" height="23" rx="8" fill="#ffffff" opacity=".55"/>
-  <rect x="230" y="584" width="412" height="29" rx="8" fill="#51d7ff" opacity=".92"/>
-  <rect x="1055" y="256" width="1555" height="719" rx="42" fill="#1d2d55" stroke="#f8f2de" stroke-width="6" opacity="1"/>
-  <g opacity=".18" stroke="#ffffff" stroke-width="3">
-    <path d="M1115 493 H2550"/>
-    <path d="M1115 730 H2550"/>
-    <path d="M1568 316 V915"/>
-    <path d="M2081 316 V915"/>
-  </g>
-  <circle cx="1443" cy="486" r="97" fill="#60e27a" stroke="#f7ffe8" stroke-width="8"/>
-  <circle cx="2205" cy="500" r="97" fill="#ff7048" stroke="#fff0e8" stroke-width="8"/>
-  <circle cx="1614" cy="773" r="97" fill="#51d7ff" stroke="#e8fbff" stroke-width="8"/>
-  <circle cx="2019" cy="744" r="97" fill="#ffd43b" stroke="#fff8d0" stroke-width="8"/>
-  <path d="M1334 615 C1645 414 2034 816 2330 586" fill="none" stroke="#51d7ff" stroke-width="18" stroke-linecap="round" opacity=".78"/>
-  <rect x="222" y="1065" width="2333" height="102" rx="32" fill="#202942" opacity="1"/>
-  <rect x="333" y="1101" width="500" height="23" rx="10" fill="#f8f2de" opacity="1"/>
-  <rect x="1083" y="1101" width="1111" height="17" rx="10" fill="#9da8c8" opacity="1"/>
+  <rect width="2778" height="1284" fill="url(#bg)"/>
+  <rect x="0" y="0" width="2778" height="154" fill="#0d1020"/>
+  <rect x="0" y="1105" width="2778" height="179" fill="#0d1020" opacity=".78"/>
+  <text x="125" y="98" font-family="Arial" font-size="52" font-weight="800" fill="#ffb347">Kras Pass</text>
+  <text x="2653" y="98" font-family="Arial" font-size="38" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English - Local Party Game</text>
+
+  <text x="125" y="205" font-family="Arial" font-size="88" font-weight="800" fill="#ffb347" text-anchor="start">Tournament Setup</text>
+  <rect x="125" y="321" width="1222" height="109" rx="26" fill="#1a1f3a" opacity=".96"/><text x="159" y="384" font-family="Arial" font-size="52" font-weight="600" fill="#9aa2c8" text-anchor="start">Players</text><text x="1313" y="384" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">4</text><rect x="125" y="446" width="1222" height="109" rx="26" fill="#1a1f3a" opacity=".96"/><text x="159" y="509" font-family="Arial" font-size="52" font-weight="600" fill="#9aa2c8" text-anchor="start">Preset</text><text x="1313" y="509" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">Chaos Cup</text><rect x="125" y="571" width="1222" height="109" rx="26" fill="#1a1f3a" opacity=".96"/><text x="159" y="634" font-family="Arial" font-size="52" font-weight="600" fill="#9aa2c8" text-anchor="start">Rounds</text><text x="1313" y="634" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">6</text><rect x="125" y="696" width="1222" height="109" rx="26" fill="#1a1f3a" opacity=".96"/><text x="159" y="759" font-family="Arial" font-size="52" font-weight="600" fill="#9aa2c8" text-anchor="start">Difficulty</text><text x="1313" y="759" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">Hard</text>
+  <rect x="125" y="924" width="1222" height="128" rx="30" fill="#ffb347" opacity="1"/>
+  <text x="736" y="1007" font-family="Arial" font-size="52" font-weight="800" fill="#101321" text-anchor="middle">Start Cup</text>
+  <rect x="1527" y="308" width="944" height="590" rx="141" fill="#1a1f3a" opacity=".96" stroke="#57e0c0" stroke-width="4"/>
+  <circle cx="1999" cy="526" r="166" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
+  <text x="1999" y="718" font-family="Arial" font-size="88" font-weight="800" fill="#f2f4ff" text-anchor="middle">Nabta</text>
+  <text x="1999" y="795" font-family="Arial" font-size="38" font-weight="600" fill="#9aa2c8" text-anchor="middle">Speed 85  Jump 70  Control 90</text>
+  <rect x="1577" y="821" width="777" height="34" rx="8" fill="#252c52" opacity="1"/>
+  <text x="1999" y="851" font-family="Arial" font-size="38" font-weight="700" fill="#57e0c0" text-anchor="middle">Unlocked character selected</text>
+
 </svg>
