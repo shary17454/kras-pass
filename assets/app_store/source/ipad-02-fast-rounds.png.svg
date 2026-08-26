@@ -1,26 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2048" viewBox="0 0 2732 2048">
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2732" viewBox="0 0 2048 2732">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0a1022"/>
-      <stop offset=".48" stop-color="#18213d"/>
+      <stop offset=".52" stop-color="#18213d"/>
       <stop offset="1" stop-color="#101013"/>
     </linearGradient>
   </defs>
-  <rect width="2732" height="2048" fill="url(#bg)"/>
-  <rect x="0" y="0" width="2732" height="245" fill="#0d1020"/>
-  <rect x="0" y="1762" width="2732" height="286" fill="#0d1020" opacity=".78"/>
-  <text x="122" y="156" font-family="Arial" font-size="51" font-weight="800" fill="#ffb347">Kras Pass</text>
-  <text x="2610" y="156" font-family="Arial" font-size="38" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English - Local Party Game</text>
+  <rect width="2048" height="2732" fill="url(#bg)"/>
+  <rect x="0" y="0" width="2048" height="245" fill="#0d1020"/>
+  <rect x="0" y="2555" width="2048" height="177" fill="#0d1020" opacity=".78"/>
+  <text x="143" y="151" font-family="Arial" font-size="69" font-weight="800" fill="#ffb347">Kras Pass</text>
+  <text x="1905" y="151" font-family="Arial" font-size="53" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English</text>
 
-  <text x="122" y="327" font-family="Arial" font-size="87" font-weight="800" fill="#ffb347" text-anchor="start">Tournament Setup</text>
-  <rect x="122" y="512" width="1202" height="174" rx="41" fill="#1a1f3a" opacity=".96"/><text x="156" y="612" font-family="Arial" font-size="51" font-weight="600" fill="#9aa2c8" text-anchor="start">Players</text><text x="1290" y="612" font-family="Arial" font-size="51" font-weight="800" fill="#f2f4ff" text-anchor="end">4</text><rect x="122" y="712" width="1202" height="174" rx="41" fill="#1a1f3a" opacity=".96"/><text x="156" y="812" font-family="Arial" font-size="51" font-weight="600" fill="#9aa2c8" text-anchor="start">Preset</text><text x="1290" y="812" font-family="Arial" font-size="51" font-weight="800" fill="#f2f4ff" text-anchor="end">Chaos Cup</text><rect x="122" y="912" width="1202" height="174" rx="41" fill="#1a1f3a" opacity=".96"/><text x="156" y="1012" font-family="Arial" font-size="51" font-weight="600" fill="#9aa2c8" text-anchor="start">Rounds</text><text x="1290" y="1012" font-family="Arial" font-size="51" font-weight="800" fill="#f2f4ff" text-anchor="end">6</text><rect x="122" y="1112" width="1202" height="174" rx="41" fill="#1a1f3a" opacity=".96"/><text x="156" y="1212" font-family="Arial" font-size="51" font-weight="600" fill="#9aa2c8" text-anchor="start">Difficulty</text><text x="1290" y="1212" font-family="Arial" font-size="51" font-weight="800" fill="#f2f4ff" text-anchor="end">Hard</text>
-  <rect x="122" y="1474" width="1202" height="204" rx="48" fill="#ffb347" opacity="1"/>
-  <text x="723" y="1607" font-family="Arial" font-size="51" font-weight="800" fill="#101321" text-anchor="middle">Start Cup</text>
-  <rect x="1502" y="491" width="928" height="942" rx="226" fill="#1a1f3a" opacity=".96" stroke="#57e0c0" stroke-width="4"/>
-  <circle cx="1966" cy="839" r="163" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
-  <text x="1966" y="1146" font-family="Arial" font-size="87" font-weight="800" fill="#f2f4ff" text-anchor="middle">Nabta</text>
-  <text x="1966" y="1269" font-family="Arial" font-size="38" font-weight="600" fill="#9aa2c8" text-anchor="middle">Speed 85  Jump 70  Control 90</text>
-  <rect x="1552" y="1310" width="764" height="34" rx="8" fill="#252c52" opacity="1"/>
-  <text x="1966" y="1357" font-family="Arial" font-size="38" font-weight="700" fill="#57e0c0" text-anchor="middle">Unlocked character selected</text>
+  <text x="143" y="409" font-family="Arial" font-size="131" font-weight="800" fill="#ffb347" text-anchor="start">Tournament Setup</text>
+  <text x="143" y="546" font-family="Arial" font-size="69" font-weight="600" fill="#9aa2c8" text-anchor="start">Pick players, choose a preset, start the cup.</text>
+  <rect x="143" y="669" width="1762" height="180" rx="36" fill="#1a1f3a" opacity=".96"/><text x="177" y="773" font-family="Arial" font-size="69" font-weight="600" fill="#9aa2c8" text-anchor="start">Players</text><text x="1871" y="773" font-family="Arial" font-size="69" font-weight="800" fill="#f2f4ff" text-anchor="end">4</text><rect x="143" y="888" width="1762" height="180" rx="36" fill="#1a1f3a" opacity=".96"/><text x="177" y="992" font-family="Arial" font-size="69" font-weight="600" fill="#9aa2c8" text-anchor="start">Preset</text><text x="1871" y="992" font-family="Arial" font-size="69" font-weight="800" fill="#f2f4ff" text-anchor="end">Chaos Cup</text><rect x="143" y="1107" width="1762" height="180" rx="36" fill="#1a1f3a" opacity=".96"/><text x="177" y="1211" font-family="Arial" font-size="69" font-weight="600" fill="#9aa2c8" text-anchor="start">Rounds</text><text x="1871" y="1211" font-family="Arial" font-size="69" font-weight="800" fill="#f2f4ff" text-anchor="end">6</text><rect x="143" y="1326" width="1762" height="180" rx="36" fill="#1a1f3a" opacity=".96"/><text x="177" y="1430" font-family="Arial" font-size="69" font-weight="600" fill="#9aa2c8" text-anchor="start">Difficulty</text><text x="1871" y="1430" font-family="Arial" font-size="69" font-weight="800" fill="#f2f4ff" text-anchor="end">Hard</text>
+  <rect x="143" y="1475" width="1762" height="191" rx="38" fill="#ffb347" opacity="1"/>
+  <text x="1024" y="1598" font-family="Arial" font-size="69" font-weight="800" fill="#101321" text-anchor="middle">Start Cup</text>
+  <rect x="143" y="1639" width="1762" height="601" rx="120" fill="#1a1f3a" opacity=".96" stroke="#57e0c0" stroke-width="8"/>
+  <circle cx="1024" cy="1843" r="194" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
+  <text x="1024" y="2062" font-family="Arial" font-size="131" font-weight="800" fill="#f2f4ff" text-anchor="middle">Nabta</text>
+  <text x="1024" y="2158" font-family="Arial" font-size="53" font-weight="600" fill="#9aa2c8" text-anchor="middle">Speed 85  Jump 70  Control 90</text>
 
 </svg>

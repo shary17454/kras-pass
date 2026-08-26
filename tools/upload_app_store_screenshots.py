@@ -16,7 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 API = "https://api.appstoreconnect.apple.com/v1"
 ISSUER_ID = "26cc2279-524d-4d33-ba75-9333cf111ad1"
 KEY_ID = "668Z2T3Q47"
-APP_STORE_VERSION_LOCALIZATION_ID = "40f54014-70ee-426d-ada2-6279b13e5f59"
+APP_STORE_VERSION_LOCALIZATION_ID = os.environ.get(
+    "APP_STORE_VERSION_LOCALIZATION_ID",
+    "40f54014-70ee-426d-ada2-6279b13e5f59",
+)
 
 SCREENSHOT_GROUPS = {
     "APP_IPHONE_65": [

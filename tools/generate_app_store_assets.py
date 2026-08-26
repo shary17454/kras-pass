@@ -79,6 +79,123 @@ def icon_svg() -> str:
 """
 
 
+def portrait_screenshot_svg(width: int, height: int, screen: str, accent: str) -> str:
+    margin = int(width * 0.07)
+    title_size = int(width * 0.064)
+    body_size = int(width * 0.034)
+    small_size = int(width * 0.026)
+    top_h = int(height * 0.09)
+    bottom_h = int(height * 0.065)
+
+    def text(x: int, y: int, value: str, size: int, fill: str = "#f2f4ff", weight: int = 600, anchor: str = "start") -> str:
+        return f'<text x="{x}" y="{y}" font-family="Arial" font-size="{size}" font-weight="{weight}" fill="{fill}" text-anchor="{anchor}">{value}</text>'
+
+    def pill(x: int, y: int, w: int, h: int, fill: str, stroke: str = "", opacity: str = "1") -> str:
+        stroke_part = f' stroke="{stroke}" stroke-width="{max(3, int(width * 0.004))}"' if stroke else ""
+        return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{int(h * 0.20)}" fill="{fill}" opacity="{opacity}"{stroke_part}/>'
+
+    player_colors = ["#60e27a", "#ff7048", "#51d7ff", "#ffd43b"]
+    player_names = ["Nabta", "Sakhra", "Mowja", "Barq"]
+
+    if screen == "gameplay":
+        arena_x = margin
+        arena_y = int(height * 0.31)
+        arena_w = width - margin * 2
+        arena_h = int(height * 0.33)
+        card_y = int(height * 0.145)
+        card_h = int(height * 0.125)
+        chips = []
+        chip_w = int((width - margin * 2 - 22) / 2)
+        chip_h = int(height * 0.063)
+        for i, (name, color) in enumerate(zip(player_names, player_colors)):
+            x = margin + (i % 2) * (chip_w + 22)
+            y = int(height * 0.70) + (i // 2) * int(chip_h * 1.22)
+            chips.append(pill(x, y, chip_w, chip_h, "#1a1f3a", color, ".96"))
+            chips.append(f'<circle cx="{x+int(chip_h*.32)}" cy="{y+int(chip_h*.34)}" r="{int(chip_h*.09)}" fill="{color}"/>')
+            chips.append(text(x + int(chip_h * 0.52), y + int(chip_h * 0.42), name, small_size, "#f2f4ff", 700))
+            chips.append(text(x + int(chip_w * 0.86), y + int(chip_h * 0.42), str([12, 8, 10, 6][i]), body_size, color, 800, "end"))
+        body = f"""
+  {text(margin, int(height*.13), "Ring Rumble", title_size, "#ffb347", 800)}
+  {pill(margin, card_y, width - margin * 2, card_h, "#1a1f3a", "", ".96")}
+  {text(margin+34, card_y+int(card_h*.35), "Push rivals out of the arena", body_size, "#f2f4ff", 700)}
+  {text(margin+34, card_y+int(card_h*.64), "Round 2 of 4  -  Power-ups ON", small_size, "#57e0c0", 700)}
+  <circle cx="{int(width*.50)}" cy="{int(height*.285)}" r="{int(width*.065)}" fill="#1a1f3a" stroke="#ffb347" stroke-width="5"/>
+  {text(int(width*.50), int(height*.302), "0:42", title_size, "#f2f4ff", 800, "middle")}
+  <rect x="{arena_x}" y="{arena_y}" width="{arena_w}" height="{arena_h}" rx="36" fill="#17264a" stroke="#f8f2de" stroke-width="6"/>
+  <g opacity=".18" stroke="#ffffff" stroke-width="3">
+    <path d="M{arena_x+45} {arena_y+int(arena_h*.33)} H{arena_x+arena_w-45}"/>
+    <path d="M{arena_x+45} {arena_y+int(arena_h*.66)} H{arena_x+arena_w-45}"/>
+    <path d="M{arena_x+int(arena_w*.33)} {arena_y+45} V{arena_y+arena_h-45}"/>
+    <path d="M{arena_x+int(arena_w*.66)} {arena_y+45} V{arena_y+arena_h-45}"/>
+  </g>
+  <path d="M{arena_x+int(arena_w*.15)} {arena_y+int(arena_h*.52)} C{arena_x+int(arena_w*.37)} {arena_y+int(arena_h*.18)} {arena_x+int(arena_w*.64)} {arena_y+int(arena_h*.83)} {arena_x+int(arena_w*.84)} {arena_y+int(arena_h*.42)}" fill="none" stroke="{accent}" stroke-width="18" stroke-linecap="round" opacity=".75"/>
+  <circle cx="{arena_x+int(arena_w*.25)}" cy="{arena_y+int(arena_h*.31)}" r="{int(width*.050)}" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
+  <circle cx="{arena_x+int(arena_w*.74)}" cy="{arena_y+int(arena_h*.34)}" r="{int(width*.050)}" fill="#ff7048" stroke="#fff0e8" stroke-width="8"/>
+  <circle cx="{arena_x+int(arena_w*.39)}" cy="{arena_y+int(arena_h*.72)}" r="{int(width*.050)}" fill="#51d7ff" stroke="#e8fbff" stroke-width="8"/>
+  <circle cx="{arena_x+int(arena_w*.62)}" cy="{arena_y+int(arena_h*.68)}" r="{int(width*.050)}" fill="#ffd43b" stroke="#fff8d0" stroke-width="8"/>
+  {''.join(chips)}
+"""
+    elif screen == "tournament":
+        rows = []
+        row_w = width - margin * 2
+        row_h = int(height * 0.066)
+        labels = [("Players", "4"), ("Preset", "Chaos Cup"), ("Rounds", "6"), ("Difficulty", "Hard")]
+        for i, (label, value) in enumerate(labels):
+            y = int(height * 0.245) + i * int(row_h * 1.22)
+            rows.append(pill(margin, y, row_w, row_h, "#1a1f3a", "", ".96"))
+            rows.append(text(margin + 34, y + int(row_h*.58), label, body_size, "#9aa2c8", 600))
+            rows.append(text(width - margin - 34, y + int(row_h*.58), value, body_size, "#f2f4ff", 800, "end"))
+        card_y = int(height * 0.60)
+        body = f"""
+  {text(margin, int(height*.15), "Tournament Setup", title_size, "#ffb347", 800)}
+  {text(margin, int(height*.20), "Pick players, choose a preset, start the cup.", body_size, "#9aa2c8", 600)}
+  {''.join(rows)}
+  {pill(margin, int(height*.54), row_w, int(height*.07), "#ffb347")}
+  {text(int(width*.50), int(height*.585), "Start Cup", body_size, "#101321", 800, "middle")}
+  {pill(margin, card_y, row_w, int(height*.22), "#1a1f3a", "#57e0c0", ".96")}
+  <circle cx="{int(width*.50)}" cy="{card_y+int(height*.075)}" r="{int(width*.095)}" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
+  {text(int(width*.50), card_y+int(height*.155), "Nabta", title_size, "#f2f4ff", 800, "middle")}
+  {text(int(width*.50), card_y+int(height*.19), "Speed 85  Jump 70  Control 90", small_size, "#9aa2c8", 600, "middle")}
+"""
+    else:
+        rows = []
+        row_w = width - margin * 2
+        row_h = int(height * 0.068)
+        standings = [("1", "Nabta", "18", "#60e27a"), ("2", "Mowja", "14", "#51d7ff"), ("3", "Sakhra", "11", "#ff7048"), ("4", "Barq", "8", "#ffd43b")]
+        for i, (rank, name, score, color) in enumerate(standings):
+            y = int(height * 0.26) + i * int(row_h * 1.28)
+            rows.append(pill(margin, y, row_w, row_h, "#1a1f3a", color, ".96"))
+            rows.append(text(margin + 34, y + int(row_h*.58), rank, body_size, color, 800))
+            rows.append(text(margin + int(row_w*.22), y + int(row_h*.58), name, body_size, "#f2f4ff", 800))
+            rows.append(text(width - margin - 34, y + int(row_h*.58), score + " pts", body_size, "#f2f4ff", 800, "end"))
+        body = f"""
+  {text(int(width*.50), int(height*.15), "Cup Results", title_size, "#ffb347", 800, "middle")}
+  {text(int(width*.50), int(height*.20), "Gem Grab - Ring Rumble - Quick Draw", body_size, "#9aa2c8", 600, "middle")}
+  {''.join(rows)}
+  {pill(margin, int(height*.70), int(row_w*.46), int(height*.07), "#252c52", "#57e0c0", ".96")}
+  {text(margin+int(row_w*.23), int(height*.745), "Replay Match", body_size, "#f2f4ff", 800, "middle")}
+  {pill(margin+int(row_w*.54), int(height*.70), int(row_w*.46), int(height*.07), "#ffb347", "", "1")}
+  {text(margin+int(row_w*.77), int(height*.745), "Next Round", body_size, "#101321", 800, "middle")}
+"""
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1022"/>
+      <stop offset=".52" stop-color="#18213d"/>
+      <stop offset="1" stop-color="#101013"/>
+    </linearGradient>
+  </defs>
+  <rect width="{width}" height="{height}" fill="url(#bg)"/>
+  <rect x="0" y="0" width="{width}" height="{top_h}" fill="#0d1020"/>
+  <rect x="0" y="{height-bottom_h}" width="{width}" height="{bottom_h}" fill="#0d1020" opacity=".78"/>
+  <text x="{margin}" y="{int(top_h*.62)}" font-family="Arial" font-size="{body_size}" font-weight="800" fill="#ffb347">Kras Pass</text>
+  <text x="{width-margin}" y="{int(top_h*.62)}" font-family="Arial" font-size="{small_size}" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English</text>
+{body}
+</svg>
+"""
+
+
 def screenshot_svg(width: int, height: int, screen: str, accent: str) -> str:
     """Render App Store screenshots as in-app UI, not marketing posters.
 
@@ -87,6 +204,8 @@ def screenshot_svg(width: int, height: int, screen: str, accent: str) -> str:
     screens so the product page shows the actual app concept in use.
     """
     landscape = width > height
+    if not landscape:
+        return portrait_screenshot_svg(width, height, screen, accent)
     margin = int(width * 0.045)
     top_h = int(height * 0.12)
     bottom_h = int(height * 0.14)
@@ -244,12 +363,12 @@ def main() -> None:
         run_magick(source_icon, ICON_DIR / name, size)
 
     shots = [
-        ("iphone-01-party-arena.png", 2778, 1284, "gameplay", "#ffb347"),
-        ("iphone-02-fast-rounds.png", 2778, 1284, "tournament", "#51d7ff"),
-        ("iphone-03-local-chaos.png", 2778, 1284, "results", "#60e27a"),
-        ("ipad-01-party-arena.png", 2732, 2048, "gameplay", "#ffb347"),
-        ("ipad-02-fast-rounds.png", 2732, 2048, "tournament", "#51d7ff"),
-        ("ipad-03-local-chaos.png", 2732, 2048, "results", "#60e27a"),
+        ("iphone-01-party-arena.png", 1284, 2778, "gameplay", "#ffb347"),
+        ("iphone-02-fast-rounds.png", 1284, 2778, "tournament", "#51d7ff"),
+        ("iphone-03-local-chaos.png", 1284, 2778, "results", "#60e27a"),
+        ("ipad-01-party-arena.png", 2048, 2732, "gameplay", "#ffb347"),
+        ("ipad-02-fast-rounds.png", 2048, 2732, "tournament", "#51d7ff"),
+        ("ipad-03-local-chaos.png", 2048, 2732, "results", "#60e27a"),
     ]
     for filename, width, height, screen, accent in shots:
         svg_path = SOURCE_DIR / f"{filename}.svg"

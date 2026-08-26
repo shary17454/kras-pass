@@ -1,59 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2778" height="1284" viewBox="0 0 2778 1284">
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="2778" viewBox="0 0 1284 2778">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0a1022"/>
-      <stop offset=".48" stop-color="#18213d"/>
+      <stop offset=".52" stop-color="#18213d"/>
       <stop offset="1" stop-color="#101013"/>
     </linearGradient>
   </defs>
-  <rect width="2778" height="1284" fill="url(#bg)"/>
-  <rect x="0" y="0" width="2778" height="154" fill="#0d1020"/>
-  <rect x="0" y="1105" width="2778" height="179" fill="#0d1020" opacity=".78"/>
-  <text x="125" y="98" font-family="Arial" font-size="52" font-weight="800" fill="#ffb347">Kras Pass</text>
-  <text x="2653" y="98" font-family="Arial" font-size="38" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English - Local Party Game</text>
+  <rect width="1284" height="2778" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1284" height="250" fill="#0d1020"/>
+  <rect x="0" y="2598" width="1284" height="180" fill="#0d1020" opacity=".78"/>
+  <text x="89" y="155" font-family="Arial" font-size="43" font-weight="800" fill="#ffb347">Kras Pass</text>
+  <text x="1195" y="155" font-family="Arial" font-size="33" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English</text>
 
-  <rect x="125" y="231" width="694" height="539" rx="129" fill="#1a1f3a" opacity=".95"/>
-  <text x="159" y="291" font-family="Arial" font-size="88" font-weight="800" fill="#ffb347" text-anchor="start">Ring Rumble</text>
-  <text x="159" y="343" font-family="Arial" font-size="52" font-weight="600" fill="#f2f4ff" text-anchor="start">Push rivals out of the arena</text>
-  <text x="159" y="396" font-family="Arial" font-size="52" font-weight="500" fill="#9aa2c8" text-anchor="start">Round 2 of 4</text>
-  <rect x="159" y="436" width="485" height="42" rx="10" fill="#252c52" opacity="1"/>
-  <text x="183" y="466" font-family="Arial" font-size="38" font-weight="700" fill="#57e0c0" text-anchor="start">Power-ups ON</text>
-  <rect x="159" y="501" width="541" height="42" rx="10" fill="#252c52" opacity="1"/>
-  <text x="183" y="531" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Touch controls visible</text>
-  <circle cx="1389" cy="128" r="74" fill="#1a1f3a" stroke="#ffb347" stroke-width="5"/>
-  <text x="1389" y="147" font-family="Arial" font-size="88" font-weight="800" fill="#f2f4ff" text-anchor="middle">0:42</text>
-
-  <rect x="944" y="256" width="1611" height="719" rx="36" fill="#17264a" stroke="#f8f2de" stroke-width="6"/>
+  <text x="89" y="361" font-family="Arial" font-size="82" font-weight="800" fill="#ffb347" text-anchor="start">Ring Rumble</text>
+  <rect x="89" y="402" width="1106" height="347" rx="69" fill="#1a1f3a" opacity=".96"/>
+  <text x="123" y="523" font-family="Arial" font-size="43" font-weight="700" fill="#f2f4ff" text-anchor="start">Push rivals out of the arena</text>
+  <text x="123" y="624" font-family="Arial" font-size="33" font-weight="700" fill="#57e0c0" text-anchor="start">Round 2 of 4  -  Power-ups ON</text>
+  <circle cx="642" cy="791" r="83" fill="#1a1f3a" stroke="#ffb347" stroke-width="5"/>
+  <text x="642" y="838" font-family="Arial" font-size="82" font-weight="800" fill="#f2f4ff" text-anchor="middle">0:42</text>
+  <rect x="89" y="861" width="1106" height="916" rx="36" fill="#17264a" stroke="#f8f2de" stroke-width="6"/>
   <g opacity=".18" stroke="#ffffff" stroke-width="3">
-    <path d="M994 493 H2505"/>
-    <path d="M994 730 H2505"/>
-    <path d="M1475 306 V925"/>
-    <path d="M2007 306 V925"/>
+    <path d="M134 1163 H1150"/>
+    <path d="M134 1465 H1150"/>
+    <path d="M453 906 V1732"/>
+    <path d="M818 906 V1732"/>
   </g>
-  <path d="M1185 629 C1540 385 1975 852 2297 557" fill="none" stroke="#ffb347" stroke-width="18" stroke-linecap="round" opacity=".75"/>
-  <circle cx="1346" cy="478" r="88" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
-  <circle cx="2136" cy="500" r="88" fill="#ff7048" stroke="#fff0e8" stroke-width="8"/>
-  <circle cx="1572" cy="773" r="88" fill="#51d7ff" stroke="#e8fbff" stroke-width="8"/>
-  <circle cx="1942" cy="744" r="88" fill="#ffd43b" stroke="#fff8d0" stroke-width="8"/>
-  <circle cx="1749" cy="615" r="50" fill="#ffffff" opacity=".9"/>
+  <path d="M254 1337 C498 1025 796 1621 1018 1245" fill="none" stroke="#ffb347" stroke-width="18" stroke-linecap="round" opacity=".75"/>
+  <circle cx="365" cy="1144" r="64" fill="#60e27a" stroke="#eaffef" stroke-width="8"/>
+  <circle cx="907" cy="1172" r="64" fill="#ff7048" stroke="#fff0e8" stroke-width="8"/>
+  <circle cx="520" cy="1520" r="64" fill="#51d7ff" stroke="#e8fbff" stroke-width="8"/>
+  <circle cx="774" cy="1483" r="64" fill="#ffd43b" stroke="#fff8d0" stroke-width="8"/>
+  <rect x="89" y="1944" width="542" height="175" rx="35" fill="#1a1f3a" opacity=".96" stroke="#60e27a" stroke-width="5"/><circle cx="145" cy="2003" r="15" fill="#60e27a"/><text x="180" y="2017" font-family="Arial" font-size="33" font-weight="700" fill="#f2f4ff" text-anchor="start">Nabta</text><text x="555" y="2017" font-family="Arial" font-size="43" font-weight="800" fill="#60e27a" text-anchor="end">12</text><rect x="653" y="1944" width="542" height="175" rx="35" fill="#1a1f3a" opacity=".96" stroke="#ff7048" stroke-width="5"/><circle cx="709" cy="2003" r="15" fill="#ff7048"/><text x="744" y="2017" font-family="Arial" font-size="33" font-weight="700" fill="#f2f4ff" text-anchor="start">Sakhra</text><text x="1119" y="2017" font-family="Arial" font-size="43" font-weight="800" fill="#ff7048" text-anchor="end">8</text><rect x="89" y="2157" width="542" height="175" rx="35" fill="#1a1f3a" opacity=".96" stroke="#51d7ff" stroke-width="5"/><circle cx="145" cy="2216" r="15" fill="#51d7ff"/><text x="180" y="2230" font-family="Arial" font-size="33" font-weight="700" fill="#f2f4ff" text-anchor="start">Mowja</text><text x="555" y="2230" font-family="Arial" font-size="43" font-weight="800" fill="#51d7ff" text-anchor="end">10</text><rect x="653" y="2157" width="542" height="175" rx="35" fill="#1a1f3a" opacity=".96" stroke="#ffd43b" stroke-width="5"/><circle cx="709" cy="2216" r="15" fill="#ffd43b"/><text x="744" y="2230" font-family="Arial" font-size="33" font-weight="700" fill="#f2f4ff" text-anchor="start">Barq</text><text x="1119" y="2230" font-family="Arial" font-size="43" font-weight="800" fill="#ffd43b" text-anchor="end">6</text>
 
-  <circle cx="333" cy="898" r="125" fill="#252c52" stroke="#9aa2c8" stroke-width="4" opacity=".92"/>
-  <circle cx="2361" cy="873" r="100" fill="#252c52" stroke="#ffb347" stroke-width="4" opacity=".92"/>
-  <circle cx="2527" cy="963" r="100" fill="#252c52" stroke="#57e0c0" stroke-width="4" opacity=".92"/>
-<rect x="125" y="1052" width="620" height="121" rx="29" fill="#1a1f3a" opacity=".96" stroke="#60e27a" stroke-width="4"/>
-<circle cx="159" cy="1086" r="13" fill="#60e27a"/>
-<text x="183" y="1091" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Nabta</text>
-<text x="183" y="1130" font-family="Arial" font-size="52" font-weight="800" fill="#60e27a" text-anchor="start">12</text>
-<rect x="761" y="1052" width="620" height="121" rx="29" fill="#1a1f3a" opacity=".96" stroke="#ff7048" stroke-width="4"/>
-<circle cx="795" cy="1086" r="13" fill="#ff7048"/>
-<text x="819" y="1091" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Sakhra</text>
-<text x="819" y="1130" font-family="Arial" font-size="52" font-weight="800" fill="#ff7048" text-anchor="start">8</text>
-<rect x="1397" y="1052" width="620" height="121" rx="29" fill="#1a1f3a" opacity=".96" stroke="#51d7ff" stroke-width="4"/>
-<circle cx="1431" cy="1086" r="13" fill="#51d7ff"/>
-<text x="1455" y="1091" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Mowja</text>
-<text x="1455" y="1130" font-family="Arial" font-size="52" font-weight="800" fill="#51d7ff" text-anchor="start">10</text>
-<rect x="2033" y="1052" width="620" height="121" rx="29" fill="#1a1f3a" opacity=".96" stroke="#ffd43b" stroke-width="4"/>
-<circle cx="2067" cy="1086" r="13" fill="#ffd43b"/>
-<text x="2091" y="1091" font-family="Arial" font-size="38" font-weight="700" fill="#f2f4ff" text-anchor="start">Barq</text>
-<text x="2091" y="1130" font-family="Arial" font-size="52" font-weight="800" fill="#ffd43b" text-anchor="start">6</text>
 </svg>

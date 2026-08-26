@@ -1,23 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2778" height="1284" viewBox="0 0 2778 1284">
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="2778" viewBox="0 0 1284 2778">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0a1022"/>
-      <stop offset=".48" stop-color="#18213d"/>
+      <stop offset=".52" stop-color="#18213d"/>
       <stop offset="1" stop-color="#101013"/>
     </linearGradient>
   </defs>
-  <rect width="2778" height="1284" fill="url(#bg)"/>
-  <rect x="0" y="0" width="2778" height="154" fill="#0d1020"/>
-  <rect x="0" y="1105" width="2778" height="179" fill="#0d1020" opacity=".78"/>
-  <text x="125" y="98" font-family="Arial" font-size="52" font-weight="800" fill="#ffb347">Kras Pass</text>
-  <text x="2653" y="98" font-family="Arial" font-size="38" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English - Local Party Game</text>
+  <rect width="1284" height="2778" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1284" height="250" fill="#0d1020"/>
+  <rect x="0" y="2598" width="1284" height="180" fill="#0d1020" opacity=".78"/>
+  <text x="89" y="155" font-family="Arial" font-size="43" font-weight="800" fill="#ffb347">Kras Pass</text>
+  <text x="1195" y="155" font-family="Arial" font-size="33" font-weight="700" fill="#9aa2c8" text-anchor="end">Arabic / English</text>
 
-  <text x="1389" y="218" font-family="Arial" font-size="88" font-weight="800" fill="#ffb347" text-anchor="middle">Cup Results</text>
-  <text x="1389" y="288" font-family="Arial" font-size="52" font-weight="600" fill="#9aa2c8" text-anchor="middle">Gem Grab - Ring Rumble - Quick Draw</text>
-  <rect x="305" y="333" width="2166" height="96" rx="23" fill="#1a1f3a" opacity=".96" stroke="#60e27a" stroke-width="4"/><text x="388" y="397" font-family="Arial" font-size="52" font-weight="800" fill="#60e27a" text-anchor="start">1</text><text x="611" y="397" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="start">Nabta</text><text x="2333" y="397" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">18 pts</text><rect x="305" y="467" width="2166" height="96" rx="23" fill="#1a1f3a" opacity=".96" stroke="#51d7ff" stroke-width="4"/><text x="388" y="531" font-family="Arial" font-size="52" font-weight="800" fill="#51d7ff" text-anchor="start">2</text><text x="611" y="531" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="start">Mowja</text><text x="2333" y="531" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">14 pts</text><rect x="305" y="601" width="2166" height="96" rx="23" fill="#1a1f3a" opacity=".96" stroke="#ff7048" stroke-width="4"/><text x="388" y="665" font-family="Arial" font-size="52" font-weight="800" fill="#ff7048" text-anchor="start">3</text><text x="611" y="665" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="start">Sakhra</text><text x="2333" y="665" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">11 pts</text><rect x="305" y="735" width="2166" height="96" rx="23" fill="#1a1f3a" opacity=".96" stroke="#ffd43b" stroke-width="4"/><text x="388" y="799" font-family="Arial" font-size="52" font-weight="800" fill="#ffd43b" text-anchor="start">4</text><text x="611" y="799" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="start">Barq</text><text x="2333" y="799" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="end">8 pts</text>
-  <rect x="555" y="950" width="722" height="102" rx="24" fill="#252c52" opacity=".96" stroke="#57e0c0" stroke-width="4"/>
-  <text x="916" y="1016" font-family="Arial" font-size="52" font-weight="800" fill="#f2f4ff" text-anchor="middle">Replay Match</text>
-  <rect x="1500" y="950" width="722" height="102" rx="24" fill="#ffb347" opacity="1"/>
-  <text x="1861" y="1016" font-family="Arial" font-size="52" font-weight="800" fill="#101321" text-anchor="middle">Next Round</text>
+  <text x="642" y="416" font-family="Arial" font-size="82" font-weight="800" fill="#ffb347" text-anchor="middle">Cup Results</text>
+  <text x="642" y="555" font-family="Arial" font-size="43" font-weight="600" fill="#9aa2c8" text-anchor="middle">Gem Grab - Ring Rumble - Quick Draw</text>
+  <rect x="89" y="722" width="1106" height="188" rx="37" fill="#1a1f3a" opacity=".96" stroke="#60e27a" stroke-width="5"/><text x="123" y="831" font-family="Arial" font-size="43" font-weight="800" fill="#60e27a" text-anchor="start">1</text><text x="332" y="831" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="start">Nabta</text><text x="1161" y="831" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="end">18 pts</text><rect x="89" y="962" width="1106" height="188" rx="37" fill="#1a1f3a" opacity=".96" stroke="#51d7ff" stroke-width="5"/><text x="123" y="1071" font-family="Arial" font-size="43" font-weight="800" fill="#51d7ff" text-anchor="start">2</text><text x="332" y="1071" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="start">Mowja</text><text x="1161" y="1071" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="end">14 pts</text><rect x="89" y="1202" width="1106" height="188" rx="37" fill="#1a1f3a" opacity=".96" stroke="#ff7048" stroke-width="5"/><text x="123" y="1311" font-family="Arial" font-size="43" font-weight="800" fill="#ff7048" text-anchor="start">3</text><text x="332" y="1311" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="start">Sakhra</text><text x="1161" y="1311" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="end">11 pts</text><rect x="89" y="1442" width="1106" height="188" rx="37" fill="#1a1f3a" opacity=".96" stroke="#ffd43b" stroke-width="5"/><text x="123" y="1551" font-family="Arial" font-size="43" font-weight="800" fill="#ffd43b" text-anchor="start">4</text><text x="332" y="1551" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="start">Barq</text><text x="1161" y="1551" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="end">8 pts</text>
+  <rect x="89" y="1944" width="508" height="194" rx="38" fill="#252c52" opacity=".96" stroke="#57e0c0" stroke-width="5"/>
+  <text x="343" y="2069" font-family="Arial" font-size="43" font-weight="800" fill="#f2f4ff" text-anchor="middle">Replay Match</text>
+  <rect x="686" y="1944" width="508" height="194" rx="38" fill="#ffb347" opacity="1"/>
+  <text x="940" y="2069" font-family="Arial" font-size="43" font-weight="800" fill="#101321" text-anchor="middle">Next Round</text>
 
 </svg>
