@@ -33,7 +33,8 @@ const SCREENS := {
 	"match": "res://src/match/match_scene.gd",
 }
 
-var holder: Node
+var holder_layer: CanvasLayer
+var holder: Control
 var overlay: ColorRect
 var toast_layer: CanvasLayer
 var current_id := ""
@@ -45,12 +46,18 @@ var _pending_args := {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# Parented to the router itself rather than deferred onto the root: the very
-	# first `go_to()` happens inside Main._ready, and a deferred add would leave
-	# the boot screen outside the tree with a null `get_tree()`.
-	holder = Node.new()
+	# Keep screens on an explicit canvas layer. iOS may otherwise leave Control
+	# screens parented under a plain Node with no usable rect, which presents as
+	# only the clear colour being visible.
+	holder_layer = CanvasLayer.new()
+	holder_layer.layer = 0
+	holder_layer.name = "ScreenLayer"
+	add_child(holder_layer)
+	holder = Control.new()
 	holder.name = "ScreenHolder"
-	add_child(holder)
+	holder.mouse_filter = Control.MOUSE_FILTER_PASS
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder_layer.add_child(holder)
 	var layer := CanvasLayer.new()
 	layer.layer = 100
 	layer.name = "TransitionLayer"
@@ -125,6 +132,13 @@ func _swap(id: String, args: Dictionary) -> void:
 	var node: Node = script.new()
 	node.name = id
 	holder.add_child(node)
+	if node is Control:
+		var control := node as Control
+		control.set_anchors_preset(Control.PRESET_FULL_RECT)
+		control.offset_left = 0.0
+		control.offset_top = 0.0
+		control.offset_right = 0.0
+		control.offset_bottom = 0.0
 	current_node = node
 	current_id = id
 	if node.has_method("setup"):
