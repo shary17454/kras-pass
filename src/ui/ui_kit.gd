@@ -293,11 +293,10 @@ static func hbox(separation: int = 14) -> HBoxContainer:
 static func animate_in(node: Control, delay: float = 0.0) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	node.modulate.a = 0.0
+	node.modulate.a = 1.0
 	var start := node.position
 	node.position = start + Vector2(0, 26)
-	var tw := node.create_tween().set_parallel(true)
-	tw.tween_property(node, "modulate:a", 1.0, 0.28).set_delay(delay)
+	var tw := node.create_tween()
 	tw.tween_property(node, "position", start, 0.32).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 

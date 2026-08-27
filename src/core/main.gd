@@ -19,7 +19,7 @@ func _ready() -> void:
 		Log.e("content: %s" % p, "Main")
 	if not problems.is_empty() and OS.is_debug_build():
 		Log.e("%d content problems found — see log above" % problems.size(), "Main")
-	SceneRouter.go_to("boot", {}, false, 0.0)
+	SceneRouter.go_to("main_menu", {}, false, 0.0)
 
 
 func _notification(what: int) -> void:

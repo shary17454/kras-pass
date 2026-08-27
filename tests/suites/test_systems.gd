@@ -203,3 +203,15 @@ func _navigation(t: TestHarness, host: Node) -> void:
 	t.not_null(SceneRouter.current_node, "a screen was opened")
 	t.ok(SceneRouter.current_node != null and SceneRouter.current_node.is_inside_tree(),
 		"the opened screen is inside the tree")
+
+	t.test("app entry opens the playable main menu without a gated boot screen")
+	var main_script: Script = load("res://src/core/main.gd")
+	t.not_null(main_script, "main entry script loads")
+	if main_script != null:
+		var main: Node = main_script.new()
+		host.add_child(main)
+		await host.get_tree().process_frame
+		t.equal(SceneRouter.current_id, "main_menu", "first app frame routes to the main menu")
+		t.not_null(SceneRouter.current_node, "main menu node exists after app entry")
+		main.queue_free()
+		await host.get_tree().process_frame
