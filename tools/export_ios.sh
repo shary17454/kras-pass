@@ -39,6 +39,15 @@ for KEY in "UISupportedInterfaceOrientations" "UISupportedInterfaceOrientations~
 	/usr/libexec/PlistBuddy -c "Add :$KEY:1 string UIInterfaceOrientationLandscapeRight" "$PLIST"
 done
 
+echo "==> Removing unused permission usage descriptions"
+for KEY in "NSCameraUsageDescription" "NSMicrophoneUsageDescription" "NSPhotoLibraryUsageDescription"; do
+	/usr/libexec/PlistBuddy -c "Delete :$KEY" "$PLIST" 2>/dev/null || true
+done
+
+if [[ -f "$OUT/KrasPass/dummy.h" ]]; then
+	perl -0pi -e 's/\n#pragma once\n/\n/' "$OUT/KrasPass/dummy.h"
+fi
+
 # --- build ------------------------------------------------------------------
 if [[ "$TARGET" == "simulator" ]]; then
 	SDK="iphonesimulator"
