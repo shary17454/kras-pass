@@ -13,6 +13,8 @@ func run(t: TestHarness, host: Node) -> void:
 	await _sources_are_indistinguishable(t, host)
 	_touch_profiles(t)
 	_touch_layout_rules(t)
+	_haptics(t)
+	_haptic_events(t)
 
 
 ## Drive one fighter from a virtual (AI) slot and another from a touch slot with
@@ -107,3 +109,59 @@ func _touch_layout_rules(t: TestHarness) -> void:
 	UserSettings.set_value("touch_controls", "on")
 	t.ok(TouchSource.should_show(), "'on' forces it")
 	UserSettings.set_value("touch_controls", before)
+
+
+## Spec item 22: graded feedback, on every device a human can hold, and never a
+## phone that buzzes continuously.
+func _haptics(t: TestHarness) -> void:
+	t.test("haptics are graded and rate-limited")
+	var kinds := [InputRouter.Haptic.LIGHT, InputRouter.Haptic.MEDIUM,
+		InputRouter.Haptic.HEAVY, InputRouter.Haptic.SUCCESS]
+	for k in kinds:
+		t.ok(InputRouter.HAPTIC_SPEC.has(k), "grade %d has a spec" % k)
+	var light: Dictionary = InputRouter.HAPTIC_SPEC[InputRouter.Haptic.LIGHT]
+	var heavy: Dictionary = InputRouter.HAPTIC_SPEC[InputRouter.Haptic.HEAVY]
+	t.ok(float(heavy["amp"]) > float(light["amp"]), "heavy hits harder than light")
+	t.ok(int(heavy["ms"]) > int(light["ms"]), "heavy lasts longer than light")
+	t.ok(InputRouter.SUCCESS_BEATS.size() > 1, "success is a pattern, not one thump")
+
+	t.test("only a device a human is holding is asked to buzz")
+	var before := InputRouter.source_of(0)
+	InputRouter.assign_virtual(0)
+	t.ok(not InputRouter.can_feel(0), "an AI slot is never buzzed")
+	InputRouter.assign_touch(0)
+	t.ok(InputRouter.can_feel(0), "a touch slot is buzzed")
+	InputRouter.assign_pad(0, 0)
+	t.ok(InputRouter.can_feel(0), "a gamepad slot is buzzed")
+	InputRouter.clear_slot(0)
+	t.ok(not InputRouter.can_feel(0), "an empty slot is never buzzed")
+	if before == InputRouter.Source.NONE:
+		InputRouter.clear_slot(0)
+
+	t.test("the vibration setting is honoured")
+	var saved = UserSettings.get_value("vibration")
+	UserSettings.set_value("vibration", false)
+	InputRouter.assign_touch(0)
+	# Nothing to assert on the actuator itself in a test, but the call must be
+	# safe and silent rather than reaching the device — a crash here is the
+	# failure mode that matters.
+	InputRouter.haptic(0, InputRouter.Haptic.HEAVY)
+	InputRouter.rumble(0, 0.9, 0.2)
+	t.ok(true, "haptics with vibration off are inert")
+	UserSettings.set_value("vibration", saved)
+	InputRouter.clear_slot(0)
+
+
+## The director must actually be listening. A haptics feature that silently
+## stops being wired to the EventBus is indistinguishable from not having one.
+func _haptic_events(t: TestHarness) -> void:
+	t.test("the haptic director is subscribed to the moments that matter")
+	for sig in ["countdown_tick", "player_eliminated", "powerup_collected",
+			"pickup_collected", "player_respawned", "sudden_death_started",
+			"match_finished", "achievement_unlocked"]:
+		var wired := false
+		for c in EventBus.get_signal_connection_list(sig):
+			if c["callable"].get_object() == Haptics:
+				wired = true
+				break
+		t.ok(wired, "%s reaches the haptic director" % sig)

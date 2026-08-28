@@ -201,12 +201,88 @@ func binding_label(profile_index: int, action: String) -> String:
 	return OS.get_keycode_string(code)
 
 
+## Graded feedback, per spec item 22. A gamepad slot gets a motor pulse; a
+## touch slot gets the handheld actuator, which is the only one the primary
+## iPhone player has — before this, `rumble()` returned early for anything that
+## was not a PAD, so the touch player felt a 18 ms tick when they pressed a
+## button and nothing at all when they were hit, launched or won the round.
+enum Haptic { LIGHT, MEDIUM, HEAVY, SUCCESS }
+
+const HAPTIC_SPEC := {
+	Haptic.LIGHT:   {"amp": 0.35, "ms": 18,  "joy": 0.28, "sec": 0.08},
+	Haptic.MEDIUM:  {"amp": 0.60, "ms": 42,  "joy": 0.52, "sec": 0.14},
+	Haptic.HEAVY:   {"amp": 0.95, "ms": 90,  "joy": 0.85, "sec": 0.26},
+	Haptic.SUCCESS: {"amp": 0.75, "ms": 55,  "joy": 0.70, "sec": 0.18},
+}
+## Two short pulses either side of a gap read as celebration rather than as a
+## bigger thump — the pattern is the message, not the amplitude.
+const SUCCESS_BEATS := [0.0, 0.13, 0.26]
+## The handheld actuator is one shared device: four fighters trading blows would
+## keep it running continuously, which spec item 22 explicitly forbids and which
+## reads as a broken phone rather than as feedback. A stronger cue may always
+## interrupt a weaker one; an equal or weaker cue inside the window is dropped.
+const HANDHELD_GAP := 0.11
+
+var _handheld_until := 0.0
+var _handheld_level := -1
+
+
+## Legacy entry point: a raw motor strength. Kept because Fighter feeds it a
+## continuous knockback value, and a continuum is genuinely the right shape for
+## a shove. Routed through the graded path so touch players feel it too.
 func rumble(slot: int, strength: float, duration: float) -> void:
+	if strength >= 0.55:
+		haptic(slot, Haptic.HEAVY)
+	elif strength >= 0.3:
+		haptic(slot, Haptic.MEDIUM)
+	else:
+		haptic(slot, Haptic.LIGHT)
 	if not bool(UserSettings.get_value("vibration")):
 		return
-	if _sources[slot] != Source.PAD:
+	if _sources[slot] == Source.PAD:
+		Input.start_joy_vibration(_device_ids[slot], strength * 0.6, strength, duration)
+
+
+func haptic(slot: int, kind: Haptic) -> void:
+	if not bool(UserSettings.get_value("vibration")):
 		return
-	Input.start_joy_vibration(_device_ids[slot], strength * 0.6, strength, duration)
+	if slot < 0 or slot >= MAX_SLOTS:
+		return
+	var spec: Dictionary = HAPTIC_SPEC.get(kind, HAPTIC_SPEC[Haptic.LIGHT])
+	match _sources[slot]:
+		Source.PAD:
+			if kind == Haptic.SUCCESS:
+				Input.start_joy_vibration(_device_ids[slot], 0.4, float(spec["joy"]), 0.45)
+			else:
+				Input.start_joy_vibration(_device_ids[slot],
+					float(spec["joy"]) * 0.6, float(spec["joy"]), float(spec["sec"]))
+		Source.TOUCH:
+			_handheld(kind, spec)
+		_:
+			pass
+
+
+func _handheld(kind: Haptic, spec: Dictionary) -> void:
+	var now := float(Time.get_ticks_msec()) / 1000.0
+	if now < _handheld_until and int(kind) <= _handheld_level:
+		return
+	_handheld_level = int(kind)
+	_handheld_until = now + HANDHELD_GAP
+	if kind == Haptic.SUCCESS:
+		for offset in SUCCESS_BEATS:
+			if offset <= 0.0:
+				Input.vibrate_handheld(int(spec["ms"]), float(spec["amp"]))
+			else:
+				var t := get_tree().create_timer(offset)
+				t.timeout.connect(func(): Input.vibrate_handheld(int(spec["ms"]), float(spec["amp"])))
+		_handheld_until = now + SUCCESS_BEATS[SUCCESS_BEATS.size() - 1] + HANDHELD_GAP
+		return
+	Input.vibrate_handheld(int(spec["ms"]), float(spec["amp"]))
+
+
+## True for any slot this device can buzz — used to skip work for AI slots.
+func can_feel(slot: int) -> bool:
+	return slot >= 0 and slot < MAX_SLOTS and _sources[slot] in [Source.PAD, Source.TOUCH]
 
 
 func _bindings_for(profile_index: int) -> Dictionary:

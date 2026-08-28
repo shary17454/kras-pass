@@ -174,6 +174,10 @@ func strike(centre: Vector3, radius: float, power: float = 26.0) -> void:
 		f.take_hit(-1, away.normalized() if away.length() > 0.1 else Vector3.FORWARD,
 			power * (1.0 - away.length() / radius * 0.4), 0.0, true)
 		ctx.bump_detail(i, "hits_taken")
+		# A boss landing on you is the heaviest cue in the game — take_hit's
+		# scaled pulse under-sells it because the knockback is deliberately
+		# survivable.
+		InputRouter.haptic(i, InputRouter.Haptic.HEAVY)
 
 
 func _clear_telegraphs() -> void:

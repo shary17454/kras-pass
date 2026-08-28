@@ -302,7 +302,9 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	_squash = Vector3(1.3, 0.7, 1.3)
 	EventBus.player_hit.emit(from_slot, slot, push)
 	EventBus.shake(minf(0.5, push * 0.03), 0.18)
-	InputRouter.rumble(slot, clampf(push * 0.05, 0.15, 0.8), 0.16)
+	# Scaled by the shove that actually landed, so a graze and a launch do not
+	# feel the same. InputRouter grades it and picks the right actuator.
+	InputRouter.rumble(slot, clampf(push * 0.035, 0.15, 0.95), 0.16)
 	AudioManager.play_sfx("hit", global_position)
 	_spawn_burst(data.accent if data != null else Color.WHITE, 7)
 	if health <= 0.0:
