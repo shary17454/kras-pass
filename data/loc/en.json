@@ -561,5 +561,19 @@
   "game.lab_crates.desc": "Some crates hit back.",
   "game.lab_crates.rules": "Smash crates for points and beware the rigged ones. Now with green specimen boxes: they pay no points but arm you on the spot — a shockwave, an eight-way volley, or a heavy ingot of score.",
   "results.stat.regions": "Regions closed",
-  "results.stat.weapons": "Weapons"
+  "results.stat.weapons": "Weapons",
+  "game.boss_forge.name": "The Forge Warden",
+  "game.boss_forge.desc": "Its shell is armoured. Its ammunition is not.",
+  "game.boss_forge.rules": "Your blows do nothing to it. It lobs iron crates — smash one for glowing slag, then shove the slag into its intake before it cools. Whoever feeds it banks the damage.",
+  "game.boss_colossus.name": "The Colossus",
+  "game.boss_colossus.desc": "It does not want your health. It wants you off the edge.",
+  "game.boss_colossus.rules": "Its slams tear craters that never repair, and its sweeps arc across the ring. After every slam the fist lies buried for a moment — that moment is the only opening you get.",
+  "game.boss_dreadnought.name": "The Dreadnought",
+  "game.boss_dreadnought.desc": "Armoured up front, open at the back.",
+  "game.boss_dreadnought.rules": "It turns to face whoever hurt it last, so the four of you cannot all stand behind it. Three phases: shells, then mines, then a spin that leaves no safe standing spot. Strike the vents.",
+  "game.boss_sovereign.name": "The Sovereign",
+  "game.boss_sovereign.desc": "It does not speed up between phases. It changes the game.",
+  "game.boss_sovereign.rules": "Three phases, three different fights: a pursuit that punishes standing still, a siege whose shield only falls to its own orbs sent back, then a collapse that throws everything at once. Damage is banked per player.",
+  "results.stat.hits_taken": "Hits taken",
+  "world.boss.label": "Boss fight"
 }

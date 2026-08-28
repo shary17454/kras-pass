@@ -108,6 +108,6 @@ static func _overrides_any(controller: Object, methods: Array) -> bool:
 ## Convenience for the debug menu and CI: validate the whole catalogue.
 static func validate_all(check_localization: bool = true) -> PackedStringArray:
 	var problems := PackedStringArray()
-	for def in Registry.minigames():
+	for def in Registry.all_minigames():
 		problems.append_array(validate(def, check_localization))
 	return problems

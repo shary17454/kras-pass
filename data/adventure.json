@@ -8,12 +8,49 @@
       "color": "#4ec96a",
       "required_trophies": 0,
       "stages": [
-        {"id": "gv1", "game": "ring_rumble",  "arena": "vortex_ring",   "opponents": 3, "difficulty": 0, "rounds": 1},
-        {"id": "gv2", "game": "crate_smash",  "arena": "crate_yard",    "opponents": 3, "difficulty": 0, "rounds": 1},
-        {"id": "gv3", "game": "paint_grid",   "arena": "paint_grid",    "opponents": 3, "difficulty": 1, "rounds": 1},
-        {"id": "gv4", "game": "gem_grab",     "arena": "gem_hollow",    "opponents": 3, "difficulty": 1, "rounds": 1},
-        {"id": "gv5", "game": "ring_rumble",  "arena": "storm_ring",    "opponents": 3, "difficulty": 1, "rounds": 3,
-          "boss": true, "name_key": "stage.boss.greenvale", "reward_gems": 8}
+        {
+          "id": "gv1",
+          "game": "ring_rumble",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 0,
+          "rounds": 1
+        },
+        {
+          "id": "gv2",
+          "game": "crate_smash",
+          "arena": "crate_yard",
+          "opponents": 3,
+          "difficulty": 0,
+          "rounds": 1
+        },
+        {
+          "id": "gv3",
+          "game": "paint_grid",
+          "arena": "paint_grid",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 1
+        },
+        {
+          "id": "gv4",
+          "game": "gem_grab",
+          "arena": "gem_hollow",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 1
+        },
+        {
+          "id": "gv5",
+          "game": "ring_rumble",
+          "arena": "storm_ring",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 3,
+          "boss": true,
+          "name_key": "stage.boss.greenvale",
+          "reward_gems": 8
+        }
       ]
     },
     {
@@ -23,12 +60,49 @@
       "color": "#3fa9f5",
       "required_trophies": 4,
       "stages": [
-        {"id": "th1", "game": "goal_guard",   "arena": "quad_court",    "opponents": 3, "difficulty": 1, "rounds": 1},
-        {"id": "th2", "game": "star_rush",    "arena": "star_meadow",   "opponents": 3, "difficulty": 1, "rounds": 1},
-        {"id": "th3", "game": "color_stand",  "arena": "color_floor",   "opponents": 3, "difficulty": 1, "rounds": 1},
-        {"id": "th4", "game": "rising_tide",  "arena": "tide_spire",    "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "th5", "game": "goal_guard",   "arena": "quad_court",    "opponents": 3, "difficulty": 2, "rounds": 3,
-          "boss": true, "name_key": "stage.boss.tidehollow", "reward_gems": 10}
+        {
+          "id": "th1",
+          "game": "goal_guard",
+          "arena": "quad_court",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 1
+        },
+        {
+          "id": "th2",
+          "game": "star_rush",
+          "arena": "star_meadow",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 1
+        },
+        {
+          "id": "th3",
+          "game": "color_stand",
+          "arena": "color_floor",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 1
+        },
+        {
+          "id": "th4",
+          "game": "rising_tide",
+          "arena": "tide_spire",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "th5",
+          "game": "boss_forge",
+          "arena": "crate_yard",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1,
+          "boss": true,
+          "name_key": "game.boss_forge.name",
+          "reward_gems": 10
+        }
       ]
     },
     {
@@ -38,12 +112,49 @@
       "color": "#ff7a3d",
       "required_trophies": 9,
       "stages": [
-        {"id": "es1", "game": "blast_ball",    "arena": "ember_pit",    "opponents": 3, "difficulty": 1, "rounds": 1},
-        {"id": "es2", "game": "bumper_bowl",   "arena": "bumper_bowl",  "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "es3", "game": "crate_relay",   "arena": "relay_docks",  "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "es4", "game": "zone_hold",     "arena": "dune_ring",    "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "es5", "game": "blast_ball",    "arena": "ember_pit",    "opponents": 3, "difficulty": 2, "rounds": 3,
-          "boss": true, "name_key": "stage.boss.embersouq", "reward_gems": 12}
+        {
+          "id": "es1",
+          "game": "blast_ball",
+          "arena": "ember_pit",
+          "opponents": 3,
+          "difficulty": 1,
+          "rounds": 1
+        },
+        {
+          "id": "es2",
+          "game": "bumper_bowl",
+          "arena": "bumper_bowl",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "es3",
+          "game": "crate_relay",
+          "arena": "relay_docks",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "es4",
+          "game": "zone_hold",
+          "arena": "dune_ring",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "es5",
+          "game": "boss_colossus",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1,
+          "boss": true,
+          "name_key": "game.boss_colossus.name",
+          "reward_gems": 12
+        }
       ]
     },
     {
@@ -53,12 +164,49 @@
       "color": "#c9a7ff",
       "required_trophies": 15,
       "stages": [
-        {"id": "sl1", "game": "crumble_court", "arena": "crumble_court", "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "sl2", "game": "sweeper_storm", "arena": "sweeper_ring",  "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "sl3", "game": "hurdle_dash",   "arena": "hurdle_track",  "opponents": 3, "difficulty": 2, "rounds": 2},
-        {"id": "sl4", "game": "symbol_echo",   "arena": "echo_hall",     "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "sl5", "game": "crumble_court", "arena": "crumble_court", "opponents": 3, "difficulty": 3, "rounds": 3,
-          "boss": true, "name_key": "stage.boss.skyloft", "reward_gems": 14}
+        {
+          "id": "sl1",
+          "game": "crumble_court",
+          "arena": "crumble_court",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "sl2",
+          "game": "sweeper_storm",
+          "arena": "sweeper_ring",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "sl3",
+          "game": "hurdle_dash",
+          "arena": "hurdle_track",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 2
+        },
+        {
+          "id": "sl4",
+          "game": "symbol_echo",
+          "arena": "echo_hall",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "sl5",
+          "game": "boss_dreadnought",
+          "arena": "iron_flats",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1,
+          "boss": true,
+          "name_key": "game.boss_dreadnought.name",
+          "reward_gems": 14
+        }
       ]
     },
     {
@@ -68,19 +216,72 @@
       "color": "#8892a6",
       "required_trophies": 21,
       "stages": [
-        {"id": "cw1", "game": "scrap_karts",  "arena": "scrap_yard",    "opponents": 3, "difficulty": 2, "rounds": 1},
-        {"id": "cw2", "game": "kart_sprint",  "arena": "circuit_loop",  "opponents": 3, "difficulty": 3, "rounds": 1},
-        {"id": "cw3", "game": "turret_duel",  "arena": "iron_flats",    "opponents": 3, "difficulty": 3, "rounds": 1},
-        {"id": "cw4", "game": "quick_draw",   "arena": "draw_stage",    "opponents": 3, "difficulty": 3, "rounds": 1},
-        {"id": "cw5", "game": "duel_pit",     "arena": "duel_pit",      "opponents": 3, "difficulty": 3, "rounds": 3,
-          "boss": true, "name_key": "stage.boss.cogworks", "reward_gems": 20}
+        {
+          "id": "cw1",
+          "game": "scrap_karts",
+          "arena": "scrap_yard",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "cw2",
+          "game": "kart_sprint",
+          "arena": "circuit_loop",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "cw3",
+          "game": "turret_duel",
+          "arena": "iron_flats",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "cw4",
+          "game": "quick_draw",
+          "arena": "draw_stage",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "cw5",
+          "game": "boss_sovereign",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1,
+          "boss": true,
+          "name_key": "game.boss_sovereign.name",
+          "reward_gems": 20
+        }
       ]
     }
   ],
   "completion_rewards": [
-    {"percent": 25,  "type": "gems",      "amount": 15},
-    {"percent": 50,  "type": "character", "id": "mowja"},
-    {"percent": 75,  "type": "gems",      "amount": 40},
-    {"percent": 100, "type": "arena_gold", "id": "vortex_ring"}
+    {
+      "percent": 25,
+      "type": "gems",
+      "amount": 15
+    },
+    {
+      "percent": 50,
+      "type": "character",
+      "id": "mowja"
+    },
+    {
+      "percent": 75,
+      "type": "gems",
+      "amount": 40
+    },
+    {
+      "percent": 100,
+      "type": "arena_gold",
+      "id": "vortex_ring"
+    }
   ]
 }

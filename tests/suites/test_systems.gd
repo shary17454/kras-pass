@@ -90,7 +90,7 @@ func _ai_profiles(t: TestHarness) -> void:
 		previous_accuracy = accuracy
 
 	t.test("every mini-game's AI script loads")
-	for def in Registry.minigames():
+	for def in Registry.all_minigames():
 		var script: Script = load(def.controller_script)
 		var controller = script.new()
 		var brain_script = controller.ai_script()

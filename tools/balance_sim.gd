@@ -121,7 +121,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 			chars.append(cid_played)
 			appearances[cid_played] = int(appearances.get(cid_played, 0)) + 1
 		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 9001 + run * 613)
-		cfg.duration_override = ROUND_SECONDS
+		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
 		var result := await _play(cfg)
 		if result == null:
@@ -170,6 +170,15 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	return row
 
 
+## How long to let one simulated round run. The 14-second clip keeps a 21-game
+## sweep to a couple of minutes, but it is nonsense for a boss: those fights run
+## 150 seconds against four-figure health pools, so a clipped round ends with
+## nobody having landed enough hits to score and every boss reads as a 100% tie
+## on zero. Give them a window the fight can actually resolve in.
+func _window_for(def: MiniGameDef) -> float:
+	return 75.0 if def.is_boss else ROUND_SECONDS
+
+
 ## Expert-versus-Easy, mirrored across slots, expressed as the share of points
 ## the expert pair took. 0.5 is no separation at all.
 func _difficulty_edge(def: MiniGameDef) -> float:
@@ -182,7 +191,7 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 		for slot in 4:
 			same.append(roster[i % roster.size()].id)
 		var cfg := MatchConfig.build(def.id, same, 0, PlayerConfig.Difficulty.EASY, 4242 + i * 97)
-		cfg.duration_override = ROUND_SECONDS
+		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
 		cfg.allow_powerups = false
 		for slot in 4:

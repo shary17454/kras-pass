@@ -665,6 +665,98 @@
         "type": "trophies",
         "amount": 15
       }
+    },
+    {
+      "id": "boss_forge",
+      "category": "combat",
+      "scoring": "points",
+      "arenas": [
+        "crate_yard"
+      ],
+      "duration": 150.0,
+      "rounds": 1,
+      "sudden_death": false,
+      "controls": [
+        "move",
+        "attack",
+        "dash",
+        "jump"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "⚒",
+      "tags": [
+        "boss"
+      ],
+      "boss": true
+    },
+    {
+      "id": "boss_colossus",
+      "category": "combat",
+      "scoring": "points",
+      "arenas": [
+        "vortex_ring"
+      ],
+      "duration": 150.0,
+      "rounds": 1,
+      "sudden_death": false,
+      "controls": [
+        "move",
+        "attack",
+        "dash",
+        "jump"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "⛰",
+      "tags": [
+        "boss"
+      ],
+      "boss": true
+    },
+    {
+      "id": "boss_dreadnought",
+      "category": "combat",
+      "scoring": "points",
+      "arenas": [
+        "iron_flats"
+      ],
+      "duration": 150.0,
+      "rounds": 1,
+      "sudden_death": false,
+      "controls": [
+        "move",
+        "attack",
+        "dash",
+        "jump"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "⛨",
+      "tags": [
+        "boss"
+      ],
+      "boss": true
+    },
+    {
+      "id": "boss_sovereign",
+      "category": "combat",
+      "scoring": "points",
+      "arenas": [
+        "vortex_ring"
+      ],
+      "duration": 150.0,
+      "rounds": 1,
+      "sudden_death": false,
+      "controls": [
+        "move",
+        "attack",
+        "dash",
+        "jump"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "♛",
+      "tags": [
+        "boss"
+      ],
+      "boss": true
     }
   ]
 }

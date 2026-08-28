@@ -58,7 +58,7 @@ func _sources_are_indistinguishable(t: TestHarness, host: Node) -> void:
 func _touch_profiles(t: TestHarness) -> void:
 	t.test("every mini-game declares a usable control profile")
 	var missing: Array[String] = []
-	for def in Registry.minigames():
+	for def in Registry.all_minigames():
 		var kind := def.control_profile
 		if not ControlProfile.NAMES.has(kind):
 			missing.append(def.id)
@@ -73,7 +73,7 @@ func _touch_profiles(t: TestHarness) -> void:
 	t.empty(missing, "control profiles match declared controls")
 
 	t.test("driving games use the steering layout")
-	for def in Registry.minigames():
+	for def in Registry.all_minigames():
 		if def.control_hints.has("drive"):
 			t.equal(ControlProfile.name_of(def.control_profile), "steering",
 				"%s drives, so it steers" % def.id)
@@ -81,7 +81,7 @@ func _touch_profiles(t: TestHarness) -> void:
 
 func _touch_layout_rules(t: TestHarness) -> void:
 	t.test("touch buttons are derived from declared controls, never duplicated")
-	for def in Registry.minigames():
+	for def in Registry.all_minigames():
 		var buttons := ControlProfile.buttons_for(def.control_profile, def.control_hints)
 		var seen_bits := {}
 		for b in buttons:

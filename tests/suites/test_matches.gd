@@ -90,7 +90,10 @@ func _play(cfg: MatchConfig) -> Dictionary:
 
 
 func _every_minigame(t: TestHarness) -> void:
-	for def in Registry.minigames():
+	# all_minigames(), not minigames(): the boss fights are excluded from the
+	# player-facing rotation but they are still real matches, and "every game
+	# finishes, ranks everyone and moves its bots" has to hold for them too.
+	for def in Registry.all_minigames():
 		t.test("play %s to completion" % def.id)
 		var cfg := _make_config(def.id, PlayerConfig.Difficulty.MEDIUM)
 		var run_result := await _play(cfg)

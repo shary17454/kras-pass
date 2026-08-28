@@ -57,6 +57,11 @@ const CATEGORY_NAMES := {
 @export var unlock := {}
 @export var difficulty_curve := 1.0  # multiplies AI aggression in adventure
 @export var icon_glyph := "◆"
+## Championship fights. They are real mini-games and go through the same match
+## layer, but they are not part of the rotation: Quick Play, Party, the stats
+## table and the completion percentage all count the collection, not the four
+## bosses guarding it.
+@export var is_boss := false
 
 
 static func from_dict(d: Dictionary) -> MiniGameDef:
@@ -81,6 +86,7 @@ static func from_dict(d: Dictionary) -> MiniGameDef:
 	m.unlock = d.get("unlock", {})
 	m.difficulty_curve = float(d.get("difficulty_curve", 1.0))
 	m.icon_glyph = String(d.get("glyph", "◆"))
+	m.is_boss = bool(d.get("boss", false))
 	return m
 
 

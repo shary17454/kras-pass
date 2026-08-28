@@ -58,8 +58,27 @@ func character(id: String) -> CharacterData:
 	return _by_id["char"].get(id)
 
 
+## The rotation: every game a player can pick, boss fights excluded. Callers
+## that genuinely want the bosses too — the validator, the adventure map — ask
+## for `all_minigames()` or look one up by id.
 func minigames() -> Array[MiniGameDef]:
+	var out: Array[MiniGameDef] = []
+	for m in _minigames:
+		if not m.is_boss:
+			out.append(m)
+	return out
+
+
+func all_minigames() -> Array[MiniGameDef]:
 	return _minigames
+
+
+func boss_games() -> Array[MiniGameDef]:
+	var out: Array[MiniGameDef] = []
+	for m in _minigames:
+		if m.is_boss:
+			out.append(m)
+	return out
 
 
 func minigame(id: String) -> MiniGameDef:
