@@ -26,10 +26,13 @@ const MAX_TICKS := 60 * 120
 const MUTATOR_STRESS_SET := ["low_gravity", "hyper_speed", "tiny", "double_hazards", "ice_floor", "short_fuse"]
 const CHAOS_MUTATOR_SET := ["powerup_rush", "double_hazards"]
 
+const NULL_TRIALS := 4000
+
 var runs := 6
 var only := ""
 var _report := []
 var _mutator_report := []
+var _null_cache := {}
 var _started := 0
 ## Progress goes to a file as well as stdout: Godot buffers stdout when it is
 ## piped, which makes a long simulation look hung when it is merely quiet.
@@ -96,6 +99,12 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	var roster := Registry.characters()
 	var wins_by_slot := [0, 0, 0, 0]
 	var wins_by_character := {}
+	# Every character that actually took the field, win or lose. Without this a
+	# character that never wins is simply absent from `wins_by_character`, and
+	# the bias maths then divides by the winners only — a game where one
+	# character sweeps every run collapses to a single bucket and reports 0%
+	# bias, which is exactly backwards.
+	var appearances := {}
 	var durations: Array[float] = []
 	var ties := 0
 	var zero_score_runs := 0
@@ -108,7 +117,9 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		# are separable rather than confounded.
 		var chars: Array = []
 		for slot in 4:
-			chars.append(roster[(slot + run) % roster.size()].id)
+			var cid_played := roster[(slot + run) % roster.size()].id
+			chars.append(cid_played)
+			appearances[cid_played] = int(appearances.get(cid_played, 0)) + 1
 		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 9001 + run * 613)
 		cfg.duration_override = ROUND_SECONDS
 		cfg.rounds = 1
@@ -148,7 +159,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"wins_by_slot": wins_by_slot,
 		"slot_bias": _bias(wins_by_slot),
 		"wins_by_character": wins_by_character,
-		"character_bias": _bias(wins_by_character.values()),
+		"character_buckets": appearances.size(),
+		"character_bias": _bias(_counts_over(appearances.keys(), wins_by_character)),
 		"zero_score_runs": zero_score_runs,
 		"expert_edge": expert_edge,
 		"avg_score": _mean(scores_seen),
@@ -262,6 +274,47 @@ func _play(cfg: MatchConfig) -> MatchResult:
 
 
 ## How far the most-favoured entry is above an even share. 0 is perfectly even.
+## Win counts for every bucket that played, including the ones that never won.
+func _counts_over(bucket_ids: Array, wins: Dictionary) -> Array:
+	var counts: Array = []
+	for id in bucket_ids:
+		counts.append(int(wins.get(id, 0)))
+	return counts
+
+
+## The 95th percentile of `_bias` under a perfectly fair game, for the sample
+## size that actually ran.
+##
+## `_bias` is a coarse statistic on a small sample: across six runs of a
+## four-slot game it can only ever be one of 0.083, 0.25, 0.417, … so a fixed
+## 0.20 cut is really the question "did any one slot win three of six?" — which
+## chance alone answers yes to about 65% of the time. Comparing against the
+## null distribution instead makes the flag mean "more lopsided than chance
+## explains" at whatever `--runs` the operator picked, so raising the run count
+## tightens the test rather than leaving it equally noisy.
+func _null_bias_p95(bins: int, draws: int) -> float:
+	if bins < 2 or draws < 1:
+		return 1.0
+	var key := "%d_%d" % [bins, draws]
+	if _null_cache.has(key):
+		return float(_null_cache[key])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 8675309  # fixed so two runs of the report never disagree
+	var samples: Array[float] = []
+	for trial in NULL_TRIALS:
+		var counts: Array = []
+		counts.resize(bins)
+		counts.fill(0)
+		for d in draws:
+			var b := rng.randi_range(0, bins - 1)
+			counts[b] = int(counts[b]) + 1
+		samples.append(_bias(counts))
+	samples.sort()
+	var p95: float = samples[int(float(samples.size()) * 0.95)]
+	_null_cache[key] = p95
+	return p95
+
+
 func _bias(counts) -> float:
 	var values: Array = []
 	var total := 0.0
@@ -293,9 +346,19 @@ func _flags(def: MiniGameDef, row: Dictionary) -> Array:
 		flags.append("did not finish %d/%d runs" % [runs - int(row["runs"]), runs])
 	if float(row["tie_rate"]) > 0.4:
 		flags.append("ties %.0f%% of the time" % (float(row["tie_rate"]) * 100.0))
-	if float(row["slot_bias"]) > 0.20:
+	# Thresholds come from the fair-game null for this sample size, never from a
+	# fixed number — see `_null_bias_p95`.
+	var slot_wins: Array = row["wins_by_slot"]
+	var slot_draws := 0
+	for w in slot_wins:
+		slot_draws += int(w)
+	if float(row["slot_bias"]) > _null_bias_p95(slot_wins.size(), slot_draws):
 		flags.append("spawn slot advantage")
-	if float(row["character_bias"]) > 0.25:
+	var char_buckets := int(row["character_buckets"])
+	var char_draws := 0
+	for w in (row["wins_by_character"] as Dictionary).values():
+		char_draws += int(w)
+	if float(row["character_bias"]) > _null_bias_p95(char_buckets, char_draws):
 		flags.append("character advantage")
 	if int(row["zero_score_runs"]) > 0 and def.scoring == MiniGameDef.Scoring.POINTS:
 		flags.append("%d run(s) scored nothing" % int(row["zero_score_runs"]))

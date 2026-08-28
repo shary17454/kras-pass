@@ -24,13 +24,11 @@ func on_credited_knockout(attacker: int, _victim: int) -> void:
 	AudioManager.play_sfx("score")
 
 
-func on_fighter_fell(slot: int) -> void:
-	var f := ctx.fighter(slot)
-	# A bumper launch has no attacker, so credit the player currently leading
-	# nobody — i.e. award nothing but still keep the round flowing.
-	if f != null and f.last_attacker() < 0:
-		ctx.bump_detail(slot, "falls")
-	super.on_fighter_fell(slot)
+# A bumper launch has no attacker, so nobody banks points for it — which is
+# already what the base class does, and it counts the fall itself in
+# `_handle_out`. Counting it again here made every uncredited ring-out show up
+# twice on the results screen, and in this arena the bumpers cause nearly all of
+# them, so the falls column read roughly double the truth.
 
 
 func is_round_over() -> bool:

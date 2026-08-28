@@ -290,10 +290,25 @@ static func hbox(separation: int = 14) -> HBoxContainer:
 
 
 ## Fade + rise entrance used by every screen so navigation feels continuous.
+##
+## `node` is almost always managed by a Container, and a container only assigns
+## its children's positions when it sorts — which happens at the end of the
+## frame, *after* `build()` has run. Reading `node.position` here would capture
+## the pre-sort value and the tween would then keep writing that stale value
+## back every frame, parking the node where the layout never put it. Under RTL
+## the stale value is the far edge of the viewport, so the whole screen ends up
+## off-screen and the game presents as nothing but the background colour.
+## Waiting one frame lets the container sort first, so `start` is the real
+## laid-out position and the tween lands exactly where the layout wants it.
 static func animate_in(node: Control, delay: float = 0.0) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	node.modulate.a = 0.0
+	if not node.is_inside_tree():
+		return
+	await node.get_tree().process_frame
+	if not is_instance_valid(node) or not node.is_inside_tree():
+		return
 	var start := node.position
 	node.position = start + Vector2(0, 26)
 	var tw := node.create_tween().set_parallel(true)
