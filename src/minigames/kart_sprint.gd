@@ -123,14 +123,36 @@ func is_round_over() -> bool:
 
 func compute_scores() -> Array[int]:
 	# Unfinished karts are ordered behind finishers but ahead of each other by
-	# how far round they got, encoded into the sentinel.
+	# how far round they got, encoded into the sentinel. Whole checkpoints are
+	# ~1.7 s of driving apart, so two mid-pack karts between the same pair
+	# counted as tied in 30% of simulated rounds — the metres still to the next
+	# checkpoint break that tie at the resolution the race is actually run at.
 	var out: Array[int] = []
 	for i in finish_times.size():
 		if finish_times[i] != UNFINISHED:
 			out.append(finish_times[i])
 		else:
 			var progress := lap[i] * _checkpoints.size() + _next_cp[i]
-			out.append(UNFINISHED - progress)
+			var toward := 0
+			var f := ctx.fighter(i)
+			if f != null and is_instance_valid(f) and not _checkpoints.is_empty():
+				var gap := f.global_position.distance_to(_checkpoints[_next_cp[i]])
+				toward = clampi(int(99.0 - minf(gap, 99.0)), 0, 99)
+			out.append(UNFINISHED - progress * 100 - toward)
+	return out
+
+
+## Where the boost pads this kart can currently use sit, for brains that plan
+## their line through them. They are big glowing squares and the recharge is
+## visible on the pad, so a bot steering for one reads the same information a
+## player does. Pads still cooling down for this kart are omitted — detouring
+## to one costs line and pays nothing, which is exactly the mistake a planner
+## must not make on the player's behalf.
+func boost_pad_positions(for_slot: int) -> Array:
+	var out: Array = []
+	for pad in _boost_pads:
+		if not pad["cooldown"].has(for_slot):
+			out.append(pad["pos"])
 	return out
 
 

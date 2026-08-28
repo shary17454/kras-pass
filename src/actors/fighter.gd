@@ -224,8 +224,13 @@ func _handle_buttons(frame: InputFrame) -> void:
 
 
 func _do_dash(frame: InputFrame) -> void:
+	# Walking dashes go where the stick points. Driving is different: the stick
+	# is (steer, throttle), not a world direction, so reading it as one sent
+	# every kart boost toward world -Z regardless of heading — half the lap the
+	# boost was a brake, and the tiers that boost most paid the most for it. A
+	# vehicle boost goes where the nose points.
 	var dir := Vector3(frame.move.x, 0, frame.move.y)
-	if dir.length_squared() < 0.05:
+	if locomotion == Locomotion.DRIVE or dir.length_squared() < 0.05:
 		dir = facing
 	dir = dir.normalized()
 	var t := _tuning

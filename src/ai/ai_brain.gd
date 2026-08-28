@@ -307,20 +307,20 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 	# straight over it, at every tier alike. So project the real travel and
 	# refuse the dashes that end in the void — at `edge_awareness` odds, so the
 	# tiers that are supposed to yeet themselves still do.
-	if rng.randf() < edge_awareness:
+	# …but only where a fall actually ends the round. On respawn tracks the
+	# guard was a regression: a ring lane is ~7 m wide, so the 5 m projection
+	# on a curve lands outside the lane constantly and the most edge-aware tier
+	# refused nearly every dash — the exact opposite of skilled racing, where
+	# boosting on the straights is the whole advantage.
+	var fall_is_lethal: bool = controller == null or bool(controller.get("eliminate_on_fall"))
+	if fall_is_lethal and rng.randf() < edge_awareness:
 		var arena := ctx.arena as Arena
-		if arena == null and OS.get_environment("DASH_DEBUG") != "":
-			print("DASH_NOARENA")
 		if arena != null:
 			var dir := Vector3(move.x, 0.0, move.y)
 			if dir.length_squared() > 0.05:
 				var land: Vector3 = me.global_position + dir.normalized() * 5.0
 				if arena.edge_distance(land) < 1.2:
-					if OS.get_environment("DASH_DEBUG") != "":
-						print("DASH_REFUSED")
 					return
-	if OS.get_environment("DASH_DEBUG") != "":
-		print("DASH_OK")
 	press(Btn.DASH)
 
 

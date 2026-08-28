@@ -192,11 +192,15 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 		var result := await _play(cfg)
 		if result == null:
 			continue
-		# Race games score low-is-better; invert so "more is better" everywhere.
-		var invert := def.scoring == MiniGameDef.Scoring.RACE_TIME
+		# Compare finishing places, not raw scores. Raw scores lied wherever a
+		# game encodes its result indirectly — an unfinished race reports a
+		# huge sentinel for everyone, so inverting it flattened every kart to
+		# epsilon and the edge read exactly 0.50 no matter how the bots drove.
+		# Places are what the ranking already computes for every scoring type,
+		# so first-to-fourth pays 4-3-2-1 and the metric means the same thing
+		# in a brawl, a race and a tile game.
 		for slot in 4:
-			var raw := float(result.score_of(slot))
-			var value := (1.0 / maxf(raw, 1.0)) * 1000.0 if invert else raw
+			var value := float(5 - clampi(result.place_of(slot), 1, 4))
 			if (slot < 2) == expert_first:
 				expert_total += value
 			else:
