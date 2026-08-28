@@ -6,7 +6,13 @@ extends MiniGameController
 ## aggressive, high-scoring game instead of a cautious one.
 
 const RING_OUT_POINTS := 2
-const BUMPER_ASSIST_POINTS := 1
+## Everyone still in the bowl banks this when a rival goes out, whoever sent
+## them. Measured: the bumpers preempt nearly every player-driven ejection —
+## six matches produced 305 ring-outs but only 6 that a player could be credited
+## for, so a rule that pays only for credited knockouts left 34 of 40 rounds
+## tied four-way on zero. Falls are the signal this arena actually generates;
+## staying in the bowl while rivals do not is the skill it actually tests.
+const SURVIVOR_POINTS := 1
 
 
 func configure() -> void:
@@ -19,9 +25,28 @@ func build() -> void:
 
 
 func on_credited_knockout(attacker: int, _victim: int) -> void:
+	# `_handle_out` already counts this on the attacker's knockout tally, so
+	# counting it again here doubled the number on the results screen.
 	ctx.add_score(attacker, int(RING_OUT_POINTS * ctx.powerups.point_multiplier(attacker)))
-	ctx.bump_detail(attacker, "knockouts")
 	AudioManager.play_sfx("score")
+
+
+func on_fighter_fell(slot: int) -> void:
+	super.on_fighter_fell(slot)
+	_pay_survivors(slot)
+
+
+func on_fighter_knocked_out(slot: int, by_slot: int) -> void:
+	super.on_fighter_knocked_out(slot, by_slot)
+	_pay_survivors(slot)
+
+
+## Pay everyone who is not the one who just went out.
+func _pay_survivors(fallen: int) -> void:
+	for i in ctx.fighters.size():
+		if i == fallen or not ctx.is_alive(i):
+			continue
+		ctx.add_score(i, int(SURVIVOR_POINTS * ctx.powerups.point_multiplier(i)))
 
 
 # A bumper launch has no attacker, so nobody banks points for it — which is

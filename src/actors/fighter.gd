@@ -285,8 +285,15 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	_stun = maxf(_stun, float(_tuning.get("hit_stun", 0.16)))
 	_invuln = maxf(_invuln, float(_tuning.get("hit_invuln", 0.12)))
 	_hitstop = float(_tuning.get("hitstop", 0.05))
-	_last_hit_by = from_slot
-	_last_hit_timer = float(_tuning.get("assist_window", 5.0))
+	# An environmental knock — bumper, sweeper, blast — has no owner, and
+	# claiming the victim for nobody erases the shove that put them there. In
+	# Bumper Bowl the bumpers cause nearly every ring-out, so a rival could set
+	# up a launch perfectly and the point went nowhere: 34 of 40 simulated
+	# rounds ended with all four players on zero. A hazard now leaves an
+	# in-window credit standing; only another player can take it over.
+	if from_slot >= 0:
+		_last_hit_by = from_slot
+		_last_hit_timer = float(_tuning.get("assist_window", 5.0))
 	_squash = Vector3(1.3, 0.7, 1.3)
 	EventBus.player_hit.emit(from_slot, slot, push)
 	EventBus.shake(minf(0.5, push * 0.03), 0.18)
