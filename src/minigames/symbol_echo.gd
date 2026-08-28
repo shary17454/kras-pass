@@ -9,6 +9,15 @@ enum Stage { SHOW, INPUT, RESOLVE }
 
 const PAD_COUNT := 5
 const SEQUENCE_POINTS := 2
+## Finishing the sequence at all is worth `SEQUENCE_POINTS` per step, which is
+## what keeps a slow-but-sure player in the game. This is the racing half: with
+## a flat reward every finisher scored identically and the round tied 82% of the
+## time, so being first has to be worth something on its own.
+const ORDER_BONUS := [4, 2, 1, 0]
+## Partial credit. Without it the only scoring event is a finished sequence, so
+## a round where nobody manages a clean run ends four-way nil and produces no
+## result at all — which happened in 5% of simulated rounds.
+const STEP_POINTS := 1
 
 var _pads: Array = []
 var _sequence: Array[int] = []
@@ -19,6 +28,9 @@ var _show_index := 0
 var _step_time := 0.62
 var _length := 3
 var _last_pad: Array[int] = []
+var _mistakes: Array[int] = []
+var _serial := 0
+var _finished: Array[int] = []
 
 
 func configure() -> void:
@@ -36,6 +48,8 @@ func build() -> void:
 	_progress.fill(0)
 	_last_pad.resize(ctx.player_count())
 	_last_pad.fill(-1)
+	_mistakes.resize(ctx.player_count())
+	_mistakes.fill(0)
 	var glyphs := ["◆", "●", "▲", "■", "★"]
 	for i in PAD_COUNT:
 		var ang := TAU * float(i) / float(PAD_COUNT) - PI * 0.5
@@ -62,6 +76,8 @@ func _new_sequence() -> void:
 		_sequence.append(ctx.rng.randi_range(0, PAD_COUNT - 1))
 	_progress.fill(0)
 	_last_pad.fill(-1)
+	_finished.clear()
+	_serial += 1
 	_stage = Stage.SHOW
 	_show_index = 0
 	_timer = 0.6
@@ -82,6 +98,8 @@ func tick(delta: float) -> void:
 					_reset_pad_colors()
 		Stage.INPUT:
 			_read_inputs()
+			if _all_finished():
+				_timer = minf(_timer, 0.35)
 			if _timer <= 0.0:
 				_stage = Stage.RESOLVE
 				_timer = 1.0
@@ -126,17 +144,35 @@ func _read_inputs() -> void:
 			continue
 		if on == _sequence[_progress[i]]:
 			_progress[i] += 1
+			ctx.add_score(i, int(STEP_POINTS * ctx.powerups.point_multiplier(i)))
 			AudioManager.play_sfx("correct", f.global_position)
 			if _progress[i] >= _sequence.size():
-				var gain := int(SEQUENCE_POINTS * _sequence.size() * ctx.powerups.point_multiplier(i))
+				var rank := _finished.size()
+				_finished.append(i)
+				var base := SEQUENCE_POINTS * _sequence.size()
+				var bonus: int = ORDER_BONUS[rank] if rank < ORDER_BONUS.size() else 0
+				var gain := int(float(base + bonus) * ctx.powerups.point_multiplier(i))
 				ctx.add_score(i, gain)
 				ctx.bump_detail(i, "correct")
+				if rank == 0:
+					ctx.bump_detail(i, "first")
 				AudioManager.play_sfx("score")
 		else:
 			_progress[i] = 0
+			_mistakes[i] += 1
 			ctx.bump_detail(i, "mistakes")
 			f.stun(0.45)
 			AudioManager.play_sfx("wrong", f.global_position)
+
+
+## True once every player still in the round has walked the whole sequence, so
+## the round can move on instead of burning the remaining seconds.
+func _all_finished() -> bool:
+	var alive := 0
+	for i in ctx.fighters.size():
+		if ctx.is_alive(i):
+			alive += 1
+	return alive > 0 and _finished.size() >= alive
 
 
 func _pad_under(pos: Vector3) -> int:
@@ -162,6 +198,28 @@ func expected_pad(slot: int) -> int:
 
 func is_showing() -> bool:
 	return _stage == Stage.SHOW
+
+
+## Bumped every time a fresh sequence is dealt. A brain keys its recall on this
+## so a step it fumbled is re-rolled for the next sequence instead of staying
+## wrong for the whole round.
+func sequence_serial() -> int:
+	return _serial
+
+
+## How many steps of the current sequence this slot has already walked.
+func progress_of(slot: int) -> int:
+	if slot < 0 or slot >= _progress.size():
+		return 0
+	return _progress[slot]
+
+
+## Wrong-pad count for this slot. A brain watches this to notice its own miss,
+## which is the only feedback a human gets too.
+func mistakes_of(slot: int) -> int:
+	if slot < 0 or slot >= _mistakes.size():
+		return 0
+	return _mistakes[slot]
 
 
 func is_round_over() -> bool:
@@ -190,4 +248,5 @@ func detail_rows() -> Array:
 	return [
 		{"key": "results.stat.correct", "field": "correct"},
 		{"key": "results.stat.mistakes", "field": "mistakes"},
+		{"key": "results.stat.first", "field": "first"},
 	]

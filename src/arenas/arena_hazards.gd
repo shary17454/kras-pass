@@ -36,9 +36,15 @@ class Sweeper extends Node3D:
 		_area.add_child(cs)
 		add_child(_area)
 
+	## The rate the arm is turning *right now*, acceleration included. This is
+	## what a player reads off the screen, so it is also what a bot is allowed
+	## to use when judging whether the arm will reach it in time.
+	func current_speed() -> float:
+		return speed * (1.0 + _age * accel_over_time)
+
 	func tick(delta: float) -> void:
 		_age += delta
-		rotate_y(speed * (1.0 + _age * accel_over_time) * delta)
+		rotate_y(current_speed() * delta)
 		if _area == null:
 			return
 		for body in _area.get_overlapping_bodies():

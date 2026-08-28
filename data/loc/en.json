@@ -72,6 +72,7 @@
   "results.stat.time": "Time",
   "results.stat.correct": "Correct",
   "results.stat.mistakes": "Mistakes",
+  "results.stat.first": "First",
   "results.stat.damage": "Damage dealt",
   "results.stat.crates": "Crates",
   "tournament.title": "Tournament",
