@@ -12,10 +12,16 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$ROOT/build/ios"
 TARGET="${1:-device}"
 GODOT="${GODOT:-godot}"
+MANIFEST="$OUT/KrasPass.xcodeproj/xcshareddata/xcodecloud/manifest.json"
+MANIFEST_BACKUP=""
 
 cd "$ROOT"
 
 echo "==> Exporting iOS project"
+if [[ -f "$MANIFEST" ]]; then
+	MANIFEST_BACKUP="$(mktemp)"
+	cp "$MANIFEST" "$MANIFEST_BACKUP"
+fi
 rm -rf "$OUT"
 mkdir -p "$OUT"
 "$GODOT" --headless --path . --export-release "iOS" "$OUT/KrasPass.ipa" >/tmp/kraspass_export.log 2>&1 || {
@@ -24,6 +30,10 @@ mkdir -p "$OUT"
 	exit 1
 }
 test -d "$OUT/KrasPass.xcodeproj" || { echo "no Xcode project produced" >&2; exit 1; }
+if [[ -n "$MANIFEST_BACKUP" ]]; then
+	mkdir -p "$(dirname "$MANIFEST")"
+	cp "$MANIFEST_BACKUP" "$MANIFEST"
+fi
 
 # --- orientation patch ------------------------------------------------------
 # Godot 4.7 writes a single interface orientation per device family, and picks
@@ -38,6 +48,21 @@ for KEY in "UISupportedInterfaceOrientations" "UISupportedInterfaceOrientations~
 	/usr/libexec/PlistBuddy -c "Add :$KEY:0 string UIInterfaceOrientationLandscapeLeft" "$PLIST"
 	/usr/libexec/PlistBuddy -c "Add :$KEY:1 string UIInterfaceOrientationLandscapeRight" "$PLIST"
 done
+
+echo "==> Removing unused permission usage descriptions"
+for KEY in "NSCameraUsageDescription" "NSMicrophoneUsageDescription" "NSPhotoLibraryUsageDescription"; do
+	/usr/libexec/PlistBuddy -c "Delete :$KEY" "$PLIST" 2>/dev/null || true
+done
+
+if [[ -f "$OUT/KrasPass/dummy.h" ]]; then
+	perl -0pi -e 's/\n#pragma once\n/\n/' "$OUT/KrasPass/dummy.h"
+fi
+
+perl -0pi -e 's/CODE_SIGN_IDENTITY = "Apple Distribution";/CODE_SIGN_IDENTITY = "Apple Development";/g' \
+	"$OUT/KrasPass.xcodeproj/project.pbxproj"
+perl -0pi -e 's/\n+\z/\n/' \
+	"$OUT/KrasPass.xcodeproj/project.pbxproj" \
+	"$OUT/KrasPass/export_options.plist"
 
 # --- build ------------------------------------------------------------------
 if [[ "$TARGET" == "simulator" ]]; then
