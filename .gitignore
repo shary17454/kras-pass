@@ -12,6 +12,8 @@ exports/
 *.exe
 *.pck
 *.zip
+__pycache__/
+*.pyc
 
 # Xcode Cloud needs the generated iOS project, but not local archives/exports.
 !build/
