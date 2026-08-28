@@ -10,15 +10,21 @@ var health: Array[float] = []
 var _max_health := 100.0
 var _ram_damage := 18.0
 var _threshold := 7.0
+const FLANK_BONUS := 2.2
+
 var _hit_cooldown := {}
+var _backwash := 0.2
 var _bars: Array = []
 
 
 func configure() -> void:
 	eliminate_on_fall = true
 	lives_per_player = 1
+	# A derby scores wrecks, not caution.
+	survival_knockout_weight = 4
 	var t := Balance.table("tuning").get("vehicle", {})
 	_max_health = float(t.get("max_health", 100.0))
+	_backwash = float(t.get("ram_backwash", 0.2))
 	_ram_damage = float(t.get("ram_damage", 18.0))
 	_threshold = float(t.get("ram_speed_threshold", 7.0))
 
@@ -95,14 +101,39 @@ func _resolve_rams() -> void:
 			var a_into: float = a.velocity.dot(dir)
 			var b_into: float = -b.velocity.dot(dir)
 			var scale := closing / maxf(_threshold, 0.1)
+			# Where you hit them matters as much as how hard. A kart caught
+			# across the flank or from behind cannot brace or bounce off; a
+			# head-on is two chassis meeting and both crews walking away. Flat
+			# 0.6/0.2 damage made every exchange mutually destructive, so the
+			# tiers that aimed well simply engaged more and died sooner —
+			# precision had no payoff and every profile knob measured *better*
+			# turned down. Angle is what precision buys.
+			var flank_a := _flank_multiplier(b, dir)
+			var flank_b := _flank_multiplier(a, -dir)
 			if a_into > b_into:
-				_damage(j, i, _ram_damage * scale * 0.6, dir)
-				_damage(i, j, _ram_damage * scale * 0.2, -dir)
+				_damage(j, i, _ram_damage * scale * 0.6 * flank_a, dir)
+				_damage(i, j, _ram_damage * scale * _backwash, -dir)
 			else:
-				_damage(i, j, _ram_damage * scale * 0.6, -dir)
-				_damage(j, i, _ram_damage * scale * 0.2, dir)
+				_damage(i, j, _ram_damage * scale * 0.6 * flank_b, -dir)
+				_damage(j, i, _ram_damage * scale * _backwash, dir)
 			EventBus.shake(0.35, 0.2)
 			AudioManager.play_sfx("hit", a.global_position)
+
+
+## 1.0 head-on, rising toward `FLANK_BONUS` as the hit swings round to the
+## victim's side or back. `impact` points from the attacker toward the victim.
+func _flank_multiplier(victim, impact: Vector3) -> float:
+	if victim == null or not is_instance_valid(victim):
+		return 1.0
+	var facing: Vector3 = victim.facing
+	facing.y = 0.0
+	var hit: Vector3 = impact
+	hit.y = 0.0
+	if facing.length() < 0.1 or hit.length() < 0.1:
+		return 1.0
+	# -1 means the impact arrives straight at the nose, +1 straight up the back.
+	var alignment: float = facing.normalized().dot(hit.normalized())
+	return lerpf(1.0, FLANK_BONUS, clampf((alignment + 1.0) * 0.5, 0.0, 1.0))
 
 
 func _damage(victim: int, attacker: int, amount: float, dir: Vector3) -> void:

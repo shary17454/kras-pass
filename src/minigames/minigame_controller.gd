@@ -21,6 +21,13 @@ var def: MiniGameDef
 
 ## Fall handling shared by most games. A game sets these in `configure()`.
 var eliminate_on_fall := true      # false = respawn instead
+## How much a credited elimination is worth against a place in the survival
+## order. 1 is the default and keeps outliving people king. A game whose entire
+## verb is wrecking rivals should raise it: in Scrap Karts every exchange hurts
+## both karts, so ranking purely by who lasts longest makes not fighting the
+## optimal strategy in a demolition derby, and the bot tiers that engaged most
+## placed worst.
+var survival_knockout_weight := 1
 var respawn_delay := 1.4
 var lives_per_player := 1
 var _respawn_timers := {}
@@ -145,7 +152,7 @@ func compute_scores() -> Array[int]:
 		# turtle who hid to second place.
 		var out := ctx.survival_scores()
 		for i in out.size():
-			out[i] = out[i] * 2 + int(ctx.details[i].get("knockouts", 0))
+			out[i] = out[i] * 2 + int(ctx.details[i].get("knockouts", 0)) * survival_knockout_weight
 		return out
 	return ctx.scores.duplicate()
 

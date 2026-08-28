@@ -68,6 +68,17 @@ for KEY in "UISupportedInterfaceOrientations" "UISupportedInterfaceOrientations~
 	/usr/libexec/PlistBuddy -c "Add :$KEY:1 string UIInterfaceOrientationLandscapeRight" "$PLIST"
 done
 
+# --- game controller declaration -------------------------------------------
+# Spec item 55 wants the Game Controller capability declared, and item 5 wants
+# four players on four pads. Godot's exporter writes neither key, so the App
+# Store has no way to know the game supports controllers and iOS treats a
+# second pad as a duplicate of the first.
+echo "==> Declaring game controller support"
+for KEY in "GCSupportsControllerUserInteraction" "GCSupportsMultipleMicroGamepads"; do
+	/usr/libexec/PlistBuddy -c "Delete :$KEY" "$PLIST" 2>/dev/null || true
+	/usr/libexec/PlistBuddy -c "Add :$KEY bool true" "$PLIST"
+done
+
 echo "==> Removing unused permission usage descriptions"
 for KEY in "NSCameraUsageDescription" "NSMicrophoneUsageDescription" "NSPhotoLibraryUsageDescription"; do
 	/usr/libexec/PlistBuddy -c "Delete :$KEY" "$PLIST" 2>/dev/null || true

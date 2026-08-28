@@ -12,8 +12,25 @@ func decide(_delta: float) -> void:
 
 	var intruder := _rival_in_zone(zone, radius)
 	if inside and intruder >= 0:
-		# Someone is sharing the zone: nothing scores until one of us leaves.
-		steer_to(predict(intruder, 0.2))
+		# Someone is sharing the zone and nothing scores until one of us
+		# leaves — so the swing has to *eject* them, not merely land. Take the
+		# angle that puts them between you and the rim: a hit from the inside
+		# pushes them out, the same hit from the outside pushes them into the
+		# middle and buys the rival another two seconds of stalemate. Every
+		# profile knob measured identical here (0.50 across the board) because
+		# the brain was throwing hits with no thought to which way they sent
+		# anyone; `strategy` now decides who takes the angle and who just
+		# swings.
+		var spot := predict(intruder, 0.2)
+		if rng.randf() < strategy:
+			var outward: Vector3 = spot - zone
+			outward.y = 0.0
+			if outward.length() > 0.4:
+				steer_to(spot - outward.normalized() * 1.7)
+			else:
+				steer_to(spot)
+		else:
+			steer_to(spot)
 		maybe_attack(intruder, 2.6)
 		if rng.randf() < aggression:
 			maybe_dash(1.2)

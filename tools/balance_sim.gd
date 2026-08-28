@@ -176,7 +176,16 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 ## nobody having landed enough hits to score and every boss reads as a 100% tie
 ## on zero. Give them a window the fight can actually resolve in.
 func _window_for(def: MiniGameDef) -> float:
-	return 75.0 if def.is_boss else ROUND_SECONDS
+	if def.is_boss:
+		return 75.0
+	# A fraction of the intended round, not a flat count of seconds. The flat
+	# 14 s clip quietly penalised anything that scores by accumulation: Zone
+	# Hold runs 90 s and moves its circle every 7-11 s, so a 14 s sample caught
+	# barely one placement and read a dead-flat 0.50 no matter how the bots
+	# played — widening it to 45 s moved the same build to 0.52. Measuring a
+	# 90-second game in 14 seconds is the same mistake as timing a boss fight
+	# in 14 seconds, and it was hiding real signal rather than adding noise.
+	return clampf(def.duration * 0.35, ROUND_SECONDS, 45.0)
 
 
 ## Expert-versus-Easy, mirrored across slots, expressed as the share of points
