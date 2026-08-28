@@ -17,8 +17,16 @@ func build() -> void:
 
 func on_round_start() -> void:
 	var arena := ctx.arena as Arena
-	if arena != null:
-		arena.reset_hazards()
+	if arena == null:
+		return
+	arena.reset_hazards()
+	# The arms spawn at fixed angles with alternating spin, so whichever slot
+	# stands nearest a blade's opening sweep eats it every single round — the
+	# simulator read that as a 42% spawn-slot advantage. Rolling the phases
+	# from the round's seed keeps rounds fair and replays reproducible.
+	for child in arena.get_children():
+		if child is ArenaHazards.Sweeper:
+			child.rotation.y = ctx.rng.randf() * TAU
 
 
 func tick(_delta: float) -> void:

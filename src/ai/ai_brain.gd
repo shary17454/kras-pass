@@ -295,8 +295,33 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 	var me := self_body()
 	if me == null or not me.can_dash:
 		return
-	if rng.randf() < dash_chance * chance_scale * decision_interval * 6.0:
-		press(Btn.DASH)
+	if rng.randf() >= dash_chance * chance_scale * decision_interval * 6.0:
+		return
+	# A dash is a commitment you cannot steer out of: the 15.5 impulse alone
+	# carries ~1.7 m against damping, riding on top of full walk speed for the
+	# dash window plus the slide after it — call it five metres of travel that
+	# is decided the moment the button goes down. Isolating knobs showed this
+	# is the single biggest skill-eraser in every push-out game: with dashes
+	# and no attacks the Expert edge collapses to 0.45 while attacks alone
+	# score 0.61, because a charge dash near the rim follows the victim
+	# straight over it, at every tier alike. So project the real travel and
+	# refuse the dashes that end in the void — at `edge_awareness` odds, so the
+	# tiers that are supposed to yeet themselves still do.
+	if rng.randf() < edge_awareness:
+		var arena := ctx.arena as Arena
+		if arena == null and OS.get_environment("DASH_DEBUG") != "":
+			print("DASH_NOARENA")
+		if arena != null:
+			var dir := Vector3(move.x, 0.0, move.y)
+			if dir.length_squared() > 0.05:
+				var land: Vector3 = me.global_position + dir.normalized() * 5.0
+				if arena.edge_distance(land) < 1.2:
+					if OS.get_environment("DASH_DEBUG") != "":
+						print("DASH_REFUSED")
+					return
+	if OS.get_environment("DASH_DEBUG") != "":
+		print("DASH_OK")
+	press(Btn.DASH)
 
 
 func maybe_attack(target_slot: int, range_: float = 2.4) -> void:

@@ -48,10 +48,10 @@ func decide(_delta: float) -> void:
 	#    successful hit actually removes them instead of just annoying them.
 	if target >= 0 and rng.randf() < aggression + 0.2:
 		var spot := predict(target, 0.3)
+		var to_target := distance_to(spot)
 		var shove_dir := _best_shove_position(spot, arena)
 		steer_to(shove_dir)
 		maybe_attack(target, 2.5)
-		var to_target := distance_to(spot)
 		if to_target > 4.5 and to_target < 11.0:
 			maybe_dash(0.9)
 		keep_off_edge(panic_margin)

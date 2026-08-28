@@ -37,12 +37,16 @@ func on_sudden_death() -> void:
 		return
 	# Collapse the ring toward the centre immediately; anyone loitering at the
 	# rim is now standing on nothing.
-	var shrink := Balance.num("tuning", "match.sudden_death_shrink", 0.55)
 	for h in arena.get_children():
 		if h is ArenaHazards.ShrinkRing:
 			h.start_delay = 0.0
 			h.rate = maxf(h.rate, 1.2)
-			h.min_radius = maxf(3.0, arena.def.radius * shrink * 0.5)
+			# Room for one. Stopping at a 3.6 m island let every remaining
+			# fighter stand inside it indefinitely once knockback stopped being
+			# a catapult, and a sudden death that can stalemate is not sudden —
+			# the round hung until the harness timeout. The ring now closes to
+			# less than a body's width, which is a guarantee, not a pressure.
+			h.min_radius = 0.9
 
 
 func on_credited_knockout(attacker: int, _victim: int) -> void:

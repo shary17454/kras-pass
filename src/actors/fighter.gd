@@ -334,6 +334,7 @@ func is_dashing() -> bool:
 	return _dash_time > 0.0
 
 
+
 func is_attacking() -> bool:
 	return _attack_time > 0.0
 
@@ -450,9 +451,19 @@ func _apply_impulse(delta: float) -> void:
 	if _impulse.length_squared() < 0.0004:
 		_impulse = Vector3.ZERO
 		return
-	velocity += _impulse
+	# `_impulse` is the Δv a hit still owes this body, paid out over the ~0.3 s
+	# the damping needs to drain it — that spread is what makes a shove read as
+	# a push rather than a teleport. Pay out exactly what drains each frame.
+	# The previous line here was `velocity += _impulse` with no delta: the full
+	# remaining impulse re-added sixty times a second, so a tuned 11.5 shove
+	# delivered ~110 m/s and threw its victim two hundred metres off a ring
+	# thirteen metres wide. Every symptom traced back to this one line — rounds
+	# of a 95-second game over in 4.7 s, forty-five falls per match, and every
+	# skill gap erased because any exchange was a coin-flip execution.
 	var damp := float(_tuning.get("impulse_damping", 9.0))
-	_impulse = _impulse.move_toward(Vector3.ZERO, damp * delta * maxf(1.0, _impulse.length() * 0.35))
+	var before := _impulse
+	_impulse = _impulse.move_toward(Vector3.ZERO, damp * delta * maxf(1.0, before.length() * 0.35))
+	velocity += before - _impulse
 
 
 func _gravity() -> float:

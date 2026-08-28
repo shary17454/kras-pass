@@ -7,7 +7,10 @@ extends RefCounted
 ## by hand every build: pause, restart, early quit, controller loss and the
 ## multi-round path.
 
-const MAX_SECONDS_PER_MATCH := 70.0
+# 110 not 70: with impulse physics fixed, nobody gets thrown out of a ring in
+# a 5-second round any more, so short test rounds legitimately reach sudden
+# death and need the extra simulated seconds to resolve.
+const MAX_SECONDS_PER_MATCH := 110.0
 const ROUND_SECONDS := 5.0
 
 var _host: Node

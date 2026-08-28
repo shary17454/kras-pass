@@ -133,7 +133,20 @@ func max_carry() -> int:
 ## running score the game has been adding to `ctx`.
 func compute_scores() -> Array[int]:
 	if def != null and def.scoring == MiniGameDef.Scoring.SURVIVAL:
-		return ctx.survival_scores()
+		# Survival rank alone made cowardice the winning meta: the attacker
+		# carries all the risk of engaging while the reward — everyone left
+		# moves up a rank — is shared by every survivor, hunter and turtle
+		# alike. Bots exposed it (the passive tier beat the aggressive one in
+		# every push-out game) but the free-rider structure is just as true for
+		# four humans on a couch. So outliving a rival pays double what a
+		# credited ring-out pays, and ring-outs pay the one who caused them:
+		# survival stays king — no kill count outranks the last one standing —
+		# but a hunter who throws two rivals out and dies third now beats the
+		# turtle who hid to second place.
+		var out := ctx.survival_scores()
+		for i in out.size():
+			out[i] = out[i] * 2 + int(ctx.details[i].get("knockouts", 0))
+		return out
 	return ctx.scores.duplicate()
 
 
@@ -233,6 +246,14 @@ func safe_respawn_position(slot: int) -> Vector3:
 func _handle_out(slot: int) -> void:
 	if not ctx.is_alive(slot):
 		return
+	if OS.get_environment("DEATH_DEBUG") != "":
+		var f := ctx.fighter(slot)
+		if f != null and ctx.arena is Arena:
+			var r := (f.global_position - ctx.arena.global_position).length()
+			print("DEATH slot=%d rnd=%d t=%.1f y=%.1f xz=%.1f dashing=%s attacker=%d" % [
+				slot, ctx.round_index, ctx.time_left, f.global_position.y,
+				Vector2(f.global_position.x - ctx.arena.global_position.x, f.global_position.z - ctx.arena.global_position.z).length(),
+				f.is_dashing(), f.last_attacker()])
 	ctx.bump_detail(slot, "falls")
 	var attacker: int = ctx.fighter(slot).last_attacker() if ctx.fighter(slot) != null else -1
 	if attacker >= 0 and attacker != slot:
