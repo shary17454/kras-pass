@@ -169,6 +169,15 @@
   "game.goal_guard.name": "Goal Guard",
   "game.goal_guard.desc": "Your wall, your problem.",
   "game.goal_guard.rules": "Each competitor defends one side. Deflect the balls away from your goal — every ball that gets past costs you a point.",
+  "game.magnet_court.name": "Magnet Court",
+  "game.magnet_court.desc": "Catch the storm, then throw it back.",
+  "game.magnet_court.rules": "Defend your wall — and carry a one-charge magnet: for a beat it pulls nearby balls in, then hurls them all away from your goal. The charge refills slowly, so pick your moment.",
+  "game.storm_heart.name": "Storm Heart",
+  "game.storm_heart.desc": "The machine in the middle is not on your side.",
+  "game.storm_heart.rules": "Goal Guard around a spinning turbine: every few seconds it whirls up and hurls every ball outward on a different bearing. Watch the blades — they warn you before they strike.",
+  "game.sky_court.name": "Sky Court",
+  "game.sky_court.desc": "Four engines, and less trust than you'd like.",
+  "game.sky_court.rules": "The court hangs in the sky. When an engine dies the deck really tilts and every ball bends toward the low corner — read the slope before it reads your goal.",
   "game.blast_ball.name": "Blast Ball",
   "game.blast_ball.desc": "Whoever holds it, loses it.",
   "game.blast_ball.rules": "The ball is armed. Hit it toward someone else before the fuse runs out — the one closest to the blast is eliminated.",
@@ -537,5 +546,6 @@
   "category.race": "Racing",
   "category.reaction": "Reaction",
   "category.survival": "Survival",
-  "category.combat": "Light combat"
+  "category.combat": "Light combat",
+  "results.stat.volleys": "Counter volleys"
 }

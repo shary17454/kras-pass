@@ -95,6 +95,81 @@
       ]
     },
     {
+      "id": "magnet_court",
+      "category": "ball_zone",
+      "scoring": "points",
+      "arenas": [
+        "quad_court"
+      ],
+      "duration": 100.0,
+      "rounds": 1,
+      "controls": [
+        "move",
+        "dash",
+        "ability"
+      ],
+      "control_profile": "aim_and_move",
+      "glyph": "⌾",
+      "tags": [
+        "defence",
+        "tempo"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 5
+      }
+    },
+    {
+      "id": "storm_heart",
+      "category": "ball_zone",
+      "scoring": "points",
+      "arenas": [
+        "quad_court"
+      ],
+      "duration": 100.0,
+      "rounds": 1,
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "aim_and_move",
+      "glyph": "❋",
+      "tags": [
+        "defence",
+        "chaos"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 8
+      }
+    },
+    {
+      "id": "sky_court",
+      "category": "ball_zone",
+      "scoring": "points",
+      "arenas": [
+        "quad_court"
+      ],
+      "duration": 100.0,
+      "rounds": 1,
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "aim_and_move",
+      "glyph": "⬒",
+      "tags": [
+        "defence",
+        "nerve"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 12
+      }
+    },
+    {
       "id": "blast_ball",
       "category": "ball_zone",
       "scoring": "survival",
