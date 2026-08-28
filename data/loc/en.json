@@ -547,5 +547,19 @@
   "category.reaction": "Reaction",
   "category.survival": "Survival",
   "category.combat": "Light combat",
-  "results.stat.volleys": "Counter volleys"
+  "results.stat.volleys": "Counter volleys",
+  "game.fawda.name": "Fawda",
+  "game.fawda.desc": "The fuse is lit, and it is on nobody's side.",
+  "game.fawda.rules": "Shove your rivals off the ring — while bombs drop with their fuses already burning. Walk over one to carry it, press attack to throw it. You cannot swing while carrying, and a bomb that goes off in your hands throws you further than any shove.",
+  "game.mnatiq.name": "Regions",
+  "game.mnatiq.desc": "Draw your border; what it holds is yours.",
+  "game.mnatiq.rules": "Every tile you cross becomes yours. But close a loop around an area and the whole pocket flips to you at once — drawing beats walking.",
+  "game.mukharrib.name": "The Saboteur",
+  "game.mukharrib.desc": "A machine that takes nobody's side.",
+  "game.mukharrib.rules": "Claim tiles while a neutral drone patrols: it marks a square in white, then scrubs it and its neighbours back to bare floor. It hunts whoever leads — so read its route and paint behind it, not ahead of it.",
+  "game.lab_crates.name": "The Lab",
+  "game.lab_crates.desc": "Some crates hit back.",
+  "game.lab_crates.rules": "Smash crates for points and beware the rigged ones. Now with green specimen boxes: they pay no points but arm you on the spot — a shockwave, an eight-way volley, or a heavy ingot of score.",
+  "results.stat.regions": "Regions closed",
+  "results.stat.weapons": "Weapons"
 }

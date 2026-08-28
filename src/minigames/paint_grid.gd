@@ -48,6 +48,7 @@ func tick(delta: float) -> void:
 			continue
 		if tile.claim(i, UIKit.adapt(ctx.config.players[i].color())):
 			AudioManager.play_sfx("tick", f.global_position, 1.0 + i * 0.06)
+			_on_tile_claimed(tile, i)
 		# A dash paints a small cross, which rewards committed movement over
 		# shuffling back and forth on one square.
 		if f.is_dashing():
@@ -62,7 +63,13 @@ func _paint_neighbours(arena: Arena, centre: ArenaTile, slot: int) -> void:
 	var col := UIKit.adapt(ctx.config.players[slot].color())
 	for t in _tiles:
 		if absi(t.grid_x - centre.grid_x) + absi(t.grid_z - centre.grid_z) == 1:
-			t.claim(slot, col)
+			if t.claim(slot, col):
+				_on_tile_claimed(t, slot)
+
+
+## Hook for family variants: fired once per tile that actually changed hands.
+func _on_tile_claimed(_tile: ArenaTile, _slot: int) -> void:
+	pass
 
 
 func _recount_scores() -> void:

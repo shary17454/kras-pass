@@ -74,6 +74,32 @@
       }
     },
     {
+      "id": "fawda",
+      "category": "push_out",
+      "scoring": "survival",
+      "arenas": [
+        "vortex_ring",
+        "storm_ring"
+      ],
+      "duration": 95.0,
+      "rounds": 2,
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "✸",
+      "tags": [
+        "chaos",
+        "nerve"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 18
+      }
+    },
+    {
       "id": "goal_guard",
       "category": "ball_zone",
       "scoring": "points",
@@ -309,6 +335,56 @@
       ]
     },
     {
+      "id": "mnatiq",
+      "category": "control",
+      "scoring": "points",
+      "arenas": [
+        "paint_grid"
+      ],
+      "duration": 95.0,
+      "rounds": 1,
+      "controls": [
+        "move",
+        "jump",
+        "dash"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "◫",
+      "tags": [
+        "territory",
+        "planning"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 10
+      }
+    },
+    {
+      "id": "mukharrib",
+      "category": "control",
+      "scoring": "points",
+      "arenas": [
+        "paint_grid"
+      ],
+      "duration": 95.0,
+      "rounds": 1,
+      "controls": [
+        "move",
+        "jump",
+        "dash"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "⌗",
+      "tags": [
+        "territory",
+        "chaos"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 14
+      }
+    },
+    {
       "id": "zone_hold",
       "category": "control",
       "scoring": "points",
@@ -353,6 +429,31 @@
         "smash",
         "risk"
       ]
+    },
+    {
+      "id": "lab_crates",
+      "category": "crates",
+      "scoring": "points",
+      "arenas": [
+        "crate_yard"
+      ],
+      "duration": 90.0,
+      "rounds": 1,
+      "controls": [
+        "move",
+        "attack",
+        "dash"
+      ],
+      "control_profile": "movement_action",
+      "glyph": "⚗",
+      "tags": [
+        "gamble",
+        "combat"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 20
+      }
     },
     {
       "id": "crate_relay",
