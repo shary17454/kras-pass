@@ -17,7 +17,7 @@ const DEFAULTS := {
 	"camera_shake": 1.0,
 	"graphics_quality": 2,  # 0 low, 1 medium, 2 high
 	"fps_limit": 0,  # 0 = display refresh
-	"language": "",  # "" = follow system on first launch
+	"language": "",  # "" = no explicit choice yet -> Arabic, the primary
 	"text_scale": 1.0,
 	"high_contrast": false,
 	"reduce_flashes": false,

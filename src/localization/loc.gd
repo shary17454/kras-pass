@@ -20,8 +20,11 @@ var _missing := {}
 func _ready() -> void:
 	for code in SUPPORTED:
 		_tables[code] = _read(code)
-	var sys := OS.get_locale_language()
-	locale = sys if SUPPORTED.has(sys) else "ar"
+	# Arabic is the app's primary language, not merely its fallback: a fresh
+	# install starts in Arabic on every device, whatever the system language.
+	# UserSettings re-applies a saved explicit choice right after the autoloads
+	# finish, so picking English in settings still sticks across launches.
+	locale = "ar"
 	_apply_text_direction()
 
 
