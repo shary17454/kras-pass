@@ -17,6 +17,25 @@ MANIFEST_BACKUP=""
 
 cd "$ROOT"
 
+REQUIRED_IOS_SDK="${REQUIRED_IOS_SDK:-26.5}"
+XCODE_VERSION="$(xcodebuild -version | tr '\n' ' ')"
+IPHONEOS_SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version)"
+IPHONEOS_SDK_BUILD="$(xcrun --sdk iphoneos --show-sdk-build-version)"
+
+version_ge() {
+	local lhs="$1"
+	local rhs="$2"
+	[[ "$(printf '%s\n%s\n' "$rhs" "$lhs" | sort -V | tail -1)" == "$lhs" ]]
+}
+
+echo "==> Toolchain"
+echo "    xcode     : $XCODE_VERSION"
+echo "    iphoneos  : $IPHONEOS_SDK_VERSION ($IPHONEOS_SDK_BUILD)"
+if ! version_ge "$IPHONEOS_SDK_VERSION" "$REQUIRED_IOS_SDK"; then
+	echo "iphoneos SDK $IPHONEOS_SDK_VERSION is older than required $REQUIRED_IOS_SDK" >&2
+	exit 1
+fi
+
 echo "==> Exporting iOS project"
 if [[ -f "$MANIFEST" ]]; then
 	MANIFEST_BACKUP="$(mktemp)"
@@ -24,7 +43,7 @@ if [[ -f "$MANIFEST" ]]; then
 fi
 rm -rf "$OUT"
 mkdir -p "$OUT"
-"$GODOT" --headless --path . --export-release "iOS" "$OUT/KrasPass.ipa" >/tmp/kraspass_export.log 2>&1 || {
+"$GODOT" --headless --log-file /tmp/kraspass_export_godot.log --path . --export-release "iOS" "$OUT/KrasPass.ipa" >/tmp/kraspass_export.log 2>&1 || {
 	echo "Godot export failed:" >&2
 	tail -30 /tmp/kraspass_export.log >&2
 	exit 1
@@ -91,11 +110,21 @@ xcodebuild -project "$OUT/KrasPass.xcodeproj" \
 
 APP="$(find "$DD/Build/Products" -maxdepth 2 -name 'KrasPass.app' -print -quit)"
 test -n "$APP" || { echo "no .app produced" >&2; exit 1; }
+BINARY_SDK="$(xcrun vtool -show-build "$APP/KrasPass" | awk '/ sdk / {print $2; exit}')"
+if [[ -z "$BINARY_SDK" ]]; then
+	echo "could not read LC_BUILD_VERSION sdk from the built app binary" >&2
+	exit 1
+fi
+if ! version_ge "$BINARY_SDK" "$REQUIRED_IOS_SDK"; then
+	echo "built app binary SDK $BINARY_SDK is older than required $REQUIRED_IOS_SDK" >&2
+	exit 1
+fi
 
 echo "==> BUILD SUCCEEDED"
 echo "    bundle    : $APP"
 echo "    size      : $(du -sh "$APP" | cut -f1)"
 echo "    binary    : $(file -b "$APP/KrasPass")"
+echo "    sdk       : $BINARY_SDK"
 echo "    identifier: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")"
 echo "    min iOS   : $(/usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$APP/Info.plist")"
 echo "    families  : $(/usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily' "$APP/Info.plist" | tr -d '\n ' )"
