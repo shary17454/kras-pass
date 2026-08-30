@@ -821,7 +821,7 @@ func _show_pause_menu(message: String = "") -> void:
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(centre)
 	var card := UIKit.panel(UIKit.PANEL, 22)
-	card.custom_minimum_size = Vector2(520, 0)
+	card.custom_minimum_size = Vector2(640, 0)
 	centre.add_child(card)
 	var v := UIKit.vbox(12)
 	card.add_child(v)
@@ -829,7 +829,7 @@ func _show_pause_menu(message: String = "") -> void:
 	if message != "":
 		var m := UIKit.centered(message, UIKit.SIZE_SMALL, UIKit.DANGER)
 		m.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		m.custom_minimum_size = Vector2(460, 0)
+		m.custom_minimum_size = Vector2(570, 0)
 		v.add_child(m)
 	var resume := UIKit.button(Loc.t("pause.resume"))
 	resume.pressed.connect(_toggle_pause)

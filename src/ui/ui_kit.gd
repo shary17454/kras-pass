@@ -21,11 +21,11 @@ const TEXT_DIM := Color("#9aa2c8")
 const DANGER := Color("#ff5f6d")
 const OK := Color("#6bd67d")
 
-const SIZE_TITLE := 74
-const SIZE_HEADING := 40
-const SIZE_BODY := 26
-const SIZE_SMALL := 20
-const SIZE_TINY := 16
+const SIZE_TITLE := 86
+const SIZE_HEADING := 48
+const SIZE_BODY := 32
+const SIZE_SMALL := 25
+const SIZE_TINY := 20
 
 static var _theme: Theme
 static var _font: Font
@@ -100,7 +100,7 @@ static func label(text: String, size: int = SIZE_BODY, color: Color = Color.TRAN
 	l.add_theme_font_size_override("font_size", int(size * scale()))
 	l.add_theme_color_override("font_color", text_color() if color == Color.TRANSPARENT else color)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
-	l.add_theme_constant_override("outline_size", 5)
+	l.add_theme_constant_override("outline_size", 6)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if Loc.is_rtl() else HORIZONTAL_ALIGNMENT_LEFT
 	l.text_direction = Control.TEXT_DIRECTION_RTL if Loc.is_rtl() else Control.TEXT_DIRECTION_LTR
 	return l
@@ -130,10 +130,10 @@ static func stylebox(color: Color, radius: int = 14, border := 0, border_color :
 	sb.corner_radius_top_right = radius
 	sb.corner_radius_bottom_left = radius
 	sb.corner_radius_bottom_right = radius
-	sb.content_margin_left = 18
-	sb.content_margin_right = 18
-	sb.content_margin_top = 10
-	sb.content_margin_bottom = 10
+	sb.content_margin_left = 22
+	sb.content_margin_right = 22
+	sb.content_margin_top = 13
+	sb.content_margin_bottom = 13
 	if border > 0:
 		sb.border_width_left = border
 		sb.border_width_right = border
@@ -163,7 +163,7 @@ static func button(text: String, size: int = SIZE_BODY) -> Button:
 	b.add_theme_stylebox_override("focus", stylebox(ACCENT, 14, 2, Color.WHITE))
 	b.add_theme_stylebox_override("pressed", stylebox(ACCENT.darkened(0.15), 14))
 	b.add_theme_stylebox_override("disabled", stylebox(PANEL.darkened(0.3), 14))
-	b.custom_minimum_size = Vector2(0, 58 * scale())
+	b.custom_minimum_size = Vector2(0, 68 * scale())
 	b.focus_mode = Control.FOCUS_ALL
 	# Menu audio is wired here so no screen has to remember it.
 	b.focus_entered.connect(func(): AudioManager.play_ui("ui_move"))
@@ -177,7 +177,7 @@ static func button(text: String, size: int = SIZE_BODY) -> Button:
 static func icon_button(glyph: String, tooltip: String) -> Button:
 	var b := button(glyph, SIZE_HEADING)
 	b.tooltip_text = tooltip
-	b.custom_minimum_size = Vector2(72 * scale(), 72 * scale())
+	b.custom_minimum_size = Vector2(84 * scale(), 84 * scale())
 	return b
 
 
@@ -200,7 +200,7 @@ static func option(items: Array, selected: int) -> OptionButton:
 	o.add_theme_font_override("font", font())
 	o.add_theme_font_size_override("font_size", int(SIZE_BODY * scale()))
 	o.focus_mode = Control.FOCUS_ALL
-	o.custom_minimum_size = Vector2(280 * scale(), 52)
+	o.custom_minimum_size = Vector2(330 * scale(), 64 * scale())
 	return o
 
 
@@ -220,7 +220,7 @@ static func row(label_text: String, control: Control) -> HBoxContainer:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 18)
 	var l := label(label_text)
-	l.custom_minimum_size = Vector2(340 * scale(), 0)
+	l.custom_minimum_size = Vector2(390 * scale(), 0)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.size_flags_horizontal = Control.SIZE_SHRINK_END
 	if Loc.is_rtl():

@@ -42,7 +42,7 @@ func _make_bar(slot: int) -> Node3D:
 		return null
 	var label := Label3D.new()
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.font_size = 64
+	label.font_size = 82
 	label.pixel_size = 0.005
 	label.outline_size = 18
 	label.position = Vector3(0, 2.3, 0)

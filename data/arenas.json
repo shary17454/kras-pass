@@ -4,24 +4,24 @@
     {
       "id": "vortex_ring",
       "shape": "disc",
-      "radius": 13.0,
+      "radius": 16.0,
       "thickness": 1.2,
       "wall_height": 0.0,
       "theme": "arctic",
       "palette": {"floor": "#bfe8f4", "accent": "#f5fbff", "sky_top": "#0b3156", "sky_bottom": "#2d8fc2"},
-      "hazards": [{"type": "shrink", "start_delay": 18.0, "rate": 0.28, "min_radius": 5.0}]
+      "hazards": [{"type": "shrink", "start_delay": 18.0, "rate": 0.28, "min_radius": 6.5}]
     },
     {
       "id": "storm_ring",
       "shape": "disc",
-      "radius": 11.5,
+      "radius": 14.0,
       "thickness": 1.2,
       "wall_height": 0.0,
       "theme": "arctic",
       "palette": {"floor": "#d5f4fb", "accent": "#8ee8ff", "sky_top": "#082747", "sky_bottom": "#1d789e"},
       "hazards": [
         {"type": "sweeper", "count": 2, "speed": 1.15, "length": 9.0, "height": 0.9},
-        {"type": "shrink", "start_delay": 26.0, "rate": 0.2, "min_radius": 6.0}
+        {"type": "shrink", "start_delay": 26.0, "rate": 0.2, "min_radius": 7.0}
       ]
     },
     {

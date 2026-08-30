@@ -61,7 +61,7 @@ func build() -> void:
 		var label := Label3D.new()
 		label.text = glyphs[i]
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.font_size = 140
+		label.font_size = 170
 		label.pixel_size = 0.006
 		label.outline_size = 24
 		label.position = pos + Vector3(0, 1.6, 0)

@@ -14,13 +14,13 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 	if selected:
 		card.add_theme_stylebox_override("panel", UIKit.stylebox(
 			Color(col.r * 0.4, col.g * 0.4, col.b * 0.4, 1.0), 18, 4, UIKit.ACCENT))
-	card.custom_minimum_size = Vector2(250, 300)
+	card.custom_minimum_size = Vector2(300, 360)
 	var v := UIKit.vbox(6)
 	card.add_child(v)
 
 	var swatch := UIKit.panel(col if unlocked else Color(0.25, 0.25, 0.3), 12)
-	swatch.custom_minimum_size = Vector2(0, 86)
-	var glyph := UIKit.centered("?" if not unlocked else "◆", 46, UIKit.BG, true)
+	swatch.custom_minimum_size = Vector2(0, 104)
+	var glyph := UIKit.centered("?" if not unlocked else "◆", 54, UIKit.BG, true)
 	swatch.add_child(glyph)
 	v.add_child(swatch)
 
@@ -31,7 +31,7 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 	else:
 		var hint := UIKit.centered(Progression.unlock_hint(c.unlock), UIKit.SIZE_TINY, UIKit.ACCENT)
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		hint.custom_minimum_size = Vector2(210, 0)
+		hint.custom_minimum_size = Vector2(250, 0)
 		v.add_child(hint)
 	return card
 
@@ -46,16 +46,16 @@ static func stat_block(c: CharacterData) -> Control:
 	for r in rows:
 		var h := UIKit.hbox(8)
 		var l := UIKit.label(Loc.t(String(r[0])), UIKit.SIZE_TINY, UIKit.dim_color())
-		l.custom_minimum_size = Vector2(96, 0)
+		l.custom_minimum_size = Vector2(118, 0)
 		h.add_child(l)
-		h.add_child(UIKit.stat_bar(float(r[1]), c.accent, 120.0))
+		h.add_child(UIKit.stat_bar(float(r[1]), c.accent, 145.0))
 		v.add_child(h)
 	return v
 
 
 static func minigame_card(m: MiniGameDef, unlocked: bool) -> Control:
 	var card := UIKit.panel(UIKit.PANEL if unlocked else Color(0.11, 0.12, 0.18), 16)
-	card.custom_minimum_size = Vector2(300, 150)
+	card.custom_minimum_size = Vector2(360, 185)
 	var v := UIKit.vbox(4)
 	card.add_child(v)
 	var top := UIKit.hbox(10)
@@ -67,7 +67,7 @@ static func minigame_card(m: MiniGameDef, unlocked: bool) -> Control:
 	var desc := UIKit.label(Loc.t(m.desc_key) if unlocked else Progression.unlock_hint(m.unlock),
 		UIKit.SIZE_TINY, UIKit.dim_color())
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(270, 44)
+	desc.custom_minimum_size = Vector2(320, 62)
 	v.add_child(desc)
 	if unlocked:
 		var entry := Stats.game_entry(m.id)
@@ -83,10 +83,10 @@ static func standings_row(rank: int, name: String, color: Color, value: String, 
 	var h := UIKit.hbox(16)
 	card.add_child(h)
 	var place := UIKit.label(Loc.t("ordinal.%d" % mini(rank, 4)), UIKit.SIZE_BODY, UIKit.ACCENT, true)
-	place.custom_minimum_size = Vector2(90, 0)
+	place.custom_minimum_size = Vector2(110, 0)
 	h.add_child(place)
 	var dot := UIKit.panel(UIKit.adapt(color), 8)
-	dot.custom_minimum_size = Vector2(20, 20)
+	dot.custom_minimum_size = Vector2(24, 24)
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(dot)
 	var label := UIKit.label(name, UIKit.SIZE_BODY)
@@ -116,8 +116,8 @@ static func scroll_grid(columns: int) -> Array:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var grid := GridContainer.new()
 	grid.columns = columns
-	grid.add_theme_constant_override("h_separation", 18)
-	grid.add_theme_constant_override("v_separation", 18)
+	grid.add_theme_constant_override("h_separation", 24)
+	grid.add_theme_constant_override("v_separation", 24)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(grid)
 	return [scroll, grid]

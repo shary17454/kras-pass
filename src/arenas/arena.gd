@@ -187,32 +187,38 @@ func _build_environment() -> void:
 	var env := Environment.new()
 	var sky := Sky.new()
 	var mat := ProceduralSkyMaterial.new()
-	mat.sky_top_color = def.sky_top
-	mat.sky_horizon_color = def.sky_bottom
-	mat.ground_bottom_color = def.sky_top.darkened(0.4)
-	mat.ground_horizon_color = def.sky_bottom.darkened(0.2)
+	if _is_arctic():
+		mat.sky_top_color = Color(0.015, 0.055, 0.105)
+		mat.sky_horizon_color = Color(0.16, 0.42, 0.56)
+		mat.ground_bottom_color = Color(0.01, 0.04, 0.07)
+		mat.ground_horizon_color = Color(0.02, 0.14, 0.24)
+	else:
+		mat.sky_top_color = def.sky_top
+		mat.sky_horizon_color = def.sky_bottom
+		mat.ground_bottom_color = def.sky_top.darkened(0.4)
+		mat.ground_horizon_color = def.sky_bottom.darkened(0.2)
 	mat.sun_angle_max = 30.0
 	sky.sky_material = mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.85
+	env.ambient_light_energy = 0.74 if _is_arctic() else 0.85
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	if not bool(UserSettings.get_value("reduce_effects")):
 		env.glow_enabled = true
-		env.glow_intensity = 0.5
-		env.glow_bloom = 0.15
+		env.glow_intensity = 0.34 if _is_arctic() else 0.5
+		env.glow_bloom = 0.11 if _is_arctic() else 0.15
 	env.fog_enabled = true
-	env.fog_light_color = def.sky_bottom
-	env.fog_density = 0.008
+	env.fog_light_color = Color(0.16, 0.42, 0.54) if _is_arctic() else def.sky_bottom
+	env.fog_density = 0.006 if _is_arctic() else 0.008
 	_env = WorldEnvironment.new()
 	_env.environment = env
 	add_child(_env)
 
 	_light = DirectionalLight3D.new()
-	_light.rotation_degrees = Vector3(-58, 38, 0)
-	_light.light_energy = 1.15
-	_light.light_color = Color(1.0, 0.96, 0.9)
+	_light.rotation_degrees = Vector3(-52, 34, 0) if _is_arctic() else Vector3(-58, 38, 0)
+	_light.light_energy = 1.05 if _is_arctic() else 1.15
+	_light.light_color = Color(0.78, 0.92, 1.0) if _is_arctic() else Color(1.0, 0.96, 0.9)
 	_light.shadow_enabled = int(UserSettings.get_value("graphics_quality")) >= 1
 	_light.directional_shadow_max_distance = 70.0
 	add_child(_light)
@@ -220,8 +226,8 @@ func _build_environment() -> void:
 	var fill := OmniLight3D.new()
 	fill.position = Vector3(0, def.radius * 0.9, 0)
 	fill.omni_range = def.radius * 3.0
-	fill.light_energy = 0.55
-	fill.light_color = def.accent_color
+	fill.light_energy = 0.44 if _is_arctic() else 0.55
+	fill.light_color = Color(0.18, 0.56, 0.82) if _is_arctic() else def.accent_color
 	fill.shadow_enabled = false
 	add_child(fill)
 
@@ -270,7 +276,7 @@ func _build_disc() -> void:
 	_floor_mesh = body.get_child(0) as MeshInstance3D
 	_floor_shape = (body.get_child(1) as CollisionShape3D).shape as CylinderShape3D
 	if _is_arctic() and _floor_mesh != null:
-		_floor_mesh.material_override = MeshFactory.ice(def.floor_color.lightened(0.05), 0.94)
+		_floor_mesh.material_override = MeshFactory.ice(Color(0.66, 0.90, 0.98), 0.96)
 	if not _has_hazard("shrink"):
 		# When the arena shrinks, ShrinkRing draws the live rim instead.
 		var rim := MeshFactory.torus(def.radius - 0.35, def.radius + 0.1, def.accent_color, 0.7)
@@ -498,32 +504,46 @@ func _add_deco_rings() -> void:
 
 
 func _add_arctic_set_dressing() -> void:
-	var ocean := MeshFactory.plane(Vector2(def.radius * 5.8, def.radius * 5.8), Color(0.02, 0.20, 0.34))
+	var ocean := MeshFactory.plane(Vector2(def.radius * 18.0, def.radius * 18.0), Color(0.015, 0.12, 0.22))
 	ocean.name = "ArcticOcean"
-	ocean.position = Vector3(0, -0.78, 0)
-	ocean.material_override = MeshFactory.water(Color(0.02, 0.24, 0.40), 0.88)
+	ocean.position = Vector3(0, -0.82, 0)
+	ocean.material_override = MeshFactory.water(Color(0.005, 0.11, 0.22), 0.94)
 	_static_root.add_child(ocean)
 
-	var ocean_glow := MeshFactory.plane(Vector2(def.radius * 4.9, def.radius * 4.9), Color(0.05, 0.46, 0.62))
+	var deep_patch := MeshFactory.plane(Vector2(def.radius * 16.0, def.radius * 16.0), Color(0.01, 0.08, 0.16))
+	deep_patch.name = "ArcticOceanDepth"
+	deep_patch.position = Vector3(0, -0.815, 0)
+	deep_patch.rotation_degrees = Vector3(0, 18, 0)
+	deep_patch.material_override = MeshFactory.transparent(Color(0.0, 0.04, 0.09), 0.22)
+	_static_root.add_child(deep_patch)
+
+	var far_water := MeshFactory.plane(Vector2(def.radius * 28.0, def.radius * 28.0), Color(0.0, 0.07, 0.14))
+	far_water.name = "ArcticFarWater"
+	far_water.position = Vector3(0, -0.86, 0)
+	far_water.rotation_degrees = Vector3(0, -11, 0)
+	far_water.material_override = MeshFactory.water(Color(0.0, 0.075, 0.15), 0.98)
+	_static_root.add_child(far_water)
+
+	var ocean_glow := MeshFactory.plane(Vector2(def.radius * 5.0, def.radius * 5.0), Color(0.05, 0.46, 0.62))
 	ocean_glow.name = "ArcticOceanInnerGlow"
-	ocean_glow.position = Vector3(0, -0.76, 0)
-	ocean_glow.material_override = MeshFactory.transparent(Color(0.08, 0.62, 0.78), 0.22)
+	ocean_glow.position = Vector3(0, -0.9, 0)
+	ocean_glow.material_override = MeshFactory.transparent(Color(0.08, 0.60, 0.82), 0.08)
 	_static_root.add_child(ocean_glow)
 
-	for i in 18:
-		var ang := TAU * float(i) / 18.0
-		var r := def.radius * (1.28 + 0.38 * float(i % 4) / 3.0)
-		var wave := MeshFactory.box(Vector3(2.2 + 0.45 * float(i % 3), 0.025, 0.055), Color(0.68, 0.93, 1.0))
+	for i in 54:
+		var ang := TAU * float(i) / 54.0
+		var r := def.radius * (1.20 + 2.5 * float(i % 9) / 8.0)
+		var wave := MeshFactory.box(Vector3(1.7 + 0.55 * float(i % 4), 0.022, 0.05), Color(0.68, 0.93, 1.0))
 		wave.name = "ArcticWave%d" % i
-		wave.position = Vector3(cos(ang) * r, -0.55 + 0.025 * sin(float(i)), sin(ang) * r)
+		wave.position = Vector3(cos(ang) * r, -0.53 + 0.025 * sin(float(i)), sin(ang) * r)
 		wave.rotation.y = -ang + 0.18 * sin(float(i) * 1.9)
-		wave.material_override = MeshFactory.transparent(Color(0.72, 0.96, 1.0), 0.42)
+		wave.material_override = MeshFactory.transparent(Color(0.72, 0.97, 1.0), 0.56)
 		_static_root.add_child(wave)
 
-	var floe_rim := MeshFactory.torus(def.radius - 0.28, def.radius + 0.34, Color(0.91, 0.98, 1.0), 0.45)
+	var floe_rim := MeshFactory.torus(def.radius - 0.28, def.radius + 0.34, Color(0.78, 0.95, 1.0), 0.22)
 	floe_rim.name = "IceFloeRim"
 	floe_rim.position = Vector3(0, 0.12, 0)
-	floe_rim.material_override = MeshFactory.ice(Color(0.92, 0.99, 1.0), 0.96)
+	floe_rim.material_override = MeshFactory.ice(Color(0.76, 0.94, 1.0), 0.98)
 	_static_root.add_child(floe_rim)
 
 	var snow_lip := MeshFactory.torus(def.radius - 0.05, def.radius + 0.12, Color(1.0, 1.0, 0.96), 0.18)
@@ -531,7 +551,7 @@ func _add_arctic_set_dressing() -> void:
 	snow_lip.position = Vector3(0, 0.18, 0)
 	_static_root.add_child(snow_lip)
 
-	var chunks := 36
+	var chunks := 40
 	for i in chunks:
 		var ang := TAU * float(i) / float(chunks)
 		var r := def.radius + 0.5 + 0.32 * sin(float(i) * 1.7)
@@ -543,9 +563,9 @@ func _add_arctic_set_dressing() -> void:
 		_static_root.add_child(chunk)
 		_hazards.append(chunk)
 
-	for i in 14:
-		var ang := TAU * float(i) / 14.0 + 0.11
-		var r := def.radius * (1.45 + 0.35 * float(i % 5) / 4.0)
+	for i in 20:
+		var ang := TAU * float(i) / 20.0 + 0.11
+		var r := def.radius * (1.42 + 0.48 * float(i % 6) / 5.0)
 		var floe := MeshFactory.ice_chunk(0.45 + 0.12 * float(i % 4), Color(0.82, 0.96, 1.0))
 		floe.name = "FloatingIce%d" % i
 		floe.position = Vector3(cos(ang) * r, -0.43, sin(ang) * r)
@@ -553,25 +573,43 @@ func _add_arctic_set_dressing() -> void:
 		floe.scale = Vector3(1.5 + 0.18 * float(i % 2), 0.42, 0.7 + 0.12 * float(i % 3))
 		_static_root.add_child(floe)
 
+	for i in 10:
+		var ang := TAU * float(i) / 10.0 + 0.2
+		var r := def.radius * (2.08 + 0.12 * float(i % 3))
+		var berg := MeshFactory.ice_chunk(0.9 + 0.22 * float(i % 3), Color(0.78, 0.94, 1.0))
+		berg.name = "BackgroundIceberg%d" % i
+		berg.position = Vector3(cos(ang) * r, -0.35, sin(ang) * r)
+		berg.rotation_degrees = Vector3(0, rad_to_deg(-ang) + float(i * 21), 0)
+		berg.scale = Vector3(1.8 + 0.15 * float(i % 2), 0.9, 1.0)
+		_static_root.add_child(berg)
+
 
 func _add_ice_surface_marks() -> void:
 	var crack_color := Color(0.42, 0.70, 0.82, 0.55)
-	for i in 18:
+	for i in 26:
 		var strip := MeshFactory.box(Vector3(1.2 + 0.55 * float(i % 4), 0.026, 0.045), crack_color)
-		var r := def.radius * (0.14 + 0.045 * float(i))
-		var ang := TAU * float(i) / 18.0 + 0.3
+		var r := def.radius * (0.12 + 0.032 * float(i))
+		var ang := TAU * float(i) / 26.0 + 0.3
 		strip.position = Vector3(cos(ang) * r, 0.08, sin(ang) * r)
 		strip.rotation.y = -ang + 0.35 * sin(float(i))
 		strip.material_override = MeshFactory.transparent(Color(0.25, 0.66, 0.82), 0.5)
 		_static_root.add_child(strip)
-	for i in 10:
+	for i in 16:
 		var patch := MeshFactory.box(Vector3(1.8 + 0.35 * float(i % 3), 0.028, 0.42 + 0.08 * float(i % 2)), Color(0.98, 1.0, 0.98))
 		var r := def.radius * (0.24 + 0.06 * float(i % 6))
-		var ang := TAU * float(i) / 10.0 + 0.55
+		var ang := TAU * float(i) / 16.0 + 0.55
 		patch.position = Vector3(cos(ang) * r, 0.105, sin(ang) * r)
 		patch.rotation.y = -ang + 0.6
 		patch.material_override = MeshFactory.transparent(Color(0.98, 1.0, 0.98), 0.36)
 		_static_root.add_child(patch)
+	for i in 18:
+		var scratch := MeshFactory.box(Vector3(0.9 + 0.18 * float(i % 4), 0.018, 0.026), Color(0.78, 0.93, 0.98))
+		var r := def.radius * (0.16 + 0.04 * float(i % 10))
+		var ang := TAU * float(i) / 18.0 + 0.9
+		scratch.position = Vector3(cos(ang) * r, 0.13, sin(ang) * r)
+		scratch.rotation.y = -ang + 1.1
+		scratch.material_override = MeshFactory.transparent(Color(0.86, 0.98, 1.0), 0.5)
+		_static_root.add_child(scratch)
 
 
 # --- hazards ---------------------------------------------------------------

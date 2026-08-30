@@ -53,7 +53,7 @@ func _build() -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(top)
 
-	_timer_label = UIKit.centered("0:00", 60, UIKit.TEXT, true)
+	_timer_label = UIKit.centered("0:00", 72, UIKit.TEXT, true)
 	top.add_child(_timer_label)
 	_round_label = UIKit.centered("", UIKit.SIZE_SMALL, UIKit.dim_color())
 	top.add_child(_round_label)
@@ -63,12 +63,12 @@ func _build() -> void:
 	# --- player chips ------------------------------------------------------
 	var chips := HBoxContainer.new()
 	chips.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	chips.offset_top = -118
-	chips.offset_bottom = -24
+	chips.offset_top = -136
+	chips.offset_bottom = -22
 	chips.offset_left = 40
 	chips.offset_right = -40
 	chips.alignment = BoxContainer.ALIGNMENT_CENTER
-	chips.add_theme_constant_override("separation", 18)
+	chips.add_theme_constant_override("separation", 22)
 	chips.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(chips)
 	for p in ctx.config.players:
@@ -91,17 +91,17 @@ func _build() -> void:
 	_hint_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_hint_label.anchor_left = 0.0
 	_hint_label.anchor_right = 1.0
-	_hint_label.offset_top = -140
-	_hint_label.offset_bottom = -118
+	_hint_label.offset_top = -166
+	_hint_label.offset_bottom = -136
 	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hint_label)
 
 	# --- toasts ------------------------------------------------------------
 	_toast_box = VBoxContainer.new()
 	_toast_box.set_anchors_preset(Control.PRESET_TOP_RIGHT if not Loc.is_rtl() else Control.PRESET_TOP_LEFT)
-	_toast_box.offset_left = 24 if Loc.is_rtl() else -420
-	_toast_box.offset_right = 420 if Loc.is_rtl() else -24
-	_toast_box.offset_top = 120
+	_toast_box.offset_left = 24 if Loc.is_rtl() else -500
+	_toast_box.offset_right = 500 if Loc.is_rtl() else -24
+	_toast_box.offset_top = 140
 	_toast_box.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_toast_box)
@@ -110,7 +110,7 @@ func _build() -> void:
 func _make_chip(p: PlayerConfig) -> Control:
 	var col := UIKit.adapt(p.color())
 	var card := UIKit.panel(Color(col.r * 0.28, col.g * 0.28, col.b * 0.28, 0.86), 16)
-	card.custom_minimum_size = Vector2(240, 84)
+	card.custom_minimum_size = Vector2(285, 104)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	card.add_child(box)
@@ -119,7 +119,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	top.add_theme_constant_override("separation", 10)
 	box.add_child(top)
 	var dot := UIKit.panel(col, 8)
-	dot.custom_minimum_size = Vector2(18, 18)
+	dot.custom_minimum_size = Vector2(24, 24)
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(dot)
 	var name_label := UIKit.label(p.display_name(), UIKit.SIZE_SMALL, UIKit.text_color(), true)
@@ -144,14 +144,14 @@ func _make_rules_card() -> Control:
 	wrapper.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var card := UIKit.panel(Color(UIKit.PANEL.r, UIKit.PANEL.g, UIKit.PANEL.b, 0.94), 24)
-	card.custom_minimum_size = Vector2(900, 0)
+	card.custom_minimum_size = Vector2(1080, 0)
 	var v := UIKit.vbox(14)
 	card.add_child(v)
 	var d := ctx.definition
 	v.add_child(UIKit.centered(d.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT, true))
 	var rules := UIKit.centered(Loc.t(d.rules_key), UIKit.SIZE_BODY)
 	rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	rules.custom_minimum_size = Vector2(840, 0)
+	rules.custom_minimum_size = Vector2(1000, 0)
 	v.add_child(rules)
 	v.add_child(UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.ACCENT_2))
 	if ctx.config.subtitle_key != "":
