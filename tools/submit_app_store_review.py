@@ -19,7 +19,7 @@ ISSUER_ID = "26cc2279-524d-4d33-ba75-9333cf111ad1"
 KEY_ID = "668Z2T3Q47"
 APP_ID = os.environ.get("APP_STORE_APP_ID", "6801506973")
 VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.0")
-BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "42")
+BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "43")
 
 WHATS_NEW_AR = (
     "تحسين استقرار التشغيل على iPhone وiPad، ومعالجة مشكلة الشاشة السوداء عند فتح اللعبة، "
@@ -210,6 +210,22 @@ def get_review_submission(version_id: str) -> dict | None:
     return None
 
 
+def get_ready_review_submission() -> dict | None:
+    params = q(
+        {
+            "fields[reviewSubmissions]": "state,submittedDate",
+            "filter[app]": APP_ID,
+            "limit": "20",
+        }
+    )
+    submissions = request("GET", f"/reviewSubmissions?{params}").get("data", [])
+    for submission in submissions:
+        attrs = submission.get("attributes", {})
+        if attrs.get("state") == "READY_FOR_REVIEW" and not attrs.get("submittedDate"):
+            return submission
+    return None
+
+
 def create_review_submission() -> str:
     created = request(
         "POST",
@@ -321,6 +337,8 @@ def main() -> None:
 
     submission = before_submission
     if submission is None or submission.get("attributes", {}).get("state") in {"CANCELED", "COMPLETE"}:
+        submission = get_ready_review_submission()
+    if submission is None:
         submission_id = create_review_submission()
         item_id = add_version_to_review(submission_id, version["id"])
     else:
