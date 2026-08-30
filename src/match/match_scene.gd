@@ -201,7 +201,7 @@ func _spawn_fighters(def: MiniGameDef) -> void:
 		var character := p.character()
 		if character == null:
 			character = Registry.characters()[p.slot % maxi(1, Registry.characters().size())]
-		f.setup(p.slot, character, mode)
+		f.setup(p.slot, character, mode, arena.def.theme)
 		f.can_jump = controller.allows_jump()
 		f.can_attack = controller.allows_attack()
 		f.can_dash = controller.allows_dash()

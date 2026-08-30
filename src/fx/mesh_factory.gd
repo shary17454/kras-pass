@@ -187,6 +187,116 @@ static func pickup_shell(color: Color, radius := 0.55) -> Node3D:
 	return root
 
 
+static func ice_chunk(size: float, color: Color) -> Node3D:
+	var root := Node3D.new()
+	var base := box(Vector3(size * 1.5, size * 0.46, size * 0.82), color)
+	base.position = Vector3(0, 0.1, 0)
+	root.add_child(base)
+	var cap := box(Vector3(size * 1.1, size * 0.32, size * 0.58), color.lightened(0.08))
+	cap.position = Vector3(-size * 0.08, size * 0.42, 0)
+	cap.rotation_degrees = Vector3(0, 12, -6)
+	root.add_child(cap)
+	var shine := box(Vector3(size * 0.58, size * 0.04, size * 0.12), Color(0.95, 1.0, 1.0))
+	shine.position = Vector3(-size * 0.18, size * 0.62, -size * 0.18)
+	shine.material_override = glow(Color(0.90, 0.98, 1.0), 0.35)
+	root.add_child(shine)
+	return root
+
+
+static func arctic_mount(slot: int, rider_color: Color, accent: Color) -> Node3D:
+	if slot % 2 == 0:
+		return penguin_mount(rider_color, accent)
+	return seal_mount(rider_color, accent)
+
+
+static func penguin_mount(rider_color: Color, accent: Color) -> Node3D:
+	var root := Node3D.new()
+	var body := capsule(0.42, 1.02, Color(0.035, 0.055, 0.075))
+	body.position = Vector3(0, 0.47, 0)
+	body.scale = Vector3(1.05, 0.78, 1.2)
+	root.add_child(body)
+
+	var belly := sphere(0.34, Color(0.94, 0.98, 0.96))
+	belly.position = Vector3(0, 0.46, -0.27)
+	belly.scale = Vector3(0.72, 0.9, 0.35)
+	root.add_child(belly)
+
+	var head := sphere(0.34, Color(0.035, 0.055, 0.075))
+	head.position = Vector3(0, 0.98, -0.1)
+	root.add_child(head)
+
+	var beak := cone(0.12, 0.28, Color(1.0, 0.64, 0.22))
+	beak.rotation_degrees = Vector3(90, 0, 0)
+	beak.position = Vector3(0, 0.96, -0.43)
+	root.add_child(beak)
+
+	for sx in [-1.0, 1.0]:
+		var eye := sphere(0.045, Color(0.02, 0.02, 0.025))
+		eye.position = Vector3(0.11 * sx, 1.06, -0.38)
+		root.add_child(eye)
+		var flipper := box(Vector3(0.12, 0.48, 0.18), Color(0.025, 0.04, 0.06))
+		flipper.position = Vector3(0.38 * sx, 0.46, -0.03)
+		flipper.rotation_degrees = Vector3(0, 0, 24 * sx)
+		root.add_child(flipper)
+		var foot := box(Vector3(0.28, 0.06, 0.22), Color(1.0, 0.58, 0.18))
+		foot.position = Vector3(0.18 * sx, 0.05, -0.28)
+		root.add_child(foot)
+
+	var saddle := torus(0.28, 0.39, rider_color, 0.25)
+	saddle.position = Vector3(0, 0.9, 0.08)
+	saddle.rotation_degrees = Vector3(90, 0, 0)
+	root.add_child(saddle)
+	var reins := box(Vector3(0.06, 0.04, 0.62), accent)
+	reins.position = Vector3(0, 1.03, -0.08)
+	root.add_child(reins)
+	return root
+
+
+static func seal_mount(rider_color: Color, accent: Color) -> Node3D:
+	var root := Node3D.new()
+	var body := capsule(0.42, 1.15, Color(0.56, 0.68, 0.72))
+	body.position = Vector3(0, 0.4, 0)
+	body.rotation_degrees = Vector3(90, 0, 0)
+	body.scale = Vector3(1.0, 0.85, 1.22)
+	root.add_child(body)
+
+	var chest := sphere(0.34, Color(0.82, 0.91, 0.92))
+	chest.position = Vector3(0, 0.4, -0.33)
+	chest.scale = Vector3(0.78, 0.55, 0.32)
+	root.add_child(chest)
+
+	var head := sphere(0.32, Color(0.60, 0.72, 0.76))
+	head.position = Vector3(0, 0.56, -0.7)
+	root.add_child(head)
+
+	var muzzle := sphere(0.14, Color(0.90, 0.94, 0.92))
+	muzzle.position = Vector3(0, 0.53, -0.97)
+	muzzle.scale = Vector3(1.35, 0.78, 0.72)
+	root.add_child(muzzle)
+
+	for sx in [-1.0, 1.0]:
+		var eye := sphere(0.045, Color(0.02, 0.025, 0.03))
+		eye.position = Vector3(0.11 * sx, 0.66, -0.94)
+		root.add_child(eye)
+		var whisker := box(Vector3(0.34, 0.018, 0.018), Color(0.95, 0.98, 0.96))
+		whisker.position = Vector3(0.2 * sx, 0.53, -1.04)
+		whisker.rotation_degrees = Vector3(0, 18 * sx, 0)
+		root.add_child(whisker)
+		var flipper := box(Vector3(0.15, 0.08, 0.55), Color(0.46, 0.58, 0.64))
+		flipper.position = Vector3(0.42 * sx, 0.18, -0.1)
+		flipper.rotation_degrees = Vector3(0, 18 * sx, 0)
+		root.add_child(flipper)
+
+	var saddle := torus(0.3, 0.42, rider_color, 0.22)
+	saddle.position = Vector3(0, 0.84, -0.05)
+	saddle.rotation_degrees = Vector3(90, 0, 0)
+	root.add_child(saddle)
+	var strap := box(Vector3(0.7, 0.05, 0.08), accent)
+	strap.position = Vector3(0, 0.72, -0.05)
+	root.add_child(strap)
+	return root
+
+
 ## A small kart: body, cabin, four wheels. Used by the vehicle games.
 static func kart(color: Color, accent: Color) -> Node3D:
 	var root := Node3D.new()

@@ -119,6 +119,89 @@ class Bumper extends Node3D:
 				tw.tween_property(_mesh, "scale", Vector3.ONE, 0.18)
 
 
+class BreakableIceBarrier extends StaticBody3D:
+	## A rim chunk that blocks the first impact, shatters, then leaves the edge
+	## open so ring-outs still work once a player has broken through.
+	var broken := false
+	var _area: Area3D
+	var _solid_shape: CollisionShape3D
+	var _visual: Node3D
+	var _cooldown := 0.0
+	var _break_tween: Tween
+
+	func build(size: float, color: Color) -> void:
+		collision_layer = 1
+		collision_mask = 0
+		_visual = MeshFactory.ice_chunk(size, color)
+		add_child(_visual)
+
+		_solid_shape = CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(size * 1.55, size * 0.72, size * 0.92)
+		_solid_shape.shape = box
+		_solid_shape.position = Vector3(0, size * 0.34, 0)
+		add_child(_solid_shape)
+
+		_area = Area3D.new()
+		_area.collision_layer = 8
+		_area.collision_mask = 2
+		var acs := CollisionShape3D.new()
+		var area_box := BoxShape3D.new()
+		area_box.size = Vector3(size * 1.9, size * 1.05, size * 1.35)
+		acs.shape = area_box
+		acs.position = Vector3(0, size * 0.45, 0)
+		_area.add_child(acs)
+		add_child(_area)
+
+	func tick(delta: float) -> void:
+		if broken:
+			return
+		_cooldown = maxf(0.0, _cooldown - delta)
+		if _cooldown > 0.0 or _area == null:
+			return
+		for body in _area.get_overlapping_bodies():
+			if body is Fighter and body.alive:
+				_break(body)
+				return
+
+	func _break(fighter: Fighter) -> void:
+		broken = true
+		collision_layer = 0
+		collision_mask = 0
+		for child in get_children():
+			if child is CollisionShape3D:
+				child.disabled = true
+		if _area != null and is_instance_valid(_area):
+			_area.monitoring = false
+		var away := fighter.global_position - global_position
+		away.y = 0.0
+		if away.length_squared() < 0.05:
+			away = Vector3(global_position.x, 0, global_position.z)
+		fighter.apply_impulse(away.normalized() * 2.4)
+		AudioManager.play_sfx("crate_break", global_position, 0.75)
+		add_child(MeshFactory.burst(Color(0.78, 0.94, 1.0), 14, 2.8, 0.45))
+		if _visual != null and is_instance_valid(_visual):
+			_break_tween = _visual.create_tween()
+			_break_tween.tween_property(_visual, "scale", Vector3(1.18, 0.55, 1.18), 0.06)
+			_break_tween.tween_property(_visual, "scale", Vector3.ZERO, 0.18)
+			_break_tween.tween_callback(_visual.hide)
+
+	func reset() -> void:
+		broken = false
+		_cooldown = 0.18
+		collision_layer = 1
+		collision_mask = 0
+		if _solid_shape != null and is_instance_valid(_solid_shape):
+			_solid_shape.disabled = false
+		if _area != null and is_instance_valid(_area):
+			_area.monitoring = true
+		if _break_tween != null and _break_tween.is_valid():
+			_break_tween.kill()
+		if _visual != null and is_instance_valid(_visual):
+			_visual.show()
+			_visual.scale = Vector3.ONE
+
+
 class RisingWater extends Node3D:
 	## A plane that climbs and eliminates whoever it reaches. Drives Rising Tide
 	## and doubles as the "floor is lava" primitive for future games.

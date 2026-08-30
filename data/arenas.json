@@ -7,7 +7,8 @@
       "radius": 13.0,
       "thickness": 1.2,
       "wall_height": 0.0,
-      "palette": {"floor": "#2e3358", "accent": "#f2a03f", "sky_top": "#141a3c", "sky_bottom": "#6b3d6b"},
+      "theme": "arctic",
+      "palette": {"floor": "#bfe8f4", "accent": "#f5fbff", "sky_top": "#0b3156", "sky_bottom": "#2d8fc2"},
       "hazards": [{"type": "shrink", "start_delay": 18.0, "rate": 0.28, "min_radius": 5.0}]
     },
     {
@@ -16,7 +17,8 @@
       "radius": 11.5,
       "thickness": 1.2,
       "wall_height": 0.0,
-      "palette": {"floor": "#25324f", "accent": "#7be5ff", "sky_top": "#0d1430", "sky_bottom": "#2b5c7a"},
+      "theme": "arctic",
+      "palette": {"floor": "#d5f4fb", "accent": "#8ee8ff", "sky_top": "#082747", "sky_bottom": "#1d789e"},
       "hazards": [
         {"type": "sweeper", "count": 2, "speed": 1.15, "length": 9.0, "height": 0.9},
         {"type": "shrink", "start_delay": 26.0, "rate": 0.2, "min_radius": 6.0}

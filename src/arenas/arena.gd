@@ -61,6 +61,8 @@ func build(arena_def: ArenaDef) -> void:
 		"pit": _build_pit()
 		"islands": _build_islands()
 		_: _build_disc()
+	if _is_arctic():
+		_add_arctic_set_dressing()
 	if def.wall_height > 0.0:
 		_build_walls()
 	_build_hazards()
@@ -169,6 +171,9 @@ func reset_hazards() -> void:
 			if String(h.get("type", "")) == "rising":
 				start = float(h.get("start_y", -6.0))
 		_water.reset(start)
+	for h in _hazards:
+		if h is ArenaHazards.BreakableIceBarrier and is_instance_valid(h):
+			h.reset()
 	for t in tiles:
 		if is_instance_valid(t):
 			t.restore()
@@ -221,6 +226,10 @@ func _build_environment() -> void:
 	add_child(fill)
 
 
+func _is_arctic() -> bool:
+	return def != null and def.theme == "arctic"
+
+
 # --- shapes ----------------------------------------------------------------
 
 func _add_static_box(size: Vector3, pos: Vector3, color: Color, emission := 0.0) -> StaticBody3D:
@@ -266,6 +275,8 @@ func _build_disc() -> void:
 		rim.position = Vector3(0, 0.06, 0)
 		_static_root.add_child(rim)
 	_add_deco_rings()
+	if _is_arctic():
+		_add_ice_surface_marks()
 
 
 func _has_hazard(kind: String) -> bool:
@@ -482,6 +493,43 @@ func _add_deco_rings() -> void:
 		var ring := MeshFactory.torus(r - 0.06, r + 0.06, def.floor_color.lightened(0.16))
 		ring.position = Vector3(0, 0.03, 0)
 		_static_root.add_child(ring)
+
+
+func _add_arctic_set_dressing() -> void:
+	var ocean := MeshFactory.plane(Vector2(def.radius * 5.0, def.radius * 5.0), Color(0.02, 0.20, 0.34))
+	ocean.name = "ArcticOcean"
+	ocean.position = Vector3(0, -0.66, 0)
+	ocean.material_override = MeshFactory.glow(Color(0.02, 0.24, 0.40), 0.16)
+	_static_root.add_child(ocean)
+
+	var floe_rim := MeshFactory.torus(def.radius - 0.22, def.radius + 0.28, Color(0.91, 0.98, 1.0), 0.45)
+	floe_rim.name = "IceFloeRim"
+	floe_rim.position = Vector3(0, 0.1, 0)
+	_static_root.add_child(floe_rim)
+
+	var chunks := 28
+	for i in chunks:
+		var ang := TAU * float(i) / float(chunks)
+		var r := def.radius + 0.45 + 0.25 * sin(float(i) * 1.7)
+		var chunk := ArenaHazards.BreakableIceBarrier.new()
+		chunk.name = "IceBarrier%d" % i
+		chunk.position = Vector3(cos(ang) * r, 0.2, sin(ang) * r)
+		chunk.rotation_degrees = Vector3(-4.0 + float(i % 5) * 2.0, -rad_to_deg(ang), 3.0 * sin(float(i)))
+		chunk.build(0.75 + 0.18 * float(i % 3), def.accent_color.lightened(0.08))
+		_static_root.add_child(chunk)
+		_hazards.append(chunk)
+
+
+func _add_ice_surface_marks() -> void:
+	var crack_color := Color(0.42, 0.70, 0.82, 0.55)
+	for i in 9:
+		var strip := MeshFactory.box(Vector3(2.0 + 0.45 * float(i % 3), 0.025, 0.055), crack_color)
+		var r := def.radius * (0.2 + 0.07 * float(i))
+		var ang := TAU * float(i) / 9.0 + 0.3
+		strip.position = Vector3(cos(ang) * r, 0.08, sin(ang) * r)
+		strip.rotation.y = -ang + 0.35 * sin(float(i))
+		strip.material_override = MeshFactory.transparent(Color(0.38, 0.72, 0.88), 0.52)
+		_static_root.add_child(strip)
 
 
 # --- hazards ---------------------------------------------------------------

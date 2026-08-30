@@ -59,6 +59,7 @@ var _steer := 0.0            ## drive mode heading
 var _last_hit_by := -1
 var _last_hit_timer := 0.0
 var _visual: Node3D
+var _visual_theme := ""
 var _squash := Vector3.ONE
 var _was_on_floor := true
 var _spawn_point := Vector3.ZERO
@@ -88,11 +89,15 @@ func _ready() -> void:
 		_build_collision()
 
 
-func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomotion.WALK) -> void:
+func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomotion.WALK, visual_theme := "") -> void:
 	slot = player_slot
 	data = character
 	locomotion = mode
+	_visual_theme = visual_theme
 	_apply_character()
+	if _visual_theme == "arctic" and locomotion == Locomotion.WALK:
+		friction *= 0.58
+		acceleration *= 0.9
 	_build_visual()
 
 
@@ -149,6 +154,15 @@ func _build_visual() -> void:
 	var d := data if data != null else CharacterData.new()
 	if locomotion == Locomotion.DRIVE:
 		_visual.add_child(MeshFactory.kart(d.color, d.accent))
+	elif _visual_theme == "arctic":
+		var mount := MeshFactory.arctic_mount(slot, d.color, d.accent)
+		mount.position = Vector3(0, 0.02, 0)
+		_visual.add_child(mount)
+		var rider := MeshFactory.character_body(d)
+		rider.name = "Rider"
+		rider.position = Vector3(0, 0.95, 0.03)
+		rider.scale = Vector3.ONE * 0.54
+		_visual.add_child(rider)
 	else:
 		_visual.add_child(MeshFactory.character_body(d))
 	# A ground ring keeps a player findable when the camera pulls back or the
