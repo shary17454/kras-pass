@@ -36,6 +36,43 @@ static func toon(color: Color, emission := 0.0, rim := 0.35) -> StandardMaterial
 	return m
 
 
+static func ice(color: Color, alpha := 0.78) -> StandardMaterial3D:
+	var key := "ice%s_%.2f" % [color.to_html(), alpha]
+	if _mat_cache.has(key):
+		return _mat_cache[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(color.r, color.g, color.b, alpha)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.roughness = 0.18
+	m.metallic = 0.0
+	m.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
+	m.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
+	m.rim_enabled = true
+	m.rim = 0.62
+	m.rim_tint = 0.72
+	_mat_cache[key] = m
+	return m
+
+
+static func water(color: Color, alpha := 0.72) -> StandardMaterial3D:
+	var key := "water%s_%.2f" % [color.to_html(), alpha]
+	if _mat_cache.has(key):
+		return _mat_cache[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(color.r, color.g, color.b, alpha)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.roughness = 0.24
+	m.metallic = 0.0
+	m.emission_enabled = true
+	m.emission = color.darkened(0.08)
+	m.emission_energy_multiplier = 0.12
+	m.rim_enabled = true
+	m.rim = 0.38
+	m.rim_tint = 0.45
+	_mat_cache[key] = m
+	return m
+
+
 static func glow(color: Color, energy := 1.6) -> StandardMaterial3D:
 	var key := "g%s_%.2f" % [color.to_html(), energy]
 	if _mat_cache.has(key):
@@ -108,8 +145,8 @@ static func sphere(radius: float, color: Color, emission := 0.0) -> MeshInstance
 	var m := SphereMesh.new()
 	m.radius = radius
 	m.height = radius * 2.0
-	m.radial_segments = 20
-	m.rings = 10
+	m.radial_segments = 28
+	m.rings = 14
 	mi.mesh = m
 	mi.material_override = toon(color, emission)
 	return mi
@@ -120,8 +157,8 @@ static func capsule(radius: float, height: float, color: Color) -> MeshInstance3
 	var m := CapsuleMesh.new()
 	m.radius = radius
 	m.height = maxf(height, radius * 2.0 + 0.01)
-	m.radial_segments = 18
-	m.rings = 8
+	m.radial_segments = 24
+	m.rings = 10
 	mi.mesh = m
 	mi.material_override = toon(color)
 	return mi
@@ -132,8 +169,8 @@ static func torus(inner: float, outer: float, color: Color, emission := 0.0) -> 
 	var m := TorusMesh.new()
 	m.inner_radius = inner
 	m.outer_radius = outer
-	m.rings = 24
-	m.ring_segments = 10
+	m.rings = 40
+	m.ring_segments = 14
 	mi.mesh = m
 	mi.material_override = toon(color, emission)
 	return mi
@@ -189,17 +226,28 @@ static func pickup_shell(color: Color, radius := 0.55) -> Node3D:
 
 static func ice_chunk(size: float, color: Color) -> Node3D:
 	var root := Node3D.new()
-	var base := box(Vector3(size * 1.5, size * 0.46, size * 0.82), color)
+	var base := box(Vector3(size * 1.58, size * 0.42, size * 0.9), color)
 	base.position = Vector3(0, 0.1, 0)
+	base.rotation_degrees = Vector3(0, -5, 1.5)
+	base.material_override = ice(color, 0.82)
 	root.add_child(base)
-	var cap := box(Vector3(size * 1.1, size * 0.32, size * 0.58), color.lightened(0.08))
+	var cap := box(Vector3(size * 1.16, size * 0.3, size * 0.62), color.lightened(0.12))
 	cap.position = Vector3(-size * 0.08, size * 0.42, 0)
-	cap.rotation_degrees = Vector3(0, 12, -6)
+	cap.rotation_degrees = Vector3(0, 12, -7)
+	cap.material_override = ice(color.lightened(0.13), 0.9)
 	root.add_child(cap)
-	var shine := box(Vector3(size * 0.58, size * 0.04, size * 0.12), Color(0.95, 1.0, 1.0))
-	shine.position = Vector3(-size * 0.18, size * 0.62, -size * 0.18)
-	shine.material_override = glow(Color(0.90, 0.98, 1.0), 0.35)
-	root.add_child(shine)
+	for i in 3:
+		var shine := box(Vector3(size * (0.42 - i * 0.07), size * 0.035, size * 0.08), Color(0.95, 1.0, 1.0))
+		shine.position = Vector3(size * (-0.26 + i * 0.22), size * (0.58 + i * 0.03), size * (-0.22 + i * 0.18))
+		shine.rotation_degrees = Vector3(0, -18 + i * 16, 0)
+		shine.material_override = glow(Color(0.90, 0.98, 1.0), 0.42)
+		root.add_child(shine)
+	for sx in [-1.0, 1.0]:
+		var shard := cone(size * 0.18, size * 0.48, color.lightened(0.22))
+		shard.position = Vector3(size * 0.5 * sx, size * 0.42, size * 0.18)
+		shard.rotation_degrees = Vector3(0, 0, 22 * sx)
+		shard.material_override = ice(color.lightened(0.2), 0.74)
+		root.add_child(shard)
 	return root
 
 
@@ -220,6 +268,10 @@ static func penguin_mount(rider_color: Color, accent: Color) -> Node3D:
 	belly.position = Vector3(0, 0.46, -0.27)
 	belly.scale = Vector3(0.72, 0.9, 0.35)
 	root.add_child(belly)
+	var cheek := sphere(0.13, Color(1.0, 0.82, 0.68))
+	cheek.position = Vector3(0.0, 0.9, -0.39)
+	cheek.scale = Vector3(1.6, 0.45, 0.35)
+	root.add_child(cheek)
 
 	var head := sphere(0.34, Color(0.035, 0.055, 0.075))
 	head.position = Vector3(0, 0.98, -0.1)
@@ -234,6 +286,9 @@ static func penguin_mount(rider_color: Color, accent: Color) -> Node3D:
 		var eye := sphere(0.045, Color(0.02, 0.02, 0.025))
 		eye.position = Vector3(0.11 * sx, 1.06, -0.38)
 		root.add_child(eye)
+		var glint := sphere(0.014, Color.WHITE, 0.1)
+		glint.position = Vector3(0.125 * sx, 1.075, -0.414)
+		root.add_child(glint)
 		var flipper := box(Vector3(0.12, 0.48, 0.18), Color(0.025, 0.04, 0.06))
 		flipper.position = Vector3(0.38 * sx, 0.46, -0.03)
 		flipper.rotation_degrees = Vector3(0, 0, 24 * sx)
@@ -273,11 +328,18 @@ static func seal_mount(rider_color: Color, accent: Color) -> Node3D:
 	muzzle.position = Vector3(0, 0.53, -0.97)
 	muzzle.scale = Vector3(1.35, 0.78, 0.72)
 	root.add_child(muzzle)
+	var nose := sphere(0.055, Color(0.06, 0.07, 0.08))
+	nose.position = Vector3(0, 0.57, -1.09)
+	nose.scale = Vector3(1.25, 0.7, 0.85)
+	root.add_child(nose)
 
 	for sx in [-1.0, 1.0]:
 		var eye := sphere(0.045, Color(0.02, 0.025, 0.03))
 		eye.position = Vector3(0.11 * sx, 0.66, -0.94)
 		root.add_child(eye)
+		var glint := sphere(0.014, Color.WHITE, 0.1)
+		glint.position = Vector3(0.125 * sx, 0.675, -0.975)
+		root.add_child(glint)
 		var whisker := box(Vector3(0.34, 0.018, 0.018), Color(0.95, 0.98, 0.96))
 		whisker.position = Vector3(0.2 * sx, 0.53, -1.04)
 		whisker.rotation_degrees = Vector3(0, 18 * sx, 0)
