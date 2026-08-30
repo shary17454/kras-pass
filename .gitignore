@@ -20,6 +20,8 @@ __pycache__/
 build/*
 !build/ios/
 !build/ios/**
+build/ios/**/*.a
+!build/ios/lfs_parts/**
 build/ios/KrasPass.xcarchive/
 build/ios/exported-appstore/
 build/ios/KrasPass.xcodeproj/project.xcworkspace/xcuserdata/

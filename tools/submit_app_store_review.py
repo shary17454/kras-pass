@@ -19,7 +19,7 @@ ISSUER_ID = "26cc2279-524d-4d33-ba75-9333cf111ad1"
 KEY_ID = "668Z2T3Q47"
 APP_ID = os.environ.get("APP_STORE_APP_ID", "6801506973")
 VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.0")
-BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "41")
+BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "42")
 
 WHATS_NEW_AR = (
     "تحسين استقرار التشغيل على iPhone وiPad، ومعالجة مشكلة الشاشة السوداء عند فتح اللعبة، "
