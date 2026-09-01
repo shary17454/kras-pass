@@ -160,6 +160,24 @@ func _powerups(t: TestHarness, host: Node) -> void:
 	system._tick_effects(speed.duration + 0.1)
 	t.near(float(fighter.mods["speed"]), 1.0, 0.001, "effects expire back to the baseline")
 
+	# Freeze is the one effect that never enters `_effects`; it is counted down
+	# by the fighter itself. Regression guard: it used to be applied and never
+	# lowered, which left the victim frozen for the rest of the match.
+	t.test("freeze releases on its own timer")
+	var freeze := Registry.powerup("freeze")
+	system._apply(0, freeze)
+	t.near(float(fighter.mods["frozen"]), freeze.duration, 0.001, "freeze applied for its duration")
+	t.ok(_has_effect(system, 0, "freeze"), "and is visible on the HUD while it holds")
+	fighter.tick(InputFrame.new(), freeze.duration * 0.5)
+	t.ok(float(fighter.mods["frozen"]) > 0.0, "still frozen halfway through")
+	fighter.tick(InputFrame.new(), freeze.duration)
+	t.near(float(fighter.mods["frozen"]), 0.0, 0.001, "control returns once the timer runs out")
+	t.ok(not _has_effect(system, 0, "freeze"), "and the HUD chip clears with it")
+
+	system._apply(0, freeze)
+	system.clear_all()
+	t.near(float(fighter.mods["frozen"]), 0.0, 0.001, "a round reset thaws anyone still frozen")
+
 	t.test("clearing effects between rounds leaves no residue")
 	system._apply(0, Registry.powerup("double"))
 	system.clear_all()
@@ -169,6 +187,13 @@ func _powerups(t: TestHarness, host: Node) -> void:
 	system.queue_free()
 	fighter.queue_free()
 	await host.get_tree().process_frame
+
+
+func _has_effect(system: PowerUpSystem, slot: int, id: String) -> bool:
+	for e in system.active_effects_for(slot):
+		if String(e["id"]) == id:
+			return true
+	return false
 
 
 ## Walks every registered screen, confirming each one builds and can get back to
