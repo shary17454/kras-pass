@@ -126,4 +126,17 @@ func _apply_engine_settings() -> void:
 	# gameplay readability identical across quality tiers.
 	var scale: float = [0.7, 0.85, 1.0][clampi(quality, 0, 2)]
 	get_tree().root.scaling_3d_scale = scale
-	get_tree().root.msaa_3d = Viewport.MSAA_2X if quality >= 2 else Viewport.MSAA_DISABLED
+	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
+	# Multisampling is what keeps a bevelled edge from crawling as the camera
+	# orbits, so it is the last thing to give up rather than the first.
+	if quality >= 2:
+		get_tree().root.msaa_3d = Viewport.MSAA_4X if rich else Viewport.MSAA_2X
+	elif quality == 1:
+		get_tree().root.msaa_3d = Viewport.MSAA_2X
+	else:
+		get_tree().root.msaa_3d = Viewport.MSAA_DISABLED
+	# Below full resolution, a cheap post-process pass costs less than the
+	# aliasing it removes; at full resolution MSAA already covers it.
+	get_tree().root.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED \
+		if quality >= 2 else Viewport.SCREEN_SPACE_AA_FXAA
+	get_tree().root.use_taa = rich and quality >= 2

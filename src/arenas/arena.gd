@@ -25,6 +25,11 @@ var current_radius := 12.0
 var track_length := 0.0
 var lane_count := 4
 var checkpoints: Array[Vector3] = []
+## Racing line of a `circuit`, sampled once at build time. Every "am I on the
+## track?" query walks this instead of solving the curve, because the curve is
+## only defined implicitly and the AI asks several times per frame.
+var circuit_line: PackedVector3Array = []
+var track_width := 8.0
 var finish_z := 0.0
 var start_z := 0.0
 
@@ -58,6 +63,7 @@ func build(arena_def: ArenaDef) -> void:
 		"grid": _build_tiles(false)
 		"track": _build_track()
 		"oval": _build_oval()
+		"circuit": _build_circuit()
 		"pit": _build_pit()
 		"islands": _build_islands()
 		_: _build_disc()
@@ -86,6 +92,8 @@ func is_inside(pos: Vector3, margin: float = 0.0) -> bool:
 		"oval":
 			var d := p.length()
 			return d <= current_radius - margin and d >= current_radius * 0.5 + margin
+		"circuit":
+			return _circuit_offset(pos) <= track_width * 0.5 - margin
 		_:
 			return p.length() <= current_radius - margin
 
@@ -102,6 +110,8 @@ func edge_distance(pos: Vector3) -> float:
 			return minf(current_radius - d, d - current_radius * 0.45)
 		"track":
 			return current_radius * 0.7 - absf(p.x)
+		"circuit":
+			return track_width * 0.5 - _circuit_offset(pos)
 		_:
 			return current_radius - p.length()
 
@@ -115,6 +125,10 @@ func retreat_point(pos: Vector3) -> Vector3:
 	if def.shape == "ring" or def.shape == "oval":
 		var dir := Vector3(pos.x, 0, pos.z).normalized()
 		return global_position + dir * current_radius * 0.72
+	if def.shape == "circuit":
+		# Back onto the racing line, not toward the middle: the middle of a
+		# circuit is off the track entirely.
+		return _circuit_nearest(pos)
 	return global_position + Vector3(0, pos.y, 0)
 
 
@@ -198,19 +212,66 @@ func _build_environment() -> void:
 		mat.ground_bottom_color = def.sky_top.darkened(0.4)
 		mat.ground_horizon_color = def.sky_bottom.darkened(0.2)
 	mat.sun_angle_max = 30.0
+	mat.sky_energy_multiplier = 1.15
 	sky.sky_material = mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = 0.74 if _is_arctic() else 0.85
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	if not bool(UserSettings.get_value("reduce_effects")):
+
+	var quality := int(UserSettings.get_value("graphics_quality"))
+	var reduced := bool(UserSettings.get_value("reduce_effects"))
+	# Desktop runs Forward+, phones run the mobile renderer. Screen-space
+	# effects only exist on the former, so they are asked for by name rather
+	# than set blind: on mobile these properties are silently inert, which
+	# hides which of them are actually doing anything.
+	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
+
+	# AgX rolls highlights off instead of clipping them, which is most of the
+	# difference between "bright colours" and "lit scene" on emissive pickups.
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+	env.tonemap_exposure = 1.08
+	env.tonemap_white = 6.0
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.04
+	env.adjustment_saturation = 1.06
+
+	if not reduced:
 		env.glow_enabled = true
 		env.glow_intensity = 0.34 if _is_arctic() else 0.5
 		env.glow_bloom = 0.11 if _is_arctic() else 0.15
+		# Only genuinely bright surfaces should bloom; without a threshold the
+		# whole image hazes over and reads as fog, not light.
+		env.glow_hdr_threshold = 0.95
+		env.glow_hdr_scale = 2.0
+		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.16, 0.42, 0.54) if _is_arctic() else def.sky_bottom
 	env.fog_density = 0.006 if _is_arctic() else 0.008
+	env.fog_sky_affect = 0.35
+	env.fog_aerial_perspective = 0.28
+
+	if rich and quality >= 1 and not reduced:
+		# Contact shadows. Procedural primitives read as stickers floating over
+		# the floor without them; this is the single biggest grounding cue.
+		env.ssao_enabled = true
+		env.ssao_radius = 1.1
+		env.ssao_intensity = 2.2 if quality >= 2 else 1.6
+		env.ssao_detail = 0.5
+		env.ssao_light_affect = 0.15
+	if rich and quality >= 2 and not reduced:
+		env.ssil_enabled = true
+		env.ssil_intensity = 0.7
+		env.ssr_enabled = true
+		env.ssr_max_steps = 32
+		env.ssr_fade_in = 0.2
+		env.ssr_fade_out = 6.0
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = 0.012 if _is_arctic() else 0.008
+		env.volumetric_fog_gi_inject = 0.6
+		env.volumetric_fog_length = 96.0
+
 	_env = WorldEnvironment.new()
 	_env.environment = env
 	add_child(_env)
@@ -219,8 +280,23 @@ func _build_environment() -> void:
 	_light.rotation_degrees = Vector3(-52, 34, 0) if _is_arctic() else Vector3(-58, 38, 0)
 	_light.light_energy = 1.05 if _is_arctic() else 1.15
 	_light.light_color = Color(0.78, 0.92, 1.0) if _is_arctic() else Color(1.0, 0.96, 0.9)
-	_light.shadow_enabled = int(UserSettings.get_value("graphics_quality")) >= 1
+	_light.light_specular = 0.9
+	_light.shadow_enabled = quality >= 1
 	_light.directional_shadow_max_distance = 70.0
+	# Four splits keep near-camera shadows sharp without shortening the range;
+	# blending them hides the banding you otherwise see as a player runs out.
+	_light.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS \
+		if quality >= 2 else DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	_light.directional_shadow_blend_splits = quality >= 2
+	_light.directional_shadow_split_1 = 0.06
+	_light.directional_shadow_split_2 = 0.16
+	_light.directional_shadow_split_3 = 0.42
+	# A real sun is not a point: giving it an angular size softens the shadow
+	# with distance from the contact point, which is what sells it as sunlight.
+	_light.light_angular_distance = 1.1 if quality >= 2 else 0.0
+	_light.shadow_blur = 1.0
+	_light.shadow_bias = 0.035
+	_light.shadow_normal_bias = 1.6
 	add_child(_light)
 
 	var fill := OmniLight3D.new()
@@ -417,6 +493,118 @@ func _build_oval() -> void:
 		spawn_points.append(Vector3(ring_mid + (i % 2) * 1.8 - 0.9, 1.3, -1.4 - float(i / 2) * 2.6))
 
 
+## A closed racing circuit whose centre line is r(t) = radius * (1 + wobble *
+## cos(lobes * t)). Two numbers per arena is all it takes to turn one ring into
+## a track with hairpins and straights, and because the line is stored the AI,
+## the respawn logic and the "are you on the road" test all read the same
+## geometry the road was laid on.
+func _build_circuit() -> void:
+	var lobes := int(def.param("lobes", 3.0))
+	var wobble: float = clampf(def.param("wobble", 0.22), 0.0, 0.45)
+	track_width = maxf(def.param("width", 8.0), 4.0)
+	var samples := 120
+	circuit_line = PackedVector3Array()
+	for i in samples:
+		var t := TAU * float(i) / float(samples)
+		var r: float = def.radius * (1.0 + wobble * cos(float(lobes) * t))
+		circuit_line.append(Vector3(cos(t) * r, 0.0, sin(t) * r))
+
+	for i in samples:
+		var a: Vector3 = circuit_line[i]
+		var b: Vector3 = circuit_line[(i + 1) % samples]
+		var mid := (a + b) * 0.5
+		var seg := (b - a)
+		# 1.35 overlap: consecutive slabs are laid on a curve, so butting them
+		# end to end leaves wedge-shaped gaps a kart drops through.
+		var body := _add_static_box(
+			Vector3(seg.length() * 1.35, def.thickness, track_width),
+			Vector3(mid.x, -def.thickness * 0.5, mid.z),
+			def.floor_color if i % 8 < 4 else def.floor_color.lightened(0.045))
+		body.rotation.y = -atan2(seg.z, seg.x)
+
+	checkpoints.clear()
+	var cp_count := 12
+	for i in cp_count:
+		var idx := int(float(i) / float(cp_count) * float(samples))
+		var p: Vector3 = circuit_line[idx]
+		checkpoints.append(Vector3(p.x, 1.0, p.z))
+
+	var start: Vector3 = circuit_line[0]
+	var fwd: Vector3 = (circuit_line[1] - circuit_line[samples - 1]).normalized()
+	var line := MeshFactory.box(Vector3(0.7, 0.12, track_width), def.accent_color, 0.9)
+	line.position = Vector3(start.x, 0.08, start.z)
+	line.rotation.y = -atan2(fwd.z, fwd.x)
+	_static_root.add_child(line)
+
+	var side := Vector3(-fwd.z, 0.0, fwd.x)
+	spawn_points.clear()
+	for i in 4:
+		# Two-by-two grid behind the line, the way a race actually starts.
+		spawn_points.append(start - fwd * (2.2 + float(i / 2) * 3.0)
+			+ side * (float(i % 2) * 3.0 - 1.5) + Vector3(0, 1.3, 0))
+
+
+func _circuit_walls(h: float) -> void:
+	var n := circuit_line.size()
+	if n == 0:
+		return
+	for i in n:
+		var a: Vector3 = circuit_line[i]
+		var b: Vector3 = circuit_line[(i + 1) % n]
+		var mid := (a + b) * 0.5
+		var seg := b - a
+		var side := Vector3(-seg.z, 0.0, seg.x).normalized()
+		for s: float in [1.0, -1.0]:
+			var body := _add_static_box(
+				Vector3(seg.length() * 1.35, h, 0.5),
+				mid + side * (track_width * 0.5 + 0.25) * s + Vector3(0, h * 0.5, 0),
+				def.accent_color.darkened(0.45) if i % 8 < 4 else def.accent_color.darkened(0.15))
+			body.rotation.y = -atan2(seg.z, seg.x)
+
+
+func _circuit_nearest(pos: Vector3) -> Vector3:
+	var n := circuit_line.size()
+	if n == 0:
+		return global_position
+	var best: Vector3 = circuit_line[0]
+	var best_d := INF
+	var p := Vector3(pos.x - global_position.x, 0.0, pos.z - global_position.z)
+	for i in n:
+		var d: float = p.distance_squared_to(circuit_line[i])
+		if d < best_d:
+			best_d = d
+			best = circuit_line[i]
+	return global_position + best + Vector3(0, 1.2, 0)
+
+
+## Lateral distance from the racing line. Sampled, so it is accurate to half a
+## segment — well under the width of a kart at 120 samples.
+func _circuit_offset(pos: Vector3) -> float:
+	var n := circuit_line.size()
+	if n == 0:
+		return 0.0
+	var p := Vector3(pos.x - global_position.x, 0.0, pos.z - global_position.z)
+	var best := INF
+	for i in n:
+		var d: float = p.distance_squared_to(circuit_line[i])
+		if d < best:
+			best = d
+	return sqrt(best)
+
+
+## A point on the racing line at normalised distance `t` around the loop. Used
+## by the race games to place pads and crates on the road for any shape.
+func track_point(t: float) -> Vector3:
+	if def.shape == "circuit" and not circuit_line.is_empty():
+		var idx := int(fposmod(t, 1.0) * float(circuit_line.size())) % circuit_line.size()
+		var p: Vector3 = circuit_line[idx]
+		return global_position + Vector3(p.x, 0.0, p.z)
+	# Oval and everything else: the mid-ring is the racing line.
+	var mid: float = (def.radius + def.radius * 0.55) * 0.5
+	var ang := TAU * fposmod(t, 1.0)
+	return global_position + Vector3(cos(ang) * mid, 0.0, sin(ang) * mid)
+
+
 func _build_pit() -> void:
 	_add_static_cylinder(def.radius, def.thickness, Vector3(0, -def.thickness * 0.5, 0), def.floor_color)
 	# Three tiers of ledges so a climbing game has real vertical structure.
@@ -481,6 +669,8 @@ func _build_walls() -> void:
 		"oval":
 			_ring_wall(def.radius + 0.35, h, 40)
 			_ring_wall(def.radius * 0.55 - 0.35, h, 28)
+		"circuit":
+			_circuit_walls(h)
 		_:
 			_ring_wall(def.radius + 0.3, h, 36)
 
