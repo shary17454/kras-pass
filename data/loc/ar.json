@@ -575,5 +575,14 @@
   "game.boss_sovereign.desc": "لا يسرع بين مراحله، بل يبدّل اللعبة.",
   "game.boss_sovereign.rules": "ثلاث مراحل تغيّر نوع القتال: مطاردة تعاقب الوقوف، ثم حصار بدرع لا يسقط إلا بردّ كراته إليه، ثم انهيار يرمي كل شيء دفعة واحدة. الضرر يُسجَّل لكلٍّ باسمه.",
   "results.stat.hits_taken": "ضربات تلقّيتها",
-  "world.boss.label": "مواجهة الزعيم"
+  "world.boss.label": "مواجهة الزعيم",
+  "game.sabaq_sawarikh.name": "سباق الصواريخ",
+  "game.sabaq_sawarikh.desc": "لفّتان، وصناديق تقرّر مصيرهما.",
+  "game.sabaq_sawarikh.rules": "أكمل لفّتين أولاً. مرّ فوق الصناديق لتلتقط سلاحاً: صاروخ يطارد من أمامك، قنبلة تتركها خلفك، دفعة سرعة، أو درع يمتص ضربة. الضربة تدوّرك لحظة ولا تخرجك، والمتأخّر يسحب أسلحة أقوى.",
+  "arena.dune_circuit.name": "حلبة الكثبان",
+  "arena.neon_spiral.name": "اللولب النيوني",
+  "arena.frost_hairpin.name": "منعطف الصقيع",
+  "arena.magma_ring.name": "حلقة الحمم",
+  "arena.sky_causeway.name": "جسر السماء",
+  "results.stat.hits": "إصابات"
 }

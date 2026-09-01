@@ -17,6 +17,12 @@ var _checkpoints: Array[Vector3] = []
 var _boost_pads: Array = []
 
 
+## Overridable so a game on a longer circuit can run fewer laps. Distance is
+## what has to stay comparable between race games, not lap count.
+func laps() -> int:
+	return LAPS
+
+
 func configure() -> void:
 	eliminate_on_fall = false
 	lives_per_player = 99
@@ -81,8 +87,8 @@ func tick(delta: float) -> void:
 			_next_cp[i] = (_next_cp[i] + 1) % _checkpoints.size()
 			if _next_cp[i] == 0:
 				lap[i] += 1
-				AudioManager.play_sfx("score" if lap[i] >= LAPS else "tick")
-				if lap[i] >= LAPS:
+				AudioManager.play_sfx("score" if lap[i] >= laps() else "tick")
+				if lap[i] >= laps():
 					finish_times[i] = int(round(_elapsed * 100.0))
 					ctx.set_detail(i, "time", finish_times[i])
 					ctx.set_detail(i, "laps", lap[i])
@@ -159,7 +165,7 @@ func boost_pad_positions(for_slot: int) -> Array:
 func hud_value(slot: int) -> String:
 	if finish_times[slot] != UNFINISHED:
 		return "%.2f" % (finish_times[slot] / 100.0)
-	return Loc.t("hud.lap", {"n": mini(lap[slot] + 1, LAPS), "total": LAPS})
+	return Loc.t("hud.lap", {"n": mini(lap[slot] + 1, laps()), "total": laps()})
 
 
 func hud_banner() -> String:

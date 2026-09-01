@@ -575,5 +575,14 @@
   "game.boss_sovereign.desc": "It does not speed up between phases. It changes the game.",
   "game.boss_sovereign.rules": "Three phases, three different fights: a pursuit that punishes standing still, a siege whose shield only falls to its own orbs sent back, then a collapse that throws everything at once. Damage is banked per player.",
   "results.stat.hits_taken": "Hits taken",
-  "world.boss.label": "Boss fight"
+  "world.boss.label": "Boss fight",
+  "game.sabaq_sawarikh.name": "Rocket Rally",
+  "game.sabaq_sawarikh.desc": "Two laps, and crates that decide them.",
+  "game.sabaq_sawarikh.rules": "Finish two laps first. Drive through a crate for a weapon: a rocket that chases the kart ahead, a bomb you leave behind, a speed burst, or a shield. A hit spins you out for a moment, it never ends your race — and the further back you are, the better the crate.",
+  "arena.dune_circuit.name": "Dune Circuit",
+  "arena.neon_spiral.name": "Neon Spiral",
+  "arena.frost_hairpin.name": "Frost Hairpin",
+  "arena.magma_ring.name": "Magma Ring",
+  "arena.sky_causeway.name": "Sky Causeway",
+  "results.stat.hits": "Hits"
 }
