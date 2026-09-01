@@ -63,8 +63,11 @@ func _build_crates() -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
-	# Rows of three across the road so the crate you take is a choice, and so
-	# four karts abreast cannot all be denied by one rival taking the only one.
+	# One crate per kart, per row. Three crates for four karts denied exactly one
+	# driver an item at every single row, and the driver denied is always the one
+	# who arrives last — i.e. always the back of the starting grid. The balance
+	# simulator caught it at 40 runs as a flagged spawn-slot advantage (18%),
+	# well above the fair-game null for that sample size.
 	for row in 5:
 		var t := (float(row) + 0.5) / 5.0
 		var here := arena.track_point(t)
@@ -75,8 +78,10 @@ func _build_crates() -> void:
 			continue
 		fwd = fwd.normalized()
 		var side := Vector3(-fwd.z, 0.0, fwd.x)
-		var spread: float = minf(arena.track_width * 0.28, 2.6) if arena.track_width > 0.0 else 2.2
-		for lane: float in [-1.0, 0.0, 1.0]:
+		# Lane spacing, not half-width: four lanes span 3x this, and the narrowest
+		# circuit is 7m across, so a kart plus clearance has to fit inside it.
+		var spread: float = minf(arena.track_width * 0.22, 1.7)
+		for lane: float in [-1.5, -0.5, 0.5, 1.5]:
 			var pos := here + side * spread * lane + Vector3(0, 0.85, 0)
 			var mesh := MeshFactory.crate(1.05, UIKit.ACCENT, UIKit.ACCENT_2)
 			mesh.position = pos

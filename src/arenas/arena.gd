@@ -539,8 +539,10 @@ func _build_circuit() -> void:
 	var side := Vector3(-fwd.z, 0.0, fwd.x)
 	spawn_points.clear()
 	for i in 4:
-		# Two-by-two grid behind the line, the way a race actually starts.
-		spawn_points.append(start - fwd * (2.2 + float(i / 2) * 3.0)
+		# Two-by-two grid behind the line. The row gap is deliberately small:
+		# it only has to read as a grid, and every metre of it is a head start
+		# handed to the same two slots in every match.
+		spawn_points.append(start - fwd * (2.2 + float(i / 2) * 1.6)
 			+ side * (float(i % 2) * 3.0 - 1.5) + Vector3(0, 1.3, 0))
 
 
