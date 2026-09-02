@@ -1,5 +1,6 @@
 extends RefCounted
-## Input frames, AI profiles, power-up stacking, object pooling and navigation.
+## Input frames, AI profiles, power-up stacking, object pooling, procedural
+## geometry and navigation.
 
 
 func run(t: TestHarness, host: Node) -> void:
@@ -8,6 +9,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_platform(t)
 	_ai_profiles(t)
 	_pooling(t)
+	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
 
@@ -120,6 +122,52 @@ func _pooling(t: TestHarness) -> void:
 	var stats := Pool.stats()
 	t.equal(int(stats["test_item"]["live"]), 0, "released instances are not counted as live")
 	Pool.drain()
+
+
+## Guards for the geometry `MeshFactory` generates. Every one of these failures
+## shipped through a green suite once, because "the scripts run" and "the mesh is
+## a solid" are different claims and only the first was ever being checked.
+func _procedural_geometry(t: TestHarness) -> void:
+	t.test("rounded boxes are closed solids wound consistently outward")
+	# A hand-written winding table had 320 of 364 triangles inside out. With
+	# back-face culling that discards the bevel strips and every box in every
+	# arena shows open seams at its edges — invisible to a script-level test and
+	# easy to miss in a screenshot, because the strips are thin.
+	for size in [Vector3(1, 1, 1), Vector3(1.5, 0.45, 2.1), Vector3(6.2, 1.0, 9.0)]:
+		var mesh := MeshFactory._rounded_box_mesh(size, MeshFactory.BEVEL, MeshFactory.BEVEL_SEGMENTS)
+		var arrays := mesh.surface_get_arrays(0)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var norms: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var tris := verts.size() / 3
+		var flipped := 0
+		var volume := 0.0
+		for i in tris:
+			var a := verts[i * 3]
+			var b := verts[i * 3 + 1]
+			var c := verts[i * 3 + 2]
+			# Signed volume of the tetrahedron to the origin. Summed over a
+			# closed, outward-wound surface this is the enclosed volume.
+			volume += a.dot(b.cross(c)) / 6.0
+			var geometric := (b - a).cross(c - a)
+			if geometric.length() < 0.000001:
+				continue
+			var supplied := norms[i * 3] + norms[i * 3 + 1] + norms[i * 3 + 2]
+			if geometric.dot(supplied) < 0.0:
+				flipped += 1
+		t.equal(flipped, 0, "%s: every triangle winds with its own normal" % str(size))
+		# The bevel removes material at the corners, so the solid is a little
+		# smaller than its bounding box and never larger.
+		var box_volume: float = size.x * size.y * size.z
+		t.ok(volume > box_volume * 0.9 and volume <= box_volume,
+			"%s: encloses %.3f of its %.3f box" % [str(size), volume, box_volume])
+
+	t.test("clearing the cache releases meshes as well as materials")
+	MeshFactory.box(Vector3(3.1, 0.4, 7.7), Color.RED)
+	t.ok(MeshFactory._mesh_cache.size() > 0, "building a box caches its mesh")
+	# `PlatformService._on_memory_warning()` calls this, so anything it misses
+	# stays resident exactly when the device is asking for memory back.
+	MeshFactory.clear_cache()
+	t.equal(MeshFactory._mesh_cache.size(), 0, "mesh cache is cleared too")
 
 
 func _powerups(t: TestHarness, host: Node) -> void:

@@ -40,11 +40,18 @@ var _bombs: Array = []
 var _missiles: Array[Projectile] = []
 
 
-## Two laps, not three. These circuits are ~175 m round against Kart Sprint's
-## 97 m, so three laps would be a 530 m race inside a 140 s clock — the field
-## would still be driving when the whistle went.
+## Three laps. The first cut was two, chosen by matching *distance* to Kart
+## Sprint (~175 m a lap here against its 97 m). That was the wrong axis: what
+## has to match is how long the race lasts, and two laps ran 40.4 s against
+## Kart Sprint's 64.1 s.
+##
+## A short race is what let raw character speed decide it — `base_speed` spans
+## 7.4 to 10.8 across the roster, and the weapons need laps to work against
+## that. Measured at 40 runs: Kart Sprint 8% character bias unflagged, this game
+## 22% and flagged, on the same roster and the same brain. Three laps put the
+## race length back on the reference, and the 140 s clock holds it comfortably.
 func laps() -> int:
-	return 2
+	return 3
 
 
 func build() -> void:
