@@ -142,7 +142,7 @@ func _tick_crates(delta: float) -> void:
 			var f := ctx.fighter(i)
 			if f == null or not is_instance_valid(f) or not ctx.is_alive(i):
 				continue
-			if held[i] != Item.NONE:
+			if held[i] != Item.NONE or finish_times[i] != UNFINISHED:
 				continue
 			var to: Vector3 = f.global_position - crate["pos"]
 			to.y = 0.0
@@ -186,6 +186,12 @@ func _tick_items(delta: float) -> void:
 	for i in ctx.fighters.size():
 		shielded[i] = maxf(0.0, shielded[i] - delta)
 		if not ctx.is_alive(i):
+			continue
+		# A finished racer keeps `is_alive` true — Kart Sprint only clears
+		# `control_enabled`, and this reads InputRouter directly. Without this
+		# check, whoever crosses the line first can spend a held rocket on the
+		# three drivers still deciding second place.
+		if finish_times[i] != UNFINISHED:
 			continue
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f):
@@ -284,6 +290,11 @@ func _launch_missile(slot: int, f) -> void:
 		shot.hit_fighter.connect(_on_missile_hit)
 	var dir: Vector3 = f.facing.normalized()
 	shot.fire(f.global_position + Vector3(0, 0.9, 0) + dir * 2.0, dir, slot, 30.0, 0.0, 60.0)
+	# The spin-out below is this game's entire punishment, and the shield has to
+	# be able to stop it. `Projectile` applies its own knockback and stun before
+	# it emits, so the shield would have been consumed after the hit had already
+	# landed rather than instead of it.
+	shot.notify_only = true
 	if target >= 0:
 		shot.guide(ctx, target, 2.6)
 	_missiles.append(shot)

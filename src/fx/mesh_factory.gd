@@ -263,6 +263,11 @@ static func transparent(color: Color, alpha := 0.4) -> StandardMaterial3D:
 static func clear_cache() -> void:
 	_mat_cache.clear()
 	_tex_cache.clear()
+	# `PlatformService._on_memory_warning()` calls this. Every rounded box ever
+	# built is held here, including one slab mesh per distinct circuit segment,
+	# so leaving it out kept the largest cache alive at exactly the moment iOS
+	# was asking for memory back.
+	_mesh_cache.clear()
 
 
 # --- primitives ------------------------------------------------------------
@@ -296,10 +301,7 @@ static func _rounded_box_mesh(size: Vector3, bevel: float, seg: int) -> ArrayMes
 			var b := c + u * eu - v * ev
 			var d := c + u * eu + v * ev
 			var e := c - u * eu + v * ev
-			if sgn > 0.0:
-				_quad(st, a, b, d, e, nn, nn, nn, nn)
-			else:
-				_quad(st, a, e, d, b, nn, nn, nn, nn)
+			_quad(st, a, b, d, e, nn, nn, nn, nn)
 
 	# Twelve edges: a quarter cylinder swept along the third axis.
 	for ai in 3:
@@ -319,32 +321,22 @@ static func _rounded_box_mesh(size: Vector3, bevel: float, seg: int) -> ArrayMes
 					var n1: Vector3 = (u * cos(t1) * su + v * sin(t1) * sv).normalized()
 					var p0 := base + n0 * r
 					var p1 := base + n1 * r
-					var flip: bool = (su * sv) < 0.0
-					if flip:
-						_quad(st, p0 - axis * la, p1 - axis * la, p1 + axis * la, p0 + axis * la,
-							n0, n1, n1, n0)
-					else:
-						_quad(st, p0 + axis * la, p1 + axis * la, p1 - axis * la, p0 - axis * la,
-							n0, n1, n1, n0)
+					_quad(st, p0 + axis * la, p1 + axis * la, p1 - axis * la, p0 - axis * la,
+						n0, n1, n1, n0)
 
 	# Eight corners: a spherical octant per corner.
 	for sx: float in [1.0, -1.0]:
 		for sy: float in [1.0, -1.0]:
 			for sz: float in [1.0, -1.0]:
 				var base := Vector3(inner.x * sx, inner.y * sy, inner.z * sz)
-				var flip: bool = (sx * sy * sz) < 0.0
 				for i in seg:
 					for j in seg:
 						var n00 := _octant(i, j, seg, sx, sy, sz)
 						var n10 := _octant(i + 1, j, seg, sx, sy, sz)
 						var n11 := _octant(i + 1, j + 1, seg, sx, sy, sz)
 						var n01 := _octant(i, j + 1, seg, sx, sy, sz)
-						if flip:
-							_quad(st, base + n00 * r, base + n01 * r, base + n11 * r, base + n10 * r,
-								n00, n01, n11, n10)
-						else:
-							_quad(st, base + n00 * r, base + n10 * r, base + n11 * r, base + n01 * r,
-								n00, n10, n11, n01)
+						_quad(st, base + n00 * r, base + n10 * r, base + n11 * r, base + n01 * r,
+							n00, n10, n11, n01)
 
 	st.generate_tangents()
 	var mesh := st.commit()
@@ -372,9 +364,22 @@ static func _uv_for(p: Vector3, n: Vector3) -> Vector2:
 	return Vector2(p.x, p.y) * 0.5
 
 
+## Emits the quad with whichever winding agrees with the supplied normals.
+##
+## Tracking winding by hand is how 88% of these triangles ended up inside out:
+## the correct order depends on the product of three axis signs across six
+## faces, twelve swept edges and eight octants, and a hand-written sign table
+## is wrong more often than it is right. With back-face culling on, the bevel
+## strips were being discarded and every box showed open seams at its edges.
+## Deriving the winding from the geometry cannot drift.
 static func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
 		na: Vector3, nb: Vector3, nc: Vector3, nd: Vector3) -> void:
-	for tri in [[a, na, b, nb, c, nc], [a, na, c, nc, d, nd]]:
+	var tris: Array
+	if (b - a).cross(c - a).dot(na + nb + nc) < 0.0:
+		tris = [[a, na, c, nc, b, nb], [a, na, d, nd, c, nc]]
+	else:
+		tris = [[a, na, b, nb, c, nc], [a, na, c, nc, d, nd]]
+	for tri in tris:
 		for k in 3:
 			var pos: Vector3 = tri[k * 2]
 			var nrm: Vector3 = tri[k * 2 + 1]

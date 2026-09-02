@@ -43,15 +43,23 @@ func build() -> void:
 	_build_boost_pads(arena)
 
 
+## Pads go on the arena's racing line, not on a circle derived from its radius.
+## For an oval those are the same point by construction, so this is unchanged
+## there; on a lobed circuit a fixed circle lands the pads off the road — on
+## Frost Hairpin, roughly 5.6m from a centreline whose half-width is 4.25m,
+## i.e. behind the inner wall, unreachable, and pulling steering bots into it.
 func _build_boost_pads(arena: Arena) -> void:
-	var inner := arena.def.radius * 0.55
-	var mid := (arena.def.radius + inner) * 0.5
 	for i in 4:
-		var ang := TAU * (float(i) + 0.5) / 4.0
-		var pos := arena.global_position + Vector3(cos(ang) * mid, 0.09, sin(ang) * mid)
+		var t := (float(i) + 0.5) / 4.0
+		var here := arena.track_point(t)
+		var ahead := arena.track_point(t + 0.005)
+		var pos := here + Vector3(0, 0.09, 0)
 		var pad := MeshFactory.box(Vector3(2.4, 0.12, 2.4), UIKit.ACCENT_2, 1.2)
 		pad.position = pos
-		pad.rotation.y = -ang
+		var fwd := ahead - here
+		fwd.y = 0.0
+		if fwd.length_squared() > 0.0001:
+			pad.rotation.y = -atan2(fwd.z, fwd.x)
 		ctx.world_root.add_child(pad)
 		_boost_pads.append({"pos": pos, "radius": 1.6, "cooldown": {}})
 
