@@ -64,6 +64,11 @@ func tick(delta: float) -> void:
 func clear_all() -> void:
 	_effects.clear()
 	for slot in ctx.fighters.size():
+		# `_recompute` deliberately preserves freeze, so a round reset has to
+		# clear it explicitly or it survives into the next round.
+		var f := ctx.fighter(slot)
+		if f != null and is_instance_valid(f):
+			f.mods["frozen"] = 0.0
 		_recompute(slot)
 	for p in _active_pickups.duplicate():
 		_retire(p)
@@ -74,6 +79,14 @@ func active_effects_for(slot: int) -> Array:
 	for e in _effects:
 		if int(e["slot"]) == slot:
 			out.append({"id": e["def"].id, "glyph": e["def"].glyph, "color": e["def"].color, "remaining": e["remaining"]})
+	# Freeze never enters `_effects` (it ticks on the fighter), but a player who
+	# has lost control needs to see why, and for how much longer.
+	var f := ctx.fighter(slot)
+	if f != null and is_instance_valid(f) and float(f.mods["frozen"]) > 0.0:
+		var d := Registry.powerup("freeze")
+		if d != null:
+			out.append({"id": d.id, "glyph": d.glyph, "color": d.color,
+				"remaining": float(f.mods["frozen"])})
 	return out
 
 

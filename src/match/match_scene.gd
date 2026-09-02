@@ -32,6 +32,12 @@ var mutators: MutatorSystem
 
 var phase: int = P.LOADING
 var _phase_timer := 0.0
+## What `_phase_timer` was set to on entry. The skip grace period has to be
+## measured against the timer actually running, not against a constant: a rules
+## card for a game you already know starts at 3.5 s, which is below the
+## first-time constant, so comparing to that constant made the card skippable
+## on the very first frame and it flashed past before it could be read.
+var _phase_duration := 0.0
 var _phase_locked := false
 var _round_results: Array[MatchResult] = []
 var _round_index := 0
@@ -297,6 +303,7 @@ func _set_phase(next: int) -> void:
 	_phase_locked = false
 	EventBus.match_phase_changed.emit(next)
 	_enter_phase(next)
+	_phase_duration = _phase_timer
 
 
 func _enter_phase(p: int) -> void:
@@ -308,8 +315,12 @@ func _enter_phase(p: int) -> void:
 		P.INSTRUCTIONS:
 			hud.show_rules(true)
 			var known := not UserSettings.should_show_tutorial(ctx.definition.id)
-			_phase_timer = float(_tuning.get("instructions_seconds_known", 1.6)) if known \
-				else float(_tuning.get("instructions_seconds", 4.0))
+			_phase_timer = float(_tuning.get("instructions_seconds_known", 3.5)) if known \
+				else float(_tuning.get("instructions_seconds", 7.0))
+			# An all-AI match has nobody reading the card. Holding it up is
+			# pure dead time in demos, replays and the automated match tests.
+			if config != null and config.human_slots().is_empty():
+				_phase_timer = minf(_phase_timer, 1.0)
 		P.COUNTDOWN:
 			hud.show_rules(false)
 			hud.show_hints(true)
@@ -417,7 +428,7 @@ func _tick_playback(delta: float) -> void:
 func _advance_timed_phase(delta: float) -> void:
 	_phase_timer -= delta
 	# Any button skips the intro and the rules card once a player is ready.
-	if phase == P.INSTRUCTIONS and _any_human_pressed() and _phase_timer < float(_tuning.get("instructions_seconds", 4.0)) - 0.4:
+	if phase == P.INSTRUCTIONS and _any_human_pressed() and _phase_timer < _phase_duration - 0.4:
 		_phase_timer = 0.0
 	if _phase_timer > 0.0:
 		return

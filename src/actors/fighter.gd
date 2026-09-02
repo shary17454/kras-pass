@@ -217,6 +217,9 @@ func tick(frame: InputFrame, delta: float) -> void:
 
 func _advance_timers(delta: float) -> void:
 	_stun = maxf(0.0, _stun - delta)
+	# Freeze runs on this clock rather than through PowerUpSystem's effect list,
+	# so it has to be counted down here. Nothing else ever lowers it.
+	mods["frozen"] = maxf(0.0, float(mods["frozen"]) - delta)
 	_dash_cd = maxf(0.0, _dash_cd - delta)
 	_dash_time = maxf(0.0, _dash_time - delta)
 	_attack_cd = maxf(0.0, _attack_cd - delta)
@@ -377,6 +380,7 @@ func respawn_at(p: Vector3) -> void:
 	velocity = Vector3.ZERO
 	_impulse = Vector3.ZERO
 	_stun = 0.0
+	mods["frozen"] = 0.0
 	_invuln = 1.0
 	alive = true
 	visible = true

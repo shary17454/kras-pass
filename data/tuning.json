@@ -40,8 +40,8 @@
   },
   "match": {
     "intro_seconds": 1.6,
-    "instructions_seconds": 4.0,
-    "instructions_seconds_known": 1.6,
+    "instructions_seconds": 7.0,
+    "instructions_seconds_known": 3.5,
     "countdown_seconds": 3,
     "finish_seconds": 2.2,
     "results_min_seconds": 1.0,

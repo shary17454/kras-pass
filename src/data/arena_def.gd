@@ -9,7 +9,7 @@ extends Resource
 
 @export var id := ""
 @export var name_key := ""
-@export var shape := "disc"  # disc | square | ring | cross | tiles | track | pit | islands
+@export var shape := "disc"  # disc | square | ring | cross | tiles | track | pit | islands | oval | circuit
 @export var radius := 12.0
 @export var thickness := 1.0
 @export var wall_height := 0.0   # 0 = open edge (fall off), >0 = enclosed
@@ -23,6 +23,11 @@ extends Resource
 @export var spawn_points: Array = [] # explicit spawns; empty = auto ring
 @export var gravity_scale := 1.0
 @export var fall_y := -14.0          # below this a fighter is out
+## Shape-specific numbers. `circuit` reads `lobes`, `wobble` and `width` from
+## here, which is what makes five race tracks five different drives instead of
+## one ring in five palettes. Kept as a free-form bag so a new shape never
+## needs a schema change.
+@export var params: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> ArenaDef:
@@ -44,7 +49,12 @@ static func from_dict(d: Dictionary) -> ArenaDef:
 	a.spawn_points = d.get("spawns", [])
 	a.gravity_scale = float(d.get("gravity_scale", 1.0))
 	a.fall_y = float(d.get("fall_y", -14.0))
+	a.params = d.get("params", {})
 	return a
+
+
+func param(key: String, fallback: float) -> float:
+	return float(params.get(key, fallback))
 
 
 ## Evenly spaced spawn ring when the data file does not pin exact positions.

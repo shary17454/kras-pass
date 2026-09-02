@@ -757,6 +757,37 @@
         "boss"
       ],
       "boss": true
+    },
+    {
+      "id": "sabaq_sawarikh",
+      "category": "race",
+      "scoring": "race_time",
+      "arenas": [
+        "dune_circuit",
+        "neon_spiral",
+        "frost_hairpin",
+        "magma_ring",
+        "sky_causeway"
+      ],
+      "duration": 140.0,
+      "rounds": 1,
+      "sudden_death": false,
+      "controls": [
+        "drive",
+        "attack",
+        "boost"
+      ],
+      "control_profile": "steering",
+      "glyph": "➤",
+      "tags": [
+        "race",
+        "vehicle",
+        "weapons"
+      ],
+      "unlock": {
+        "type": "trophies",
+        "amount": 8
+      }
     }
   ]
 }

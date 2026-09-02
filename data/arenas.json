@@ -8,8 +8,20 @@
       "thickness": 1.2,
       "wall_height": 0.0,
       "theme": "arctic",
-      "palette": {"floor": "#bfe8f4", "accent": "#f5fbff", "sky_top": "#0b3156", "sky_bottom": "#2d8fc2"},
-      "hazards": [{"type": "shrink", "start_delay": 18.0, "rate": 0.28, "min_radius": 6.5}]
+      "palette": {
+        "floor": "#bfe8f4",
+        "accent": "#f5fbff",
+        "sky_top": "#0b3156",
+        "sky_bottom": "#2d8fc2"
+      },
+      "hazards": [
+        {
+          "type": "shrink",
+          "start_delay": 18.0,
+          "rate": 0.28,
+          "min_radius": 6.5
+        }
+      ]
     },
     {
       "id": "storm_ring",
@@ -18,10 +30,26 @@
       "thickness": 1.2,
       "wall_height": 0.0,
       "theme": "arctic",
-      "palette": {"floor": "#d5f4fb", "accent": "#8ee8ff", "sky_top": "#082747", "sky_bottom": "#1d789e"},
+      "palette": {
+        "floor": "#d5f4fb",
+        "accent": "#8ee8ff",
+        "sky_top": "#082747",
+        "sky_bottom": "#1d789e"
+      },
       "hazards": [
-        {"type": "sweeper", "count": 2, "speed": 1.15, "length": 9.0, "height": 0.9},
-        {"type": "shrink", "start_delay": 26.0, "rate": 0.2, "min_radius": 7.0}
+        {
+          "type": "sweeper",
+          "count": 2,
+          "speed": 1.15,
+          "length": 9.0,
+          "height": 0.9
+        },
+        {
+          "type": "shrink",
+          "start_delay": 26.0,
+          "rate": 0.2,
+          "min_radius": 7.0
+        }
       ]
     },
     {
@@ -30,8 +58,19 @@
       "radius": 12.0,
       "thickness": 0.8,
       "wall_height": 0.0,
-      "palette": {"floor": "#4a3b55", "accent": "#ff9f6b", "sky_top": "#241736", "sky_bottom": "#7a4160"},
-      "hazards": [{"type": "crumble", "delay": 0.9, "respawn": 6.0}]
+      "palette": {
+        "floor": "#4a3b55",
+        "accent": "#ff9f6b",
+        "sky_top": "#241736",
+        "sky_bottom": "#7a4160"
+      },
+      "hazards": [
+        {
+          "type": "crumble",
+          "delay": 0.9,
+          "respawn": 6.0
+        }
+      ]
     },
     {
       "id": "bumper_bowl",
@@ -39,8 +78,26 @@
       "radius": 13.0,
       "thickness": 1.0,
       "wall_height": 0.0,
-      "palette": {"floor": "#33405e", "accent": "#ff5f8d", "sky_top": "#16193a", "sky_bottom": "#54376e"},
-      "hazards": [{"type": "bumper", "count": 5, "radius": 1.1, "power": 17.0}, {"type": "shrink", "start_delay": 24.0, "rate": 0.3, "min_radius": 5.5}]
+      "palette": {
+        "floor": "#33405e",
+        "accent": "#ff5f8d",
+        "sky_top": "#16193a",
+        "sky_bottom": "#54376e"
+      },
+      "hazards": [
+        {
+          "type": "bumper",
+          "count": 5,
+          "radius": 1.1,
+          "power": 17.0
+        },
+        {
+          "type": "shrink",
+          "start_delay": 24.0,
+          "rate": 0.3,
+          "min_radius": 5.5
+        }
+      ]
     },
     {
       "id": "quad_court",
@@ -48,7 +105,12 @@
       "radius": 13.0,
       "thickness": 1.0,
       "wall_height": 2.2,
-      "palette": {"floor": "#25455a", "accent": "#57e0c0", "sky_top": "#0f2a38", "sky_bottom": "#2f6d78"}
+      "palette": {
+        "floor": "#25455a",
+        "accent": "#57e0c0",
+        "sky_top": "#0f2a38",
+        "sky_bottom": "#2f6d78"
+      }
     },
     {
       "id": "ember_pit",
@@ -56,7 +118,12 @@
       "radius": 12.0,
       "thickness": 1.0,
       "wall_height": 1.6,
-      "palette": {"floor": "#4b2a2a", "accent": "#ff8b3d", "sky_top": "#2a1220", "sky_bottom": "#8a3b2e"}
+      "palette": {
+        "floor": "#4b2a2a",
+        "accent": "#ff8b3d",
+        "sky_top": "#2a1220",
+        "sky_bottom": "#8a3b2e"
+      }
     },
     {
       "id": "scrap_yard",
@@ -64,8 +131,20 @@
       "radius": 17.0,
       "thickness": 1.0,
       "wall_height": 1.6,
-      "palette": {"floor": "#3d3f45", "accent": "#e2b23c", "sky_top": "#1c1e26", "sky_bottom": "#5a4b3a"},
-      "hazards": [{"type": "pillars", "count": 6, "radius": 1.2, "height": 2.4}]
+      "palette": {
+        "floor": "#3d3f45",
+        "accent": "#e2b23c",
+        "sky_top": "#1c1e26",
+        "sky_bottom": "#5a4b3a"
+      },
+      "hazards": [
+        {
+          "type": "pillars",
+          "count": 6,
+          "radius": 1.2,
+          "height": 2.4
+        }
+      ]
     },
     {
       "id": "iron_flats",
@@ -73,8 +152,20 @@
       "radius": 16.0,
       "thickness": 1.0,
       "wall_height": 0.9,
-      "palette": {"floor": "#38414d", "accent": "#9fd8ff", "sky_top": "#161c26", "sky_bottom": "#3c5266"},
-      "hazards": [{"type": "pillars", "count": 8, "radius": 1.0, "height": 2.2}]
+      "palette": {
+        "floor": "#38414d",
+        "accent": "#9fd8ff",
+        "sky_top": "#161c26",
+        "sky_bottom": "#3c5266"
+      },
+      "hazards": [
+        {
+          "type": "pillars",
+          "count": 8,
+          "radius": 1.0,
+          "height": 2.2
+        }
+      ]
     },
     {
       "id": "gem_hollow",
@@ -82,7 +173,12 @@
       "radius": 14.0,
       "thickness": 1.0,
       "wall_height": 0.0,
-      "palette": {"floor": "#33305c", "accent": "#b98cff", "sky_top": "#191436", "sky_bottom": "#4d3a7a"}
+      "palette": {
+        "floor": "#33305c",
+        "accent": "#b98cff",
+        "sky_top": "#191436",
+        "sky_bottom": "#4d3a7a"
+      }
     },
     {
       "id": "star_meadow",
@@ -90,7 +186,12 @@
       "radius": 14.0,
       "thickness": 1.0,
       "wall_height": 0.8,
-      "palette": {"floor": "#2c4a38", "accent": "#ffe066", "sky_top": "#132a20", "sky_bottom": "#3f7a52"}
+      "palette": {
+        "floor": "#2c4a38",
+        "accent": "#ffe066",
+        "sky_top": "#132a20",
+        "sky_bottom": "#3f7a52"
+      }
     },
     {
       "id": "paint_grid",
@@ -98,7 +199,12 @@
       "radius": 12.0,
       "thickness": 0.6,
       "wall_height": 0.7,
-      "palette": {"floor": "#3a3550", "accent": "#ffffff", "sky_top": "#1c1730", "sky_bottom": "#5b4a80"}
+      "palette": {
+        "floor": "#3a3550",
+        "accent": "#ffffff",
+        "sky_top": "#1c1730",
+        "sky_bottom": "#5b4a80"
+      }
     },
     {
       "id": "dune_ring",
@@ -106,7 +212,12 @@
       "radius": 14.5,
       "thickness": 1.0,
       "wall_height": 0.8,
-      "palette": {"floor": "#5a4a2e", "accent": "#ffd98a", "sky_top": "#2b2016", "sky_bottom": "#8a6b3a"}
+      "palette": {
+        "floor": "#5a4a2e",
+        "accent": "#ffd98a",
+        "sky_top": "#2b2016",
+        "sky_bottom": "#8a6b3a"
+      }
     },
     {
       "id": "crate_yard",
@@ -114,7 +225,12 @@
       "radius": 13.0,
       "thickness": 1.0,
       "wall_height": 1.4,
-      "palette": {"floor": "#463b2e", "accent": "#ffc46b", "sky_top": "#241c14", "sky_bottom": "#6b5334"}
+      "palette": {
+        "floor": "#463b2e",
+        "accent": "#ffc46b",
+        "sky_top": "#241c14",
+        "sky_bottom": "#6b5334"
+      }
     },
     {
       "id": "relay_docks",
@@ -122,7 +238,12 @@
       "radius": 15.0,
       "thickness": 1.0,
       "wall_height": 0.0,
-      "palette": {"floor": "#2b4150", "accent": "#6be0ff", "sky_top": "#111f2b", "sky_bottom": "#33636f"}
+      "palette": {
+        "floor": "#2b4150",
+        "accent": "#6be0ff",
+        "sky_top": "#111f2b",
+        "sky_bottom": "#33636f"
+      }
     },
     {
       "id": "hurdle_track",
@@ -130,8 +251,19 @@
       "radius": 13.0,
       "thickness": 1.0,
       "wall_height": 0.9,
-      "palette": {"floor": "#43304a", "accent": "#ff7ab8", "sky_top": "#1d1226", "sky_bottom": "#6a3565"},
-      "hazards": [{"type": "hurdles", "rows": 7, "height": 0.85}]
+      "palette": {
+        "floor": "#43304a",
+        "accent": "#ff7ab8",
+        "sky_top": "#1d1226",
+        "sky_bottom": "#6a3565"
+      },
+      "hazards": [
+        {
+          "type": "hurdles",
+          "rows": 7,
+          "height": 0.85
+        }
+      ]
     },
     {
       "id": "circuit_loop",
@@ -139,7 +271,12 @@
       "radius": 20.0,
       "thickness": 1.0,
       "wall_height": 1.2,
-      "palette": {"floor": "#333a44", "accent": "#7bffd0", "sky_top": "#141a20", "sky_bottom": "#356057"}
+      "palette": {
+        "floor": "#333a44",
+        "accent": "#7bffd0",
+        "sky_top": "#141a20",
+        "sky_bottom": "#356057"
+      }
     },
     {
       "id": "color_floor",
@@ -147,7 +284,12 @@
       "radius": 11.0,
       "thickness": 0.6,
       "wall_height": 0.7,
-      "palette": {"floor": "#2f3a4d", "accent": "#ffffff", "sky_top": "#131a26", "sky_bottom": "#3e5a72"}
+      "palette": {
+        "floor": "#2f3a4d",
+        "accent": "#ffffff",
+        "sky_top": "#131a26",
+        "sky_bottom": "#3e5a72"
+      }
     },
     {
       "id": "echo_hall",
@@ -155,7 +297,12 @@
       "radius": 10.5,
       "thickness": 1.0,
       "wall_height": 2.4,
-      "palette": {"floor": "#2b2b46", "accent": "#a0f0ff", "sky_top": "#12122a", "sky_bottom": "#3a3a6b"}
+      "palette": {
+        "floor": "#2b2b46",
+        "accent": "#a0f0ff",
+        "sky_top": "#12122a",
+        "sky_bottom": "#3a3a6b"
+      }
     },
     {
       "id": "draw_stage",
@@ -163,7 +310,12 @@
       "radius": 9.5,
       "thickness": 1.0,
       "wall_height": 1.1,
-      "palette": {"floor": "#3d2f3f", "accent": "#ffd23f", "sky_top": "#1c1420", "sky_bottom": "#5e3c50"}
+      "palette": {
+        "floor": "#3d2f3f",
+        "accent": "#ffd23f",
+        "sky_top": "#1c1420",
+        "sky_bottom": "#5e3c50"
+      }
     },
     {
       "id": "tide_spire",
@@ -172,8 +324,19 @@
       "thickness": 0.8,
       "wall_height": 0.0,
       "fall_y": -6.0,
-      "palette": {"floor": "#26485c", "accent": "#66e0ff", "sky_top": "#0e2230", "sky_bottom": "#2c6b80"},
-      "hazards": [{"type": "rising", "speed": 0.42, "start_y": -6.0}]
+      "palette": {
+        "floor": "#26485c",
+        "accent": "#66e0ff",
+        "sky_top": "#0e2230",
+        "sky_bottom": "#2c6b80"
+      },
+      "hazards": [
+        {
+          "type": "rising",
+          "speed": 0.42,
+          "start_y": -6.0
+        }
+      ]
     },
     {
       "id": "sweeper_ring",
@@ -181,8 +344,21 @@
       "radius": 13.0,
       "thickness": 1.0,
       "wall_height": 0.0,
-      "palette": {"floor": "#3b2f52", "accent": "#ff6b6b", "sky_top": "#1a1130", "sky_bottom": "#5c3568"},
-      "hazards": [{"type": "sweeper", "count": 3, "speed": 1.0, "length": 11.0, "height": 0.85}]
+      "palette": {
+        "floor": "#3b2f52",
+        "accent": "#ff6b6b",
+        "sky_top": "#1a1130",
+        "sky_bottom": "#5c3568"
+      },
+      "hazards": [
+        {
+          "type": "sweeper",
+          "count": 3,
+          "speed": 1.0,
+          "length": 11.0,
+          "height": 0.85
+        }
+      ]
     },
     {
       "id": "duel_pit",
@@ -190,7 +366,12 @@
       "radius": 12.0,
       "thickness": 1.0,
       "wall_height": 0.0,
-      "palette": {"floor": "#402a34", "accent": "#ff9bb0", "sky_top": "#1e1018", "sky_bottom": "#6b3244"}
+      "palette": {
+        "floor": "#402a34",
+        "accent": "#ff9bb0",
+        "sky_top": "#1e1018",
+        "sky_bottom": "#6b3244"
+      }
     },
     {
       "id": "glass_terrace",
@@ -198,7 +379,102 @@
       "radius": 13.0,
       "thickness": 0.7,
       "wall_height": 0.0,
-      "palette": {"floor": "#2f4a5c", "accent": "#bff0ff", "sky_top": "#12222c", "sky_bottom": "#3d6f7d"}
+      "palette": {
+        "floor": "#2f4a5c",
+        "accent": "#bff0ff",
+        "sky_top": "#12222c",
+        "sky_bottom": "#3d6f7d"
+      }
+    },
+    {
+      "id": "dune_circuit",
+      "shape": "circuit",
+      "radius": 26.0,
+      "thickness": 1.0,
+      "wall_height": 1.3,
+      "palette": {
+        "floor": "#5a4126",
+        "accent": "#ffc46b",
+        "sky_top": "#2a1a12",
+        "sky_bottom": "#c97a3a"
+      },
+      "params": {
+        "lobes": 3,
+        "wobble": 0.2,
+        "width": 9.0
+      }
+    },
+    {
+      "id": "neon_spiral",
+      "shape": "circuit",
+      "radius": 20.0,
+      "thickness": 1.0,
+      "wall_height": 1.3,
+      "palette": {
+        "floor": "#1b1f3a",
+        "accent": "#7bffd0",
+        "sky_top": "#080a18",
+        "sky_bottom": "#2c1d5a"
+      },
+      "params": {
+        "lobes": 5,
+        "wobble": 0.26,
+        "width": 8.0
+      }
+    },
+    {
+      "id": "frost_hairpin",
+      "shape": "circuit",
+      "radius": 25.0,
+      "thickness": 1.0,
+      "wall_height": 1.3,
+      "palette": {
+        "floor": "#4a6472",
+        "accent": "#bdf0ff",
+        "sky_top": "#0b1a26",
+        "sky_bottom": "#3f7f96"
+      },
+      "params": {
+        "lobes": 2,
+        "wobble": 0.34,
+        "width": 8.5
+      }
+    },
+    {
+      "id": "magma_ring",
+      "shape": "circuit",
+      "radius": 24.0,
+      "thickness": 1.0,
+      "wall_height": 1.3,
+      "palette": {
+        "floor": "#3a1f1c",
+        "accent": "#ff6a3d",
+        "sky_top": "#1a0a08",
+        "sky_bottom": "#8c2f18"
+      },
+      "params": {
+        "lobes": 4,
+        "wobble": 0.16,
+        "width": 7.5
+      }
+    },
+    {
+      "id": "sky_causeway",
+      "shape": "circuit",
+      "radius": 19.5,
+      "thickness": 1.0,
+      "wall_height": 1.3,
+      "palette": {
+        "floor": "#3c4a63",
+        "accent": "#ffe27a",
+        "sky_top": "#101a30",
+        "sky_bottom": "#5f7fb8"
+      },
+      "params": {
+        "lobes": 6,
+        "wobble": 0.24,
+        "width": 7.0
+      }
     }
   ]
 }

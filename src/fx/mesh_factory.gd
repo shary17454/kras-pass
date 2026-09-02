@@ -12,6 +12,14 @@ extends RefCounted
 
 static var _mat_cache := {}
 static var _tex_cache := {}
+static var _mesh_cache := {}
+
+## How far box corners are pulled toward a sphere. Hard 90-degree edges are the
+## single loudest "untextured primitive" tell: a real edge catches a specular
+## highlight along its length, a mathematical one cannot. Small value on
+## purpose — enough to light the edge, not enough to inflate the face.
+const BEVEL := 0.14
+const BEVEL_SEGMENTS := 4
 
 
 # --- materials -------------------------------------------------------------
@@ -30,18 +38,97 @@ static func _noise_texture(seed: int, frequency: float, size := 256) -> NoiseTex
 	tex.width = size
 	tex.height = size
 	tex.seamless = true
+	tex.generate_mipmaps = true
+	# Raw 0..1 noise multiplied into the albedo turns every surface into
+	# camouflage. Compressing it to 0.82..1.0 keeps the grain and drops the
+	# blotching, so the tint the designer picked is still the colour you see.
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(0.82, 0.82, 0.82))
+	ramp.set_color(1, Color(1.0, 1.0, 1.0))
+	tex.color_ramp = ramp
 	tex.noise = noise
 	_tex_cache[key] = tex
 	return tex
 
-static func toon(color: Color, emission := 0.0, rim := 0.35) -> StandardMaterial3D:
-	var key := "t%s_%.2f_%.2f" % [color.to_html(), emission, rim]
+
+## The same noise field the albedo already uses, re-read as a tangent-space
+## normal map. This is where most of the perceived quality comes from: it costs
+## no repository bytes and gives every flat primitive a surface that reacts to
+## the light instead of returning one constant value.
+static func _normal_texture(seed: int, frequency: float, bump := 0.9, size := 256) -> NoiseTexture2D:
+	var key := "nrm%d_%.3f_%.2f_%d" % [seed, frequency, bump, size]
+	if _tex_cache.has(key):
+		return _tex_cache[key]
+	var noise := FastNoiseLite.new()
+	noise.seed = seed
+	noise.frequency = frequency
+	noise.fractal_octaves = 4
+	noise.fractal_lacunarity = 2.05
+	noise.fractal_gain = 0.5
+	var tex := NoiseTexture2D.new()
+	tex.width = size
+	tex.height = size
+	tex.seamless = true
+	tex.as_normal_map = true
+	tex.bump_strength = bump
+	tex.generate_mipmaps = true
+	tex.noise = noise
+	_tex_cache[key] = tex
+	return tex
+
+
+## Roughness variation. A surface with one uniform roughness reads as plastic
+## no matter how good the lighting is; breaking it up is what sells "material".
+static func _rough_texture(seed: int, frequency: float, size := 256) -> NoiseTexture2D:
+	var key := "rgh%d_%.3f_%d" % [seed, frequency, size]
+	if _tex_cache.has(key):
+		return _tex_cache[key]
+	var noise := FastNoiseLite.new()
+	noise.seed = seed
+	noise.frequency = frequency
+	noise.fractal_octaves = 3
+	var tex := NoiseTexture2D.new()
+	tex.width = size
+	tex.height = size
+	tex.seamless = true
+	tex.generate_mipmaps = true
+	tex.noise = noise
+	_tex_cache[key] = tex
+	return tex
+
+
+## Relief and roughness describe a *surface*, not a colour, so they are shared
+## across every material instead of being regenerated per tint. Twelve colours
+## used to allocate 84 noise textures; sharing brings that to N + 4, which on a
+## phone is the difference between ~21MB of VRAM for noise and under 4MB.
+const SEED_SURFACE := 5501
+const SEED_FINE := 5502
+const SEED_RUBBER := 5503
+const SEED_ROUGH := 5504
+
+
+static func _seed_for(color: Color) -> int:
+	return 1207 + int(color.r8) + int(color.g8) * 3 + int(color.b8) * 7
+
+
+## `uv_scale` is part of the cache key on purpose: a 40m floor and a 0.1m bolt
+## must not share one material, or the floor gets a single stretched noise tile
+## smeared across it while the bolt gets a solid colour.
+static func toon(color: Color, emission := 0.0, rim := 0.35, uv_scale := Vector3.ONE) -> StandardMaterial3D:
+	var key := "t%s_%.2f_%.2f_%.2f_%.2f" % [color.to_html(), emission, rim, uv_scale.x, uv_scale.y]
 	if _mat_cache.has(key):
 		return _mat_cache[key]
 	var m := StandardMaterial3D.new()
+	m.uv1_scale = uv_scale
+	var sd := _seed_for(color)
 	m.albedo_color = color
-	m.albedo_texture = _noise_texture(1207 + int(color.r8) + int(color.g8) * 3 + int(color.b8) * 7, 0.075, 256)
-	m.roughness = 0.38
+	m.albedo_texture = _noise_texture(sd, 0.075, 256)
+	m.normal_enabled = true
+	m.normal_texture = _normal_texture(SEED_SURFACE, 0.09, 0.85)
+	m.normal_scale = 0.65
+	m.roughness = 0.44
+	m.roughness_texture = _rough_texture(SEED_ROUGH, 0.05)
+	m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
 	m.metallic = 0.02
 	m.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
 	m.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
@@ -63,9 +150,15 @@ static func ice(color: Color, alpha := 0.78) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(color.r, color.g, color.b, alpha)
 	m.albedo_texture = _noise_texture(4071, 0.055, 384)
+	m.normal_enabled = true
+	m.normal_texture = _normal_texture(4071, 0.045, 1.35, 384)
+	m.normal_scale = 1.1
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.roughness = 0.11
+	m.roughness_texture = _rough_texture(SEED_ROUGH, 0.05)
 	m.metallic = 0.0
+	m.clearcoat = 0.85
+	m.clearcoat_roughness = 0.06
 	m.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
 	m.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
 	m.rim_enabled = true
@@ -81,7 +174,12 @@ static func satin(color: Color, roughness := 0.34, metallic := 0.0, rim := 0.18)
 		return _mat_cache[key]
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color
+	m.normal_enabled = true
+	m.normal_texture = _normal_texture(SEED_FINE, 0.12, 0.55)
+	m.normal_scale = 0.38
 	m.roughness = roughness
+	m.roughness_texture = _rough_texture(SEED_ROUGH, 0.05)
+	m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
 	m.metallic = metallic
 	m.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
 	m.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
@@ -98,7 +196,11 @@ static func rubber(color: Color) -> StandardMaterial3D:
 		return _mat_cache[key]
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color
-	m.roughness = 0.78
+	m.normal_enabled = true
+	m.normal_texture = _normal_texture(SEED_RUBBER, 0.34, 1.15)
+	m.normal_scale = 0.9
+	m.roughness = 0.82
+	m.roughness_texture = _rough_texture(SEED_ROUGH, 0.05)
 	m.metallic = 0.0
 	m.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
 	m.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
@@ -113,6 +215,9 @@ static func water(color: Color, alpha := 0.72) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(color.r, color.g, color.b, alpha)
 	m.albedo_texture = _noise_texture(9182, 0.026, 512)
+	m.normal_enabled = true
+	m.normal_texture = _normal_texture(9182, 0.018, 1.6, 512)
+	m.normal_scale = 1.35
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.roughness = 0.08
 	m.metallic = 0.0
@@ -158,16 +263,138 @@ static func transparent(color: Color, alpha := 0.4) -> StandardMaterial3D:
 static func clear_cache() -> void:
 	_mat_cache.clear()
 	_tex_cache.clear()
+	# `PlatformService._on_memory_warning()` calls this. Every rounded box ever
+	# built is held here, including one slab mesh per distinct circuit segment,
+	# so leaving it out kept the largest cache alive at exactly the moment iOS
+	# was asking for memory back.
+	_mesh_cache.clear()
 
 
 # --- primitives ------------------------------------------------------------
 
+## A rounded box, built the honest way: six flat faces, twelve quarter-cylinder
+## edges and eight spherical corners. Every normal is exact and the joins are
+## tangent-continuous, so the bevel reads as a lit edge rather than a shading
+## seam. Meshes are cached by shape — a hundred crates share one resource.
+static func _rounded_box_mesh(size: Vector3, bevel: float, seg: int) -> ArrayMesh:
+	var key := "rb%.4f_%.4f_%.4f_%.3f_%d" % [size.x, size.y, size.z, bevel, seg]
+	if _mesh_cache.has(key):
+		return _mesh_cache[key]
+	var half := size * 0.5
+	var r: float = minf(bevel, minf(half.x, minf(half.y, half.z)) * 0.5)
+	var inner := half - Vector3(r, r, r)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	var axes := [Vector3.RIGHT, Vector3.UP, Vector3.BACK]
+	# Six faces.
+	for ai in 3:
+		var n: Vector3 = axes[ai]
+		var u: Vector3 = axes[(ai + 1) % 3]
+		var v: Vector3 = axes[(ai + 2) % 3]
+		var eu: float = inner[(ai + 1) % 3]
+		var ev: float = inner[(ai + 2) % 3]
+		for sgn: float in [1.0, -1.0]:
+			var c: Vector3 = n * (inner[ai] + r) * sgn
+			var nn: Vector3 = n * sgn
+			var a := c - u * eu - v * ev
+			var b := c + u * eu - v * ev
+			var d := c + u * eu + v * ev
+			var e := c - u * eu + v * ev
+			_quad(st, a, b, d, e, nn, nn, nn, nn)
+
+	# Twelve edges: a quarter cylinder swept along the third axis.
+	for ai in 3:
+		var axis: Vector3 = axes[ai]
+		var u: Vector3 = axes[(ai + 1) % 3]
+		var v: Vector3 = axes[(ai + 2) % 3]
+		var lu: float = inner[(ai + 1) % 3]
+		var lv: float = inner[(ai + 2) % 3]
+		var la: float = inner[ai]
+		for su: float in [1.0, -1.0]:
+			for sv: float in [1.0, -1.0]:
+				var base: Vector3 = u * lu * su + v * lv * sv
+				for i in seg:
+					var t0 := PI * 0.5 * (float(i) / float(seg))
+					var t1 := PI * 0.5 * (float(i + 1) / float(seg))
+					var n0: Vector3 = (u * cos(t0) * su + v * sin(t0) * sv).normalized()
+					var n1: Vector3 = (u * cos(t1) * su + v * sin(t1) * sv).normalized()
+					var p0 := base + n0 * r
+					var p1 := base + n1 * r
+					_quad(st, p0 + axis * la, p1 + axis * la, p1 - axis * la, p0 - axis * la,
+						n0, n1, n1, n0)
+
+	# Eight corners: a spherical octant per corner.
+	for sx: float in [1.0, -1.0]:
+		for sy: float in [1.0, -1.0]:
+			for sz: float in [1.0, -1.0]:
+				var base := Vector3(inner.x * sx, inner.y * sy, inner.z * sz)
+				for i in seg:
+					for j in seg:
+						var n00 := _octant(i, j, seg, sx, sy, sz)
+						var n10 := _octant(i + 1, j, seg, sx, sy, sz)
+						var n11 := _octant(i + 1, j + 1, seg, sx, sy, sz)
+						var n01 := _octant(i, j + 1, seg, sx, sy, sz)
+						_quad(st, base + n00 * r, base + n10 * r, base + n11 * r, base + n01 * r,
+							n00, n10, n11, n01)
+
+	st.generate_tangents()
+	var mesh := st.commit()
+	_mesh_cache[key] = mesh
+	return mesh
+
+
+static func _octant(i: int, j: int, seg: int, sx: float, sy: float, sz: float) -> Vector3:
+	var phi := PI * 0.5 * (float(i) / float(seg))
+	var theta := PI * 0.5 * (float(j) / float(seg))
+	return Vector3(cos(theta) * sin(phi) * sx, cos(phi) * sy, sin(theta) * sin(phi) * sz).normalized()
+
+
+## Box-projected UVs: pick the plane the normal points at hardest and drop the
+## remaining two components in. Noise maps do not care about seams, and this
+## keeps the texel density identical on a 0.06m bolt and a 40m floor slab.
+static func _uv_for(p: Vector3, n: Vector3) -> Vector2:
+	var ax := absf(n.x)
+	var ay := absf(n.y)
+	var az := absf(n.z)
+	if ax >= ay and ax >= az:
+		return Vector2(p.z, p.y) * 0.5
+	if ay >= az:
+		return Vector2(p.x, p.z) * 0.5
+	return Vector2(p.x, p.y) * 0.5
+
+
+## Emits the quad with whichever winding agrees with the supplied normals.
+##
+## Tracking winding by hand is how 88% of these triangles ended up inside out:
+## the correct order depends on the product of three axis signs across six
+## faces, twelve swept edges and eight octants, and a hand-written sign table
+## is wrong more often than it is right. With back-face culling on, the bevel
+## strips were being discarded and every box showed open seams at its edges.
+## Deriving the winding from the geometry cannot drift.
+static func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
+		na: Vector3, nb: Vector3, nc: Vector3, nd: Vector3) -> void:
+	var tris: Array
+	if (b - a).cross(c - a).dot(na + nb + nc) < 0.0:
+		tris = [[a, na, c, nc, b, nb], [a, na, d, nd, c, nc]]
+	else:
+		tris = [[a, na, b, nb, c, nc], [a, na, c, nc, d, nd]]
+	for tri in tris:
+		for k in 3:
+			var pos: Vector3 = tri[k * 2]
+			var nrm: Vector3 = tri[k * 2 + 1]
+			st.set_normal(nrm)
+			st.set_uv(_uv_for(pos, nrm))
+			st.add_vertex(pos)
+
+
 static func box(size: Vector3, color: Color, emission := 0.0) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	var m := BoxMesh.new()
-	m.size = size
-	mi.mesh = m
-	mi.material_override = toon(color, emission)
+	# Thin slabs need a proportionally smaller bevel or the rounding eats the
+	# whole shape: a 0.02m-thick shine strip must not become a sausage.
+	var thinnest: float = minf(size.x, minf(size.y, size.z))
+	mi.mesh = _rounded_box_mesh(size, minf(BEVEL, thinnest * 0.22), BEVEL_SEGMENTS)
+	mi.material_override = toon(color, emission)  # UVs are already world-scaled
 	return mi
 
 
@@ -180,7 +407,7 @@ static func cylinder(radius: float, height: float, color: Color, emission := 0.0
 	m.radial_segments = sides
 	m.rings = 1
 	mi.mesh = m
-	mi.material_override = toon(color, emission)
+	mi.material_override = toon(color, emission, 0.35, _tile(Vector2(radius * PI, height)))
 	return mi
 
 
@@ -237,8 +464,15 @@ static func plane(size: Vector2, color: Color) -> MeshInstance3D:
 	var m := PlaneMesh.new()
 	m.size = size
 	mi.mesh = m
-	mi.material_override = toon(color)
+	mi.material_override = toon(color, 0.0, 0.35, _tile(Vector2(size.x, size.y)))
 	return mi
+
+
+## Primitive UVs run 0..1 regardless of size, so texel density has to be
+## restored from the object's real dimensions. Quantised so that near-identical
+## sizes still share one cached material.
+static func _tile(size: Vector2) -> Vector3:
+	return Vector3(maxf(1.0, snappedf(size.x * 0.35, 0.5)), maxf(1.0, snappedf(size.y * 0.35, 0.5)), 1.0)
 
 
 # --- composite pieces ------------------------------------------------------

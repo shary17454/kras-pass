@@ -16,6 +16,18 @@ var knockback := 9.0
 var range_left := 26.0
 var direction := Vector3.FORWARD
 var active := false
+## Optional guidance. Zero turn rate is a dumb shot and is the default, so the
+## games that fire straight are unaffected by this existing at all.
+var homing_slot := -1
+var turn_rate := 0.0
+## When true the shot reports the hit and applies nothing itself. A game whose
+## weapons have one designed reaction needs that reaction to be the *only* one:
+## `Fighter.take_hit` runs before `hit_fighter` is emitted, so a listener that
+## checks its own shield is deciding after the generic knockback, stun and
+## hitstop have already landed. Off by default; the games that want the built-in
+## hit keep it.
+var notify_only := false
+var _ctx: MatchContext
 
 var _mesh: Node3D
 
@@ -51,13 +63,36 @@ func fire(from: Vector3, dir: Vector3, by_slot: int, shot_speed: float, shot_dam
 	range_left = max_range
 	active = true
 	visible = true
+	homing_slot = -1
+	turn_rate = 0.0
+	notify_only = false
 	set_deferred("monitoring", true)
 	look_at(from + direction, Vector3.UP)
+
+
+## Give the shot a target. Called after `fire`, so an unguided shot never pays
+## for the lookup.
+func guide(context: MatchContext, target_slot: int, rate: float) -> void:
+	_ctx = context
+	homing_slot = target_slot
+	turn_rate = rate
 
 
 func tick(delta: float) -> void:
 	if not active:
 		return
+	if turn_rate > 0.0 and homing_slot >= 0 and _ctx != null:
+		var target := _ctx.fighter(homing_slot)
+		if target != null and is_instance_valid(target) and target.alive:
+			var want := (target.global_position + Vector3(0, 0.7, 0) - global_position)
+			if want.length_squared() > 0.01:
+				# Rotate toward the target rather than snapping: a shot that
+				# turns instantly is unavoidable, which is not a weapon, it is
+				# a punishment.
+				direction = direction.slerp(want.normalized(), clampf(turn_rate * delta, 0.0, 1.0)).normalized()
+				look_at(global_position + direction, Vector3.UP)
+		else:
+			turn_rate = 0.0
 	var step := speed * delta
 	range_left -= step
 	if range_left <= 0.0:
@@ -78,7 +113,8 @@ func tick(delta: float) -> void:
 		return
 	for body in get_overlapping_bodies():
 		if body is Fighter and body.alive and body.slot != shooter:
-			body.take_hit(shooter, direction, knockback, damage)
+			if not notify_only:
+				body.take_hit(shooter, direction, knockback, damage)
 			hit_fighter.emit(self, shooter, body.slot)
 			_expire()
 			return
@@ -100,4 +136,8 @@ func on_acquired() -> void:
 func on_released() -> void:
 	active = false
 	visible = false
+	homing_slot = -1
+	turn_rate = 0.0
+	notify_only = false
+	_ctx = null
 	set_deferred("monitoring", false)

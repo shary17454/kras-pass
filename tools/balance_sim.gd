@@ -185,6 +185,14 @@ func _window_for(def: MiniGameDef) -> float:
 	# played — widening it to 45 s moved the same build to 0.52. Measuring a
 	# 90-second game in 14 seconds is the same mistake as timing a boss fight
 	# in 14 seconds, and it was hiding real signal rather than adding noise.
+	# A race is only scored when somebody crosses the line. The 45 s ceiling is
+	# shorter than a lap-race takes to run, so every race was being measured in
+	# the state "nobody finished, rank by progress" — which is a different game
+	# from the one being tuned, exactly as the flat 14 s clip was for the
+	# bosses. Rocket Rally averaged 42.9 s against a 45 s window, i.e. it was
+	# reading its own ceiling. Race games get their real clock.
+	if def.scoring == MiniGameDef.Scoring.RACE_TIME:
+		return maxf(def.duration, 45.0)
 	return clampf(def.duration * 0.35, ROUND_SECONDS, 45.0)
 
 

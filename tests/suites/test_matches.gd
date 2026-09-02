@@ -24,6 +24,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _pause_and_restart(t)
 	await _device_loss(t)
 	await _difficulty_separation(t)
+	await _rocket_rally_rules(t)
 
 
 func _characters() -> Array:
@@ -234,3 +235,85 @@ func _difficulty_separation(t: TestHarness) -> void:
 					easy_total += result.score_of(slot)
 		t.greater(expert_total, easy_total,
 			"%s: expert competitors out-score easy ones across four mirrored seeds" % game)
+
+
+## Three rules of Rocket Rally that a "the match completed" test cannot see.
+## Every one of them shipped through a green suite and was caught in review.
+func _rocket_rally_rules(t: TestHarness) -> void:
+	t.test("Rocket Rally: crossing the line ends your involvement")
+	var cfg := _make_config("sabaq_sawarikh", PlayerConfig.Difficulty.EASY)
+	cfg.duration_override = 40.0
+	var script: Script = load("res://src/match/match_scene.gd")
+	var scene: Node = script.new()
+	_host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	var tree := _host.get_tree()
+	var wait := 0
+	while not MatchPhase.is_live(scene.phase) and wait < 3000:
+		await tree.physics_frame
+		wait += 1
+	t.ok(MatchPhase.is_live(scene.phase), "the race reached a live phase")
+
+	var game = scene.controller
+	t.not_null(game, "the race controller exists")
+	if game != null:
+		# Boost pads are inherited from Kart Sprint, which used to place them on
+		# a circle derived from the arena radius. That is only the racing line on
+		# an oval; on a lobed circuit it put them behind the inner wall, where no
+		# kart could reach them and the racing brain still steered at them.
+		var arena := scene.arena as Arena
+		var half: float = arena.track_width * 0.5
+		for pad in game.boost_pad_positions(0):
+			var p: Vector3 = pad
+			var nearest := INF
+			for k in 240:
+				nearest = minf(nearest, Vector3(p.x, 0.0, p.z).distance_to(
+					arena.track_point(float(k) / 240.0)))
+			t.ok(nearest < half, "boost pad sits on the road (%.2fm from the line, half-width %.2f)"
+				% [nearest, half])
+
+		# A finished racer keeps `is_alive`; Kart Sprint only clears
+		# `control_enabled`. Driven through the crate path rather than the fire
+		# button, because a headless AI never presses attack — a test that waits
+		# for input here passes whether the guard exists or not.
+		var driver: Fighter = scene.ctx.fighter(0)
+		if driver != null and is_instance_valid(driver) and not game._crates.is_empty():
+			var crate: Dictionary = game._crates[0]
+			crate["cooldown"] = 0.0
+			game.held[0] = game.Item.NONE
+			game.finish_times[0] = 1
+			driver.global_position = crate["pos"]
+			game._tick_crates(0.02)
+			t.equal(game.held[0], game.Item.NONE, "a finished racer cannot take a crate")
+			game.finish_times[0] = game.UNFINISHED
+			game._tick_crates(0.02)
+			t.ok(game.held[0] != game.Item.NONE, "and an unfinished one still can")
+			game.held[0] = game.Item.NONE
+
+		# `Projectile` applies its own knockback, stun and hitstop *before* it
+		# emits `hit_fighter`, so a shield checked in the callback was consumed
+		# after the hit had landed rather than instead of it. Asserting on the
+		# fired shot, not on `_spin_out`: `_spin_out` always honoured the shield,
+		# the bug was everything that ran before it got the chance.
+		var shooter: Fighter = scene.ctx.fighter(0)
+		if shooter != null and is_instance_valid(shooter):
+			game._launch_missile(0, shooter)
+			t.ok(not game._missiles.is_empty(), "the rocket is airborne")
+			if not game._missiles.is_empty():
+				var shot: Projectile = game._missiles[game._missiles.size() - 1]
+				t.ok(shot.notify_only,
+					"the rocket reports its hit instead of applying one, so the shield can stop it")
+
+		var victim: Fighter = scene.ctx.fighter(1)
+		if victim != null and is_instance_valid(victim):
+			game.shielded[1] = 5.0
+			victim._stun = 0.0
+			game._spin_out(1, 0, Vector3.FORWARD)
+			t.near(victim._stun, 0.0, 0.001, "a shielded racer is not spun out")
+			t.near(game.shielded[1], 0.0, 0.001, "and the shield is spent doing it")
+			game._spin_out(1, 0, Vector3.FORWARD)
+			t.ok(victim._stun > 0.0, "the next hit lands once the shield is gone")
+
+	scene.queue_free()
+	await tree.process_frame
+
