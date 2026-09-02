@@ -18,16 +18,16 @@ API = "https://api.appstoreconnect.apple.com/v1"
 ISSUER_ID = "26cc2279-524d-4d33-ba75-9333cf111ad1"
 KEY_ID = "668Z2T3Q47"
 APP_ID = os.environ.get("APP_STORE_APP_ID", "6801506973")
-VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.0")
-BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "52")
+VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.2")
+BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "58")
 
 WHATS_NEW_AR = (
-    "تحسين استقرار التشغيل على iPhone وiPad، ومعالجة مشكلة الشاشة السوداء عند فتح اللعبة، "
-    "وتحديث بناء iOS ليتوافق مع متطلبات App Store الحالية."
+    "إصلاح تجميد اللاعبين، ورفع جودة الرسومات، وإضافة سباق الصواريخ، "
+    "مع تحسين توازن السباقات واستقرار الحزمة."
 )
 WHATS_NEW_EN = (
-    "Improves iPhone and iPad launch stability, fixes a blank-screen startup issue, "
-    "and updates the iOS build pipeline for current App Store requirements."
+    "Fixes frozen-player recovery, raises render quality, adds Rocket Rally, "
+    "and improves race balance and package stability."
 )
 
 
