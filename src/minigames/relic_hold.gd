@@ -42,11 +42,17 @@ func on_round_start() -> void:
 
 func tick(delta: float) -> void:
 	if _relic != null and is_instance_valid(_relic) and _holder < 0:
-		_relic.tick(delta)
-		# A relic that slid off the rim would end the game, so it comes back.
-		var arena := ctx.arena as Arena
-		if arena != null and not arena.is_inside(_relic.global_position, 0.4):
-			_relic.place(arena.global_position + Vector3(0, 1.2, 0))
+		var loose := _relic
+		loose.tick(delta)
+		# `tick` is what notices a player standing on the relic, so by the next
+		# line it may have been picked up and retired to the pool. Re-check
+		# before touching it again — this fired in the balance simulator and
+		# never once in a single-run test.
+		if _holder < 0 and _relic == loose and is_instance_valid(loose):
+			# A relic that slid off the rim would end the game, so it comes back.
+			var arena := ctx.arena as Arena
+			if arena != null and not arena.is_inside(loose.global_position, 0.4):
+				loose.place(arena.global_position + Vector3(0, 1.2, 0))
 	if _respawn > 0.0:
 		_respawn = maxf(0.0, _respawn - delta)
 		if _respawn <= 0.0:

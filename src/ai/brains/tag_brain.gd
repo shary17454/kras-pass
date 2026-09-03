@@ -2,6 +2,12 @@ extends AIBrain
 ## Tag Hunt. Chase when it is you, run when it is not, and never back yourself
 ## onto the rim while looking over your shoulder.
 
+var _idle_phase := 0.0   ## drawn, never derived from slot — see generic_brain
+
+
+func on_configured() -> void:
+	_idle_phase = rng.randf() * TAU
+
 
 func decide(_delta: float) -> void:
 	var me := self_body()
@@ -32,7 +38,7 @@ func decide(_delta: float) -> void:
 	if gap > 9.0:
 		# Far enough to breathe: drift toward open space near the middle rather
 		# than stand still, so there is somewhere to run when they arrive.
-		var angle := float(slot) * TAU * 0.25 + _time * 0.5
+		var angle := _idle_phase + _time * 0.5
 		var r: float = arena.current_radius * 0.5
 		steer_to(arena.global_position + Vector3(cos(angle) * r, 0, sin(angle) * r), 0.75)
 		keep_off_edge(3.0)

@@ -10,10 +10,17 @@ extends AIBrain
 
 var _tree: SceneTree
 var _retreat := 0.0     ## seconds left of backing off after committing a dash
+var _idle_phase := 0.0  ## where this bot loiters; drawn, never derived from slot
 
 
 func on_configured() -> void:
 	_tree = Engine.get_main_loop() as SceneTree
+	# Drawn from this bot's own generator rather than taken from its slot
+	# number. A slot-derived phase gave every bot a fixed 90-degree offset from
+	# its neighbours, which fixes who ends up standing next to whom — harmless
+	# while idling was just decoration, and a spawn-slot advantage the moment
+	# bodies started shoving each other for real.
+	_idle_phase = rng.randf() * TAU
 
 
 func decide(_delta: float) -> void:
@@ -108,7 +115,7 @@ func decide(_delta: float) -> void:
 	#    wall clock — under fast-forward play (the balance simulator, automated
 	#    tests) a wall-clock angle barely advances between ticks and bots would
 	#    look frozen anyway, which is the opposite of the point.
-	var angle := float(slot) * TAU * 0.25 + _time * 0.4
+	var angle := _idle_phase + _time * 0.4
 	var r: float = arena.current_radius * 0.45
 	steer_to(arena.global_position + Vector3(cos(angle) * r, 0, sin(angle) * r), 0.7)
 	keep_off_edge(panic_margin)

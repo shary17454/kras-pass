@@ -315,25 +315,58 @@ func _boon_chance(slot: int) -> float:
 
 
 ## 0.0 for the player in front, 1.0 for the player at the back. Ties share the
-## middle, and a game with no score yet reads as a flat 0.5 — no skew at all
-## until somebody is actually ahead.
+## middle, and a field that is genuinely level reads as a flat 0.5 — no skew at
+## all until somebody is actually ahead.
 func _rank_fraction(slot: int) -> float:
 	var alive := ctx.alive_slots()
 	if alive.size() < 2 or slot < 0 or slot >= ctx.scores.size():
 		return 0.5
-	var mine := ctx.scores[slot]
+	var mine := _standing(slot)
 	var better := 0
 	var worse := 0
 	for i in alive:
 		if i == slot:
 			continue
-		if ctx.scores[i] > mine:
+		var theirs := _standing(i)
+		if theirs > mine + 0.01:
 			better += 1
-		elif ctx.scores[i] < mine:
+		elif theirs < mine - 0.01:
 			worse += 1
 	if better == 0 and worse == 0:
 		return 0.5
 	return clampf(float(better) / float(better + worse), 0.0, 1.0)
+
+
+## How well a player is doing, right now, from what is on screen.
+##
+## A running score is the obvious answer and it is the wrong one on its own: a
+## survival game never touches `ctx.scores`, so in Ring Rumble — the very stage
+## the spec describes the machine for — every player read as exactly tied for
+## the whole round and the comeback skew did nothing at all. Two identical
+## forty-run batches with different skew settings returned identical numbers,
+## which is what gave it away. Where there is no score, standing is what a
+## spectator would say it is: ring-outs you caused, minus the ones you took,
+## minus how battered you are.
+func _standing(slot: int) -> float:
+	if slot < 0 or slot >= ctx.scores.size():
+		return 0.0
+	if _scores_are_live():
+		return float(ctx.scores[slot])
+	var detail: Dictionary = ctx.details[slot] if slot < ctx.details.size() else {}
+	var value := float(detail.get("knockouts", 0)) * 2.0 - float(detail.get("falls", 0))
+	var f := ctx.fighter(slot)
+	if f != null and is_instance_valid(f):
+		value -= f.damage_percent * 0.02
+	return value
+
+
+## True once anybody has a score at all. Until then the scoreboard is not a
+## ranking, it is four zeroes.
+func _scores_are_live() -> bool:
+	for s in ctx.scores:
+		if s != 0:
+			return true
+	return false
 
 
 # --- the timed mark --------------------------------------------------------
