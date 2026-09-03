@@ -85,6 +85,7 @@ var _aborted := false
 var _sudden_death_used := false
 var _noted_leader := -1
 var _noted_last := -1
+var _warn_second := -1
 
 
 # --- lifecycle -------------------------------------------------------------
@@ -363,6 +364,7 @@ func _begin_play() -> void:
 		f.control_enabled = true
 	hud.announce(Loc.t("hud.go"), UIKit.OK, 0.4)
 	AudioManager.play_sfx("go")
+	_warn_second = -1
 	controller.on_round_start()
 	for b in _brains:
 		if b != null:
@@ -487,7 +489,28 @@ func _tick_live(delta: float) -> void:
 		_round_elapsed += delta
 	EventBus.match_time_changed.emit(ctx.time_left)
 	hud.set_time(ctx.time_left, float(_tuning.get("hurry_time", 5.0)))
+	_tick_time_warning()
 	_evaluate_end(delta)
+
+
+## The closing seconds, made audible. `warn_time` was in the tuning table from
+## the start and nothing read it: a round simply ran out. One pip per remaining
+## second, pitched up as it goes, and the music switches to the tension loop on
+## the way in — the spec's "raise the tempo in the last ten seconds", and the
+## one moment a party game must not be quiet.
+func _tick_time_warning() -> void:
+	var warn := float(_tuning.get("warn_time", 10.0))
+	if ctx.time_left <= 0.0 or ctx.time_left > warn:
+		return
+	var second := int(ceil(ctx.time_left))
+	if second == _warn_second:
+		return
+	var first := _warn_second == -1
+	_warn_second = second
+	AudioManager.play_sfx("tick", Vector3.ZERO, 1.0 + float(int(warn) - second) * 0.055)
+	if first and not ctx.sudden_death and AudioManager.current_track() != "tension":
+		AudioManager.play_music("tension", 0.7)
+	EventBus.time_warning.emit(second)
 
 
 ## Records a state fingerprint every N ticks while playing, and compares

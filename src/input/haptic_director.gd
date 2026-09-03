@@ -18,6 +18,7 @@ func _ready() -> void:
 	EventBus.pickup_collected.connect(_on_pickup)
 	EventBus.player_respawned.connect(_on_respawned)
 	EventBus.sudden_death_started.connect(_on_sudden_death)
+	EventBus.time_warning.connect(_on_time_warning)
 	EventBus.match_finished.connect(_on_match_finished)
 	EventBus.achievement_unlocked.connect(_on_achievement)
 
@@ -49,6 +50,14 @@ func _on_respawned(slot: int) -> void:
 
 func _on_sudden_death() -> void:
 	_all(H.HEAVY)
+
+
+## Only the final three seconds. Ten buzzes in a row stops being information
+## and starts being a phone that will not shut up.
+func _on_time_warning(seconds_left: int) -> void:
+	if seconds_left > 3:
+		return
+	_all(H.LIGHT if seconds_left > 1 else H.MEDIUM)
 
 
 ## Winners get the celebration pattern, everyone else gets a single thud, so

@@ -13,6 +13,10 @@ signal round_started(round_index: int)
 signal countdown_tick(remaining: int)
 signal match_time_changed(remaining: float)
 signal sudden_death_started()
+## Emitted once per second through the closing seconds of a round, counting
+## down. Audio raises the tempo, the HUD reads the clock itself, and haptics
+## turn the last beats into something felt.
+signal time_warning(seconds_left: int)
 signal round_finished(result: Resource)
 signal match_finished(result: Resource)
 

@@ -18,6 +18,9 @@ var _centre_label: Label
 var _rules_card: Control
 var _hint_label: Label
 var _toast_box: VBoxContainer
+## Width of the per-player charge meter, in unscaled pixels.
+const METER_WIDTH := 118.0
+
 var _accum := 0.0
 var _period := 1.0 / 12.0
 var _low_time := false
@@ -61,18 +64,36 @@ func _build() -> void:
 	top.add_child(_banner_label)
 
 	# --- player chips ------------------------------------------------------
+	# The spec puts the four players along the top with the clock between them,
+	# and it is the right call for a 3D party game: the bottom third of the
+	# screen is where bodies fight and where the touch controls live, so a chip
+	# strip down there covers the action and sits under the player's thumbs.
+	# One container with an expanding gap in the middle means the clock can
+	# never overlap a chip at any window width.
 	var chips := HBoxContainer.new()
-	chips.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	chips.offset_top = -136
-	chips.offset_bottom = -22
-	chips.offset_left = 40
-	chips.offset_right = -40
-	chips.alignment = BoxContainer.ALIGNMENT_CENTER
-	chips.add_theme_constant_override("separation", 22)
+	chips.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	chips.offset_top = 14
+	chips.offset_bottom = 156
+	chips.offset_left = 26
+	chips.offset_right = -26
+	chips.add_theme_constant_override("separation", 14)
 	chips.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(chips)
-	for p in ctx.config.players:
-		chips.add_child(_make_chip(p))
+	var players: Array = ctx.config.players
+	var half := int(ceil(players.size() / 2.0))
+	for i in players.size():
+		if i == half:
+			var gap := Control.new()
+			gap.custom_minimum_size = Vector2(430, 0)
+			gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			chips.add_child(gap)
+		chips.add_child(_make_chip(players[i]))
+	if players.size() <= half:
+		var tail := Control.new()
+		tail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chips.add_child(tail)
 
 	# --- centre announcements ---------------------------------------------
 	_centre_label = UIKit.centered("", 120, UIKit.ACCENT, true)
@@ -91,8 +112,8 @@ func _build() -> void:
 	_hint_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_hint_label.anchor_left = 0.0
 	_hint_label.anchor_right = 1.0
-	_hint_label.offset_top = -166
-	_hint_label.offset_bottom = -136
+	_hint_label.offset_top = -58
+	_hint_label.offset_bottom = -22
 	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hint_label)
 
@@ -110,33 +131,112 @@ func _build() -> void:
 func _make_chip(p: PlayerConfig) -> Control:
 	var col := UIKit.adapt(p.color())
 	var card := UIKit.panel(Color(col.r * 0.28, col.g * 0.28, col.b * 0.28, 0.86), 16)
-	card.custom_minimum_size = Vector2(285, 104)
+	# Menu padding is generous on purpose; a match chip cannot afford it. Four
+	# chips at menu padding measured 356 px each, which put the outermost one
+	# 56 px off the left of a 1920-wide screen.
+	_tighten(card, 10, 8)
+	card.custom_minimum_size = Vector2(214, 0)
+	# Shrink, don't fill: a filling chip eats the gap the clock sits in.
+	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	card.add_child(row)
+
+	var portrait := _make_portrait(p, col)
+	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(portrait)
+
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	card.add_child(box)
+	box.add_theme_constant_override("separation", 1)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(box)
 
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 10)
-	box.add_child(top)
-	var dot := UIKit.panel(col, 8)
-	dot.custom_minimum_size = Vector2(24, 24)
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	top.add_child(dot)
-	var name_label := UIKit.label(p.display_name(), UIKit.SIZE_SMALL, UIKit.text_color(), true)
+	var name_label := UIKit.label(p.display_name(), UIKit.SIZE_TINY, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(name_label)
+	name_label.clip_text = true
+	name_label.custom_minimum_size = Vector2(104, 0)
+	box.add_child(name_label)
 
-	var value := UIKit.label("0", UIKit.SIZE_HEADING, Color.WHITE, true)
+	var value := UIKit.label("0", 40, Color.WHITE, true)
 	value.name = "Value"
+	value.clip_text = true
 	box.add_child(value)
+
+	# The per-player meter the spec asks for. Where a game has no dash the bar
+	# would be a permanently full decoration, so it is hidden instead.
+	var meter := UIKit.stat_bar(1.0, col, METER_WIDTH)
+	meter.name = "Meter"
+	_tighten(meter, 0, 0)
+	meter.visible = controller != null and controller.allows_dash()
+	box.add_child(meter)
 
 	var effects := HBoxContainer.new()
 	effects.name = "Effects"
 	effects.add_theme_constant_override("separation", 6)
 	box.add_child(effects)
 
-	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot, "color": col})
+	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
+		"color": col, "meter": meter, "meter_fill": meter.get_child(0), "charge": -1.0})
 	return card
+
+
+## Replace a UIKit panel's padding with something a HUD can live with, reusing
+## the same stylebox recipe so the corner radius and colour still match.
+func _tighten(panel: PanelContainer, h: int, v: int) -> void:
+	var current := panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if current == null:
+		return
+	var sb := current.duplicate() as StyleBoxFlat
+	sb.content_margin_left = h
+	sb.content_margin_right = h
+	sb.content_margin_top = v
+	sb.content_margin_bottom = v
+	panel.add_theme_stylebox_override("panel", sb)
+
+
+## A real portrait, rendered from the same body the player controls. The project
+## ships no image assets by rule, so the chip renders the character mesh into a
+## 96x96 viewport once and shows that. Headless — tests, the balance simulator —
+## gets the flat colour swatch instead, because there is no renderer to ask.
+func _make_portrait(p: PlayerConfig, col: Color) -> Control:
+	var frame := UIKit.panel(Color(col.r * 0.5, col.g * 0.5, col.b * 0.5, 0.95), 12)
+	_tighten(frame, 3, 3)
+	frame.custom_minimum_size = Vector2(64, 64)
+	var character := p.character()
+	if DisplayServer.get_name() == "headless" or character == null:
+		var swatch := UIKit.panel(col, 10)
+		_tighten(swatch, 0, 0)
+		swatch.custom_minimum_size = Vector2(58, 58)
+		frame.add_child(swatch)
+		return frame
+	var vp := SubViewport.new()
+	vp.size = Vector2i(96, 96)
+	vp.transparent_bg = true
+	vp.disable_3d = false
+	vp.own_world_3d = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var body := MeshFactory.character_body(character)
+	body.position = Vector3(0, -0.62, 0)
+	body.rotation.y = 0.5
+	vp.add_child(body)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 0.5, 2.05)
+	cam.fov = 42.0
+	vp.add_child(cam)
+	var lamp := DirectionalLight3D.new()
+	lamp.rotation_degrees = Vector3(-32, 38, 0)
+	lamp.light_energy = 1.4
+	vp.add_child(lamp)
+	var view := TextureRect.new()
+	view.custom_minimum_size = Vector2(58, 58)
+	view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(vp)
+	frame.add_child(view)
+	view.texture = vp.get_texture()
+	return frame
 
 
 func _make_rules_card() -> Control:
@@ -247,7 +347,26 @@ func _refresh_chips() -> void:
 		chip["value"].text = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
 		var alive: bool = ctx.is_alive(slot)
 		chip["root"].modulate = Color(1, 1, 1, 1.0 if alive else 0.4)
+		_refresh_meter(chip, slot)
 		_refresh_effects(chip, slot)
+
+
+func _refresh_meter(chip: Dictionary, slot: int) -> void:
+	var meter: Control = chip["meter"]
+	if not meter.visible:
+		return
+	var f := ctx.fighter(slot)
+	if f == null or not is_instance_valid(f):
+		return
+	var value: float = clampf(f.charge, 0.0, 1.0)
+	# Only resize on a visible change: this runs for four chips at the HUD
+	# refresh rate and a full-width relayout per frame is pure waste.
+	if absf(value - float(chip["charge"])) < 0.02:
+		return
+	chip["charge"] = value
+	var fill := chip["meter_fill"] as Control
+	if fill != null:
+		fill.custom_minimum_size.x = maxf(6.0, METER_WIDTH * UIKit.scale() * value)
 
 
 func _refresh_effects(chip: Dictionary, slot: int) -> void:
