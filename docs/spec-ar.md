@@ -402,3 +402,76 @@ Next Round
 الهدف النهائي من التصميم هو إنشاء لعبة جماعية سريعة وفوضوية ولكن مفهومة، تستطيع تعلمها خلال ثوانٍ، بينما يحتاج إتقان الحركة والاندفاع واستغلال الزوايا والوزن والسرعة وتأثيرات الآلة الطائرة إلى وقت ومهارة.
 
 يجب أن تكون كل جولة مليئة بالتصادمات والمواقف غير المتوقعة والضحك والمنافسة، وأن يتغير مسار الجولة باستمرار بسبب اللاعبين والبيئة والحواجز الجليدية والتعزيزات والآلة الطائرة التي تحوم فوق الحلبة وتؤثر مباشرة على مجريات اللعب، بحيث لا تتشابه جولتان بشكل كامل ويشعر اللاعب دائمًا برغبة في إعادة اللعب مرة أخرى.
+
+---
+
+## خريطة التنفيذ
+
+الجدول يقول **أين** نُفِّذ كل بند، وهل كان موجوداً في المشروع قبل هذه المواصفة أم
+أُضيف من أجلها. الغرض عملي: منع بناء نظام موجود مرة ثانية.
+
+| بند المواصفة | الحالة | المكان |
+|---|---|---|
+| لعبة حفلات لأربعة، ألعاب مصغّرة بقواعد مختلفة | كان | `data/minigames.json` (٣٨ لعبة)، `src/minigames/` |
+| الساحة الجليدية: منصة، جبال، جروف، انعكاسات، ضباب | كان | `Arena._add_arctic_set_dressing()`، `_add_ice_surface_marks()` |
+| حواف مفتوحة وخطيرة | كان | `Arena.is_inside()` + `MatchScene._check_out_of_bounds()` |
+| الانزلاق على الجليد بعد ترك المفتاح | كان | `Fighter.setup()` (احتكاك ×0.58 للثيمة القطبية) |
+| بقع أشدّ انزلاقاً من غيرها | أُضيف | `Arena.surface_grip()` + `_add_slick_patches()`، `Fighter.surface_grip` |
+| كاميرا مشتركة مرتفعة تتكيّف مع تفرّق اللاعبين | كان | `ArenaCamera._update_focus_and_zoom()` |
+| مرور الكاميرا فوق الحلبة قبل الجولة | أُضيف | `ArenaCamera.begin_intro()`، `_tick_intro()` |
+| شخصيات مختلفة في الوزن والسرعة والقوة، بلا شخصية متفوّقة | كان | `data/characters.json` (٨)، `Fighter._apply_character()` |
+| HUD أعلى الشاشة: صور الشخصيات + مؤشر لكل لاعب + مؤقت كبير | أُضيف | `MatchHUD._build()`، `_make_chip()`، `_make_portrait()` |
+| التحكم المباشر: حركة، دوران، قفز، هجوم، اندفاع | كان | `Fighter._handle_buttons()`، `_integrate_walk()` |
+| حساب التسارع/السرعة/التباطؤ/الاحتكاك/الكتلة | كان | `Fighter._integrate_walk()`، `data/tuning.json → fighter` |
+| **فيزياء الاصطدام بين اللاعبين** (اتجاه، سرعة الطرفين، وزنهما، اصطدام جانبي قطري) | أُضيف | `Fighter.resolve_impacts()`، `_collect_body_contacts()`، `_deal_ram()` |
+| الاندفاع الهجومي بشريط شحن يُستهلك ويُعاد تعبئته | أُضيف | `Fighter.charge`، `can_afford_dash()`، `tuning.fighter.dash_cost/charge_refill` |
+| أنظمة السقوط: حياة، خصم نقطة، إعادة ظهور، خروج نهائي | كان | `MiniGameController._handle_out()`، `eliminate_on_fall`، `lives_per_player` |
+| **الآلة الطائرة**: تحويم، تنبيه بصري وصوتي، شعاع، إسقاط عناصر، علامة موقوتة | أُضيف | `src/arenas/hover_machine.gd`، `data/tuning.json → machine` |
+| ميل تأثيرات الآلة ضد المتصدر ولصالح المتأخر بلا حتمية | أُضيف | `HoverMachine._boon_chance()`، `_rank_fraction()` |
+| تعزيزات إيجابية: دفع، سرعة، تكبير، وزن، تسريع الشحن، حماية، تقليل الضرر، قوة هجوم | كان جزئياً + أُضيف | `data/powerups.json`: كانت `speed/power/heavy/shield/quickdash`؛ أُضيفت `grow/tough` |
+| تأثيرات سلبية: إبطاء، حِمْل، تصغير، تبلّد، إضعاف دفع، إرباك، صعق، تجميد، انزلاق، هشاشة | كان جزئياً + أُضيف | كانت `slow/freeze`؛ أُضيفت `burden/shrink/sluggish/weaken/scramble/shock/slick/frail` |
+| التأثيرات واضحة بصرياً (توهج، وزن فوق الرأس، غلاف جليد، شرارات) | أُضيف | `Fighter._update_state_fx()`، `_build_state_fx()` |
+| جولة دقيقة–دقيقتان، عدّ تنازلي ٣، ٢، ١، ابدأ | كان | `data/minigames.json → duration`، `MatchScene._tick_countdown()` |
+| نظام النقاط: نقطة على الإخراج، مكافأة بقاء، خصم على السقوط | كان | `MiniGameController.compute_scores()`، `on_credited_knockout()` |
+| Sudden Death بحلبة أخطر | كان | `MatchPhase.P.SUDDEN_DEATH`، `on_sudden_death()` في كل لعبة |
+| تسريع تأثيرات الآلة في الموت المفاجئ | أُضيف | `HoverMachine.set_urgency()` من `MatchScene._enter_phase()` |
+| حواجز جليدية تتشقق تدريجياً ثم تنكسر | أُضيف (كانت تنكسر من أول لمسة) | `ArenaHazards.BreakableIceBarrier._crack()` |
+| تشقق الأرض من الاصطدامات | أُضيف | `Arena.spawn_impact_crack()` |
+| مؤثرات الاصطدام: شظايا، غبار، اهتزاز شاشة، تشوّه الجسم | كان | `MeshFactory.burst()`، `EventBus.shake()`، `Fighter._squash` |
+| جزيئات ثلج عند الجري وأثر انزلاق | أُضيف | `Fighter._emit_ground_spray()` |
+| Squash & Stretch (انضغاط عند الهبوط، تمدد عند القفز والاندفاع) | كان جزئياً + أُضيف | كان للقفز والهبوط؛ أُضيف للاندفاع في `_do_dash()` |
+| دوران الشخصية عند ضربة قوية، وحركة فزع قرب الحافة | أُضيف | `Fighter._spin_time`، `_edge_margin` في `_update_visual()` |
+| أصوات: انزلاق، تكسير جليد، الآلة، الشعاع، الكهرباء | أُضيف | `AudioManager._render_sfx()`: `skid/ice_crack/machine_hum/machine_alert/beam/shock` |
+| لكل شخصية أصواتها الخاصة | أُضيف (البيانات كانت موجودة ومهجورة) | `Fighter._voice()` يقرأ `CharacterData.voice_pitch` |
+| موسيقى تزداد توتراً، وعدّ تنازلي في آخر ١٠ ثوانٍ | أُضيف | `MatchScene._tick_time_warning()`، `EventBus.time_warning` |
+| ذكاء اصطناعي: أقرب خصم، تجنّب الحواف، العودة للوسط، قرارات غير مثالية | كان | `AIBrain`، `generic_brain.gd` |
+| استهداف الخصم القريب من السقوط | أُضيف | `AIBrain.edge_pressured_rival()` |
+| الابتعاد عن خصم يحمل تعزيز قوة | أُضيف | `AIBrain.is_empowered()`، `generic_brain._pick_target()` |
+| الاستفادة من الآلة الطائرة وتفادي شعاعها | أُضيف | `AIBrain.machine_threatens_me()`، `machine_drop_point()` |
+| التراجع بعد تنفيذ اندفاع | أُضيف | `generic_brain._retreat` |
+| تكتّل مؤقت على المتصدر | أُضيف | `AIBrain.leader_gap()` داخل `priority_rival()` |
+| أربع درجات صعوبة، والخبير يتوقّع بلا قراءة مدخلات | كان | `data/ai.json`، `AIBrain.perceive()/predict()` |
+| ١٥ نوعاً من الألعاب المصغّرة | كان ١٠ + أُضيف ٥ | أُضيفت: `relic_hold`، `tag_hunt`، `base_siege`، `drift_floes`، `duo_clash` |
+| ألعاب فرق ٢ ضد ٢ | أُضيف (كان مجرد راية في البيانات) | `duo_clash.gd`، `Fighter.teammates` |
+| طور البطولة بنقاط تُجمع | كان | `src/match/tournament.gd`، `standings_screen.gd` |
+| طور المغامرة بعوالم ومواجهة في نهاية كل عالم | كان ٥ عوالم + أُضيف ٤ | `data/adventure.json` (٩ عوالم، ٤٥ مرحلة) |
+| بنية Modular: كل لعبة تحدّد مدتها وشروطها ونقاطها وكاميرتها وموسيقاها | كان | `MiniGameController` + `MiniGameDef` |
+| تأثيرات الآلة من ضمن ما تحدّده كل لعبة | أُضيف | `minigames.json → "machine": true`، `MiniGameController.uses_machine()` |
+| آلة حالات: Loading, Intro, Countdown, Playing, Sudden Death, Results, Next Round | كان | `src/match/match_phase.gd` |
+| Lobby و Scoreboard | كان (كشاشات لا كأطوار) | `local_play.gd` (تجميع اللاعبين)، `standings_screen.gd` |
+| شاشة نتائج بالترتيب واحتفال الفائز | كان | `results_screen.gd`، `Fighter.celebrate()` |
+| أسلوب بصري كرتوني بلا واقعية، وطبقات للثلج، وخلفية منخفضة الحمل | كان | `MeshFactory.toon()/ice()/water()`، `Arena._build_environment()` |
+| تحكم iPhone: عصا افتراضية وأزرار، ودعم يد بلوتوث | كان | `src/input/touch_source.gd`، `input_router.gd` |
+| Haptics: ضرب، تلقي ضربة، سقوط، انفجار، فوز | كان | `src/input/haptic_director.gd` |
+| Haptics عند اقتراب انتهاء الوقت | أُضيف | `HapticDirector._on_time_warning()` |
+
+### بنود لم تُنفَّذ بعد
+
+- **لا شيء من هذا جُرِّب على جهاز فعلي.** البناء ينجح على iOS، لكن اللمس
+  والاهتزاز والحرارة وثبات الإطارات لا تُقاس من ماك (وقياس `perf.tscn` على ماك
+  أرضية عرض لا كلفة لعبة — راجع سجل المشروع).
+- «تعابير وجه واضحة وأطراف مرنة» للشخصيات: الأجسام مولَّدة من مجسمات أولية بلا
+  هيكل عظمي، فالأنيميشن انضغاط/تمدد ودوران لا مفاصل.
+- الآلة الطائرة مفعّلة في ثلاث ألعاب فقط (`ring_rumble`، `crumble_court`،
+  `bumper_bowl`) وليست في الـ٣٥ الباقية: تفعيلها يعيد توزيع التوازن ويستلزم
+  إعادة قياس، والمفتاح جاهز في البيانات لأي لعبة.

@@ -60,6 +60,19 @@ var impact_speed := 0.0
 ## Surface grip under the body, fed by the match layer. 1.0 is normal ground,
 ## lower is a slick patch.
 var surface_grip := 1.0
+
+## Body-to-body contacts waiting to be resolved this tick, keyed "low:high" so a
+## pair seen by both bodies is resolved once, and the per-pair cooldown that
+## stops a grind from firing sixty times a second.
+##
+## Static, and deferred until every body has moved, because resolving inside
+## each body's own tick handed the lower slot a real advantage: it shoved first,
+## its victim was already flying by the time it ticked, and the retaliation was
+## measured against a velocity the first hit had changed — or the contact was
+## gone entirely. The balance simulator caught it as an 18% spawn-slot
+## advantage in Ring Rumble at forty runs.
+static var _contacts := {}
+static var _pair_cooldown := {}
 var health := 100.0
 var max_health := 100.0
 var damage_percent := 0.0    ## combat games: higher = flies further
@@ -83,7 +96,7 @@ var _mount_intact := false
 var _squash := Vector3.ONE
 var _was_on_floor := true
 var _spawn_point := Vector3.ZERO
-var _ram_cd := {}            ## per-rival contact cooldown, keyed by slot
+var _pre_vel := Vector3.ZERO ## velocity carried into this tick: the approach
 var _fx_time := 0.0          ## advanced by delta, so replays stay reproducible
 var _edge_margin := 99.0     ## fed by the match layer; drives the panic pose
 var _spin_time := 0.0        ## cartoon spin-out after a heavy hit
@@ -227,6 +240,7 @@ func tick(frame: InputFrame, delta: float) -> void:
 		velocity = Vector3.ZERO
 		move_and_slide()
 		return
+	_pre_vel = velocity
 	_advance_timers(delta)
 
 	var wish := Vector3.ZERO
@@ -248,7 +262,7 @@ func tick(frame: InputFrame, delta: float) -> void:
 	_apply_impulse(delta)
 	impact_speed = Vector2(velocity.x, velocity.z).length()
 	move_and_slide()
-	_resolve_body_impacts()
+	_collect_body_contacts()
 	if not _was_on_floor and is_on_floor():
 		_squash = Vector3(1.22, 0.74, 1.22)
 		landed.emit()
@@ -265,12 +279,7 @@ func _advance_timers(delta: float) -> void:
 	if locomotion != Locomotion.DRIVE:
 		charge = minf(1.0, charge + float(_tuning.get("charge_refill", 0.3))
 			* float(mods["dash"]) * delta)
-	for other_slot in _ram_cd.keys():
-		var left := float(_ram_cd[other_slot]) - delta
-		if left <= 0.0:
-			_ram_cd.erase(other_slot)
-		else:
-			_ram_cd[other_slot] = left
+
 	# Freeze runs on this clock rather than through PowerUpSystem's effect list,
 	# so it has to be counted down here. Nothing else ever lowers it.
 	mods["frozen"] = maxf(0.0, float(mods["frozen"]) - delta)
@@ -325,7 +334,7 @@ func _do_dash(frame: InputFrame) -> void:
 	# Stretch along the launch, the other half of squash-and-stretch: the body
 	# thins and lengthens into a dash and squats on landing.
 	_squash = Vector3(0.84, 0.9, 1.3)
-	AudioManager.play_sfx("dash", global_position)
+	AudioManager.play_sfx("dash", global_position, _voice())
 
 
 func _do_attack() -> void:
@@ -333,7 +342,7 @@ func _do_attack() -> void:
 	_attack_cd = float(t.get("attack_cooldown", 0.55))
 	_attack_time = float(t.get("attack_duration", 0.2))
 	attacked.emit(slot)
-	AudioManager.play_sfx("swing", global_position)
+	AudioManager.play_sfx("swing", global_position, _voice())
 	var range_ := float(t.get("attack_range", 2.1))
 	var arc := cos(deg_to_rad(float(t.get("attack_arc_deg", 100.0)) * 0.5))
 	var strength := float(t.get("attack_knockback", 11.0)) * knock_power * float(mods["push"])
@@ -398,11 +407,21 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	# Scaled by the shove that actually landed, so a graze and a launch do not
 	# feel the same. InputRouter grades it and picks the right actuator.
 	InputRouter.rumble(slot, clampf(push * 0.035, 0.15, 0.95), 0.16)
-	AudioManager.play_sfx("hit", global_position)
+	AudioManager.play_sfx("hit", global_position, _voice())
 	_spawn_burst(data.accent if data != null else Color.WHITE, 7)
 	if health <= 0.0:
 		_on_defeated(from_slot)
 	return true
+
+
+## This character's voice, as a pitch multiplier. `voice_pitch` has been in
+## data/characters.json from the start — a boulder at 0.72 and a spark at 1.45 —
+## and nothing read it, so every body swung, fell and went out in the same
+## voice. The spec asks for a character to sound like itself on attack, on
+## taking a hit, on falling and on going out; those are exactly the sounds this
+## actor plays, so this is where the number belongs.
+func _voice(base: float = 1.0) -> float:
+	return base * (data.voice_pitch if data != null else 1.0)
 
 
 func heal(amount: float) -> void:
@@ -432,7 +451,7 @@ func freeze(seconds: float) -> void:
 func shock(seconds: float) -> void:
 	_shocked = maxf(_shocked, seconds)
 	_stun = maxf(_stun, seconds)
-	AudioManager.play_sfx("shock", global_position)
+	AudioManager.play_sfx("shock", global_position, _voice())
 
 
 func has_mount() -> bool:
@@ -492,7 +511,7 @@ func on_fell_out() -> void:
 	if not alive:
 		return
 	fell_out.emit(slot)
-	AudioManager.play_sfx("fall", global_position)
+	AudioManager.play_sfx("fall", global_position, _voice())
 	if _visual_theme == "arctic":
 		AudioManager.play_sfx("splash", global_position)
 
@@ -517,7 +536,7 @@ func on_eliminated() -> void:
 	_impulse = Vector3.ZERO
 	visible = false
 	_spawn_burst(data.color if data != null else Color.WHITE, 16)
-	AudioManager.play_sfx("eliminate", global_position)
+	AudioManager.play_sfx("eliminate", global_position, _voice())
 
 
 func celebrate(win: bool) -> void:
@@ -806,59 +825,107 @@ func set_surface_grip(value: float) -> void:
 	surface_grip = clampf(value, 0.1, 2.0)
 
 
-## Body-to-body impact — the spec's core verb. A fast body that runs into a
-## slower one shoves it; two bodies closing on each other shove harder; a
-## glancing contact deflects the victim diagonally instead of straight back.
-##
-## Each fighter resolves only the hit it *deals*, from its own tick. That is
-## what makes a head-on collision symmetric with no tie-break rule: both bodies
-## see the same contact on the same frame and each pays the other. Karts are
-## excluded because Scrap Karts already models chassis-vs-chassis with its own
-## flank bonus, and running both would double every exchange in the derby.
-func _resolve_body_impacts() -> void:
+## Note a body-to-body contact for this tick. Both bodies usually report the
+## same pair; the key collapses them into one entry, and nothing is applied
+## until `resolve_impacts()` runs after every body has moved.
+func _collect_body_contacts() -> void:
 	if not ram_enabled or locomotion == Locomotion.DRIVE:
 		return
-	var t := _tuning
-	var min_speed := float(t.get("ram_min_speed", 4.4))
 	for i in get_slide_collision_count():
 		var c := get_slide_collision(i)
-		var victim := c.get_collider() as Fighter
-		if victim == null or victim == self or not victim.alive:
+		var other := c.get_collider() as Fighter
+		if other == null or other == self or not other.alive:
 			continue
-		if victim.locomotion == Locomotion.DRIVE or victim.teammates.has(slot):
-			continue
-		if _ram_cd.has(victim.slot):
+		if other.locomotion == Locomotion.DRIVE:
 			continue
 		var normal := c.get_normal()
 		normal.y = 0.0
 		if normal.length_squared() < 0.01:
 			continue
-		var into := -normal.normalized()          # from me into them
-		var relative := velocity - victim.velocity
+		var key := "%d:%d" % [mini(slot, other.slot), maxi(slot, other.slot)]
+		if _contacts.has(key):
+			continue
+		# Store the pair low-slot-first with the normal pointing from a into b,
+		# so the resolution has no idea which body reported it.
+		var into := -normal.normalized()
+		if slot <= other.slot:
+			_contacts[key] = {"a": self, "b": other, "into": into}
+		else:
+			_contacts[key] = {"a": other, "b": self, "into": -into}
+
+
+## Body-to-body impact — the spec's core verb. A fast body that runs into a
+## slower one shoves it; two bodies closing on each other shove harder; a
+## glancing contact deflects the victim diagonally instead of straight back.
+##
+## Called once per tick by the match layer, after every fighter has integrated
+## and moved. Both halves of a pair are paid from the same closing speed,
+## measured from the velocities the two bodies carried *into* the tick — which
+## is what makes the exchange independent of the order the bodies were ticked
+## in, and therefore of their slot numbers. Karts are excluded: Scrap Karts
+## models chassis-vs-chassis with its own flank bonus, and running both would
+## double every exchange in the derby.
+static func resolve_impacts(delta: float) -> void:
+	for key in _pair_cooldown.keys():
+		var left := float(_pair_cooldown[key]) - delta
+		if left <= 0.0:
+			_pair_cooldown.erase(key)
+		else:
+			_pair_cooldown[key] = left
+	for key in _contacts:
+		var contact: Dictionary = _contacts[key]
+		var a := contact["a"] as Fighter
+		var b := contact["b"] as Fighter
+		if a == null or b == null or not is_instance_valid(a) or not is_instance_valid(b):
+			continue
+		if not a.alive or not b.alive:
+			continue
+		if _pair_cooldown.has(key):
+			continue
+		if a.teammates.has(b.slot) or b.teammates.has(a.slot):
+			continue
+		var t: Dictionary = a._tuning
+		var into: Vector3 = contact["into"]
+		var relative: Vector3 = a._pre_vel - b._pre_vel
 		relative.y = 0.0
 		var closing := relative.dot(into)
-		if closing < min_speed:
+		if closing < float(t.get("ram_min_speed", 4.4)):
 			continue
-		_ram_cd[victim.slot] = float(t.get("ram_cooldown", 0.32))
-		# Mass ratio: a boulder shunting a feather transfers more than the
-		# reverse. `knock_resist` is already the weight axis of a character, so
-		# the heavy/light contrast the roster is built on carries into rams for
-		# free.
-		var my_mass := knock_resist * float(mods["weight"])
-		var their_mass := maxf(0.3, victim.knock_resist * float(victim.mods["weight"]))
-		var ratio := clampf(my_mass / their_mass, 0.55, 1.85)
-		var strength := closing * float(t.get("ram_scale", 1.3)) * ratio \
-			* knock_power * float(mods["push"])
-		if is_dashing():
-			strength *= float(t.get("ram_dash_bonus", 1.7))
-		# Side contact keeps its tangential half, so a clip on the shoulder
-		# sends the victim off at an angle — the difference between a shove and
-		# a spin-out, and the reason a near-miss on the rim still kills.
+		_pair_cooldown[key] = float(t.get("ram_cooldown", 0.32))
 		var tangential := relative - into * closing
-		var dir := into
-		if tangential.length() > 0.25:
-			dir = (into + tangential.normalized() * float(t.get("ram_side_factor", 0.55))).normalized()
-		victim.take_hit(slot, dir, strength, float(t.get("ram_damage", 4.0)))
+		a._deal_ram(b, into, closing, tangential, t)
+		b._deal_ram(a, -into, closing, -tangential, t)
+
+
+## Clears the shared contact state. Called when a match is built, so nothing
+## survives from the previous one.
+static func clear_impact_state() -> void:
+	_contacts.clear()
+	_pair_cooldown.clear()
+
+
+## One half of an exchange: what *this* body's weight and strength do to the
+## other. Mass ratio uses `knock_resist`, which is already the weight axis of a
+## character, so the heavy/light contrast the roster is built on carries into
+## rams for free.
+func _deal_ram(victim: Fighter, into: Vector3, closing: float, tangential: Vector3, t: Dictionary) -> void:
+	var my_mass := knock_resist * float(mods["weight"])
+	var their_mass := maxf(0.3, victim.knock_resist * float(victim.mods["weight"]))
+	# Narrow on purpose. Weight already buys resistance through `knock_resist`
+	# in `take_hit`; letting it buy the same advantage again on the delivering
+	# side compounds it, and the heavy characters started winning everywhere.
+	var ratio := clampf(my_mass / their_mass, 0.78, 1.35)
+	var strength := closing * float(t.get("ram_scale", 1.3)) * ratio \
+		* knock_power * float(mods["push"])
+	if is_dashing():
+		strength *= float(t.get("ram_dash_bonus", 1.7))
+	# Side contact keeps its tangential half, so a clip on the shoulder sends
+	# the victim off at an angle — the difference between a shove and a
+	# spin-out, and the reason a near-miss on the rim still kills.
+	var dir := into
+	if tangential.length() > 0.25:
+		dir = (into + tangential.normalized() * float(t.get("ram_side_factor", 0.55))).normalized()
+	victim.take_hit(slot, dir, strength, float(t.get("ram_damage", 4.0)))
 
 
 ## Snow kicked up by running and a wider spray while sliding sideways. Arctic

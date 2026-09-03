@@ -32,11 +32,14 @@ func _input_frames(t: TestHarness) -> void:
 	a.bits = InputFrame.Btn.DASH | InputFrame.Btn.ATTACK
 	var b := InputFrame.new()
 	b.decode(a.encode())
-	t.near(b.move.x, 0.5, 0.01, "move x survives quantisation")
-	t.near(b.move.y, -1.0, 0.01, "move y survives")
-	t.near(b.aim.y, 0.75, 0.01, "aim survives")
+	# The tolerance is the point of this test, not the byte count: a stick
+	# quantised to one byte was accurate to 8 thousandths, which is invisible
+	# until bodies collide and then decides whether they touched at all.
+	t.near(b.move.x, 0.5, 0.0001, "move x survives quantisation")
+	t.near(b.move.y, -1.0, 0.0001, "move y survives")
+	t.near(b.aim.y, 0.75, 0.0001, "aim survives")
 	t.equal(b.bits, a.bits, "buttons survive exactly")
-	t.equal(a.encode().size(), 5, "five bytes per player per tick")
+	t.equal(a.encode().size(), InputFrame.BYTES, "nine bytes per player per tick")
 
 	t.test("virtual slots accept AI input")
 	InputRouter.assign_virtual(0)

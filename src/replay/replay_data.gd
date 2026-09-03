@@ -21,10 +21,16 @@ extends RefCounted
 ## actually happened. The cost is about 220 bytes per second on top of the
 ## inputs — a rounding error against being wrong.
 
-const VERSION := 3
+const VERSION := 4
 const HASH_INTERVAL := 30    # ticks between state checkpoints
 const KEYFRAME_INTERVAL := 6 # ticks between position corrections (10 Hz)
-const KEYFRAME_BYTES_PER_PLAYER := 9
+## Position, liveness, score — and velocity, which is the half that was
+## missing. Correcting where a body is without correcting where it is going
+## puts it back on the recorded spot still carrying the wrong momentum, so it
+## re-diverges immediately and the next correction is a teleport. That was
+## invisible while bodies only walked; a shove that differs by a few metres per
+## second re-opens metres of gap inside the six ticks between corrections.
+const KEYFRAME_BYTES_PER_PLAYER := 15
 
 var id := ""
 var version := VERSION
@@ -43,10 +49,19 @@ var players: Array = []      # [{slot, character, name, human, difficulty}]
 var tick_rate := 60
 
 # --- the recording ---------------------------------------------------------
-## One entry per physics tick: 5 bytes per player, in slot order.
+## One entry per physics tick: `InputFrame.BYTES` per player, in slot order.
 var frames: Array[PackedByteArray] = []
 ## tick -> state hash, every HASH_INTERVAL ticks.
 var hashes := {}
+## tick -> the world decisions taken on that tick, in order.
+##
+## Positions and inputs are enough to reproduce a brawl. They are not enough to
+## reproduce a system that *chooses* — the hover machine picks a target from
+## where bodies happen to be standing, and a hair of divergence sends its beam
+## at a different player, which is not drift, it is a different match. Those
+## decisions are recorded and replayed verbatim, the same way keyframes make
+## positions authoritative.
+var events := {}
 ## tick -> packed authoritative state, every KEYFRAME_INTERVAL ticks.
 ## Per player: int16 x*100, int16 y*100, int16 z*100, uint8 alive, int16 score.
 var keyframes := {}
@@ -59,7 +74,7 @@ var duration := 0.0
 
 
 static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictionary,
-		keys: Dictionary, result: MatchResult) -> ReplayData:
+		keys: Dictionary, result: MatchResult, world_events: Dictionary = {}) -> ReplayData:
 	var r := ReplayData.new()
 	r.id = "%d_%s" % [Time.get_unix_time_from_system(), config.minigame_id]
 	r.created_at = int(Time.get_unix_time_from_system())
@@ -86,6 +101,7 @@ static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictio
 		r.frames.append(packet)
 	r.hashes = checkpoints.duplicate()
 	r.keyframes = keys.duplicate()
+	r.events = world_events
 	if result != null:
 		r.scores = result.scores.duplicate()
 		r.places = result.places.duplicate()
@@ -135,13 +151,14 @@ func apply_tick(tick: int, out: Array) -> bool:
 	if tick < 0 or tick >= frames.size():
 		return false
 	var packet: PackedByteArray = frames[tick]
-	for i in mini(out.size(), packet.size() / 5):
-		(out[i] as InputFrame).decode(packet, i * 5)
+	for i in mini(out.size(), packet.size() / InputFrame.BYTES):
+		(out[i] as InputFrame).decode(packet, i * InputFrame.BYTES)
 	return true
 
 
-## Pack the authoritative state of a tick. Positions are centimetre-quantised
-## int16, which covers +/-327 m — far beyond any arena.
+## Pack the authoritative state of a tick. Positions and velocities are
+## centimetre-quantised int16, which covers +/-327 m and +/-327 m/s — far
+## beyond any arena or any launch.
 static func encode_keyframe(fighters: Array, scores: Array, alive: Array) -> PackedByteArray:
 	var buf := PackedByteArray()
 	buf.resize(fighters.size() * KEYFRAME_BYTES_PER_PLAYER)
@@ -153,14 +170,24 @@ static func encode_keyframe(fighters: Array, scores: Array, alive: Array) -> Pac
 		buf.encode_s16(at + 4, clampi(int(round(p.z * 100.0)), -32768, 32767))
 		buf[at + 6] = 1 if (i < alive.size() and alive[i]) else 0
 		buf.encode_s16(at + 7, clampi(int(scores[i]) if i < scores.size() else 0, -32768, 32767))
+		var v: Vector3 = fighters[i].velocity if is_instance_valid(fighters[i]) else Vector3.ZERO
+		buf.encode_s16(at + 9, clampi(int(round(v.x * 100.0)), -32768, 32767))
+		buf.encode_s16(at + 11, clampi(int(round(v.y * 100.0)), -32768, 32767))
+		buf.encode_s16(at + 13, clampi(int(round(v.z * 100.0)), -32768, 32767))
 	return buf
+
+
+## The decisions taken on a tick, or an empty array.
+func events_at(tick: int) -> Array:
+	return events.get(str(tick), [])
 
 
 func has_keyframe(tick: int) -> bool:
 	return keyframes.has(str(tick))
 
 
-## Returns [{position, alive, score}] for a recorded tick, or an empty array.
+## Returns [{position, velocity, alive, score}] for a recorded tick, or an
+## empty array.
 func keyframe(tick: int) -> Array:
 	var buf = keyframes.get(str(tick))
 	if buf == null:
@@ -175,6 +202,10 @@ func keyframe(tick: int) -> Array:
 				packed.decode_s16(at + 0) / 100.0,
 				packed.decode_s16(at + 2) / 100.0,
 				packed.decode_s16(at + 4) / 100.0),
+			"velocity": Vector3(
+				packed.decode_s16(at + 9) / 100.0,
+				packed.decode_s16(at + 11) / 100.0,
+				packed.decode_s16(at + 13) / 100.0),
 			"alive": packed[at + 6] == 1,
 			"score": packed.decode_s16(at + 7),
 		})
@@ -238,6 +269,7 @@ func to_dict() -> Dictionary:
 		"tick_count": frames.size(),
 		"frames_b64": Marshalls.raw_to_base64(flat),
 		"hashes": hashes,
+		"events": events,
 		"keyframe_ticks": keyframes.keys(),
 		"keyframes_b64": _pack_keyframes(),
 		"scores": scores,
@@ -267,6 +299,7 @@ static func from_dict(d: Dictionary) -> ReplayData:
 	r.tick_rate = int(d.get("tick_rate", 60))
 	r.players = d.get("players", [])
 	r.hashes = d.get("hashes", {})
+	r.events = d.get("events", {})
 	r.duration = float(d.get("duration", 0.0))
 	r._unpack_keyframes(d.get("keyframe_ticks", []), String(d.get("keyframes_b64", "")),
 		maxi(1, (d.get("players", []) as Array).size()))
@@ -276,7 +309,7 @@ static func from_dict(d: Dictionary) -> ReplayData:
 	for p in d.get("places", []):
 		r.places.append(int(p))
 
-	var stride := maxi(1, r.players.size()) * 5
+	var stride := maxi(1, r.players.size()) * InputFrame.BYTES
 	var flat := Marshalls.base64_to_raw(String(d.get("frames_b64", "")))
 	var count := int(d.get("tick_count", flat.size() / stride))
 	for i in count:
@@ -318,6 +351,12 @@ static func _migrate(r: ReplayData, from_version: int) -> ReplayData:
 		r.hashes = {}
 	if from_version < 3:
 		# Input-only recordings. They will drift, and the player is told so.
+		r.keyframes = {}
+	if from_version < 4:
+		# The stick widened from one byte per axis to two, so an older packet
+		# cannot be re-read at the new stride — it would decode as noise and
+		# play back a match nobody ever had. Better an honest empty recording.
+		r.frames.clear()
 		r.keyframes = {}
 	r.version = VERSION
 	return r

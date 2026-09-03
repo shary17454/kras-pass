@@ -58,19 +58,31 @@ func copy_from(other: InputFrame) -> void:
 
 ## Compact form used by the replay recorder and the future network transport:
 ## 2 quantized axes pairs + a button byte fits in 5 bytes per player per tick.
+## Nine bytes: two int16 axes per stick, then the button mask.
+##
+## The sticks used to be single bytes, which quantised every axis to 1/127 —
+## about eight thousandths of a stick. That is invisible while a body is only
+## being integrated, and it stops being invisible the moment bodies collide:
+## an eight-thousandth difference decides whether two fighters touch at all,
+## and a replay of a brawl drifted metres from the match it was recording. The
+## extra four bytes per player per tick — roughly 240 bytes a second for four
+## players — buy two orders of magnitude of stick precision.
+const BYTES := 9
+
+
 func encode() -> PackedByteArray:
 	var out := PackedByteArray()
-	out.resize(5)
-	out[0] = int(clampf(move.x, -1.0, 1.0) * 127.0) + 128
-	out[1] = int(clampf(move.y, -1.0, 1.0) * 127.0) + 128
-	out[2] = int(clampf(aim.x, -1.0, 1.0) * 127.0) + 128
-	out[3] = int(clampf(aim.y, -1.0, 1.0) * 127.0) + 128
-	out[4] = bits & 0xFF
+	out.resize(BYTES)
+	out.encode_s16(0, int(round(clampf(move.x, -1.0, 1.0) * 32767.0)))
+	out.encode_s16(2, int(round(clampf(move.y, -1.0, 1.0) * 32767.0)))
+	out.encode_s16(4, int(round(clampf(aim.x, -1.0, 1.0) * 32767.0)))
+	out.encode_s16(6, int(round(clampf(aim.y, -1.0, 1.0) * 32767.0)))
+	out[8] = bits & 0xFF
 	return out
 
 
 func decode(data: PackedByteArray, offset: int = 0) -> void:
 	prev_bits = bits
-	move = Vector2((data[offset] - 128) / 127.0, (data[offset + 1] - 128) / 127.0)
-	aim = Vector2((data[offset + 2] - 128) / 127.0, (data[offset + 3] - 128) / 127.0)
-	bits = data[offset + 4]
+	move = Vector2(data.decode_s16(offset) / 32767.0, data.decode_s16(offset + 2) / 32767.0)
+	aim = Vector2(data.decode_s16(offset + 4) / 32767.0, data.decode_s16(offset + 6) / 32767.0)
+	bits = data[offset + 8]

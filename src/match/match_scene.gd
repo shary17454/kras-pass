@@ -62,6 +62,8 @@ var _replay_enabled := false
 var _checkpoints := {}
 ## tick -> authoritative positions/scores, written while recording.
 var _keyframes := {}
+## Decisions a world system took, keyed by tick. See ReplayData.events.
+var _world_events := {}
 ## Largest positional correction playback had to apply, in metres.
 var playback_drift := 0.0
 ## Notable events with tick stamps, fed to the highlight detector at the end.
@@ -126,6 +128,7 @@ func _build() -> void:
 
 	AudioManager.warm_match_bank()
 
+	Fighter.clear_impact_state()
 	ctx = MatchContext.new()
 	ctx.config = config
 	ctx.definition = def
@@ -181,6 +184,8 @@ func _build() -> void:
 		machine.name = "HoverMachine"
 		world.add_child(machine)
 		machine.setup(ctx)
+		machine.scripted = playback != null
+		machine.recorder = _record_world_event
 		ctx.machine = machine
 	# Mutators go on after the game has built itself, so a game that spawns its
 	# own objects is never surprised mid-construction.
@@ -493,7 +498,11 @@ func _tick_live(delta: float) -> void:
 	for f in _fighters:
 		if is_instance_valid(f):
 			f.tick(InputRouter.frame(f.slot), delta)
+	# Body-to-body shoves are resolved here, after every body has moved, so the
+	# exchange does not depend on the order the fighters were ticked in.
+	Fighter.resolve_impacts(delta)
 	_record_replay_tick()
+	_apply_world_events()
 	_checkpoint_or_verify()
 	_record_or_apply_keyframe()
 	# 3. arena
@@ -536,6 +545,31 @@ func _tick_time_warning() -> void:
 	if first and not ctx.sudden_death and AudioManager.current_track() != "tension":
 		AudioManager.play_music("tension", 0.7)
 	EventBus.time_warning.emit(second)
+
+
+## A world system's decision, stored against the tick it was taken on. Only
+## while recording: during playback the decisions arrive from the file instead.
+func _record_world_event(kind: String, data: Dictionary) -> void:
+	if playback != null or not _replay_enabled:
+		return
+	var key := str(_tick_index)
+	if not _world_events.has(key):
+		_world_events[key] = []
+	data["kind"] = kind
+	_world_events[key].append(data)
+
+
+## Hands this tick's recorded decisions back to whoever made them. Inputs and
+## keyframes reproduce a body; only this reproduces a choice.
+func _apply_world_events() -> void:
+	if playback == null:
+		return
+	var list: Array = playback.events_at(_tick_index)
+	if list.is_empty():
+		return
+	for e in list:
+		if machine != null and is_instance_valid(machine):
+			machine.apply_event(e)
 
 
 ## Records a state fingerprint every N ticks while playing, and compares
@@ -606,8 +640,19 @@ func _record_or_apply_keyframe() -> void:
 		if not is_instance_valid(f):
 			continue
 		var want: Vector3 = frame[i]["position"]
-		playback_drift = maxf(playback_drift, f.global_position.distance_to(want))
+		# Drift is only meaningful for a body that is actually in play. A player
+		# waiting to respawn is parked at y=-500, so a respawn landing one tick
+		# apart in the recording and the replay reported five hundred metres of
+		# "drift" — the instrument, not the simulation. Compare the ones that
+		# are on the field.
+		var parked := f.global_position.y < arena.fall_y - 5.0 or want.y < arena.fall_y - 5.0
+		if not parked and ctx.alive[i] and bool(frame[i]["alive"]):
+			playback_drift = maxf(playback_drift, f.global_position.distance_to(want))
 		f.global_position = want
+		# Momentum is authoritative too. Without it a corrected body carries on
+		# in the direction the replay had it going and is metres away again
+		# before the next correction lands.
+		f.velocity = frame[i].get("velocity", f.velocity)
 		var should_live: bool = bool(frame[i]["alive"])
 		if should_live != ctx.alive[i]:
 			# Elimination is authoritative too: a replay must not keep someone
@@ -778,7 +823,7 @@ func _complete_match() -> void:
 func _store_replay(result: MatchResult) -> void:
 	if not _replay_enabled or _replay.is_empty():
 		return
-	var data := ReplayData.from_match(config, _replay, _checkpoints, _keyframes, result)
+	var data := ReplayData.from_match(config, _replay, _checkpoints, _keyframes, result, _world_events)
 	data.highlights = ReplayHighlights.detect(_timeline, result, _replay.size(), data.tick_rate)
 	Replays.save(data)
 

@@ -21,7 +21,10 @@ var _team_score := [0, 0]
 
 func configure() -> void:
 	eliminate_on_fall = true
-	lives_per_player = 1
+	# Two lives each. At one life a side was wiped in thirteen seconds, which is
+	# not a round, and with nothing left to play the skill gap between tiers
+	# collapsed to nothing.
+	lives_per_player = 2
 	for slot in ctx.player_count():
 		var f := ctx.fighter(slot)
 		if f == null or not is_instance_valid(f):
@@ -116,10 +119,22 @@ func is_tied() -> bool:
 	return _team_score[0] == _team_score[1]
 
 
+## The pair share the number that decides the match, but a result screen still
+## has to rank four people. The team total dominates by an order of magnitude
+## and a partner's own ring-outs break the tie inside it — otherwise every
+## single round ends in a tie for first by construction, which is exactly what
+## the balance simulator reported: ties 100% of the time.
+func compute_scores() -> Array[int]:
+	var out: Array[int] = []
+	for slot in ctx.player_count():
+		out.append(_team_score[team_of(slot)] * 10 + int(ctx.details[slot].get("knockouts", 0)))
+	return out
+
+
 func hud_value(slot: int) -> String:
 	if not ctx.is_alive(slot):
 		return Loc.t("hud.eliminated")
-	return "%d" % team_score(team_of(slot))
+	return "%d  ♥%d" % [team_score(team_of(slot)), lives(slot)]
 
 
 func hud_banner() -> String:

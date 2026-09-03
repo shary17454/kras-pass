@@ -54,6 +54,16 @@ var _tuning := {}
 var rng := RandomNumberGenerator.new()
 var _seed := 1
 
+## Playback mode. A replay reproduces a match from inputs and periodic position
+## corrections, which is enough for bodies and not enough for a system that
+## *chooses*: the drone picks its target from where players happen to be, so a
+## hair of divergence aims the beam at somebody else — not drift, a different
+## match. While `scripted` is on the machine takes no decisions of its own and
+## executes the ones the recording hands it.
+var scripted := false
+## Set by the match layer while recording: `recorder.call(kind, data)`.
+var recorder: Callable = Callable()
+
 var _hull: Node3D
 var _eye: MeshInstance3D
 var _rotor: Node3D
@@ -141,12 +151,12 @@ func tick(delta: float) -> void:
 	match _state:
 		State.DRIFT:
 			_drift(delta)
-			if _timer <= 0.0:
+			if _timer <= 0.0 and not scripted:
 				_begin_telegraph()
 		State.TELEGRAPH:
 			_hover_over_target(delta)
 			_aim_beam()
-			if _timer <= 0.0:
+			if _timer <= 0.0 and not scripted:
 				_fire()
 
 
@@ -193,6 +203,14 @@ func _begin_telegraph() -> void:
 		_state = State.DRIFT
 		_timer = _cycle_length()
 		return
+	_emit("machine_telegraph", {"action": _action, "target": _target_slot, "id": _pending_id,
+		"px": _target_point.x, "pz": _target_point.z})
+	_show_telegraph()
+
+
+## Everything the telegraph does that is not a decision, so a replayed
+## telegraph looks identical to the one that was recorded.
+func _show_telegraph() -> void:
 	AudioManager.play_sfx("machine_alert", global_position)
 	if _beam != null and is_instance_valid(_beam):
 		_beam.visible = true
@@ -206,8 +224,15 @@ func _begin_telegraph() -> void:
 
 
 func _fire() -> void:
+	_emit("machine_fire", {"action": _action, "target": _target_slot, "id": _pending_id,
+		"px": _target_point.x, "pz": _target_point.z})
+	_deliver()
+
+
+## The delivery itself, with no choosing in it.
+func _deliver() -> void:
 	_state = State.DRIFT
-	_timer = _cycle_length()
+	_timer = _cycle_length() if not scripted else 999.0
 	if _beam != null and is_instance_valid(_beam):
 		_beam.visible = false
 	if _ground_ring != null and is_instance_valid(_ground_ring):
@@ -316,6 +341,7 @@ func _rank_fraction(slot: int) -> float:
 func _set_mark(slot: int) -> void:
 	if slot < 0 or not ctx.is_alive(slot):
 		return
+	_emit("mark_set", {"slot": slot})
 	_mark_slot = slot
 	_mark_left = float(_tuning.get("mark_seconds", 8.0))
 	_mark_grace = float(_tuning.get("mark_pass_grace", 0.7))
@@ -336,7 +362,12 @@ func _tick_mark(delta: float) -> void:
 		_clear_mark()
 		return
 	_mark_grace = maxf(0.0, _mark_grace - delta)
-	_mark_left -= delta
+	if not scripted:
+		_mark_left -= delta
+	else:
+		# The countdown still runs down for the player to read; only the moment
+		# it goes off is authoritative, and that arrives as an event.
+		_mark_left = maxf(_mark_left - delta, 0.01)
 	var carrier := ctx.fighter(_mark_slot)
 	if carrier == null or not is_instance_valid(carrier):
 		_clear_mark()
@@ -349,10 +380,11 @@ func _tick_mark(delta: float) -> void:
 		if _mark_label != null and is_instance_valid(_mark_label):
 			_mark_label.text = "%d" % int(ceil(maxf(_mark_left, 0.0)))
 			_mark_label.modulate = Color(1.0, lerpf(0.9, 0.25, urgent), lerpf(0.4, 0.2, urgent))
-	if _mark_left <= 0.0:
+	if _mark_left <= 0.0 and not scripted:
+		_emit("mark_blow", {"slot": _mark_slot})
 		_detonate_mark(carrier)
 		return
-	if _mark_grace > 0.0:
+	if _mark_grace > 0.0 or scripted:
 		return
 	var radius := float(_tuning.get("mark_pass_radius", 1.8))
 	for i in ctx.fighters.size():
@@ -362,10 +394,8 @@ func _tick_mark(delta: float) -> void:
 		if other == null or not is_instance_valid(other):
 			continue
 		if carrier.global_position.distance_to(other.global_position) <= radius:
-			_mark_slot = i
-			_mark_grace = float(_tuning.get("mark_pass_grace", 0.7))
-			AudioManager.play_sfx("bounce", other.global_position, 0.8)
-			InputRouter.rumble(i, 0.5, 0.14)
+			_emit("mark_move", {"slot": i})
+			_pass_mark(i)
 			return
 
 
@@ -385,6 +415,51 @@ func _detonate_mark(carrier: Fighter) -> void:
 	InputRouter.rumble(slot, 0.95, 0.3)
 	EventBus.notify(Loc.t("machine.mark_blown", {"name": _player_name(slot)}), "✺")
 	_clear_mark()
+
+
+func _pass_mark(slot: int) -> void:
+	_mark_slot = slot
+	_mark_grace = float(_tuning.get("mark_pass_grace", 0.7))
+	var f := ctx.fighter(slot)
+	AudioManager.play_sfx("bounce", f.global_position if f != null and is_instance_valid(f) else global_position, 0.8)
+	InputRouter.rumble(slot, 0.5, 0.14)
+
+
+func _emit(kind: String, data: Dictionary) -> void:
+	if scripted or not recorder.is_valid():
+		return
+	recorder.call(kind, data)
+
+
+## Replay a recorded decision. Values arrive from JSON, so everything is
+## re-typed on the way in rather than trusted.
+func apply_event(e: Dictionary) -> void:
+	var kind := String(e.get("kind", ""))
+	match kind:
+		"machine_telegraph":
+			_action = int(e.get("action", Action.BEAM))
+			_target_slot = int(e.get("target", -1))
+			_pending_id = String(e.get("id", ""))
+			_target_point = Vector3(float(e.get("px", 0.0)), 0.4, float(e.get("pz", 0.0)))
+			_state = State.TELEGRAPH
+			_timer = float(_tuning.get("telegraph_seconds", 1.5)) / urgency
+			_show_telegraph()
+		"machine_fire":
+			_action = int(e.get("action", Action.BEAM))
+			_target_slot = int(e.get("target", -1))
+			_pending_id = String(e.get("id", ""))
+			_target_point = Vector3(float(e.get("px", 0.0)), 0.4, float(e.get("pz", 0.0)))
+			_deliver()
+		"mark_set":
+			_set_mark(int(e.get("slot", -1)))
+		"mark_move":
+			_pass_mark(int(e.get("slot", -1)))
+		"mark_blow":
+			var slot := int(e.get("slot", -1))
+			var carrier := ctx.fighter(slot)
+			if carrier != null and is_instance_valid(carrier):
+				_mark_slot = slot
+				_detonate_mark(carrier)
 
 
 func _clear_mark() -> void:

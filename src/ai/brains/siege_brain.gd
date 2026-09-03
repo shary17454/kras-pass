@@ -60,6 +60,13 @@ func _intruder_at_home() -> int:
 
 ## The crystal nearest to breaking, with distance as the tie-break — a bot that
 ## always picks the weakest one walks past a full crystal at its feet.
+##
+## The jitter is not decoration. Four crystals on a ring means two of them are
+## exactly equidistant from any bot, and a deterministic comparison resolves
+## every one of those ties toward the lowest index: slot 0 was attacked by two
+## bots at once, slot 2 by nobody, and the balance simulator read it as a 25%
+## spawn-slot advantage. Same class of bug as handing out three crates to four
+## players — a symmetric arena made asymmetric by iteration order.
 func _weakest_rival_base() -> int:
 	var me := self_body()
 	if me == null:
@@ -74,6 +81,7 @@ func _weakest_rival_base() -> int:
 			continue
 		var pos: Vector3 = controller.call("base_position", i)
 		var cost := health * 0.6 + me.global_position.distance_to(pos) * lerpf(3.0, 1.0, strategy)
+		cost += rng.randf_range(-4.0, 4.0)
 		if cost < best_cost:
 			best_cost = cost
 			best = i
