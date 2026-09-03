@@ -48,6 +48,10 @@ var alive := true
 ## every race.
 var charge := 1.0
 var ram_enabled := true      ## body-to-body impacts; a game may switch them off
+## Slots this body refuses to be hurt by. Team games fill it in; a free-for-all
+## leaves it empty. Teammates still collide physically — they just cannot shove
+## each other into the water.
+var teammates := {}
 ## Flat speed carried into this frame's collisions, sampled before the solver
 ## has had a chance to cancel it. Ice barriers read it to tell a lean from a
 ## charge: after `move_and_slide` the component into a wall is already gone, so
@@ -351,6 +355,8 @@ func _do_attack() -> void:
 ## invulnerability and weight are applied exactly once.
 func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float = 0.0, ignore_shield: bool = false) -> bool:
 	if not alive or _invuln > 0.0:
+		return false
+	if from_slot >= 0 and teammates.has(from_slot):
 		return false
 	if mods["shield"] > 0.0 and not ignore_shield:
 		mods["shield"] = 0.0
@@ -819,7 +825,7 @@ func _resolve_body_impacts() -> void:
 		var victim := c.get_collider() as Fighter
 		if victim == null or victim == self or not victim.alive:
 			continue
-		if victim.locomotion == Locomotion.DRIVE:
+		if victim.locomotion == Locomotion.DRIVE or victim.teammates.has(slot):
 			continue
 		if _ram_cd.has(victim.slot):
 			continue

@@ -788,6 +788,22 @@
         "type": "trophies",
         "amount": 8
       }
-    }
+    },
+
+    {"id": "relic_hold", "category": "control", "scoring": "points",
+      "arenas": ["star_meadow", "gem_hollow"], "duration": 95.0, "rounds": 1,
+      "controls": ["move", "attack", "dash"], "glyph": "✦", "tags": ["objective"]},
+    {"id": "tag_hunt", "category": "control", "scoring": "points",
+      "arenas": ["star_meadow", "paint_grid"], "duration": 90.0, "rounds": 1,
+      "controls": ["move", "dash"], "glyph": "☄", "tags": ["chase"]},
+    {"id": "base_siege", "category": "crates", "scoring": "points",
+      "arenas": ["iron_flats", "crate_yard"], "duration": 105.0, "rounds": 1,
+      "controls": ["move", "attack", "dash"], "glyph": "◈", "tags": ["objective"]},
+    {"id": "drift_floes", "category": "push_out", "scoring": "survival",
+      "arenas": ["vortex_ring", "storm_ring"], "duration": 100.0, "rounds": 1,
+      "controls": ["move", "attack", "dash"], "glyph": "❄", "tags": ["chaos"]},
+    {"id": "duo_clash", "category": "push_out", "scoring": "points", "teams": true,
+      "arenas": ["sweeper_ring", "bumper_bowl"], "duration": 95.0, "rounds": 1,
+      "controls": ["move", "attack", "dash"], "glyph": "⚑", "tags": ["teams"]}
   ]
 }

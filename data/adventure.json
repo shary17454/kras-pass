@@ -1,5 +1,5 @@
 {
-  "_comment": "Adventure Mode: five realms of the Kras Pass cup, five stages each (four qualifiers + one championship). 'stars' are earned by placing 1st (3), 2nd (2) or finishing (1). A championship is a 3-round match at a raised difficulty floor.",
+  "_comment": "Adventure Mode: nine realms, five stages each (four qualifiers + one championship). 'stars' are earned by placing 1st (3), 2nd (2) or finishing (1). A championship is a match at a raised difficulty floor, sometimes over three rounds. The realms cover the themes the spec lists — greenery, tide, ember, sky, works, frost, dunes, citadel and the summit that closes the cup.",
   "worlds": [
     {
       "id": "w_greenvale",
@@ -258,6 +258,214 @@
           "boss": true,
           "name_key": "game.boss_sovereign.name",
           "reward_gems": 20
+        }
+      ]
+    },
+    {
+      "id": "w_frostreach",
+      "name_key": "world.frostreach.name",
+      "desc_key": "world.frostreach.desc",
+      "color": "#7be5ff",
+      "required_trophies": 27,
+      "stages": [
+        {
+          "id": "fr1",
+          "game": "drift_floes",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "fr2",
+          "game": "relic_hold",
+          "arena": "star_meadow",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "fr3",
+          "game": "fawda",
+          "arena": "storm_ring",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "fr4",
+          "game": "sweeper_storm",
+          "arena": "sweeper_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "fr5",
+          "game": "drift_floes",
+          "arena": "storm_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 3,
+          "boss": true,
+          "name_key": "stage.boss.frostreach",
+          "reward_gems": 12
+        }
+      ]
+    },
+    {
+      "id": "w_dunes",
+      "name_key": "world.dunes.name",
+      "desc_key": "world.dunes.desc",
+      "color": "#f2c94c",
+      "required_trophies": 33,
+      "stages": [
+        {
+          "id": "du1",
+          "game": "zone_hold",
+          "arena": "dune_ring",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "du2",
+          "game": "tag_hunt",
+          "arena": "paint_grid",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "du3",
+          "game": "sabaq_sawarikh",
+          "arena": "dune_circuit",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "du4",
+          "game": "duel_pit",
+          "arena": "duel_pit",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "du5",
+          "game": "boss_forge",
+          "arena": "crate_yard",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1,
+          "boss": true,
+          "name_key": "stage.boss.dunes",
+          "reward_gems": 13
+        }
+      ]
+    },
+    {
+      "id": "w_citadel",
+      "name_key": "world.citadel.name",
+      "desc_key": "world.citadel.desc",
+      "color": "#b07de0",
+      "required_trophies": 39,
+      "stages": [
+        {
+          "id": "ci1",
+          "game": "base_siege",
+          "arena": "iron_flats",
+          "opponents": 3,
+          "difficulty": 2,
+          "rounds": 1
+        },
+        {
+          "id": "ci2",
+          "game": "duo_clash",
+          "arena": "sweeper_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "ci3",
+          "game": "lab_crates",
+          "arena": "crate_yard",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "ci4",
+          "game": "turret_duel",
+          "arena": "iron_flats",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "ci5",
+          "game": "boss_dreadnought",
+          "arena": "iron_flats",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1,
+          "boss": true,
+          "name_key": "stage.boss.citadel",
+          "reward_gems": 15
+        }
+      ]
+    },
+    {
+      "id": "w_summit",
+      "name_key": "world.summit.name",
+      "desc_key": "world.summit.desc",
+      "color": "#ff7a3d",
+      "required_trophies": 45,
+      "stages": [
+        {
+          "id": "su1",
+          "game": "base_siege",
+          "arena": "crate_yard",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "su2",
+          "game": "relic_hold",
+          "arena": "gem_hollow",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "su3",
+          "game": "drift_floes",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "su4",
+          "game": "boss_colossus",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 1
+        },
+        {
+          "id": "su5",
+          "game": "boss_sovereign",
+          "arena": "vortex_ring",
+          "opponents": 3,
+          "difficulty": 3,
+          "rounds": 3,
+          "boss": true,
+          "name_key": "stage.boss.summit",
+          "reward_gems": 25
         }
       ]
     }
