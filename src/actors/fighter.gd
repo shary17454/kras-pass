@@ -60,6 +60,7 @@ var _last_hit_by := -1
 var _last_hit_timer := 0.0
 var _visual: Node3D
 var _visual_theme := ""
+var _mount_intact := false
 var _squash := Vector3.ONE
 var _was_on_floor := true
 var _spawn_point := Vector3.ZERO
@@ -94,6 +95,7 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 	data = character
 	locomotion = mode
 	_visual_theme = visual_theme
+	_mount_intact = _visual_theme == "arctic" and locomotion == Locomotion.WALK
 	_apply_character()
 	if _visual_theme == "arctic" and locomotion == Locomotion.WALK:
 		friction *= 0.58
@@ -156,6 +158,7 @@ func _build_visual() -> void:
 		_visual.add_child(MeshFactory.kart(d.color, d.accent))
 	elif _visual_theme == "arctic":
 		var mount := MeshFactory.arctic_mount(slot, d.color, d.accent)
+		mount.name = "Mount"
 		mount.position = Vector3(0, 0.02, 0)
 		_visual.add_child(mount)
 		var rider := MeshFactory.character_body(d)
@@ -350,6 +353,41 @@ func freeze(seconds: float) -> void:
 	mods["frozen"] = maxf(float(mods["frozen"]), seconds)
 
 
+func has_mount() -> bool:
+	return _mount_intact and _visual_theme == "arctic" and locomotion == Locomotion.WALK
+
+
+func knock_mount_off(direction: Vector3) -> bool:
+	if not has_mount() or _visual == null or not is_instance_valid(_visual):
+		return false
+	var mount := _visual.get_node_or_null("Mount") as Node3D
+	if mount == null:
+		_mount_intact = false
+		return false
+	_mount_intact = false
+	var world_parent := get_parent()
+	var start := mount.global_position
+	_visual.remove_child(mount)
+	if world_parent != null:
+		world_parent.add_child(mount)
+	mount.global_position = start
+	direction.y = 0.0
+	if direction.length_squared() < 0.01:
+		direction = facing
+	direction = direction.normalized()
+	var tween := mount.create_tween().set_parallel(true)
+	tween.tween_property(mount, "global_position", start + direction * 3.8 + Vector3(0, 1.5, 0), 0.55)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(mount, "rotation", mount.rotation + Vector3(0.9, 1.8, 0.55), 0.55)
+	tween.tween_property(mount, "scale", Vector3.ONE * 0.15, 0.45).set_delay(0.22)
+	tween.chain().tween_callback(mount.queue_free)
+	_squash = Vector3(1.4, 0.68, 1.4)
+	_invuln = maxf(_invuln, 0.3)
+	AudioManager.play_sfx("splash", global_position)
+	_spawn_burst(data.accent if data != null else Color.WHITE, 14)
+	return true
+
+
 func last_attacker() -> int:
 	return _last_hit_by
 
@@ -373,6 +411,8 @@ func on_fell_out() -> void:
 		return
 	fell_out.emit(slot)
 	AudioManager.play_sfx("fall", global_position)
+	if _visual_theme == "arctic":
+		AudioManager.play_sfx("splash", global_position)
 
 
 func respawn_at(p: Vector3) -> void:

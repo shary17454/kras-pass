@@ -45,6 +45,11 @@ var _env: WorldEnvironment
 ## edge rather than only its painted one.
 var _floor_mesh: MeshInstance3D
 var _floor_shape: CylinderShape3D
+var _arctic_water_layers: Array = []
+var _arctic_waves: Array = []
+var _arctic_floes: Array = []
+var _arctic_shrink_followers: Array[Node3D] = []
+var _arctic_time := 0.0
 
 
 func build(arena_def: ArenaDef) -> void:
@@ -146,6 +151,7 @@ func tile_at(pos: Vector3) -> ArenaTile:
 
 
 func tick(delta: float) -> void:
+	_tick_arctic_water(delta)
 	for h in _hazards:
 		if is_instance_valid(h):
 			h.tick(delta)
@@ -179,6 +185,7 @@ func reset_hazards() -> void:
 	if _shrink != null and is_instance_valid(_shrink):
 		_shrink.reset()
 		current_radius = def.radius
+		_on_radius_changed(current_radius)
 	if _water != null and is_instance_valid(_water):
 		var start := -6.0
 		for h in def.hazards:
@@ -696,11 +703,16 @@ func _add_deco_rings() -> void:
 
 
 func _add_arctic_set_dressing() -> void:
+	_arctic_water_layers.clear()
+	_arctic_waves.clear()
+	_arctic_floes.clear()
+	_arctic_shrink_followers.clear()
 	var ocean := MeshFactory.plane(Vector2(def.radius * 18.0, def.radius * 18.0), Color(0.015, 0.12, 0.22))
 	ocean.name = "ArcticOcean"
 	ocean.position = Vector3(0, -0.82, 0)
 	ocean.material_override = MeshFactory.water(Color(0.005, 0.11, 0.22), 0.94)
 	_static_root.add_child(ocean)
+	_arctic_water_layers.append({"node": ocean, "base": ocean.position, "speed": 0.10, "phase": 0.0})
 
 	var deep_patch := MeshFactory.plane(Vector2(def.radius * 16.0, def.radius * 16.0), Color(0.01, 0.08, 0.16))
 	deep_patch.name = "ArcticOceanDepth"
@@ -708,6 +720,7 @@ func _add_arctic_set_dressing() -> void:
 	deep_patch.rotation_degrees = Vector3(0, 18, 0)
 	deep_patch.material_override = MeshFactory.transparent(Color(0.0, 0.04, 0.09), 0.22)
 	_static_root.add_child(deep_patch)
+	_arctic_water_layers.append({"node": deep_patch, "base": deep_patch.position, "speed": -0.07, "phase": 1.4})
 
 	var far_water := MeshFactory.plane(Vector2(def.radius * 28.0, def.radius * 28.0), Color(0.0, 0.07, 0.14))
 	far_water.name = "ArcticFarWater"
@@ -715,6 +728,7 @@ func _add_arctic_set_dressing() -> void:
 	far_water.rotation_degrees = Vector3(0, -11, 0)
 	far_water.material_override = MeshFactory.water(Color(0.0, 0.075, 0.15), 0.98)
 	_static_root.add_child(far_water)
+	_arctic_water_layers.append({"node": far_water, "base": far_water.position, "speed": 0.045, "phase": 2.7})
 
 	var ocean_glow := MeshFactory.plane(Vector2(def.radius * 5.0, def.radius * 5.0), Color(0.05, 0.46, 0.62))
 	ocean_glow.name = "ArcticOceanInnerGlow"
@@ -731,17 +745,27 @@ func _add_arctic_set_dressing() -> void:
 		wave.rotation.y = -ang + 0.18 * sin(float(i) * 1.9)
 		wave.material_override = MeshFactory.transparent(Color(0.72, 0.97, 1.0), 0.56)
 		_static_root.add_child(wave)
+		_arctic_waves.append({"node": wave, "base": wave.position, "angle": ang, "phase": float(i) * 0.37})
 
 	var floe_rim := MeshFactory.torus(def.radius - 0.28, def.radius + 0.34, Color(0.78, 0.95, 1.0), 0.22)
 	floe_rim.name = "IceFloeRim"
 	floe_rim.position = Vector3(0, 0.12, 0)
 	floe_rim.material_override = MeshFactory.ice(Color(0.76, 0.94, 1.0), 0.98)
 	_static_root.add_child(floe_rim)
+	_arctic_shrink_followers.append(floe_rim)
 
 	var snow_lip := MeshFactory.torus(def.radius - 0.05, def.radius + 0.12, Color(1.0, 1.0, 0.96), 0.18)
 	snow_lip.name = "SnowLip"
 	snow_lip.position = Vector3(0, 0.18, 0)
 	_static_root.add_child(snow_lip)
+	_arctic_shrink_followers.append(snow_lip)
+
+	var melt_edge := MeshFactory.torus(def.radius + 0.18, def.radius + 0.62, Color(0.45, 0.9, 1.0), 0.32)
+	melt_edge.name = "MeltingWaterEdge"
+	melt_edge.position = Vector3(0, 0.02, 0)
+	melt_edge.material_override = MeshFactory.water(Color(0.18, 0.72, 0.95), 0.58)
+	_static_root.add_child(melt_edge)
+	_arctic_shrink_followers.append(melt_edge)
 
 	var chunks := 40
 	for i in chunks:
@@ -764,6 +788,7 @@ func _add_arctic_set_dressing() -> void:
 		floe.rotation_degrees = Vector3(0, rad_to_deg(-ang) + float(i * 13), 0)
 		floe.scale = Vector3(1.5 + 0.18 * float(i % 2), 0.42, 0.7 + 0.12 * float(i % 3))
 		_static_root.add_child(floe)
+		_arctic_floes.append({"node": floe, "base": floe.position, "phase": float(i) * 0.53})
 
 	for i in 10:
 		var ang := TAU * float(i) / 10.0 + 0.2
@@ -879,7 +904,46 @@ func _on_radius_changed(r: float) -> void:
 	if _floor_mesh != null and is_instance_valid(_floor_mesh):
 		var k := r / maxf(def.radius, 0.001)
 		_floor_mesh.scale = Vector3(k, 1.0, k)
+		for n in _arctic_shrink_followers:
+			if is_instance_valid(n):
+				n.scale = Vector3(k, 1.0, k)
 	radius_changed.emit(r)
+
+
+func _tick_arctic_water(delta: float) -> void:
+	if not _is_arctic():
+		return
+	_arctic_time += delta
+	for entry in _arctic_water_layers:
+		var n: Node3D = entry["node"]
+		if not is_instance_valid(n):
+			continue
+		var base: Vector3 = entry["base"]
+		var phase := float(entry["phase"])
+		n.position = base + Vector3(
+			sin(_arctic_time * 0.33 + phase) * 0.22,
+			sin(_arctic_time * 0.82 + phase) * 0.026,
+			cos(_arctic_time * 0.29 + phase) * 0.22)
+		n.rotation.y += float(entry["speed"]) * delta
+	for entry in _arctic_waves:
+		var n: Node3D = entry["node"]
+		if not is_instance_valid(n):
+			continue
+		var base: Vector3 = entry["base"]
+		var phase := float(entry["phase"])
+		n.position = base + Vector3(0, sin(_arctic_time * 2.1 + phase) * 0.055, 0)
+		n.scale.x = 1.0 + sin(_arctic_time * 1.7 + phase) * 0.18
+	for entry in _arctic_floes:
+		var n: Node3D = entry["node"]
+		if not is_instance_valid(n):
+			continue
+		var base: Vector3 = entry["base"]
+		var phase := float(entry["phase"])
+		n.position = base + Vector3(
+			sin(_arctic_time * 0.42 + phase) * 0.18,
+			sin(_arctic_time * 1.2 + phase) * 0.035,
+			cos(_arctic_time * 0.38 + phase) * 0.18)
+		n.rotation.y += sin(_arctic_time * 0.6 + phase) * delta * 0.08
 
 
 func _on_tile_collapsed(tile: ArenaTile) -> void:

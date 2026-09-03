@@ -226,6 +226,16 @@ func _render_sfx(id: String):
 			return Synth.voice({"freq": 300, "freq_to": 1200, "dur": 0.18, "wave": W.NOISE, "gain": 0.3, "attack": 0.02})
 		"fall":
 			return Synth.voice({"freq": 520, "freq_to": 90, "dur": 0.7, "wave": W.TRIANGLE, "gain": 0.42, "vibrato": 0.03, "curve": 1.8})
+		"splash":
+			return Synth.mix([
+				Synth.voice({"freq": 170, "freq_to": 60, "dur": 0.38, "wave": W.NOISE, "gain": 0.44, "curve": 1.5}),
+				Synth.voice({"freq": 620, "freq_to": 260, "dur": 0.16, "wave": W.TRIANGLE, "gain": 0.22}),
+			])
+		"burn":
+			return Synth.mix([
+				Synth.voice({"freq": 900, "freq_to": 260, "dur": 0.28, "wave": W.NOISE, "gain": 0.28, "drive": 0.35}),
+				Synth.voice({"freq": 180, "freq_to": 95, "dur": 0.2, "wave": W.SAW, "gain": 0.18, "drive": 0.45}),
+			])
 		"eliminate":
 			return Synth.mix([
 				Synth.voice({"freq": 420, "freq_to": 110, "dur": 0.5, "wave": W.SAW, "gain": 0.45, "drive": 0.3}),
@@ -376,5 +386,5 @@ func warm_match_bank() -> void:
 		return
 	for id in ["hit", "swing", "dash", "fall", "eliminate", "pickup", "powerup",
 			"score", "crate_break", "explode", "shield_break", "bounce",
-			"countdown", "go", "tick", "whistle", "win", "lose"]:
+			"countdown", "go", "tick", "whistle", "splash", "burn", "win", "lose"]:
 		_sound(id)

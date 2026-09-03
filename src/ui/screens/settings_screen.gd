@@ -45,6 +45,7 @@ func build() -> void:
 	_section(v, "settings.graphics")
 	var quality := UIKit.option([
 		Loc.t("settings.quality.low"), Loc.t("settings.quality.medium"), Loc.t("settings.quality.high"),
+		Loc.t("settings.quality.ultra"),
 	], int(UserSettings.get_value("graphics_quality")))
 	quality.item_selected.connect(func(i): UserSettings.set_value("graphics_quality", i))
 	v.add_child(UIKit.row(Loc.t("settings.quality"), quality))

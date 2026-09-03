@@ -19,6 +19,11 @@ var _bombs: Array = []
 var _drop_timer := 2.0
 
 
+func configure() -> void:
+	super.configure()
+	arctic_ordnance_enabled = false
+
+
 func build() -> void:
 	super.build()
 	_bombs.clear()

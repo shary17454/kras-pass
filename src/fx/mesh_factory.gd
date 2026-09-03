@@ -564,8 +564,79 @@ static func ice_chunk(size: float, color: Color) -> Node3D:
 
 static func arctic_mount(slot: int, rider_color: Color, accent: Color) -> Node3D:
 	if slot % 2 == 0:
-		return penguin_mount(rider_color, accent)
+		return polar_bear_mount(rider_color, accent)
 	return seal_mount(rider_color, accent)
+
+
+static func polar_bear_mount(rider_color: Color, accent: Color) -> Node3D:
+	var root := Node3D.new()
+	var fur := Color(0.92, 0.96, 0.95)
+	var shade := Color(0.72, 0.82, 0.86)
+	var body := capsule(0.48, 1.24, fur)
+	body.position = Vector3(0, 0.48, 0.02)
+	body.rotation_degrees = Vector3(90, 0, 0)
+	body.scale = Vector3(1.18, 0.9, 1.3)
+	body.material_override = satin(fur, 0.42, 0.0, 0.14)
+	root.add_child(body)
+
+	var chest := sphere(0.42, Color(0.98, 1.0, 0.98))
+	chest.position = Vector3(0, 0.55, -0.42)
+	chest.scale = Vector3(0.95, 0.55, 0.42)
+	chest.material_override = satin(Color(0.98, 1.0, 0.98), 0.34, 0.0, 0.08)
+	root.add_child(chest)
+
+	var head := sphere(0.36, fur)
+	head.position = Vector3(0, 0.74, -0.86)
+	head.scale = Vector3(1.05, 0.9, 1.0)
+	head.material_override = satin(fur, 0.36, 0.0, 0.12)
+	root.add_child(head)
+	var muzzle := sphere(0.16, Color(0.98, 1.0, 0.97))
+	muzzle.position = Vector3(0, 0.68, -1.15)
+	muzzle.scale = Vector3(1.35, 0.82, 0.8)
+	root.add_child(muzzle)
+	var nose := sphere(0.055, Color(0.035, 0.04, 0.045))
+	nose.position = Vector3(0, 0.7, -1.28)
+	nose.scale = Vector3(1.35, 0.75, 0.8)
+	root.add_child(nose)
+
+	for sx in [-1.0, 1.0]:
+		var ear := sphere(0.105, fur)
+		ear.position = Vector3(0.22 * sx, 0.98, -0.82)
+		ear.scale = Vector3(0.85, 0.9, 0.65)
+		ear.material_override = satin(fur, 0.4, 0.0, 0.1)
+		root.add_child(ear)
+		var eye := sphere(0.043, Color(0.02, 0.025, 0.03))
+		eye.position = Vector3(0.12 * sx, 0.8, -1.12)
+		root.add_child(eye)
+		var glint := sphere(0.014, Color.WHITE, 0.1)
+		glint.position = Vector3(0.132 * sx, 0.815, -1.155)
+		root.add_child(glint)
+		for z in [-0.45, 0.35]:
+			var leg := capsule(0.14, 0.42, shade)
+			leg.position = Vector3(0.34 * sx, 0.2, z)
+			leg.rotation_degrees = Vector3(6, 0, 0)
+			leg.material_override = satin(shade, 0.46, 0.0, 0.05)
+			root.add_child(leg)
+			var paw := box(Vector3(0.28, 0.09, 0.24), Color(0.86, 0.91, 0.9))
+			paw.position = Vector3(0.34 * sx, 0.05, z - 0.1)
+			paw.material_override = satin(Color(0.86, 0.91, 0.9), 0.5, 0.0, 0.02)
+			root.add_child(paw)
+
+	var saddle := torus(0.32, 0.46, rider_color, 0.22)
+	saddle.position = Vector3(0, 0.9, -0.02)
+	saddle.rotation_degrees = Vector3(90, 0, 0)
+	saddle.material_override = satin(rider_color, 0.24, 0.04, 0.12)
+	root.add_child(saddle)
+	var strap := box(Vector3(0.8, 0.05, 0.09), accent)
+	strap.position = Vector3(0, 0.78, -0.02)
+	strap.material_override = satin(accent, 0.24, 0.05, 0.1)
+	root.add_child(strap)
+	var shadow := sphere(0.45, Color(0.0, 0.0, 0.0))
+	shadow.position = Vector3(0, 0.015, 0.02)
+	shadow.scale = Vector3(1.9, 0.035, 1.25)
+	shadow.material_override = transparent(Color(0, 0, 0), 0.25)
+	root.add_child(shadow)
+	return root
 
 
 static func penguin_mount(rider_color: Color, accent: Color) -> Node3D:

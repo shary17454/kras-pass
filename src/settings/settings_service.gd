@@ -15,7 +15,7 @@ const DEFAULTS := {
 	"vibration": true,
 	"camera_sensitivity": 1.0,
 	"camera_shake": 1.0,
-	"graphics_quality": 2,  # 0 low, 1 medium, 2 high
+	"graphics_quality": 3,  # 0 low, 1 medium, 2 high, 3 ultra
 	"fps_limit": 0,  # 0 = display refresh
 	"language": "",  # "" = no explicit choice yet -> Arabic, the primary
 	"text_scale": 1.0,
@@ -124,12 +124,14 @@ func _apply_engine_settings() -> void:
 	var quality := int(get_value("graphics_quality"))
 	# Scale the 3D render resolution rather than dropping features, which keeps
 	# gameplay readability identical across quality tiers.
-	var scale: float = [0.7, 0.85, 1.0][clampi(quality, 0, 2)]
+	var scale: float = [0.7, 0.85, 1.0, 1.15][clampi(quality, 0, 3)]
 	get_tree().root.scaling_3d_scale = scale
 	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
 	# Multisampling is what keeps a bevelled edge from crawling as the camera
 	# orbits, so it is the last thing to give up rather than the first.
-	if quality >= 2:
+	if quality >= 3 and rich:
+		get_tree().root.msaa_3d = Viewport.MSAA_8X
+	elif quality >= 2:
 		get_tree().root.msaa_3d = Viewport.MSAA_4X if rich else Viewport.MSAA_2X
 	elif quality == 1:
 		get_tree().root.msaa_3d = Viewport.MSAA_2X

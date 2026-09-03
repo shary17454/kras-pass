@@ -25,6 +25,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _device_loss(t)
 	await _difficulty_separation(t)
 	await _rocket_rally_rules(t)
+	await _ring_ordnance_rules(t)
 
 
 func _characters() -> Array:
@@ -317,3 +318,53 @@ func _rocket_rally_rules(t: TestHarness) -> void:
 	scene.queue_free()
 	await tree.process_frame
 
+
+func _ring_ordnance_rules(t: TestHarness) -> void:
+	t.test("Ring Rumble: arctic bombs dismount before the next hit lands")
+	var cfg := _make_config("ring_rumble", PlayerConfig.Difficulty.EASY)
+	cfg.duration_override = 30.0
+	var script: Script = load("res://src/match/match_scene.gd")
+	var scene: Node = script.new()
+	_host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	var tree := _host.get_tree()
+	var wait := 0
+	while not MatchPhase.is_live(scene.phase) and wait < 3000:
+		await tree.physics_frame
+		wait += 1
+	t.ok(MatchPhase.is_live(scene.phase), "the ring reached a live phase")
+
+	var game = scene.controller
+	var victim: Fighter = scene.ctx.fighter(1)
+	t.not_null(game, "the ring controller exists")
+	t.not_null(victim, "a victim exists")
+	if game != null and victim != null and is_instance_valid(victim):
+		t.ok(victim.has_mount(), "arctic fighters start mounted")
+		game._drop_ordnance()
+		t.ok(not game._ordnance.is_empty(), "the ring dropped an ordnance pickup")
+		var b: Dictionary = game._ordnance[0]
+		var node: Node3D = b["node"]
+		node.global_position = victim.global_position
+		game._try_take_ordnance(b, node)
+		t.equal(victim.carrying, game.ORDNANCE_CARRY_FLAG, "walking over a drop arms a carried bomb")
+		b["held"] = -1
+		victim.carrying = 0
+		b["thrower"] = 0
+		b["kind"] = game.BombKind.FIRE
+		node.global_position = victim.global_position
+		game._detonate_ordnance(0)
+		t.ok(not victim.has_mount(), "the first bomb throws the mount away")
+		victim._invuln = 0.0
+		var damage_before := victim.damage_percent
+		game._drop_ordnance()
+		b = game._ordnance[0]
+		node = b["node"]
+		b["thrower"] = 0
+		b["kind"] = game.BombKind.FIRE
+		node.global_position = victim.global_position
+		game._detonate_ordnance(0)
+		t.greater(victim.damage_percent, damage_before, "the next bomb burns or launches the unmounted fighter")
+
+	scene.teardown()
+	scene.queue_free()
+	await tree.process_frame
