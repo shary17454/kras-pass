@@ -608,6 +608,10 @@ func _check_out_of_bounds() -> void:
 	for f in _fighters:
 		if not is_instance_valid(f) or not f.alive or not ctx.is_alive(f.slot):
 			continue
+		# The fighter has no arena reference of its own, so the one place that
+		# already measures every body against the rim also tells it how close
+		# the drop is. That is what the panic pose reads.
+		f.set_edge_margin(arena.edge_distance(f.global_position))
 		if f.global_position.y < arena.fall_y:
 			f.on_fell_out()
 			continue

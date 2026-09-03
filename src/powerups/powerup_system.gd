@@ -104,6 +104,21 @@ func spawn_at(id: String, pos: Vector3) -> void:
 	_make_pickup(d, pos)
 
 
+## Apply a power-up straight to one player, with no pickup in the world. This
+## is the hover machine's door in: a beamed penalty lands on the fighter the
+## machine aimed at, and `targets_rivals` is deliberately *not* honoured here —
+## the machine already chose who it wanted.
+func apply_to(slot: int, id: String) -> bool:
+	var d := Registry.powerup(id)
+	if d == null:
+		return false
+	if not ctx.is_alive(slot):
+		return false
+	_apply(slot, d)
+	EventBus.powerup_collected.emit(slot, d.id)
+	return true
+
+
 func _spawn_one() -> void:
 	var d := _weighted_pick()
 	if d == null:
@@ -187,6 +202,12 @@ func _apply(slot: int, d: PowerUpDef) -> void:
 		"freeze":
 			f.freeze(d.duration)
 			return
+		"shock":
+			# A jolt, not a freeze: control is gone for a beat and the body
+			# throws sparks, but momentum is kept — being shocked mid-slide
+			# still carries you toward the rim you were heading for.
+			f.shock(d.duration)
+			return
 	if d.instant:
 		return
 	# Same power-up twice refreshes rather than stacks: two Rushes should not
@@ -247,7 +268,9 @@ func _recompute(slot: int) -> void:
 	f.mods = {
 		"speed": 1.0, "push": 1.0, "weight": 1.0, "points": 1.0,
 		"magnet": 0.0, "shield": 0.0, "frozen": frozen, "jump": 1.0, "dash": 1.0,
+		"resist_taken": 1.0, "friction": 1.0, "lag": 0.0, "scramble": 0.0, "size": 1.0,
 	}
+	var size := 1.0
 	for e in _effects:
 		if int(e["slot"]) != slot:
 			continue
@@ -261,6 +284,29 @@ func _recompute(slot: int) -> void:
 			"magnet": f.mods["magnet"] = maxf(float(f.mods["magnet"]), d.magnitude)
 			"shield": f.mods["shield"] = 1.0
 			"dash": f.mods["dash"] = maxf(float(f.mods["dash"]), d.magnitude)
+			# --- the machine's penalties, and their two boosts ---------------
+			"grow": size *= d.magnitude
+			"shrink":
+				# Small *and* easy to shove: shrinking only the body would be a
+				# hitbox reward, which is the opposite of a penalty.
+				size *= d.magnitude
+				f.mods["resist_taken"] = float(f.mods["resist_taken"]) * 1.3
+			"tough": f.mods["resist_taken"] = float(f.mods["resist_taken"]) * d.magnitude
+			"frail": f.mods["resist_taken"] = float(f.mods["resist_taken"]) * d.magnitude
+			"weaken": f.mods["push"] = float(f.mods["push"]) * d.magnitude
+			"slick": f.mods["friction"] = float(f.mods["friction"]) * d.magnitude
+			"sluggish": f.mods["lag"] = maxf(float(f.mods["lag"]), d.magnitude)
+			"burden":
+				# Heavy in the way that hurts: harder to shift, but slower and
+				# late to answer the stick.
+				f.mods["weight"] = float(f.mods["weight"]) * d.magnitude
+				f.mods["speed"] = float(f.mods["speed"]) * 0.78
+				f.mods["lag"] = maxf(float(f.mods["lag"]), 0.18)
+				size *= 1.16
+			"scramble": f.mods["scramble"] = maxf(float(f.mods["scramble"]), d.magnitude)
+	# Scale is applied through the fighter so the collision body follows the
+	# silhouette; `set_powerup_scale` is a no-op when the value has not moved.
+	f.set_powerup_scale(size)
 
 
 ## Magnet pulls loose collectibles toward the holder. Collectibles opt in by

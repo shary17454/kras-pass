@@ -270,6 +270,32 @@ func _render_sfx(id: String):
 			])
 		"shield_break":
 			return Synth.voice({"freq": 1400, "freq_to": 500, "dur": 0.24, "wave": W.TRIANGLE, "gain": 0.4, "vibrato": 0.08})
+		"shock":
+			return Synth.mix([
+				Synth.voice({"freq": 2600, "freq_to": 420, "dur": 0.22, "wave": W.NOISE, "gain": 0.34, "drive": 0.7}),
+				Synth.voice({"freq": 1500, "freq_to": 190, "dur": 0.18, "wave": W.SQUARE, "gain": 0.28, "vibrato": 0.12, "vibrato_hz": 32}),
+			])
+		"ice_crack":
+			# Sharper and higher than `crate_break`: this is a fracture running
+			# through ice, not a box coming apart.
+			return Synth.mix([
+				Synth.voice({"freq": 2100, "freq_to": 900, "dur": 0.13, "wave": W.NOISE, "gain": 0.3, "drive": 0.45}),
+				Synth.voice({"freq": 1750, "dur": 0.07, "wave": W.TRIANGLE, "gain": 0.2}),
+			])
+		"skid":
+			return Synth.voice({"freq": 1400, "freq_to": 700, "dur": 0.3, "wave": W.NOISE, "gain": 0.12, "attack": 0.05, "release": 0.15})
+		"machine_alert":
+			# Two rising pips, the readable "something is about to happen" of
+			# every arcade telegraph.
+			var alert := Synth.silence(0.34)
+			Synth.place(alert, Synth.voice({"freq": 880, "dur": 0.1, "wave": W.SQUARE, "gain": 0.28}), 0.0)
+			Synth.place(alert, Synth.voice({"freq": 1320, "dur": 0.13, "wave": W.SQUARE, "gain": 0.28}), 0.15)
+			return alert
+		"beam":
+			return Synth.mix([
+				Synth.voice({"freq": 420, "freq_to": 1900, "dur": 0.42, "wave": W.SAW, "gain": 0.3, "drive": 0.25}),
+				Synth.voice({"freq": 210, "dur": 0.4, "wave": W.SINE, "gain": 0.2, "attack": 0.1}),
+			])
 		"bounce":
 			return Synth.voice({"freq": 380, "freq_to": 620, "dur": 0.08, "wave": W.SINE, "gain": 0.35})
 		"tick":
@@ -386,5 +412,6 @@ func warm_match_bank() -> void:
 		return
 	for id in ["hit", "swing", "dash", "fall", "eliminate", "pickup", "powerup",
 			"score", "crate_break", "explode", "shield_break", "bounce",
-			"countdown", "go", "tick", "whistle", "splash", "burn", "win", "lose"]:
+			"countdown", "go", "tick", "whistle", "splash", "burn", "win", "lose",
+			"shock", "ice_crack", "skid", "machine_alert", "beam"]:
 		_sound(id)

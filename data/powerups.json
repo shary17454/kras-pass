@@ -1,5 +1,5 @@
 {
-  "_comment": "Power-up framework. 'kind' selects the behaviour PowerUpSystem applies; everything else is tuning. 'categories' empty = allowed in every mini-game that enables power-ups.",
+  "_comment": "Power-up framework. 'kind' selects the behaviour PowerUpSystem applies; everything else is tuning. 'categories' empty = allowed in every mini-game that enables power-ups. 'boon': false marks a penalty; 'machine_only': true keeps it out of the ambient ground spawner so only the hover machine can deliver it.",
   "powerups": [
     {"id": "speed",     "kind": "speed",   "duration": 6.0,  "magnitude": 1.45, "color": "#7be5ff", "glyph": "»",  "weight": 1.2},
     {"id": "shield",    "kind": "shield",  "duration": 9.0,  "magnitude": 1.0,  "color": "#9ad8ff", "glyph": "◇",  "weight": 1.0},
@@ -23,6 +23,27 @@
       "instant": true,
       "categories": ["combat", "vehicle"]},
     {"id": "boost",     "kind": "boost",   "duration": 1.8,  "magnitude": 1.75, "color": "#ffb347", "glyph": "▶",  "weight": 1.1,
-      "categories": ["vehicle", "race"]}
+      "categories": ["vehicle", "race"]},
+
+    {"id": "grow",      "kind": "grow",    "duration": 8.0,  "magnitude": 1.42, "color": "#ffd88a", "glyph": "▲",  "weight": 0.8,
+      "categories": ["push_out", "combat", "ball_zone", "control"]},
+    {"id": "tough",     "kind": "tough",   "duration": 9.0,  "magnitude": 0.6,  "color": "#8fd0b4", "glyph": "◘",  "weight": 0.8},
+
+    {"id": "shrink",    "kind": "shrink",  "duration": 7.0,  "magnitude": 0.66, "color": "#b7a0d8", "glyph": "▽",  "weight": 0.8,
+      "boon": false, "machine_only": true},
+    {"id": "burden",    "kind": "burden",  "duration": 7.5,  "magnitude": 1.7,  "color": "#7a6a52", "glyph": "⊥",  "weight": 0.9,
+      "boon": false, "machine_only": true},
+    {"id": "sluggish",  "kind": "sluggish","duration": 6.5,  "magnitude": 0.3,  "color": "#6f7d92", "glyph": "◔",  "weight": 0.9,
+      "boon": false, "machine_only": true},
+    {"id": "weaken",    "kind": "weaken",  "duration": 8.0,  "magnitude": 0.55, "color": "#9a8f8f", "glyph": "◦",  "weight": 0.9,
+      "boon": false, "machine_only": true},
+    {"id": "scramble",  "kind": "scramble","duration": 5.5,  "magnitude": 0.5,  "color": "#e07ad0", "glyph": "≠",  "weight": 0.8,
+      "boon": false, "machine_only": true},
+    {"id": "slick",     "kind": "slick",   "duration": 7.0,  "magnitude": 0.32, "color": "#7fd6ef", "glyph": "∿",  "weight": 0.9,
+      "boon": false, "machine_only": true},
+    {"id": "frail",     "kind": "frail",   "duration": 7.0,  "magnitude": 1.55, "color": "#ef8f8f", "glyph": "◑",  "weight": 0.9,
+      "boon": false, "machine_only": true},
+    {"id": "shock",     "kind": "shock",   "duration": 1.15, "magnitude": 1.0,  "color": "#ffe94a", "glyph": "⚡",  "weight": 0.7,
+      "instant": true, "boon": false, "machine_only": true}
   ]
 }

@@ -109,10 +109,22 @@ func minigames_in_category(cat: MiniGameDef.Category) -> Array[MiniGameDef]:
 	return out
 
 
+## The ambient spawner's pool: everything this category allows, minus the
+## machine-only penalties.
 func powerups_for(category_name: String) -> Array[PowerUpDef]:
 	var out: Array[PowerUpDef] = []
 	for p in _powerups:
-		if p.allowed_in(category_name):
+		if p.allowed_in(category_name) and not p.machine_only:
+			out.append(p)
+	return out
+
+
+## Everything the hover machine may deliver, including the machine-only set.
+## `boon_only` picks a side: true = boosts, false = penalties.
+func machine_powerups(category_name: String, boon_only: bool) -> Array[PowerUpDef]:
+	var out: Array[PowerUpDef] = []
+	for p in _powerups:
+		if p.allowed_in(category_name) and p.boon == boon_only:
 			out.append(p)
 	return out
 

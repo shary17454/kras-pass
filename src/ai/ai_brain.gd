@@ -295,6 +295,11 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 	var me := self_body()
 	if me == null or not me.can_dash:
 		return
+	# The dash meter is a resource now. Pressing an empty button is not a
+	# mistake a human makes twice, and a bot that does it looks broken rather
+	# than beatable.
+	if not me.can_afford_dash():
+		return
 	if rng.randf() >= dash_chance * chance_scale * decision_interval * 6.0:
 		return
 	# A dash is a commitment you cannot steer out of: the 15.5 impulse alone

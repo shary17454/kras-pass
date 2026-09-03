@@ -17,6 +17,13 @@ extends Resource
 @export var categories: PackedStringArray = []  # empty = allowed everywhere
 @export var instant := false         # applies once instead of over time
 @export var targets_rivals := false  # affects everyone except the collector
+## True for a boost, false for a penalty. The hover machine reads this to skew
+## who gets what without needing a list of ids.
+@export var boon := true
+## Only the hover machine hands this one out. The harsh power-downs are
+## machine-only on purpose: as ground pickups they would flood the ambient pool
+## and re-balance twenty-eight games that were measured without them.
+@export var machine_only := false
 
 
 static func from_dict(d: Dictionary) -> PowerUpDef:
@@ -32,6 +39,8 @@ static func from_dict(d: Dictionary) -> PowerUpDef:
 	p.categories = PackedStringArray(d.get("categories", []))
 	p.instant = bool(d.get("instant", false))
 	p.targets_rivals = bool(d.get("targets_rivals", false))
+	p.boon = bool(d.get("boon", not p.targets_rivals))
+	p.machine_only = bool(d.get("machine_only", false))
 	return p
 
 
