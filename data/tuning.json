@@ -49,7 +49,7 @@
     "spin_out_time": 0.45
   },
   "match": {
-    "intro_seconds": 1.6,
+    "intro_seconds": 3.2,
     "instructions_seconds": 7.0,
     "instructions_seconds_known": 3.5,
     "countdown_seconds": 3,

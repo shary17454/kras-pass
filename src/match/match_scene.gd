@@ -324,6 +324,12 @@ func _enter_phase(p: int) -> void:
 			hud.announce(ctx.definition.display_name(), UIKit.ACCENT, 0.6)
 			hud.show_hints(false)
 			_phase_timer = float(_tuning.get("intro_seconds", 1.6))
+			# Nobody is watching an all-AI match — the balance simulator and the
+			# automated match tests both run one — so the establishing shot is
+			# dead time there, exactly like the rules card below.
+			if config != null and config.human_slots().is_empty():
+				_phase_timer = minf(_phase_timer, 0.6)
+			camera.begin_intro(_phase_timer)
 		P.INSTRUCTIONS:
 			hud.show_rules(true)
 			var known := not UserSettings.should_show_tutorial(ctx.definition.id)

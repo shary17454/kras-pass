@@ -32,6 +32,13 @@ var _shake_decay := 5.5
 var _max_shake := 0.9
 var _yaw := 0.0
 var _noise_t := 0.0
+## Pre-round establishing shot. While this is counting down the camera orbits
+## the arena from a low, wide angle instead of framing the players, which is how
+## the spec wants a round to open: show the venue, the hazards and the drone,
+## then drop into the play angle.
+var _intro_left := 0.0
+var _intro_total := 0.0
+var _intro_yaw := 0.0
 
 
 func _ready() -> void:
@@ -81,12 +88,54 @@ func _snap() -> void:
 	_apply(1.0, 0.0)
 
 
+## Start the establishing orbit. Called by the match layer when the INTRO phase
+## begins, with the phase's own length so the two cannot drift apart.
+func begin_intro(seconds: float) -> void:
+	if seconds <= 0.05 or arena == null:
+		return
+	_intro_total = seconds
+	_intro_left = seconds
+	_intro_yaw = _yaw - deg_to_rad(70.0)
+
+
+func is_intro_active() -> bool:
+	return _intro_left > 0.0
+
+
 func _process(delta: float) -> void:
 	var sensitivity := float(UserSettings.get_value("camera_sensitivity"))
+	if _intro_left > 0.0:
+		_tick_intro(delta)
+		return
 	_update_focus_and_zoom(false)
 	_shake = maxf(0.0, _shake - _shake_decay * delta)
 	_noise_t += delta * 34.0
 	_apply(clampf(_follow_lerp * sensitivity * delta, 0.0, 1.0), delta)
+
+
+## A slow sweep around the ring at a low angle, close enough to the deck that
+## the barriers, the surface and the hovering machine all pass through frame.
+## Nothing here touches `focus` or `_zoom`, so when the orbit ends the normal
+## framing resumes from wherever it already was and the camera swoops into the
+## play angle on its own follow lerp — no cut, no extra state.
+func _tick_intro(delta: float) -> void:
+	_intro_left = maxf(0.0, _intro_left - delta)
+	var t: float = 1.0 - clampf(_intro_left / maxf(_intro_total, 0.01), 0.0, 1.0)
+	_intro_yaw += delta * 0.55
+	var centre := arena.global_position
+	var radius: float = maxf(arena.def.radius, 6.0)
+	# Pulls back and lifts as it goes, so the last frame of the orbit is already
+	# close to the height the gameplay camera wants.
+	var dist: float = radius * lerpf(1.35, 1.9, t)
+	var height: float = radius * lerpf(0.42, 0.95, t)
+	global_position = centre + Vector3(sin(_intro_yaw) * dist, height, cos(_intro_yaw) * dist)
+	look_at(centre + Vector3(0, 1.4, 0), Vector3.UP)
+	if _intro_left <= 0.0:
+		# Hand the framing back where it can see everyone, without a jump: the
+		# focus and zoom were never touched, so this only re-seeds the yaw the
+		# gameplay camera orbits from.
+		_yaw = _intro_yaw
+		_update_focus_and_zoom(false)
 
 
 ## Targets worth framing: alive, and still part of the fight.
