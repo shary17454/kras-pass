@@ -2,7 +2,7 @@
   "_comment": "The mini-game catalogue. One entry + one script under src/minigames/ is a complete new game — see docs/adding-a-minigame.md. 'controls' names the glyphs shown on the pre-round card.",
   "games": [
     {
-      "id": "ring_rumble",
+      "id": "ring_rumble", "machine": true,
       "category": "push_out",
       "scoring": "survival",
       "arenas": [
@@ -25,7 +25,7 @@
       "difficulty_curve": 1.0
     },
     {
-      "id": "crumble_court",
+      "id": "crumble_court", "machine": true,
       "category": "push_out",
       "scoring": "survival",
       "arenas": [
@@ -50,7 +50,7 @@
       }
     },
     {
-      "id": "bumper_bowl",
+      "id": "bumper_bowl", "machine": true,
       "category": "push_out",
       "scoring": "points",
       "arenas": [

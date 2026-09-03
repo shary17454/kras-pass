@@ -45,6 +45,8 @@
   "hud.score": "النقاط",
   "hud.lives": "المحاولات",
   "hud.sudden_death": "الموت المفاجئ",
+  "machine.marked": "علامة الآلة على {name}!",
+  "machine.mark_blown": "انفجرت العلامة على {name}!",
   "hud.go": "انطلق!",
   "hud.finish": "انتهت",
   "hud.hurry": "أسرع!",

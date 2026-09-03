@@ -206,7 +206,100 @@ func priority_rival() -> int:
 		return near
 	if near == -1:
 		return lead
-	return lead if rng.randf() < strategy else near
+	# A runaway leader pulls attention: the wider the gap, the likelier every
+	# bot independently picks them. `strategy` still sets the baseline, so a
+	# low tier keeps swinging at whoever is closest.
+	var bias: float = clampf(strategy + leader_gap() * 0.45, 0.0, 0.95)
+	return lead if rng.randf() < bias else near
+
+
+## The rival closest to going out. Standing next to the rim is the most
+## readable weakness in a push-out game and the spec asks the AI to punish it;
+## `edge_awareness` doubles as how well this bot reads the geometry, so a low
+## tier goes for whoever is nearest instead.
+func edge_pressured_rival(threshold: float = 4.0) -> int:
+	var arena := ctx.arena as Arena
+	if arena == null or rng.randf() > edge_awareness:
+		return -1
+	var best := -1
+	var best_margin := threshold
+	for i in ctx.fighters.size():
+		if i == slot or not ctx.is_alive(i):
+			continue
+		var margin := arena.edge_distance(perceive(i))
+		if margin < best_margin:
+			best_margin = margin
+			best = i
+	return best
+
+
+## Is this player visibly buffed? The aura, the size and the glyph row are all
+## on screen, so avoiding a rival who just caught a strength power-up is
+## reading the picture rather than reading the state.
+func is_empowered(check_slot: int) -> bool:
+	var f := ctx.fighter(check_slot)
+	if f == null or not is_instance_valid(f):
+		return false
+	return float(f.mods["push"]) > 1.2 or float(f.mods["weight"]) > 1.3 \
+		or float(f.mods["size"]) > 1.2 or float(f.mods["shield"]) > 0.0
+
+
+## How far ahead the leader is, as a fraction of the field's spread. Bots read
+## the same scoreboard the players do, and when someone is running away with it
+## they all independently decide the leader is the problem — which looks like a
+## temporary alliance without any of them talking to each other.
+func leader_gap() -> float:
+	if ctx.scores.size() < 2:
+		return 0.0
+	var best := ctx.scores[0]
+	var worst := ctx.scores[0]
+	var second := -2147483648
+	for sc in ctx.scores:
+		if sc > best:
+			second = best
+			best = sc
+		elif sc > second:
+			second = sc
+		worst = mini(worst, sc)
+	var spread := maxi(best - worst, 1)
+	return clampf(float(best - second) / float(spread), 0.0, 1.0)
+
+
+# --- the hover machine, as seen from the ground ----------------------------
+## Everything below is visible: the drone, the beam it is lining up, and the
+## marker over somebody's head.
+
+func machine() -> Node:
+	return ctx.machine
+
+
+## True when the drone is lining up something unpleasant on this bot. The
+## reaction is deliberately gated on `accuracy`, so a low tier stands in the
+## beam and a high tier steps out of it.
+func machine_threatens_me() -> bool:
+	var m := ctx.machine
+	if m == null or not is_instance_valid(m):
+		return false
+	if not m.is_telegraphing() or not m.target_is_penalty():
+		return false
+	if m.target_slot() != slot:
+		return false
+	return rng.randf() < accuracy
+
+
+## The floor spot the drone is about to drop something on, or ZERO.
+func machine_drop_point() -> Vector3:
+	var m := ctx.machine
+	if m == null or not is_instance_valid(m) or not m.is_telegraphing():
+		return Vector3.ZERO
+	if m.target_slot() >= 0 or m.target_is_penalty():
+		return Vector3.ZERO
+	return m.target_point()
+
+
+func marked_slot() -> int:
+	var m := ctx.machine
+	return m.marked_slot() if m != null and is_instance_valid(m) else -1
 
 
 func distance_to(pos: Vector3) -> float:

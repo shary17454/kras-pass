@@ -141,6 +141,26 @@
     "sequence_start_length": 3,
     "sequence_step_time": 0.62
   },
+  "machine": {
+    "height": 7.6,
+    "drift_speed": 2.6,
+    "track_speed": 6.0,
+    "cycle_seconds": 9.5,
+    "cycle_jitter": 2.5,
+    "telegraph_seconds": 1.5,
+    "hum_period": 2.4,
+    "beam_weight": 1.0,
+    "drop_weight": 1.0,
+    "mark_weight": 0.55,
+    "leader_boon_chance": 0.25,
+    "trailer_boon_chance": 0.8,
+    "mark_seconds": 8.0,
+    "mark_pass_radius": 1.8,
+    "mark_pass_grace": 0.7,
+    "mark_penalty_freeze": 2.2,
+    "mark_penalty_push": 13.0,
+    "sudden_death_urgency": 1.7
+  },
   "performance": {
     "max_burst_effects": 24,
     "pool_prewarm_pickups": 12,

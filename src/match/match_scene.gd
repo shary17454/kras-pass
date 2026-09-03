@@ -29,6 +29,7 @@ var hud: MatchHUD
 var touch: TouchSource
 var powerups: PowerUpSystem
 var mutators: MutatorSystem
+var machine: HoverMachine
 
 var phase: int = P.LOADING
 var _phase_timer := 0.0
@@ -171,6 +172,13 @@ func _build() -> void:
 
 	controller.setup(ctx)
 	powerups.setup(ctx)
+	# The hover machine delivers through PowerUpSystem, so it goes on after it.
+	if controller.uses_machine():
+		machine = HoverMachine.new()
+		machine.name = "HoverMachine"
+		world.add_child(machine)
+		machine.setup(ctx)
+		ctx.machine = machine
 	# Mutators go on after the game has built itself, so a game that spawns its
 	# own objects is never surprised mid-construction.
 	mutators = MutatorSystem.new()
@@ -335,6 +343,10 @@ func _enter_phase(p: int) -> void:
 			_begin_play()
 		P.SUDDEN_DEATH:
 			_sudden_death_used = true
+			# The spec asks for the machine to lean on a stalemate rather than
+			# watch one, so its cycle tightens for the decider.
+			if machine != null and is_instance_valid(machine):
+				machine.set_urgency(Balance.num("tuning", "machine.sudden_death_urgency", 1.7))
 			_phase_timer = float(_tuning.get("sudden_death_seconds", 30.0))
 			ctx.sudden_death = true
 			ctx.time_left = _phase_timer
@@ -366,6 +378,8 @@ func _begin_play() -> void:
 	AudioManager.play_sfx("go")
 	_warn_second = -1
 	controller.on_round_start()
+	if machine != null and is_instance_valid(machine):
+		machine.reset()
 	for b in _brains:
 		if b != null:
 			b.on_round_start()
@@ -480,6 +494,8 @@ func _tick_live(delta: float) -> void:
 	controller.process_respawns(delta)
 	controller.tick(delta)
 	powerups.tick(delta)
+	if machine != null and is_instance_valid(machine):
+		machine.tick(delta)
 	mutators.tick(delta)
 	# 5. bounds
 	_check_out_of_bounds()

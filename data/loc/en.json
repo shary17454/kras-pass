@@ -45,6 +45,8 @@
   "hud.score": "Score",
   "hud.lives": "Lives",
   "hud.sudden_death": "SUDDEN DEATH",
+  "machine.marked": "The machine marked {name}!",
+  "machine.mark_blown": "The mark went off on {name}!",
   "hud.go": "GO!",
   "hud.finish": "FINISH",
   "hud.hurry": "HURRY!",

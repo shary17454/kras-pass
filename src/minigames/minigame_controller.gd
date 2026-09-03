@@ -108,6 +108,12 @@ func uses_powerups() -> bool:
 	return true
 
 
+## Whether the hover machine flies over this game. Data decides by default; a
+## game whose own rules would fight the drone can override and refuse it.
+func uses_machine() -> bool:
+	return def != null and def.hover_machine
+
+
 func music_track() -> String:
 	return "arena"
 

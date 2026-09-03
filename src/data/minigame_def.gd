@@ -49,6 +49,10 @@ const CATEGORY_NAMES := {
 @export var default_rounds := 1
 @export var supports_sudden_death := true
 @export var supports_teams := false
+## Does the hover machine fly over this game? Off by default: the drone rewrites
+## a round on purpose, and the games that were balanced without it stay that way
+## until their numbers are re-measured with it.
+@export var hover_machine := false
 ## Control glyphs shown on the pre-round card, e.g. ["move", "dash", "attack"].
 @export var control_hints: PackedStringArray = []
 ## Which on-screen layout this game wants. See ControlProfile.
@@ -80,6 +84,7 @@ static func from_dict(d: Dictionary) -> MiniGameDef:
 	m.default_rounds = int(d.get("rounds", 1))
 	m.supports_sudden_death = bool(d.get("sudden_death", true))
 	m.supports_teams = bool(d.get("teams", false))
+	m.hover_machine = bool(d.get("machine", false))
 	m.control_hints = PackedStringArray(d.get("controls", ["move"]))
 	m.control_profile = ControlProfile.from_string(String(d.get("control_profile", "movement_action")))
 	m.tags = PackedStringArray(d.get("tags", []))

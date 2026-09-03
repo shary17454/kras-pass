@@ -21,6 +21,11 @@ build/*
 !build/ios/
 !build/ios/**
 build/ios/**/*.a
+# Godot re-imports the app icons whenever the editor scans the project, which
+# drops .import sidecars into the generated iOS folder. They are artefacts of a
+# local scan, not part of the export, and export_ios.sh deletes the folder
+# anyway.
+build/ios/**/*.import
 !build/ios/lfs_parts/**
 build/ios/KrasPass.xcarchive/
 build/ios/exported-appstore/

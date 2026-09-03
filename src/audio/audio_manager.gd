@@ -284,6 +284,11 @@ func _render_sfx(id: String):
 			])
 		"skid":
 			return Synth.voice({"freq": 1400, "freq_to": 700, "dur": 0.3, "wave": W.NOISE, "gain": 0.12, "attack": 0.05, "release": 0.15})
+		"machine_hum":
+			# Deliberately quiet and low: it should register as "something is up
+			# there" without competing with the fight.
+			return Synth.voice({"freq": 96, "dur": 0.5, "wave": W.SAW, "gain": 0.07,
+				"attack": 0.12, "release": 0.2, "vibrato": 0.03, "vibrato_hz": 11})
 		"machine_alert":
 			# Two rising pips, the readable "something is about to happen" of
 			# every arcade telegraph.
@@ -413,5 +418,5 @@ func warm_match_bank() -> void:
 	for id in ["hit", "swing", "dash", "fall", "eliminate", "pickup", "powerup",
 			"score", "crate_break", "explode", "shield_break", "bounce",
 			"countdown", "go", "tick", "whistle", "splash", "burn", "win", "lose",
-			"shock", "ice_crack", "skid", "machine_alert", "beam"]:
+			"shock", "ice_crack", "skid", "machine_alert", "beam", "machine_hum"]:
 		_sound(id)
