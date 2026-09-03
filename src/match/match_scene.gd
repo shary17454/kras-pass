@@ -143,6 +143,9 @@ func _build() -> void:
 	add_child(arena)
 	arena.build(arena_def)
 	arena.fighter_submerged.connect(_on_submerged)
+	# Heavy hits fracture the floor they land on. The arena has no idea who the
+	# players are, so the match layer resolves the victim and hands over a point.
+	EventBus.player_hit.connect(_on_hit_for_floor)
 	ctx.arena = arena
 
 	var world := Node3D.new()
@@ -651,6 +654,7 @@ func _check_out_of_bounds() -> void:
 		# already measures every body against the rim also tells it how close
 		# the drop is. That is what the panic pose reads.
 		f.set_edge_margin(arena.edge_distance(f.global_position))
+		f.set_surface_grip(arena.surface_grip(f.global_position))
 		if f.global_position.y < arena.fall_y:
 			f.on_fell_out()
 			continue
@@ -677,6 +681,16 @@ func _on_knocked_out(slot: int, by_slot: int) -> void:
 	if not MatchPhase.is_live(phase):
 		return
 	controller.on_fighter_knocked_out(slot, by_slot)
+
+
+## Leaves a crack where a shove landed. Arctic arenas only, capped, and ignored
+## entirely when effects are reduced — the arena decides all of that.
+func _on_hit_for_floor(_attacker: int, victim: int, strength: float) -> void:
+	if arena == null or not is_instance_valid(arena) or not MatchPhase.is_live(phase):
+		return
+	var f := ctx.fighter(victim)
+	if f != null and is_instance_valid(f):
+		arena.spawn_impact_crack(f.global_position, strength)
 
 
 func _on_submerged(f) -> void:

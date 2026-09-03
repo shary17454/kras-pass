@@ -107,6 +107,7 @@
     "shrink_warn_seconds": 3.0,
     "tile_break_delay": 0.9,
     "tile_respawn": 6.0,
+    "slick_patch_grip": 0.42,
     "hazard_knockback": 22.0,
     "hazard_damage": 12.0
   },

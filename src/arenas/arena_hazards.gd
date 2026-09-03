@@ -120,20 +120,37 @@ class Bumper extends Node3D:
 
 
 class BreakableIceBarrier extends StaticBody3D:
-	## A rim chunk that blocks the first impact, shatters, then leaves the edge
-	## open so ring-outs still work once a player has broken through.
+	## A rim chunk that guards the edge until it is broken through.
+	##
+	## The spec wants these to take damage and crack progressively rather than
+	## pop on contact — which is also what makes them a mechanic: for the first
+	## half of a round the rim is protected, and every exchange near the edge
+	## spends a little of that protection, so the arena gets more lethal as the
+	## match goes on. Leaning on a barrier costs nothing; charging it costs a
+	## crack, and a dash costs two.
 	var broken := false
+	var strength := 3
+	var _hp := 3
+	var _size := 1.0
+	var _base_color := Color.WHITE
 	var _area: Area3D
 	var _solid_shape: CollisionShape3D
 	var _visual: Node3D
+	var _cracks: Node3D
 	var _cooldown := 0.0
 	var _break_tween: Tween
 
 	func build(size: float, color: Color) -> void:
 		collision_layer = 1
 		collision_mask = 0
+		_size = size
+		_base_color = color
+		_hp = strength
 		_visual = MeshFactory.ice_chunk(size, color)
 		add_child(_visual)
+		_cracks = Node3D.new()
+		_cracks.name = "Cracks"
+		_visual.add_child(_cracks)
 
 		_solid_shape = CollisionShape3D.new()
 		var box := BoxShape3D.new()
@@ -160,9 +177,55 @@ class BreakableIceBarrier extends StaticBody3D:
 		if _cooldown > 0.0 or _area == null:
 			return
 		for body in _area.get_overlapping_bodies():
-			if body is Fighter and body.alive:
-				_break(body)
-				return
+			if not (body is Fighter) or not body.alive:
+				continue
+			var fighter: Fighter = body
+			# A contact costs a crack; a charge costs two. The predicate is
+			# deliberately coarse: physics is not bit-exact between a recorded
+			# match and its replay, and a fine speed threshold right where
+			# bodies actually travel flips on a rounding difference — one
+			# barrier standing instead of broken diverged a replay by four
+			# metres and a whole point. Standing speeds cluster near zero and
+			# playing speeds near seven, so a gate at 1.2 is almost never
+			# straddled, and the 1-vs-2 split can only shift a break by a
+			# contact rather than deciding whether it ever happens.
+			if fighter.impact_speed < 1.2:
+				continue
+			var damage := 2 if (fighter.is_dashing() or fighter.impact_speed >= 5.6) else 1
+			_cooldown = 0.55
+			_hp -= damage
+			if _hp <= 0:
+				_break(fighter)
+			else:
+				_crack(fighter)
+			return
+
+	## Damaged but standing: a fracture appears, the chunk rings, and the
+	## fighter gets a small shove back so a wall hit reads as a hit.
+	func _crack(fighter: Fighter) -> void:
+		var away := fighter.global_position - global_position
+		away.y = 0.0
+		if away.length_squared() > 0.01:
+			fighter.apply_impulse(away.normalized() * 1.6)
+		AudioManager.play_sfx("ice_crack", global_position, 1.0 + 0.12 * float(strength - _hp))
+		InputRouter.rumble(fighter.slot, 0.3, 0.1)
+		if _visual == null or not is_instance_valid(_visual):
+			return
+		# Paler and more fractured with every hit, so the state of the rim is
+		# readable at a glance from the arena camera.
+		var wear := 1.0 - float(_hp) / float(maxi(strength, 1))
+		if _cracks != null and is_instance_valid(_cracks):
+			var line := MeshFactory.box(Vector3(_size * 1.5, 0.03, 0.04),
+				Color(0.3, 0.52, 0.68))
+			line.position = Vector3(0, _size * (0.15 + 0.25 * wear), _size * 0.42)
+			line.rotation = Vector3(0, 0.4 * wear - 0.2, 0.35 * sin(wear * 6.0))
+			line.material_override = MeshFactory.transparent(Color(0.22, 0.45, 0.62), 0.75)
+			_cracks.add_child(line)
+		var tween := _visual.create_tween()
+		tween.tween_property(_visual, "scale", Vector3(1.0 + 0.12 * wear, 1.0 - 0.1 * wear, 1.0), 0.07)
+		tween.tween_property(_visual, "scale", Vector3.ONE, 0.14)
+		if not DisplayServer.get_name() == "headless":
+			add_child(MeshFactory.burst(Color(0.8, 0.95, 1.0), 5, 1.6, 0.3))
 
 	func _break(fighter: Fighter) -> void:
 		broken = true
@@ -188,6 +251,10 @@ class BreakableIceBarrier extends StaticBody3D:
 
 	func reset() -> void:
 		broken = false
+		_hp = strength
+		if _cracks != null and is_instance_valid(_cracks):
+			for c in _cracks.get_children():
+				c.queue_free()
 		_cooldown = 0.18
 		collision_layer = 1
 		collision_mask = 0

@@ -48,6 +48,14 @@ var alive := true
 ## every race.
 var charge := 1.0
 var ram_enabled := true      ## body-to-body impacts; a game may switch them off
+## Flat speed carried into this frame's collisions, sampled before the solver
+## has had a chance to cancel it. Ice barriers read it to tell a lean from a
+## charge: after `move_and_slide` the component into a wall is already gone, so
+## anything measured afterwards says every impact was gentle.
+var impact_speed := 0.0
+## Surface grip under the body, fed by the match layer. 1.0 is normal ground,
+## lower is a slick patch.
+var surface_grip := 1.0
 var health := 100.0
 var max_health := 100.0
 var damage_percent := 0.0    ## combat games: higher = flies further
@@ -234,6 +242,7 @@ func tick(frame: InputFrame, delta: float) -> void:
 			_integrate_walk(wish, delta)
 
 	_apply_impulse(delta)
+	impact_speed = Vector2(velocity.x, velocity.z).length()
 	move_and_slide()
 	_resolve_body_impacts()
 	if not _was_on_floor and is_on_floor():
@@ -542,7 +551,8 @@ func _integrate_walk(wish: Vector3, delta: float) -> void:
 	# Grip is a modifier, not a constant: ice, the slick power-down and the
 	# low-friction mutator all arrive here, and low grip is what makes a body
 	# keep sliding after the stick is released.
-	var grip := friction * float(mods["friction"]) * float(mutator["friction"]) * control * delta
+	var grip := friction * float(mods["friction"]) * float(mutator["friction"]) \
+		* surface_grip * control * delta
 	velocity.x = move_toward(velocity.x, target.x, a if wish.length_squared() > 0.01 else grip)
 	velocity.z = move_toward(velocity.z, target.z, a if wish.length_squared() > 0.01 else grip)
 	if not is_on_floor():
@@ -784,6 +794,10 @@ func _condition_wish(wish: Vector3, delta: float) -> Vector3:
 ## Fed by the match layer every live tick; the fighter itself has no arena.
 func set_edge_margin(value: float) -> void:
 	_edge_margin = value
+
+
+func set_surface_grip(value: float) -> void:
+	surface_grip = clampf(value, 0.1, 2.0)
 
 
 ## Body-to-body impact — the spec's core verb. A fast body that runs into a

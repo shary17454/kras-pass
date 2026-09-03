@@ -50,6 +50,11 @@ var _arctic_waves: Array = []
 var _arctic_floes: Array = []
 var _arctic_shrink_followers: Array[Node3D] = []
 var _arctic_time := 0.0
+## Patches of floor with less grip than the rest, and the fracture decals left
+## by heavy hits. Both are arctic-only and both are read by gameplay, not just
+## drawn: `surface_grip()` is fed to every fighter each tick.
+var _slick_patches: Array = []
+var _impact_cracks: Array = []
 
 
 func build(arena_def: ArenaDef) -> void:
@@ -119,6 +124,60 @@ func edge_distance(pos: Vector3) -> float:
 			return track_width * 0.5 - _circuit_offset(pos)
 		_:
 			return current_radius - p.length()
+
+
+## Grip under a point: 1.0 on plain floor, lower on a slick patch. The spec asks
+## for parts of the ice to be slipperier than the rest, and a patch is only a
+## mechanic if the physics can see it.
+func surface_grip(pos: Vector3) -> float:
+	if _slick_patches.is_empty():
+		return 1.0
+	var grip := 1.0
+	for patch in _slick_patches:
+		var p: Vector3 = patch["pos"]
+		var dx := pos.x - p.x
+		var dz := pos.z - p.z
+		var r: float = patch["radius"]
+		var dist := sqrt(dx * dx + dz * dz)
+		if dist >= r:
+			continue
+		# Feathered, not a step. A hard edge is a cliff in the physics — a body
+		# straddling it flips between two friction values on a rounding
+		# difference, which both feels like a stutter and turns an unrepeatable
+		# float into a divergent match. It also reads better: grip fades as you
+		# slide onto the polish.
+		var t: float = smoothstep(r * 0.72, r, dist)
+		grip = minf(grip, lerpf(float(patch["grip"]), 1.0, t))
+	return grip
+
+
+## A fracture where a hit landed. Capped and recycled: the oldest decal is
+## reused rather than growing a pile of nodes over a two-minute round.
+func spawn_impact_crack(pos: Vector3, strength: float) -> void:
+	if not _is_arctic() or DisplayServer.get_name() == "headless":
+		return
+	if strength < 7.0 or bool(UserSettings.get_value("reduce_effects")):
+		return
+	if not is_inside(pos, 0.6):
+		return
+	var node: Node3D
+	if _impact_cracks.size() >= 12:
+		node = _impact_cracks.pop_front()
+	if node == null or not is_instance_valid(node):
+		node = Node3D.new()
+		node.name = "ImpactCrack"
+		_static_root.add_child(node)
+		for i in 3:
+			var line := MeshFactory.box(Vector3(1.5, 0.02, 0.05), Color(0.28, 0.5, 0.66))
+			line.rotation.y = TAU * float(i) / 3.0 + 0.3
+			line.material_override = MeshFactory.transparent(Color(0.24, 0.48, 0.64), 0.6)
+			node.add_child(line)
+	node.global_position = Vector3(pos.x, global_position.y + 0.11, pos.z)
+	node.rotation.y = float(_impact_cracks.size()) * 0.7
+	var k: float = clampf(strength / 26.0, 0.35, 1.25)
+	node.scale = Vector3(k, 1.0, k)
+	node.visible = true
+	_impact_cracks.append(node)
 
 
 func center() -> Vector3:
@@ -790,6 +849,8 @@ func _add_arctic_set_dressing() -> void:
 		_static_root.add_child(floe)
 		_arctic_floes.append({"node": floe, "base": floe.position, "phase": float(i) * 0.53})
 
+	_add_slick_patches()
+
 	for i in 10:
 		var ang := TAU * float(i) / 10.0 + 0.2
 		var r := def.radius * (2.08 + 0.12 * float(i % 3))
@@ -799,6 +860,29 @@ func _add_arctic_set_dressing() -> void:
 		berg.rotation_degrees = Vector3(0, rad_to_deg(-ang) + float(i * 21), 0)
 		berg.scale = Vector3(1.8 + 0.15 * float(i % 2), 0.9, 1.0)
 		_static_root.add_child(berg)
+
+
+## Polished patches: brighter, glossier and genuinely slipperier. Placed off
+## centre and away from the very rim, so they are a hazard to fight over rather
+## than a random death sentence at the edge.
+func _add_slick_patches() -> void:
+	_slick_patches.clear()
+	var grip := float(Balance.num("tuning", "arena.slick_patch_grip", 0.42))
+	var count := 5
+	for i in count:
+		var ang := TAU * float(i) / float(count) + 0.35
+		var dist := def.radius * (0.34 + 0.16 * float(i % 3))
+		var radius := def.radius * (0.13 + 0.03 * float(i % 2))
+		var pos := global_position + Vector3(cos(ang) * dist, 0.0, sin(ang) * dist)
+		_slick_patches.append({"pos": pos, "radius": radius, "grip": grip})
+		var disc := MeshFactory.cylinder(radius, 0.05, Color(0.86, 0.97, 1.0), 0.12)
+		disc.name = "SlickPatch%d" % i
+		disc.position = Vector3(cos(ang) * dist, 0.1, sin(ang) * dist)
+		disc.material_override = MeshFactory.ice(Color(0.88, 0.98, 1.0), 0.62)
+		_static_root.add_child(disc)
+		var rim := MeshFactory.torus(radius * 0.92, radius, Color(0.68, 0.9, 1.0), 0.3)
+		rim.position = Vector3(cos(ang) * dist, 0.12, sin(ang) * dist)
+		_static_root.add_child(rim)
 
 
 func _add_ice_surface_marks() -> void:
