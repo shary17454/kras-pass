@@ -460,12 +460,23 @@ Next Round
 | آلة حالات: Loading, Intro, Countdown, Playing, Sudden Death, Results, Next Round | كان | `src/match/match_phase.gd` |
 | Lobby و Scoreboard | كان (كشاشات لا كأطوار) | `local_play.gd` (تجميع اللاعبين)، `standings_screen.gd` |
 | شاشة نتائج بالترتيب واحتفال الفائز | كان | `results_screen.gd`، `Fighter.celebrate()` |
-| أسلوب بصري كرتوني بلا واقعية، وطبقات للثلج، وخلفية منخفضة الحمل | كان | `MeshFactory.toon()/ice()/water()`، `Arena._build_environment()` |
+| أسلوب بصري كرتوني بلا واقعية، وطبقات للثلج | كان | `MeshFactory.toon()/ice()/water()`، `Arena._build_environment()` |
+| سماء متحركة وسحب وثلوج بعيدة وParallax، بحمل منخفض | أُضيف | `src/fx/sky_dome.gd` (ثلاث طبقات سحب بثلاث سرعات + ثلاثة أعمدة ثلج بـMultiMesh) |
+| صوت الرياح ضمن أصوات البيئة | أُضيف | `AudioManager.play_ambience("wind")`، `_render_ambience()` |
+| مخاطر: كرات ثلجية متدحرجة | أُضيف | `ArenaHazards.Snowball`، مفعّلة على `storm_ring` |
+| مخاطر: رياح قوية تدفع اللاعبين | أُضيف | `ArenaHazards.Gust` (تنبيه ١٫٦ث ثم دفع عبر قناة الدفعة) |
+| كاميرا ليست قريبة جداً، يراها اللاعب مناسبة لشاشته | أُضيف كإعداد | `settings.camera_distance` في `ArenaCamera._apply()` |
 | تحكم iPhone: عصا افتراضية وأزرار، ودعم يد بلوتوث | كان | `src/input/touch_source.gd`، `input_router.gd` |
 | Haptics: ضرب، تلقي ضربة، سقوط، انفجار، فوز | كان | `src/input/haptic_director.gd` |
 | Haptics عند اقتراب انتهاء الوقت | أُضيف | `HapticDirector._on_time_warning()` |
 
 ### بنود لم تُنفَّذ بعد
+
+- **زر تغيير الكاميرا** على الأزرار العلوية. الكاميرا مشتركة بين الأربعة، فزرّ بيد لاعب
+  واحد يسحب رؤية الثلاثة الباقين؛ نُفِّذ بدلاً منه إعداد لمسافة الكاميرا يخصّ الجهاز لا
+  اللحظة. الأزرار الخمسة نفسها موجودة (`JUMP, ACTION, ATTACK, DASH, ABILITY`).
+- **Lobby كطور داخل آلة الحالات.** التجميع يحدث قبل وجود المباراة أصلاً، فهو شاشة
+  (`local_play.gd`) لا طور — والقائمة في المواصفة تخلط بين الاثنين.
 
 - **لا شيء من هذا جُرِّب على جهاز فعلي.** البناء ينجح على iOS، لكن اللمس
   والاهتزاز والحرارة وثبات الإطارات لا تُقاس من ماك (وقياس `perf.tscn` على ماك
