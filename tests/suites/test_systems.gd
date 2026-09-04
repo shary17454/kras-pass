@@ -291,3 +291,37 @@ func _navigation(t: TestHarness, host: Node) -> void:
 		t.not_null(SceneRouter.current_node, "main menu node exists after app entry")
 		main.queue_free()
 		await host.get_tree().process_frame
+
+	# --- access phrase -----------------------------------------------------
+	# The phrase itself is deliberately absent from this file, from the rest of
+	# the source, and therefore from the shipped .pck. What is tested is the
+	# machinery around it: that the constant is a digest rather than a phrase
+	# somebody pasted in, that wrong input is refused, and that the gate reaches
+	# every unlock check.
+	t.test("the access phrase is stored as a digest, not as text")
+	t.equal(Access.FINGERPRINT.length(), 64, "a SHA-256 digest is 64 characters")
+	t.ok(Access.FINGERPRINT.is_valid_hex_number(false), "and hexadecimal — a pasted phrase would not be")
+	t.ok(not Access.matches("clearly not the phrase"), "a wrong phrase is refused")
+	t.ok(not Access.matches(""), "an empty phrase is refused")
+	t.ok(not Access.redeem("still not it"), "redeeming a wrong phrase changes nothing")
+	t.ok(not Access.is_active(), "and leaves access closed")
+
+	t.test("access opens every gate, and revoking closes them again")
+	var locked_game := ""
+	for m in Registry.minigames():
+		if not m.unlock.is_empty() and not Progression.is_game_unlocked(m.id):
+			locked_game = m.id
+			break
+	var playable_before := Progression.playable_games().size()
+	var total_games := Registry.minigames().size()
+	# Write the token the way `redeem()` would, without naming the phrase.
+	UserSettings.set_value(Access.SETTING, Access.FINGERPRINT)
+	t.ok(Access.is_active(), "the token activates access")
+	t.ok(Progression.all_unlocked(), "the single gate reports open")
+	t.equal(Progression.playable_games().size(), total_games, "every mini-game is playable")
+	t.equal(Progression.playable_characters().size(), Registry.characters().size(), "every character is playable")
+	if locked_game != "":
+		t.ok(Progression.is_game_unlocked(locked_game), "a game behind an unlock condition opens")
+	Access.revoke()
+	t.ok(not Progression.all_unlocked(), "revoking closes the gate")
+	t.equal(Progression.playable_games().size(), playable_before, "and hands back exactly the earned list")

@@ -8,6 +8,12 @@ extends Screen
 var _rebinding := {}
 
 
+var _version_button: Button
+var _access_field: LineEdit
+var _version_taps := 0
+var _last_version_tap := 0
+
+
 func build() -> void:
 	title(Loc.t("settings.title"))
 	var scroll := ScrollContainer.new()
@@ -107,6 +113,63 @@ func build() -> void:
 	wipe.add_theme_color_override("font_color", UIKit.DANGER)
 	wipe.pressed.connect(_confirm_wipe)
 	v.add_child(wipe)
+
+	_build_version_line(v)
+
+
+## The version, at the bottom of the settings list, where every app puts it.
+##
+## It is also the way in for the unlock phrase: seven taps and a plain field
+## appears. Nothing labels it, nothing hints at it, and a wrong phrase does
+## nothing at all — a message saying "wrong" would announce that there is
+## something here to get right.
+func _build_version_line(parent: VBoxContainer) -> void:
+	parent.add_child(UIKit.spacer(18))
+	var version := String(ProjectSettings.get_setting("application/config/version", ""))
+	_version_button = UIKit.button(version, UIKit.SIZE_TINY)
+	_version_button.flat = true
+	_version_button.add_theme_color_override("font_color", UIKit.dim_color())
+	_version_button.focus_mode = Control.FOCUS_NONE
+	_version_button.pressed.connect(_on_version_pressed)
+	parent.add_child(_version_button)
+
+	_access_field = LineEdit.new()
+	_access_field.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_access_field.custom_minimum_size = Vector2(320, 0)
+	_access_field.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_access_field.visible = false
+	_access_field.text_submitted.connect(_on_access_submitted)
+	parent.add_child(_access_field)
+
+
+func _on_version_pressed() -> void:
+	if Access.is_active():
+		return
+	var now := Time.get_ticks_msec()
+	# The taps have to be deliberate: a gap of more than a second and a half
+	# starts the count again, so idly poking the version number never gets here.
+	if now - _last_version_tap > 1500:
+		_version_taps = 0
+	_last_version_tap = now
+	_version_taps += 1
+	if _version_taps < 7 or _access_field == null:
+		return
+	_version_taps = 0
+	_access_field.visible = true
+	_access_field.grab_focus()
+
+
+func _on_access_submitted(text: String) -> void:
+	if _access_field == null:
+		return
+	_access_field.text = ""
+	if not Access.redeem(text):
+		_access_field.visible = false
+		return
+	_access_field.visible = false
+	EventBus.notify(Loc.t("settings.access_ok"), "✓")
+	AudioManager.play_ui("ui_select")
+	SceneRouter.go_to("settings", {}, false, 0.1)
 
 
 func _section(parent: VBoxContainer, key: String) -> void:

@@ -118,7 +118,7 @@ func _build_stages() -> void:
 		var sid := String(s.get("id", ""))
 		var rec := Progression.stage_record(wid, sid)
 		var cleared := bool(rec.get("cleared", false))
-		var enterable := Progression.is_world_unlocked(wid) and (previous_cleared or cleared or DevTools.unlock_all)
+		var enterable := Progression.is_world_unlocked(wid) and (previous_cleared or cleared or Progression.all_unlocked())
 		_stage_holder.add_child(_stage_row(w, s, i, rec, enterable))
 		previous_cleared = cleared
 

@@ -10,7 +10,7 @@ func build() -> void:
 	body.add_child(scroll_and_grid[0])
 	var grid: GridContainer = scroll_and_grid[1]
 	for c in Registry.characters():
-		var unlocked := Progression.is_character_unlocked(c.id) or DevTools.unlock_all
+		var unlocked := Progression.is_character_unlocked(c.id) or Progression.all_unlocked()
 		var card := Widgets.character_card(c, unlocked)
 		var entry := Stats.character_entry(c.id)
 		if unlocked:

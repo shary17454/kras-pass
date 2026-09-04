@@ -99,16 +99,30 @@ func record_tournament_win() -> void:
 
 # --- characters and games --------------------------------------------------
 
+## Is everything open? Two ways in: the debug switch, which a shipped build can
+## never reach, and the phrase, which it can. Every unlock check in the project
+## routes through here so there is one answer rather than five.
+func all_unlocked() -> bool:
+	return DevTools.unlock_all or Access.is_active()
+
+
 func unlocked_characters() -> Array:
 	return _p.get("characters", [])
 
 
+## The question every caller actually means is "can this be played", so the
+## gate belongs here rather than at each call site. `unlocked_characters()`
+## deliberately keeps reporting what was *earned* — the gallery still shows a
+## trophy count that means something, and revoking access puts the roster back
+## exactly where the player left it.
 func is_character_unlocked(id: String) -> bool:
-	return unlocked_characters().has(id)
+	return all_unlocked() or unlocked_characters().has(id)
 
 
 func unlock_character(id: String, announce := true) -> bool:
-	if is_character_unlocked(id):
+	# Against the stored list, not the gate: an access-unlocked player should
+	# still earn characters normally, and still see the reward when they do.
+	if unlocked_characters().has(id):
 		return false
 	_p["characters"].append(id)
 	if announce:
@@ -124,11 +138,12 @@ func unlocked_games() -> Array:
 
 
 func is_game_unlocked(id: String) -> bool:
-	return unlocked_games().has(id)
+	return all_unlocked() or unlocked_games().has(id)
 
 
 func unlock_game(id: String, announce := true) -> bool:
-	if is_game_unlocked(id):
+	# Stored list, not the gate — same reason as unlock_character.
+	if unlocked_games().has(id):
 		return false
 	_p["games"].append(id)
 	if announce:
@@ -142,7 +157,7 @@ func unlock_game(id: String, announce := true) -> bool:
 func playable_characters() -> Array[CharacterData]:
 	var out: Array[CharacterData] = []
 	for c in Registry.characters():
-		if is_character_unlocked(c.id) or DevTools.unlock_all:
+		if is_character_unlocked(c.id):
 			out.append(c)
 	return out
 
@@ -150,7 +165,7 @@ func playable_characters() -> Array[CharacterData]:
 func playable_games() -> Array[MiniGameDef]:
 	var out: Array[MiniGameDef] = []
 	for m in Registry.minigames():
-		if is_game_unlocked(m.id) or DevTools.unlock_all:
+		if is_game_unlocked(m.id):
 			out.append(m)
 	return out
 
@@ -171,7 +186,7 @@ func set_last_character(id: String) -> void:
 # --- adventure -------------------------------------------------------------
 
 func is_world_unlocked(id: String) -> bool:
-	return _p.get("worlds", []).has(id) or DevTools.unlock_all
+	return _p.get("worlds", []).has(id) or all_unlocked()
 
 
 func unlock_world(id: String) -> void:

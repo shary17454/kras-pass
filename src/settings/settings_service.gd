@@ -8,6 +8,10 @@ extends Node
 signal changed(key: String, value)
 
 const DEFAULTS := {
+	## Set once the unlock phrase has been entered on this device; see
+	## `src/progression/owner_key.gd`. Deliberately named for what it is rather
+	## than for who it belongs to.
+	"access_token": "",
 	"volume_master": 0.9,
 	"volume_music": 0.7,
 	"volume_sfx": 1.0,
