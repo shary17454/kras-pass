@@ -131,7 +131,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0BCFE7118AEBDA3004A7AAE /* Build configuration list for PBXNativeTarget "KrasPass" */;
 			buildPhases = (
-				A44C9F4027D1430000A7C001 /* Restore Static Archives */,
 				D0BCFE3018AEBDA2004A7AAE /* Sources */,
 				D0BCFE3118AEBDA2004A7AAE /* Frameworks */,
 				D0BCFE3218AEBDA2004A7AAE /* Resources */,
@@ -197,24 +196,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		A44C9F4027D1430000A7C001 /* Restore Static Archives */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Restore Static Archives";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -x \"$SRCROOT/ci_scripts/ci_post_clone.sh\" ]; then\n  \"$SRCROOT/ci_scripts/ci_post_clone.sh\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D0BCFE3018AEBDA2004A7AAE /* Sources */ = {
@@ -352,8 +333,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Kras Pass";
 				PRODUCT_NAME = "KrasPass";
 				EXECUTABLE_NAME = "KrasPass";
-				MARKETING_VERSION = 1.1.2;
-				CURRENT_PROJECT_VERSION = 58;
+				MARKETING_VERSION = 1.1.3;
+				CURRENT_PROJECT_VERSION = 61;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -389,8 +370,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Kras Pass";
 				PRODUCT_NAME = "KrasPass";
 				EXECUTABLE_NAME = "KrasPass";
-				MARKETING_VERSION = 1.1.2;
-				CURRENT_PROJECT_VERSION = 58;
+				MARKETING_VERSION = 1.1.3;
+				CURRENT_PROJECT_VERSION = 61;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";

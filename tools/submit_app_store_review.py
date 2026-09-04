@@ -18,16 +18,16 @@ API = "https://api.appstoreconnect.apple.com/v1"
 ISSUER_ID = "26cc2279-524d-4d33-ba75-9333cf111ad1"
 KEY_ID = "668Z2T3Q47"
 APP_ID = os.environ.get("APP_STORE_APP_ID", "6801506973")
-VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.2")
-BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "58")
+VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.3")
+BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "61")
 
 WHATS_NEW_AR = (
-    "إصلاح تجميد اللاعبين، ورفع جودة الرسومات، وإضافة سباق الصواريخ، "
-    "مع تحسين توازن السباقات واستقرار الحزمة."
+    "إضافة ألعاب وأنماط جديدة، وتحسين قتال الجليد والماء، ورفع جودة الرسومات، "
+    "مع إصلاحات للذكاء الاصطناعي وإعادة العرض."
 )
 WHATS_NEW_EN = (
-    "Fixes frozen-player recovery, raises render quality, adds Rocket Rally, "
-    "and improves race balance and package stability."
+    "Adds new games and modes, improves ice and water combat, raises render quality, "
+    "and includes AI and replay fixes."
 )
 
 
@@ -112,6 +112,30 @@ def get_ios_version() -> dict:
     if not data:
         raise RuntimeError(f"No iOS App Store version {VERSION_STRING} found for app {APP_ID}")
     return data[0]
+
+
+def create_ios_version() -> dict:
+    created = request(
+        "POST",
+        "/appStoreVersions",
+        {
+            "data": {
+                "type": "appStoreVersions",
+                "attributes": {"platform": "IOS", "versionString": VERSION_STRING},
+                "relationships": {"app": {"data": {"type": "apps", "id": APP_ID}}},
+            }
+        },
+    )
+    return created["data"]
+
+
+def get_or_create_ios_version() -> dict:
+    try:
+        return get_ios_version()
+    except RuntimeError as exc:
+        if "No iOS App Store version" not in str(exc):
+            raise
+    return create_ios_version()
 
 
 def get_build() -> dict:
@@ -296,7 +320,7 @@ def snapshot() -> dict:
 def main() -> None:
     dry_run = "--dry-run" in sys.argv
     if "--list-builds" in sys.argv:
-        version = get_ios_version()
+        version = get_or_create_ios_version()
         print(
             json.dumps(
                 {
@@ -311,7 +335,7 @@ def main() -> None:
             )
         )
         return
-    version = get_ios_version()
+    version = get_or_create_ios_version()
     build = get_build()
     localizations = get_localizations(version["id"])
     before_submission = get_review_submission(version["id"])
