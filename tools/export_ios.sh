@@ -41,14 +41,46 @@ if [[ -f "$MANIFEST" ]]; then
 	MANIFEST_BACKUP="$(mktemp)"
 	cp "$MANIFEST" "$MANIFEST_BACKUP"
 fi
+# The export starts from an empty folder, and some of what lives in that folder
+# is *not* produced by the export: the Xcode Cloud scripts, the split library
+# parts that carry libgodot.a and libMoltenVK.a past GitHub's file size limit,
+# and the .keep files that hold their directories open. Wiping the folder
+# deleted eleven tracked files and only the manifest was being saved — the
+# regenerated tree looked fine locally and would have failed in Xcode Cloud,
+# which is the one place that cannot be checked from here.
+KEEP_BACKUP="$(mktemp -d)"
+for KEEP in "ci_scripts" "lfs_parts"; do
+	if [[ -e "$OUT/$KEEP" ]]; then
+		cp -R "$OUT/$KEEP" "$KEEP_BACKUP/"
+	fi
+done
+KEEP_MARKERS="$(cd "$OUT" 2>/dev/null && find . -name .keep 2>/dev/null || true)"
 rm -rf "$OUT"
 mkdir -p "$OUT"
+for KEEP in "ci_scripts" "lfs_parts"; do
+	if [[ -e "$KEEP_BACKUP/$KEEP" ]]; then
+		cp -R "$KEEP_BACKUP/$KEEP" "$OUT/"
+	fi
+done
+rm -rf "$KEEP_BACKUP"
 "$GODOT" --headless --log-file /tmp/kraspass_export_godot.log --path . --export-release "iOS" "$OUT/KrasPass.ipa" >/tmp/kraspass_export.log 2>&1 || {
 	echo "Godot export failed:" >&2
 	tail -30 /tmp/kraspass_export.log >&2
 	exit 1
 }
 test -d "$OUT/KrasPass.xcodeproj" || { echo "no Xcode project produced" >&2; exit 1; }
+# Godot recreates the xcframework folders; the markers that keep them in git do
+# not survive, so put them back.
+if [[ -n "$KEEP_MARKERS" ]]; then
+	while IFS= read -r MARKER; do
+		[[ -z "$MARKER" ]] && continue
+		mkdir -p "$OUT/$(dirname "$MARKER")"
+		# A newline, not an empty file: that is what is committed, and `touch`
+		# writing zero bytes shows up as a modification to every marker on
+		# every export.
+		printf '\n' > "$OUT/$MARKER"
+	done <<< "$KEEP_MARKERS"
+fi
 if [[ -n "$MANIFEST_BACKUP" ]]; then
 	mkdir -p "$(dirname "$MANIFEST")"
 	cp "$MANIFEST_BACKUP" "$MANIFEST"
