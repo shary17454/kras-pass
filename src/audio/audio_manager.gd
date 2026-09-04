@@ -14,6 +14,12 @@ var _ui_player: AudioStreamPlayer
 var _music_a: AudioStreamPlayer
 var _music_b: AudioStreamPlayer
 var _music_active: AudioStreamPlayer
+## A separate quiet loop for a place rather than a moment. Wind belongs here and
+## not in the sfx pool: an ambience runs for the whole round, and a one-shot
+## fired every few seconds is audibly a one-shot fired every few seconds.
+var _ambience: AudioStreamPlayer
+var _current_ambience := ""
+var _ambience_bank := {}
 var _bank := {}
 var _tracks := {}
 var _current_track := ""
@@ -39,6 +45,10 @@ func _ready() -> void:
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "UI"
 	add_child(_ui_player)
+	_ambience = AudioStreamPlayer.new()
+	_ambience.bus = "SFX"
+	_ambience.volume_db = -16.0
+	add_child(_ambience)
 	_music_a = _make_music_player()
 	_music_b = _make_music_player()
 	_music_active = _music_a
@@ -152,6 +162,53 @@ func play_music(track: String, fade := 1.2) -> void:
 	var outgoing := _music_active
 	_fade_tween.chain().tween_callback(func(): outgoing.stop())
 	_music_active = incoming
+
+
+## Start a looping ambience, or do nothing if it is already the one playing.
+func play_ambience(id: String) -> void:
+	if not enabled or _current_ambience == id:
+		return
+	var stream := _ambience_stream(id)
+	if stream == null:
+		return
+	_current_ambience = id
+	_ambience.stream = stream
+	_ambience.play()
+
+
+func stop_ambience() -> void:
+	_current_ambience = ""
+	if _ambience != null and is_instance_valid(_ambience):
+		_ambience.stop()
+
+
+func _ambience_stream(id: String) -> AudioStreamWAV:
+	if _ambience_bank.has(id):
+		return _ambience_bank[id]
+	var buf = _render_ambience(id)
+	if buf == null:
+		return null
+	var stream := Synth.to_stream(buf, true)
+	_ambience_bank[id] = stream
+	return stream
+
+
+## Wind is filtered noise with a slow swell. Built as one long loop rather than
+## repeated gusts, because a loop short enough to hear is a loop you hear.
+func _render_ambience(id: String):
+	match id:
+		"wind":
+			var layers := []
+			for i in 3:
+				layers.append(Synth.voice({
+					"freq": 220.0 + 130.0 * float(i),
+					"freq_to": 90.0 + 70.0 * float(i),
+					"dur": 6.0, "wave": W.NOISE, "gain": 0.16 - 0.04 * float(i),
+					"attack": 1.2 + 0.6 * float(i), "release": 1.6,
+					"vibrato": 0.12, "vibrato_hz": 0.14 + 0.05 * float(i),
+				}))
+			return Synth.mix(layers)
+	return null
 
 
 func stop_music(fade := 0.8) -> void:
@@ -284,6 +341,18 @@ func _render_sfx(id: String):
 			])
 		"skid":
 			return Synth.voice({"freq": 1400, "freq_to": 700, "dur": 0.3, "wave": W.NOISE, "gain": 0.12, "attack": 0.05, "release": 0.15})
+		"rumble":
+			# A boulder announcing itself: low, rough and short enough not to
+			# smear into the next one.
+			return Synth.mix([
+				Synth.voice({"freq": 110, "freq_to": 62, "dur": 0.6, "wave": W.NOISE, "gain": 0.3, "drive": 0.5, "attack": 0.08}),
+				Synth.voice({"freq": 70, "dur": 0.5, "wave": W.SAW, "gain": 0.2, "drive": 0.35}),
+			])
+		"gust":
+			return Synth.mix([
+				Synth.voice({"freq": 900, "freq_to": 260, "dur": 1.1, "wave": W.NOISE, "gain": 0.26, "attack": 0.25, "release": 0.5}),
+				Synth.voice({"freq": 180, "freq_to": 120, "dur": 0.9, "wave": W.TRIANGLE, "gain": 0.12, "attack": 0.3}),
+			])
 		"machine_hum":
 			# Deliberately quiet and low: it should register as "something is up
 			# there" without competing with the fight.
@@ -418,5 +487,6 @@ func warm_match_bank() -> void:
 	for id in ["hit", "swing", "dash", "fall", "eliminate", "pickup", "powerup",
 			"score", "crate_break", "explode", "shield_break", "bounce",
 			"countdown", "go", "tick", "whistle", "splash", "burn", "win", "lose",
-			"shock", "ice_crack", "skid", "machine_alert", "beam", "machine_hum"]:
+			"shock", "ice_crack", "skid", "machine_alert", "beam", "machine_hum",
+			"rumble", "gust"]:
 		_sound(id)

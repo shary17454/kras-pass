@@ -222,8 +222,9 @@ func _apply(weight: float, delta: float) -> void:
 		focus = live_focus
 		_zoom = lerp(_zoom, _target_zoom, clampf(_zoom_lerp * delta, 0.0, 1.0))
 
-	var offset := Vector3(sin(_yaw), 0.0, cos(_yaw)) * _distance * _zoom
-	var pos := live_focus + Vector3(offset.x, _height * _zoom, offset.z)
+	var framing := clampf(float(UserSettings.get_value("camera_distance")), 0.75, 1.4)
+	var offset := Vector3(sin(_yaw), 0.0, cos(_yaw)) * _distance * _zoom * framing
+	var pos := live_focus + Vector3(offset.x, _height * _zoom * framing, offset.z)
 	if _shake > 0.001:
 		var s := minf(_shake, _max_shake)
 		pos += Vector3(sin(_noise_t * 1.7), cos(_noise_t * 2.3), sin(_noise_t * 1.1)) * s * 0.9

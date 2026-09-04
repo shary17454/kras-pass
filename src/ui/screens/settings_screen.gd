@@ -30,6 +30,7 @@ func build() -> void:
 	_toggle(v, "settings.replay_capture", "replay_capture")
 	_slider(v, "settings.camera_sensitivity", "camera_sensitivity", 0.4, 2.0)
 	_slider(v, "settings.camera_shake", "camera_shake", 0.0, 1.5)
+	_slider(v, "settings.camera_distance", "camera_distance", 0.75, 1.4)
 
 	_section(v, "settings.touch")
 	var touch_values := ["auto", "on", "off"]

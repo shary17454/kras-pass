@@ -55,6 +55,7 @@ var _arctic_time := 0.0
 ## drawn: `surface_grip()` is fed to every fighter each tick.
 var _slick_patches: Array = []
 var _impact_cracks: Array = []
+var _sky_dome: SkyDome
 
 
 func build(arena_def: ArenaDef) -> void:
@@ -79,6 +80,7 @@ func build(arena_def: ArenaDef) -> void:
 		_: _build_disc()
 	if _is_arctic():
 		_add_arctic_set_dressing()
+		_add_weather()
 	if def.wall_height > 0.0:
 		_build_walls()
 	_build_hazards()
@@ -211,6 +213,8 @@ func tile_at(pos: Vector3) -> ArenaTile:
 
 func tick(delta: float) -> void:
 	_tick_arctic_water(delta)
+	if _sky_dome != null and is_instance_valid(_sky_dome):
+		_sky_dome.tick(delta)
 	for h in _hazards:
 		if is_instance_valid(h):
 			h.tick(delta)
@@ -234,7 +238,7 @@ func set_hazard_speed(scale: float) -> void:
 	for h in _hazards:
 		if not is_instance_valid(h):
 			continue
-		if h is ArenaHazards.Sweeper:
+		if h is ArenaHazards.Sweeper or h is ArenaHazards.Snowball:
 			h.speed = _base_hazard_speed.get(h.get_instance_id(), h.speed) * scale
 		elif h is ArenaHazards.RisingWater:
 			h.speed = _base_hazard_speed.get(h.get_instance_id(), h.speed) * scale
@@ -252,7 +256,10 @@ func reset_hazards() -> void:
 				start = float(h.get("start_y", -6.0))
 		_water.reset(start)
 	for h in _hazards:
-		if h is ArenaHazards.BreakableIceBarrier and is_instance_valid(h):
+		if not is_instance_valid(h):
+			continue
+		if h is ArenaHazards.BreakableIceBarrier or h is ArenaHazards.Snowball \
+				or h is ArenaHazards.Gust:
 			h.reset()
 	for t in tiles:
 		if is_instance_valid(t):
@@ -885,6 +892,19 @@ func _add_slick_patches() -> void:
 		_static_root.add_child(rim)
 
 
+## Sky that moves. The environment already had fog and a gradient; what it did
+## not have was anything above the horizon that changed — and a still sky is
+## the fastest way to make a generated arena look like a diorama.
+func _add_weather() -> void:
+	if DisplayServer.get_name() == "headless" or bool(UserSettings.get_value("reduce_effects")):
+		return
+	_sky_dome = SkyDome.new()
+	_sky_dome.name = "Weather"
+	add_child(_sky_dome)
+	_sky_dome.build(def.radius, Color(0.72, 0.86, 0.96))
+	AudioManager.play_ambience("wind")
+
+
 func _add_ice_surface_marks() -> void:
 	var crack_color := Color(0.42, 0.70, 0.82, 0.55)
 	for i in 26:
@@ -960,6 +980,25 @@ func _build_hazards() -> void:
 						_add_static_box(Vector3(def.radius * 0.3, float(h.get("height", 0.85)), 0.35),
 							Vector3(lane_x(lane), float(h.get("height", 0.85)) * 0.5, z),
 							def.accent_color)
+			"snowball":
+				var count := int(h.get("count", 2))
+				for i in count:
+					var ball := ArenaHazards.Snowball.new()
+					ball.speed = float(h.get("speed", 9.0))
+					ball.power = float(t.get("hazard_knockback", 22.0)) * float(h.get("power_scale", 0.8))
+					ball.period = float(h.get("period", 6.0)) * (1.0 + 0.55 * float(i))
+					add_child(ball)
+					ball.build(Color(0.93, 0.98, 1.0), float(h.get("radius", 1.15)), def.radius)
+					_base_hazard_speed[ball.get_instance_id()] = ball.speed
+					_hazards.append(ball)
+			"gust":
+				var gust := ArenaHazards.Gust.new()
+				gust.period = float(h.get("period", 13.0))
+				gust.duration = float(h.get("duration", 2.8))
+				gust.force = float(h.get("force", 7.0))
+				add_child(gust)
+				gust.build(def.accent_color, def.radius)
+				_hazards.append(gust)
 			"shrink":
 				_shrink = ArenaHazards.ShrinkRing.new()
 				_shrink.start_delay = float(h.get("start_delay", 18.0))

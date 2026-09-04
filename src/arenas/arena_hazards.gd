@@ -269,6 +269,211 @@ class BreakableIceBarrier extends StaticBody3D:
 			_visual.scale = Vector3.ONE
 
 
+class Snowball extends Node3D:
+	## A boulder of packed snow that rolls a chord across the arena and flattens
+	## whoever it meets.
+	##
+	## The spec lists rolling hazards among the things an arena should throw at
+	## the players. Unlike the sweeper — which pivots around the middle and is
+	## therefore always the same threat — this crosses, so where it is safe
+	## changes every pass, and the safe side is readable a second before it
+	## arrives.
+	##
+	## Deterministic by construction: entry angles advance by a fixed irrational
+	## step rather than being drawn, so no generator is consumed and a replay
+	## rolls the same boulders down the same lines.
+
+	const ANGLE_STEP := 2.39996323   # golden angle, so passes never repeat a lane
+
+	var speed := 9.0
+	var power := 18.0
+	var radius := 1.15
+	var arena_radius := 12.0
+	var period := 6.0
+
+	var _dir := Vector3.FORWARD
+	var _timer := 0.0
+	var _rolling := false
+	var _angle := 0.0
+	var _mesh: Node3D
+	var _hit := {}
+
+	func build(color: Color, r: float, arena_r: float) -> void:
+		radius = r
+		arena_radius = arena_r
+		_mesh = MeshFactory.sphere(radius, color, 0.06)
+		_mesh.material_override = MeshFactory.ice(color, 0.99)
+		add_child(_mesh)
+		visible = false
+		_timer = period * 0.5
+
+	func tick(delta: float) -> void:
+		if not _rolling:
+			_timer -= delta
+			if _timer <= 0.0:
+				_launch()
+			return
+		position += _dir * speed * delta
+		if _mesh != null and is_instance_valid(_mesh):
+			# Rolling, not sliding: the spin matches the travel so it reads as
+			# weight rather than as a floating ball.
+			_mesh.rotate(_dir.cross(Vector3.UP).normalized(), -speed / maxf(radius, 0.1) * delta)
+		_check_fighters()
+		if position.length() > arena_radius * 1.25:
+			_rolling = false
+			visible = false
+			_timer = period
+
+	func _launch() -> void:
+		_angle += ANGLE_STEP
+		var entry := Vector3(cos(_angle), 0.0, sin(_angle)) * arena_radius * 1.15
+		# A chord, not a diameter: offset the exit so the line across the arena
+		# is different every pass.
+		var exit_ang := _angle + PI + sin(_angle * 3.0) * 0.7
+		var exit := Vector3(cos(exit_ang), 0.0, sin(exit_ang)) * arena_radius * 1.15
+		position = Vector3(entry.x, radius * 0.75, entry.z)
+		_dir = (exit - entry).normalized()
+		_rolling = true
+		visible = true
+		_hit.clear()
+		AudioManager.play_sfx("rumble", position, 1.0)
+
+	func _check_fighters() -> void:
+		var tree := get_tree()
+		if tree == null:
+			return
+		for body in tree.get_nodes_in_group("fighters"):
+			var f := body as Fighter
+			if f == null or not f.alive or _hit.has(f.slot):
+				continue
+			var to: Vector3 = f.global_position - global_position
+			to.y = 0.0
+			if to.length() > radius + 0.7:
+				continue
+			_hit[f.slot] = true
+			# Pushed along the roll, not away from the centre of the ball: a
+			# boulder shoves you where it is going.
+			f.take_hit(-1, _dir, power, 6.0)
+			AudioManager.play_sfx("hit", f.global_position)
+
+	func reset() -> void:
+		_rolling = false
+		visible = false
+		_timer = period * 0.5
+		_hit.clear()
+
+
+class Gust extends Node3D:
+	## A wind that leans on the whole arena at once.
+	##
+	## Every other hazard here is local — you can stand somewhere else. A gust
+	## cannot be avoided, only braced against, which is why it is telegraphed
+	## for a full second and a half and why it pushes rather than launches: it
+	## turns a fight near the rim into a decision instead of a coin flip.
+
+	const ANGLE_STEP := 1.7
+
+	var period := 13.0
+	var warn := 1.6
+	var duration := 2.8
+	var force := 7.0
+	var arena_radius := 12.0
+
+	var _dir := Vector3.FORWARD
+	var _timer := 0.0
+	var _state := 0            # 0 idle, 1 warning, 2 blowing
+	var _angle := 0.0
+	var _streaks: Array = []
+
+	func build(color: Color, arena_r: float) -> void:
+		arena_radius = arena_r
+		_timer = period
+		# Long, low and dense. The first pass drew fourteen short slivers spread
+		# over the whole sky, which from the arena camera read as more of the
+		# scratch decor already on the ice rather than as wind — a hazard the
+		# player cannot see coming is just an unexplained shove.
+		var count := 26
+		for i in count:
+			var streak := MeshFactory.box(Vector3(4.5 + 2.2 * float(i % 3), 0.07, 0.13), color.lightened(0.45), 0.9)
+			streak.material_override = MeshFactory.transparent(color.lightened(0.55), 0.7)
+			streak.visible = false
+			add_child(streak)
+			_streaks.append({"node": streak, "offset": float(i) / float(count)})
+
+	func tick(delta: float) -> void:
+		_timer -= delta
+		match _state:
+			0:
+				if _timer <= 0.0:
+					_begin_warning()
+			1:
+				_animate(delta, 0.45)
+				if _timer <= 0.0:
+					_state = 2
+					_timer = duration
+					AudioManager.play_sfx("gust", global_position)
+			2:
+				_animate(delta, 1.0)
+				_push(delta)
+				if _timer <= 0.0:
+					_end()
+
+	func _begin_warning() -> void:
+		_state = 1
+		_timer = warn
+		_angle += ANGLE_STEP
+		_dir = Vector3(cos(_angle), 0.0, sin(_angle))
+		AudioManager.play_sfx("machine_alert", global_position, 0.7)
+		for entry in _streaks:
+			var node: Node3D = entry["node"]
+			if is_instance_valid(node):
+				node.visible = true
+
+	func _animate(delta: float, strength: float) -> void:
+		var across: Vector3 = _dir.cross(Vector3.UP).normalized()
+		for entry in _streaks:
+			var node: Node3D = entry["node"]
+			if not is_instance_valid(node):
+				continue
+			var offset := float(entry["offset"])
+			entry["offset"] = fmod(offset + delta * 0.55 * strength, 1.0)
+			var along: float = lerpf(-arena_radius * 1.15, arena_radius * 1.15, float(entry["offset"]))
+			# Spread across the deck, not across the sky, and low enough to read
+			# against the ice.
+			var side: float = (fmod(offset * 7.0, 1.0) - 0.5) * arena_radius * 1.7
+			node.position = _dir * along + across * side + Vector3(0, 0.45 + 0.55 * fmod(offset * 3.0, 1.0), 0)
+			node.rotation.y = -atan2(_dir.z, _dir.x)
+			node.scale.x = 0.6 + strength
+
+	func _push(delta: float) -> void:
+		var tree := get_tree()
+		if tree == null:
+			return
+		for body in tree.get_nodes_in_group("fighters"):
+			var f := body as Fighter
+			if f == null or not f.alive:
+				continue
+			# Through the impulse channel, not straight onto velocity. A walking
+			# body re-solves its velocity toward the stick every frame with
+			# `move_toward` at 38 m/s^2 or more, so anything written onto
+			# `velocity` here is erased before it is felt — the wind would be a
+			# visual with no push behind it. `_impulse` is added *after* that
+			# integration and drains on its own clock, which is what makes this
+			# something you lean against for three seconds.
+			f.apply_impulse(_dir * force * delta)
+
+	func _end() -> void:
+		_state = 0
+		_timer = period
+		for entry in _streaks:
+			var node: Node3D = entry["node"]
+			if is_instance_valid(node):
+				node.visible = false
+
+	func reset() -> void:
+		_end()
+
+
 class RisingWater extends Node3D:
 	## A plane that climbs and eliminates whoever it reaches. Drives Rising Tide
 	## and doubles as the "floor is lava" primitive for future games.

@@ -297,6 +297,7 @@ func _create_touch_controls() -> void:
 
 
 func teardown() -> void:
+	AudioManager.stop_ambience()
 	InputRouter.playback_mode = false
 	if controller != null and is_instance_valid(controller):
 		controller.cleanup()

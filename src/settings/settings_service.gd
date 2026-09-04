@@ -14,6 +14,11 @@ const DEFAULTS := {
 	"volume_ui": 0.8,
 	"vibration": true,
 	"camera_sensitivity": 1.0,
+	## How far back the shared camera sits, as a multiplier. The spec wants the
+	## view wide enough to see rivals and hazards rather than glued to one
+	## body, and how wide that needs to be depends on the screen it is played
+	## on — a phone held at arm's length is not a television across a room.
+	"camera_distance": 1.0,
 	"camera_shake": 1.0,
 	"graphics_quality": 3,  # 0 low, 1 medium, 2 high, 3 ultra
 	"fps_limit": 0,  # 0 = display refresh
