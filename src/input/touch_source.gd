@@ -15,7 +15,7 @@ extends Control
 
 const STICK_RADIUS := 110.0
 const STICK_DEAD := 0.14
-const BUTTON_RADIUS := 62.0
+const BUTTON_RADIUS := 74.0
 const EDGE_MARGIN := 54.0
 
 var slot := 0
@@ -339,13 +339,22 @@ func _draw() -> void:
 		_draw_stick(_aim_centre() if not _owners_has("aim") else _aim_origin,
 			_aim_knob if _owners_has("aim") else _aim_centre(), ink, fill, STICK_RADIUS * _scale)
 
+	# A button has to say what it does. White outlines with an abstract glyph —
+	# "»" for dash, "✦" for attack — told a player nothing about either, and at
+	# 12%% fill they were barely on the screen at all. Each verb now gets its own
+	# colour, a filled body, and its name written underneath in the player's
+	# language, which is the same word the pre-round card already uses.
 	var br := BUTTON_RADIUS * _scale
 	for i in buttons.size():
 		var c := _button_centre(i)
 		var down: bool = _pressed_buttons.has(i)
-		draw_circle(c, br, Color(1, 1, 1, a * (0.30 if down else 0.12)))
-		draw_arc(c, br, 0.0, TAU, 32, ink, 3.0, true)
-		_label(_glyph(buttons[i]), c, ink, 34)
+		var tint := _button_color(buttons[i])
+		var body := Color(tint.r, tint.g, tint.b, a * (0.85 if down else 0.55))
+		var edge := Color(1, 1, 1, a * 0.95)
+		draw_circle(c, br, body)
+		draw_arc(c, br, 0.0, TAU, 36, edge, 4.0, true)
+		_label(_glyph(buttons[i]), c - Vector2(0, br * 0.14), Color(1, 1, 1, a), 40)
+		_label(_action_name(buttons[i]), c + Vector2(0, br * 0.52), Color(1, 1, 1, a * 0.95), 26)
 
 
 func _draw_stick(origin: Vector2, knob: Vector2, ink: Color, fill: Color, r: float) -> void:
@@ -371,11 +380,29 @@ func _label(text: String, centre: Vector2, color: Color, size_px: int) -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, color)
 
 
+## One colour per verb, so a glance at the corner is enough to know which
+## button is which without reading anything.
+func _button_color(action: String) -> Color:
+	match action:
+		"attack", "shoot": return Color(0.92, 0.35, 0.30)
+		"dash", "boost": return Color(0.25, 0.62, 0.95)
+		"jump": return Color(0.36, 0.78, 0.45)
+		"ability": return Color(0.78, 0.45, 0.92)
+		"action": return Color(0.95, 0.70, 0.25)
+	return Color(0.6, 0.65, 0.8)
+
+
+## The same word the rules card shows for this verb.
+func _action_name(action: String) -> String:
+	var key := "controls.%s" % action
+	return Loc.t(key) if Loc.has(key) else ""
+
+
 func _glyph(action: String) -> String:
 	match action:
-		"jump": return "⤒"
-		"attack", "shoot": return "✦"
+		"jump": return "▲"
+		"attack", "shoot": return "✊"
 		"action": return "◉"
-		"dash", "boost": return "»"
+		"dash", "boost": return "➤"
 		"ability": return "★"
 	return "●"

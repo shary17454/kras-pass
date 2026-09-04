@@ -101,6 +101,8 @@ var _fx_time := 0.0          ## advanced by delta, so replays stay reproducible
 var _edge_margin := 99.0     ## fed by the match layer; drives the panic pose
 var _spin_time := 0.0        ## cartoon spin-out after a heavy hit
 var _rig := CharacterRig.new()   ## limbs and face, when this body has them
+var _markers: Node3D             ## ground ring + overhead pip, in player colour
+var _is_local := false
 var _shocked := 0.0         ## sparks + lost control from an electric hit
 var _state_fx: Node3D       ## persistent status visuals, built on first need
 var _size_mutator := 1.0
@@ -221,13 +223,56 @@ func _build_visual() -> void:
 	# Limbs and face, if this body has any. A kart has none and the rig simply
 	# reports that once instead of searching every frame.
 	_rig.bind(_visual)
-	# A ground ring keeps a player findable when the camera pulls back or the
-	# body is behind a wall — the single most-requested readability fix in
-	# 4-player couch games.
-	var ring := MeshFactory.torus(0.5, 0.68, d.color, 0.9)
-	ring.position = Vector3(0, 0.06, 0)
-	ring.name = "Marker"
-	_visual.add_child(ring)
+	_build_markers()
+
+
+## Who is who, from across the arena.
+##
+## On a 16 m ring the bodies are barely thirty pixels tall, and four of them in
+## the same pale palette read as identical specks: the first thing a player
+## needs to know is which one is theirs. The ring is bright and sits on the
+## floor, the pip floats overhead where nothing occludes it, and both live
+## outside `_visual` so squash-and-stretch does not distort them.
+func _build_markers() -> void:
+	if _markers != null and is_instance_valid(_markers):
+		_markers.queue_free()
+	var d := data if data != null else CharacterData.new()
+	_markers = Node3D.new()
+	_markers.name = "Markers"
+	add_child(_markers)
+
+	var ring := MeshFactory.torus(0.66, 0.98, d.color, 1.9)
+	ring.name = "Ring"
+	ring.position = Vector3(0, 0.05, 0)
+	_markers.add_child(ring)
+
+	# Sized for a thirty-pixel body seen from twenty metres up: at 0.2 across it
+	# was there and unreadable, which is the same as not being there.
+	var pip := MeshFactory.cone(0.34, 0.62, d.color)
+	pip.name = "Pip"
+	pip.rotation.x = PI
+	pip.position = Vector3(0, 2.35, 0)
+	pip.material_override = MeshFactory.glow(d.color, 2.6)
+	_markers.add_child(pip)
+	var collar := MeshFactory.torus(0.2, 0.32, d.color.lightened(0.3), 1.4)
+	collar.name = "PipCollar"
+	collar.position = Vector3(0, 2.62, 0)
+	_markers.add_child(collar)
+
+
+## The local player's own pip is larger, because "where am I" is a different
+## question from "where is everyone".
+func mark_as_local() -> void:
+	_is_local = true
+	if _markers == null or not is_instance_valid(_markers):
+		return
+	for part in ["Pip", "PipCollar"]:
+		var node := _markers.get_node_or_null(part) as Node3D
+		if node != null:
+			node.scale = Vector3.ONE * 1.4
+	var ring := _markers.get_node_or_null("Ring") as Node3D
+	if ring != null:
+		ring.scale = Vector3(1.18, 1.0, 1.18)
 
 
 func set_spawn(p: Vector3) -> void:
@@ -515,12 +560,15 @@ func on_fell_out() -> void:
 	if not alive:
 		return
 	fell_out.emit(slot)
+	# The scream, not the splash: by the time a body crosses the kill plane it
+	# is metres under the water, and the match layer has already played the
+	# splash at the surface where it happened.
 	AudioManager.play_sfx("fall", global_position, _voice())
-	if _visual_theme == "arctic":
-		AudioManager.play_sfx("splash", global_position)
 
 
 func respawn_at(p: Vector3) -> void:
+	if _markers != null and is_instance_valid(_markers):
+		_markers.visible = true
 	global_position = p
 	velocity = Vector3.ZERO
 	_impulse = Vector3.ZERO
@@ -535,6 +583,8 @@ func respawn_at(p: Vector3) -> void:
 
 
 func on_eliminated() -> void:
+	if _markers != null and is_instance_valid(_markers):
+		_markers.visible = false
 	alive = false
 	velocity = Vector3.ZERO
 	_impulse = Vector3.ZERO
@@ -713,6 +763,7 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 		_visual.rotation.z = lerp(_visual.rotation.z, sin(_fx_time * 26.0) * lean, clampf(12.0 * delta, 0.0, 1.0))
 	else:
 		_visual.rotation.z = lerp(_visual.rotation.z, 0.0, clampf(10.0 * delta, 0.0, 1.0))
+	_update_markers(delta)
 	_update_state_fx(delta)
 	_rig.tick(delta, {
 		"speed": speed_ratio(),
@@ -733,6 +784,25 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 ## The nodes hang off the fighter rather than off `_visual`, because `_visual`
 ## is squashed and stretched every frame and an aura that squashed with it
 ## would read as a bug.
+## The pip bobs and turns so it never reads as part of the scenery, and both
+## markers fade out with the body when it is eliminated.
+func _update_markers(delta: float) -> void:
+	if _markers == null or not is_instance_valid(_markers):
+		return
+	var pip := _markers.get_node_or_null("Pip") as Node3D
+	if pip != null and is_instance_valid(pip):
+		pip.rotation.y += delta * 2.0
+		pip.position.y = 2.35 + sin(_fx_time * 3.2) * 0.1
+	var collar := _markers.get_node_or_null("PipCollar") as Node3D
+	if collar != null and is_instance_valid(collar):
+		collar.rotation.y -= delta * 1.4
+		collar.position.y = 2.62 + sin(_fx_time * 3.2) * 0.1
+	var ring := _markers.get_node_or_null("Ring") as Node3D
+	if ring != null and is_instance_valid(ring):
+		var pulse := 1.0 + sin(_fx_time * 4.0) * (0.06 if _is_local else 0.03)
+		ring.scale = Vector3(pulse, 1.0, pulse)
+
+
 func _update_state_fx(delta: float) -> void:
 	if DisplayServer.get_name() == "headless":
 		return

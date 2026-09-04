@@ -89,6 +89,11 @@ var _sudden_death_used := false
 var _noted_leader := -1
 var _noted_last := -1
 var _warn_second := -1
+## Reused for bodies that are falling with nobody at the controls.
+var _neutral_frame := InputFrame.new()
+## Slots that have already broken the surface this round, so one fall makes one
+## splash rather than one per frame.
+var _splashed := {}
 
 
 # --- lifecycle -------------------------------------------------------------
@@ -228,6 +233,8 @@ func _spawn_fighters(def: MiniGameDef) -> void:
 		f.can_jump = controller.allows_jump()
 		f.can_attack = controller.allows_attack()
 		f.can_dash = controller.allows_dash()
+		if p.is_human:
+			f.mark_as_local()
 		var spawn := arena.global_position + arena.spawn_points[p.slot % arena.spawn_points.size()]
 		f.global_position = spawn
 		f.set_spawn(spawn)
@@ -392,6 +399,7 @@ func _begin_play() -> void:
 	hud.announce(Loc.t("hud.go"), UIKit.OK, 0.4)
 	AudioManager.play_sfx("go")
 	_warn_second = -1
+	_splashed.clear()
 	controller.on_round_start()
 	if machine != null and is_instance_valid(machine):
 		machine.reset()
@@ -428,6 +436,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				_tick_live(delta)
 		P.FINISH:
+			_tick_fallers(delta)
 			_phase_timer -= delta
 			if _phase_timer <= 0.0:
 				_set_phase(P.RESULTS)
@@ -518,6 +527,7 @@ func _tick_live(delta: float) -> void:
 	mutators.tick(delta)
 	# 5. bounds
 	_check_out_of_bounds()
+	_check_water_line()
 	# 6. clock
 	if not (DevTools.available() and DevTools.freeze_timer):
 		ctx.time_left = maxf(0.0, ctx.time_left - delta)
@@ -526,6 +536,19 @@ func _tick_live(delta: float) -> void:
 	hud.set_time(ctx.time_left, float(_tuning.get("hurry_time", 5.0)))
 	_tick_time_warning()
 	_evaluate_end(delta)
+
+
+## Let anyone already over the edge finish their fall while the round wraps up.
+## Only the fallers are ticked — everybody still standing stays frozen — and
+## they are driven with a neutral input frame, so this is gravity finishing a
+## story rather than a player still playing.
+func _tick_fallers(delta: float) -> void:
+	if arena == null or not is_instance_valid(arena):
+		return
+	for f in _fighters:
+		if is_instance_valid(f) and _is_falling_out(f):
+			f.tick(_neutral_frame, delta)
+	_check_water_line()
 
 
 ## The closing seconds, made audible. `warn_time` was in the tuning table from
@@ -698,6 +721,27 @@ func _evaluate_end(_delta: float) -> void:
 ## Out-of-bounds is decided here, not by each game, so "fell off" means the same
 ## thing everywhere: below the arena's kill plane, or outside a ring that has
 ## shrunk past you.
+## The splash happens where the water is, not where the kill plane is.
+##
+## `fall_y` sits far below the deck so a body has room to arc; the arctic ocean
+## is at about -0.8. Playing the splash on elimination meant the sound landed a
+## second and a half after the body had visibly gone under, if the round had not
+## already ended and frozen it first.
+func _check_water_line() -> void:
+	if arena == null or not is_instance_valid(arena):
+		return
+	var surface := arena.water_surface_y()
+	if surface == -INF:
+		return
+	for f in _fighters:
+		if not is_instance_valid(f) or _splashed.has(f.slot):
+			continue
+		if f.global_position.y > surface:
+			continue
+		_splashed[f.slot] = true
+		arena.splash_at(f.global_position)
+
+
 func _check_out_of_bounds() -> void:
 	for f in _fighters:
 		if not is_instance_valid(f) or not f.alive or not ctx.is_alive(f.slot):
@@ -751,11 +795,26 @@ func _on_submerged(f) -> void:
 	controller.on_fighter_fell(f.slot)
 
 
+## Stop everyone still playing — but not somebody who is already falling.
+##
+## Zeroing every velocity froze a body in mid-air the instant the round ended,
+## so a player shoved off the rim on the winning blow never actually reached the
+## water: the splash they were watching for simply never happened. A body below
+## the deck keeps its momentum and keeps being ticked through FINISH (see
+## `_physics_process`) until it lands.
 func _freeze_fighters() -> void:
 	for f in _fighters:
-		if is_instance_valid(f):
-			f.control_enabled = false
+		if not is_instance_valid(f):
+			continue
+		f.control_enabled = false
+		if not _is_falling_out(f):
 			f.velocity = Vector3.ZERO
+
+
+func _is_falling_out(f: Fighter) -> bool:
+	if arena == null or not is_instance_valid(arena):
+		return false
+	return f.alive and f.global_position.y < arena.global_position.y - 0.6
 
 
 func _any_human_pressed() -> bool:

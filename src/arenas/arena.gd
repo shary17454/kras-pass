@@ -182,6 +182,39 @@ func spawn_impact_crack(pos: Vector3, strength: float) -> void:
 	_impact_cracks.append(node)
 
 
+## Where a falling body meets water, or -INF on an arena that has none. The
+## arctic ocean plane is built at -0.82; everything else drops into the void.
+func water_surface_y() -> float:
+	if _water != null and is_instance_valid(_water):
+		return _water.level
+	if _is_arctic():
+		return global_position.y - 0.82
+	return -INF
+
+
+## A body breaking the surface: a ring of spray, a column of droplets and the
+## sound, at the point it went in. This is the moment a ring-out is *confirmed*
+## for everyone watching, so it is worth more than a sound effect on its own.
+func splash_at(pos: Vector3) -> void:
+	var surface := water_surface_y()
+	if surface == -INF:
+		return
+	var at := Vector3(pos.x, surface, pos.z)
+	AudioManager.play_sfx("splash", at)
+	if DisplayServer.get_name() == "headless" or bool(UserSettings.get_value("reduce_effects")):
+		return
+	var burst := MeshFactory.burst(Color(0.62, 0.88, 1.0), 16, 3.6, 0.75)
+	add_child(burst)
+	burst.global_position = at
+	var ring := MeshFactory.torus(0.5, 1.15, Color(0.75, 0.93, 1.0), 0.9)
+	ring.global_position = at + Vector3(0, 0.06, 0)
+	add_child(ring)
+	var tween := ring.create_tween().set_parallel(true)
+	tween.tween_property(ring, "scale", Vector3(3.4, 1.0, 3.4), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ring, "modulate:a", 0.0, 0.7)
+	tween.chain().tween_callback(ring.queue_free)
+
+
 func center() -> Vector3:
 	return global_position
 
@@ -887,8 +920,13 @@ func _add_slick_patches() -> void:
 		disc.position = Vector3(cos(ang) * dist, 0.1, sin(ang) * dist)
 		disc.material_override = MeshFactory.ice(Color(0.88, 0.98, 1.0), 0.62)
 		_static_root.add_child(disc)
-		var rim := MeshFactory.torus(radius * 0.92, radius, Color(0.68, 0.9, 1.0), 0.3)
-		rim.position = Vector3(cos(ang) * dist, 0.12, sin(ang) * dist)
+		# A hairline, not a hoop. At a third of a metre thick and lit, the rim
+		# read as another player ring — four bright circles on the ice that mean
+		# "somebody is standing here" and four that mean "this patch is
+		# slippery" is one kind of circle too many.
+		var rim := MeshFactory.torus(radius * 0.975, radius, Color(0.72, 0.9, 0.98), 0.0)
+		rim.position = Vector3(cos(ang) * dist, 0.115, sin(ang) * dist)
+		rim.material_override = MeshFactory.transparent(Color(0.72, 0.9, 0.98), 0.35)
 		_static_root.add_child(rim)
 
 

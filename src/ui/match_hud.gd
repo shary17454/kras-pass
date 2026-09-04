@@ -84,7 +84,7 @@ func _build() -> void:
 	for i in players.size():
 		if i == half:
 			var gap := Control.new()
-			gap.custom_minimum_size = Vector2(430, 0)
+			gap.custom_minimum_size = Vector2(380, 0)
 			gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			chips.add_child(gap)
@@ -130,12 +130,18 @@ func _build() -> void:
 
 func _make_chip(p: PlayerConfig) -> Control:
 	var col := UIKit.adapt(p.color())
-	var card := UIKit.panel(Color(col.r * 0.28, col.g * 0.28, col.b * 0.28, 0.86), 16)
+	# Bright enough to read at a glance, and ringed in the player's own colour.
+	# At 0.28 of the character colour the four chips were dark blobs that had to
+	# be studied rather than glanced at, which is the opposite of what a chip is
+	# for.
+	var card := UIKit.panel(Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16)
+	card.add_theme_stylebox_override("panel", UIKit.stylebox(
+		Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16, 3, col))
 	# Menu padding is generous on purpose; a match chip cannot afford it. Four
 	# chips at menu padding measured 356 px each, which put the outermost one
 	# 56 px off the left of a 1920-wide screen.
 	_tighten(card, 10, 8)
-	card.custom_minimum_size = Vector2(214, 0)
+	card.custom_minimum_size = Vector2(246, 0)
 	# Shrink, don't fill: a filling chip eats the gap the clock sits in.
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -144,6 +150,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	card.add_child(row)
 
 	var portrait := _make_portrait(p, col)
+	portrait.custom_minimum_size = Vector2(74, 74)
 	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(portrait)
 
@@ -152,10 +159,15 @@ func _make_chip(p: PlayerConfig) -> Control:
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(box)
 
-	var name_label := UIKit.label(p.display_name(), UIKit.SIZE_TINY, UIKit.text_color(), true)
+	# The character's own name, not "Ramla (Hard)". Who is on which pad is what
+	# the chip answers; the difficulty belongs on the setup screen, and squeezing
+	# it in here is what pushed the name into being clipped.
+	var character := p.character()
+	var shown: String = character.display_name() if character != null else p.display_name()
+	var name_label := UIKit.label(shown, UIKit.SIZE_SMALL, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.clip_text = true
-	name_label.custom_minimum_size = Vector2(104, 0)
+	name_label.custom_minimum_size = Vector2(120, 0)
 	box.add_child(name_label)
 
 	var value := UIKit.label("0", 40, Color.WHITE, true)
