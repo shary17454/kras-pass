@@ -218,7 +218,9 @@ func _make_portrait(p: PlayerConfig, col: Color) -> Control:
 	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var body := MeshFactory.character_body(character)
 	body.position = Vector3(0, -0.62, 0)
-	body.rotation.y = 0.5
+	# Faces are at -Z and the portrait camera sits at +Z, so an unturned body
+	# presents its back. Half a turn plus a little, for a three-quarter view.
+	body.rotation.y = PI + 0.5
 	vp.add_child(body)
 	var cam := Camera3D.new()
 	cam.position = Vector3(0, 0.5, 2.05)

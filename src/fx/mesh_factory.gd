@@ -861,15 +861,66 @@ static func character_body(data: CharacterData) -> Node3D:
 			root.add_child(hd)
 
 	# Eyes give the body an unambiguous facing direction, which matters in
-	# every push-out game where players read each other's aim.
+	# every push-out game where players read each other's aim — and, gathered
+	# under a `Face` node with a mouth, they are what `CharacterRig` widens in
+	# panic and squeezes shut on a hit.
+	var face := Node3D.new()
+	face.name = "Face"
+	root.add_child(face)
 	for sx in [-1.0, 1.0]:
 		var eye := sphere(0.1, Color(0.06, 0.06, 0.09))
+		eye.name = "EyeL" if sx < 0.0 else "EyeR"
 		eye.position = Vector3(0.15 * sx, head_y + 0.05, -0.3)
 		eye.material_override = satin(Color(0.015, 0.015, 0.02), 0.08, 0.0, 0.0)
-		root.add_child(eye)
+		face.add_child(eye)
 		var glint := sphere(0.026, Color.WHITE, 0.25)
 		glint.position = Vector3(0.18 * sx, head_y + 0.085, -0.37)
-		root.add_child(glint)
+		face.add_child(glint)
+	var mouth := box(Vector3(0.2, 0.055, 0.05), Color(0.05, 0.04, 0.06))
+	mouth.name = "Mouth"
+	mouth.position = Vector3(0, head_y - 0.16, -0.31)
+	mouth.material_override = satin(Color(0.04, 0.03, 0.05), 0.1, 0.0, 0.0)
+	face.add_child(mouth)
+
+	# Arms and legs. The spec's animation list — standing, walking, running,
+	# jumping, attacking, taking a hit, falling — needs something to move, and
+	# these bodies are generated primitives with no skeleton. Two hinges an arm
+	# and two a leg is all a cartoon walk cycle has ever needed.
+	var limbs := Node3D.new()
+	limbs.name = "Limbs"
+	root.add_child(limbs)
+	for sx in [-1.0, 1.0]:
+		var shoulder := Node3D.new()
+		shoulder.name = "ArmL" if sx < 0.0 else "ArmR"
+		shoulder.position = Vector3(0.44 * g * sx, 0.92 * h, 0)
+		var arm := capsule(0.1, 0.44, c.lightened(0.06))
+		arm.position = Vector3(0, -0.22, 0)
+		arm.material_override = satin(c.lightened(0.06), 0.3, 0.0, 0.12)
+		shoulder.add_child(arm)
+		var hand := sphere(0.11, a)
+		hand.position = Vector3(0, -0.44, 0)
+		hand.material_override = satin(a, 0.24, 0.0, 0.14)
+		shoulder.add_child(hand)
+		limbs.add_child(shoulder)
+	# Feet, not legs. These bodies are blobs that sit on the floor — a drum is
+	# 1.05 units tall standing at 0.55, so there is no gap underneath to hang a
+	# leg in, and the first attempt buried both of them inside the torso. What
+	# reads on a shape like this is a pair of feet peeking out at the front of
+	# the base and stepping forward and back, which is how every legless
+	# cartoon mascot has ever walked.
+	for sx in [-1.0, 1.0]:
+		var hip := Node3D.new()
+		hip.name = "LegL" if sx < 0.0 else "LegR"
+		# Far enough forward to clear the widest torso in the roster: a boulder
+		# is 0.53 across at ankle height and a drum 0.5, so 0.55 from the axis
+		# puts the foot outside both. Tucked any closer and it is swallowed by
+		# the body, which is what the first two attempts did.
+		hip.position = Vector3(0.2 * g * sx, 0.17 * h, -0.52 * g)
+		var foot := box(Vector3(0.19, 0.11, 0.3), a.darkened(0.25))
+		foot.position = Vector3(0, -0.11, -0.06)
+		foot.material_override = satin(a.darkened(0.25), 0.32, 0.0, 0.1)
+		hip.add_child(foot)
+		limbs.add_child(hip)
 
 	var acc := _accessory(data.accessory, a)
 	if acc != null:

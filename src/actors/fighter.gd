@@ -100,6 +100,7 @@ var _pre_vel := Vector3.ZERO ## velocity carried into this tick: the approach
 var _fx_time := 0.0          ## advanced by delta, so replays stay reproducible
 var _edge_margin := 99.0     ## fed by the match layer; drives the panic pose
 var _spin_time := 0.0        ## cartoon spin-out after a heavy hit
+var _rig := CharacterRig.new()   ## limbs and face, when this body has them
 var _shocked := 0.0         ## sparks + lost control from an electric hit
 var _state_fx: Node3D       ## persistent status visuals, built on first need
 var _size_mutator := 1.0
@@ -217,6 +218,9 @@ func _build_visual() -> void:
 		_visual.add_child(rider)
 	else:
 		_visual.add_child(MeshFactory.character_body(d))
+	# Limbs and face, if this body has any. A kart has none and the rig simply
+	# reports that once instead of searching every frame.
+	_rig.bind(_visual)
 	# A ground ring keeps a player findable when the camera pulls back or the
 	# body is behind a wall — the single most-requested readability fix in
 	# 4-player couch games.
@@ -710,6 +714,15 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 	else:
 		_visual.rotation.z = lerp(_visual.rotation.z, 0.0, clampf(10.0 * delta, 0.0, 1.0))
 	_update_state_fx(delta)
+	_rig.tick(delta, {
+		"speed": speed_ratio(),
+		"on_floor": is_on_floor(),
+		"attacking": _attack_time > 0.0,
+		"dashing": _dash_time > 0.0,
+		"hurt": _stun,
+		"frozen": float(mods["frozen"]) > 0.0 or _shocked > 0.0,
+		"panic": clampf(1.0 - _edge_margin / 2.6, 0.0, 1.0) if is_on_floor() else 0.0,
+	})
 
 
 ## What is happening to this body, made visible. A power-up the player cannot
