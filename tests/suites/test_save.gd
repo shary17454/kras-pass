@@ -10,6 +10,7 @@ func run(t: TestHarness) -> void:
 	t.suite("save & progression")
 	_round_trip(t)
 	_corruption(t)
+	_failed_write(t)
 	_migration(t)
 	_profiles(t)
 	_unlocks(t)
@@ -48,6 +49,13 @@ func _corruption(t: TestHarness) -> void:
 	var recovered := SaveSystem.load_slot(SLOT)
 	t.equal(int(recovered.get("generation", -1)), 1,
 		"checksum mismatch is rejected and the previous good file is restored")
+	SaveSystem._cache[SLOT] = {"generation": 3}
+	SaveSystem.mark_dirty(SLOT)
+	SaveSystem.flush()
+	var good_backup = SaveSystem._read(path + ".bak")
+	t.ok(good_backup is Dictionary, "saving after recovery keeps a valid backup")
+	if good_backup is Dictionary:
+		t.equal(int(good_backup.get("generation", -1)), 1, "corrupt main cannot overwrite good backup")
 
 	t.test("a save with no backup degrades to an empty profile, not a crash")
 	SaveSystem.erase(SLOT)
@@ -62,6 +70,29 @@ func _corruption(t: TestHarness) -> void:
 
 ## A version-1 save must survive the upgrade to per-player profiles. Losing
 ## someone's progress on an update is the one save bug that is never forgiven.
+func _failed_write(t: TestHarness) -> void:
+	t.test("failed write stays dirty and can be retried")
+	var path := "user://%s.json.tmp" % SLOT
+	SaveSystem.erase(SLOT)
+	DirAccess.remove_absolute(path)
+	DirAccess.make_dir_absolute(path)
+	SaveSystem._cache[SLOT] = {"retry": 42}
+	SaveSystem.mark_dirty(SLOT)
+	SaveSystem.flush()
+	t.ok(SaveSystem._dirty.has(SLOT), "failed save remains pending")
+	DirAccess.remove_absolute(path)
+	SaveSystem.flush()
+	t.ok(not SaveSystem._dirty.has(SLOT), "successful retry clears pending save")
+	t.equal(int(SaveSystem.load_slot(SLOT).get("retry", 0)), 42, "retry preserves data")
+	SaveSystem.erase(SLOT)
+	t.test("wrong envelope types recover without a runtime error")
+	var f := FileAccess.open("user://%s.json" % SLOT, FileAccess.WRITE)
+	f.store_string('{"body":123,"checksum":[]}')
+	f.close()
+	t.equal(SaveSystem.load_slot(SLOT).get("retry", null), null, "invalid envelope is rejected")
+	SaveSystem.erase(SLOT)
+
+
 func _migration(t: TestHarness) -> void:
 	t.test("a schema-1 save migrates into a named profile")
 	var v1 := {

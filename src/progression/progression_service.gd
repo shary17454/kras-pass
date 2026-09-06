@@ -99,11 +99,11 @@ func record_tournament_win() -> void:
 
 # --- characters and games --------------------------------------------------
 
-## Is everything open? Two ways in: the debug switch, which a shipped build can
-## never reach, and the phrase, which it can. Every unlock check in the project
-## routes through here so there is one answer rather than five.
+## Is everything open? Three ways in: the debug switch, the private phrase, and
+## the verified owner Apple account. Every unlock check in the project routes
+## through here so there is one answer rather than five.
 func all_unlocked() -> bool:
-	return DevTools.unlock_all or Access.is_active()
+	return DevTools.unlock_all or Access.is_active() or AppleAccount.has_all_games()
 
 
 func unlocked_characters() -> Array:
@@ -280,10 +280,10 @@ func reset_progress() -> void:
 
 func _check_unlocks() -> void:
 	for c in Registry.characters():
-		if not is_character_unlocked(c.id) and _rule_met(c.unlock):
+		if not unlocked_characters().has(c.id) and _rule_met(c.unlock):
 			unlock_character(c.id)
 	for m in Registry.minigames():
-		if not is_game_unlocked(m.id) and _rule_met(m.unlock):
+		if not unlocked_games().has(m.id) and _rule_met(m.unlock):
 			unlock_game(m.id)
 
 
@@ -292,7 +292,7 @@ func _check_world_unlocks() -> void:
 	for i in worlds.size():
 		var w: Dictionary = worlds[i]
 		var wid := String(w.get("id", ""))
-		if is_world_unlocked(wid):
+		if _p.get("worlds", []).has(wid) or DevTools.unlock_all:
 			continue
 		var req := int(w.get("required_trophies", 0))
 		var prev_done := true

@@ -1,0 +1,6 @@
+import os
+env = SConscript(os.environ["GODOT_CPP_PATH"] + "/SConstruct")
+env.Append(CCFLAGS=["-fobjc-arc"])
+suffix = "simulator" if env.get("ios_simulator", False) else "device"
+library = env.StaticLibrary("bin/libKrasApple." + suffix, ["apple_bridge.mm"])
+Default(library)

@@ -9,10 +9,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT="$ROOT/build/ios"
+mkdir -p "$ROOT/build"
+OUT="$(mktemp -d "$ROOT/build/ios-export.XXXXXX")"
 TARGET="${1:-device}"
 GODOT="${GODOT:-godot}"
-MANIFEST="$OUT/KrasPass.xcodeproj/xcshareddata/xcodecloud/manifest.json"
+MANIFEST="$ROOT/build/ios/KrasPass.xcodeproj/xcshareddata/xcodecloud/manifest.json"
 MANIFEST_BACKUP=""
 
 cd "$ROOT"
@@ -37,32 +38,30 @@ if ! version_ge "$IPHONEOS_SDK_VERSION" "$REQUIRED_IOS_SDK"; then
 fi
 
 echo "==> Exporting iOS project"
+test -d native/apple/bin/KrasApple.xcframework || {
+	echo "Build the Apple bridge first with tools/build_apple_bridge.sh" >&2
+	exit 1
+}
+# Generate the iOS-only extension for export, not desktop editor sessions.
+RUNTIME="$ROOT/addons/kras_apple_runtime"
+mkdir -p "$RUNTIME"
+cp native/apple/kras_apple.gdextension.template "$RUNTIME/kras_apple.gdextension"
+cleanup_apple_export() {
+	rm -f "$RUNTIME/kras_apple.gdextension" "$RUNTIME/kras_apple.gdextension.uid"
+	rmdir "$RUNTIME" 2>/dev/null || true
+	if [[ -f "$ROOT/.godot/extension_list.cfg" ]]; then
+		perl -ni -e 'print unless m{^res://addons/kras_apple_runtime/kras_apple\.gdextension\s*$}' "$ROOT/.godot/extension_list.cfg"
+	fi
+}
+trap cleanup_apple_export EXIT
+"$GODOT" --headless --editor --import --log-file /tmp/kraspass_apple_import.log --path . >/tmp/kraspass_apple_import_console.log 2>&1
 if [[ -f "$MANIFEST" ]]; then
 	MANIFEST_BACKUP="$(mktemp)"
 	cp "$MANIFEST" "$MANIFEST_BACKUP"
 fi
-# The export starts from an empty folder, and some of what lives in that folder
-# is *not* produced by the export: the Xcode Cloud scripts, the split library
-# parts that carry libgodot.a and libMoltenVK.a past GitHub's file size limit,
-# and the .keep files that hold their directories open. Wiping the folder
-# deleted eleven tracked files and only the manifest was being saved — the
-# regenerated tree looked fine locally and would have failed in Xcode Cloud,
-# which is the one place that cannot be checked from here.
-KEEP_BACKUP="$(mktemp -d)"
-for KEEP in "ci_scripts" "lfs_parts"; do
-	if [[ -e "$OUT/$KEEP" ]]; then
-		cp -R "$OUT/$KEEP" "$KEEP_BACKUP/"
-	fi
-done
-KEEP_MARKERS="$(cd "$OUT" 2>/dev/null && find . -name .keep 2>/dev/null || true)"
-rm -rf "$OUT"
-mkdir -p "$OUT"
-for KEEP in "ci_scripts" "lfs_parts"; do
-	if [[ -e "$KEEP_BACKUP/$KEEP" ]]; then
-		cp -R "$KEEP_BACKUP/$KEEP" "$OUT/"
-	fi
-done
-rm -rf "$KEEP_BACKUP"
+# Export into an isolated directory: the checked-in ios folder contains the
+# archive parts required by Xcode Cloud and must survive failed exports.
+KEEP_MARKERS=""
 "$GODOT" --headless --log-file /tmp/kraspass_export_godot.log --path . --export-release "iOS" "$OUT/KrasPass.ipa" >/tmp/kraspass_export.log 2>&1 || {
 	echo "Godot export failed:" >&2
 	tail -30 /tmp/kraspass_export.log >&2
@@ -82,8 +81,9 @@ if [[ -n "$KEEP_MARKERS" ]]; then
 	done <<< "$KEEP_MARKERS"
 fi
 if [[ -n "$MANIFEST_BACKUP" ]]; then
-	mkdir -p "$(dirname "$MANIFEST")"
-	cp "$MANIFEST_BACKUP" "$MANIFEST"
+	EXPORTED_MANIFEST="$OUT/KrasPass.xcodeproj/xcshareddata/xcodecloud/manifest.json"
+	mkdir -p "$(dirname "$EXPORTED_MANIFEST")"
+	cp "$MANIFEST_BACKUP" "$EXPORTED_MANIFEST"
 fi
 
 # --- orientation patch ------------------------------------------------------
@@ -92,6 +92,18 @@ fi
 # it has to accept the device being flipped; without this the screen stays
 # upside down until you flip it back.
 PLIST="$OUT/KrasPass/KrasPass-Info.plist"
+ENTITLEMENTS="$OUT/KrasPass/KrasPass.entitlements"
+/usr/libexec/PlistBuddy -c 'Delete :com.apple.developer.applesignin' "$ENTITLEMENTS" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c 'Add :com.apple.developer.applesignin array' "$ENTITLEMENTS"
+/usr/libexec/PlistBuddy -c 'Add :com.apple.developer.applesignin:0 string Default' "$ENTITLEMENTS"
+PRIVACY="$OUT/PrivacyInfo.xcprivacy"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes array' "$PRIVACY"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0 dict' "$PRIVACY"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataType string NSPrivacyCollectedDataTypeUserID' "$PRIVACY"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypeLinked bool true' "$PRIVACY"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypeTracking bool false' "$PRIVACY"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypePurposes array' "$PRIVACY"
+/usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypePurposes:0 string NSPrivacyCollectedDataTypePurposeAppFunctionality' "$PRIVACY"
 echo "==> Patching supported orientations (both landscape, both families)"
 for KEY in "UISupportedInterfaceOrientations" "UISupportedInterfaceOrientations~ipad"; do
 	/usr/libexec/PlistBuddy -c "Delete :$KEY" "$PLIST" 2>/dev/null || true
@@ -121,6 +133,8 @@ if [[ -f "$OUT/KrasPass/dummy.h" ]]; then
 fi
 
 perl -0pi -e 's/CODE_SIGN_IDENTITY = "Apple Distribution";/CODE_SIGN_IDENTITY = "Apple Development";/g' \
+	"$OUT/KrasPass.xcodeproj/project.pbxproj"
+perl -0pi -e 's/(OTHER_LDFLAGS = "[^"]*)";/$1 -framework AuthenticationServices -framework Security";/g' \
 	"$OUT/KrasPass.xcodeproj/project.pbxproj"
 perl -0pi -e 's/\n+\z/\n/' \
 	"$OUT/KrasPass.xcodeproj/project.pbxproj" \

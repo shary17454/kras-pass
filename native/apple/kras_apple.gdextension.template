@@ -1,0 +1,6 @@
+[configuration]
+entry_symbol = "kras_apple_init"
+compatibility_minimum = "4.4"
+
+[libraries]
+ios = "res://native/apple/bin/KrasApple.xcframework"

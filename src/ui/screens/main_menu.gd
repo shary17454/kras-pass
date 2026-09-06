@@ -41,8 +41,12 @@ func build() -> void:
 
 	var secondary := UIKit.hbox(10)
 	modes.add_child(secondary)
-	for entry in [["menu.characters", "characters"], ["menu.achievements", "achievements"],
-			["replay.title", "replays"], ["menu.stats", "stats"], ["menu.settings", "settings"]]:
+	var entries := [["menu.profile", "profile"], ["menu.characters", "characters"],
+			["menu.achievements", "achievements"], ["replay.title", "replays"],
+			["menu.stats", "stats"], ["menu.settings", "settings"]]
+	if AppleAccount.available():
+		entries.append(["account.title", "account"])
+	for entry in entries:
 		var b := UIKit.button(Loc.t(String(entry[0])), UIKit.SIZE_SMALL)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func(): SceneRouter.go_to(String(entry[1])))
@@ -89,6 +93,9 @@ func _profile_card() -> Control:
 	var stats_button := UIKit.button(Loc.t("menu.stats"), UIKit.SIZE_SMALL)
 	stats_button.pressed.connect(func(): SceneRouter.go_to("stats"))
 	v.add_child(stats_button)
+	var profile_button := UIKit.button(Loc.t("menu.profile"), UIKit.SIZE_SMALL)
+	profile_button.pressed.connect(func(): SceneRouter.go_to("profile"))
+	v.add_child(profile_button)
 	return card
 
 

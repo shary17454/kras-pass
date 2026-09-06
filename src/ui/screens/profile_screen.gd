@@ -4,6 +4,10 @@ extends Screen
 
 func build() -> void:
 	title(Loc.t("profile.title"))
+	if AppleAccount.available():
+		var account_button := UIKit.button(Loc.t("account.title"), UIKit.SIZE_SMALL)
+		account_button.pressed.connect(func(): SceneRouter.go_to("account"))
+		header.add_child(account_button)
 	var completion := Progression.completion_percent()
 	body.add_child(Widgets.progress_row(Loc.t("profile.completion"), "%.1f%%" % completion, completion / 100.0, UIKit.ACCENT))
 

@@ -339,8 +339,9 @@ def screenshot_svg(width: int, height: int, screen: str, accent: str) -> str:
 
 
 def main() -> None:
-    source_icon = SOURCE_DIR / "kras-pass-icon.svg"
-    write(source_icon, icon_svg())
+    source_icon = SOURCE_DIR / "approved-icon.png"
+    if not source_icon.is_file():
+        raise FileNotFoundError("The approved app icon is missing")
 
     icon_sizes = {
         "Icon-40.png": (40, 40),

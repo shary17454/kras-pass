@@ -66,6 +66,7 @@ func _process(delta: float) -> void:
 		await _finish(round_over)
 
 func _finish(round_over: bool) -> void:
+	set_process(false)
 	if _samples.is_empty():
 		print("%-14s no live frames sampled in %.0fs — round never ran" % [_games[_index], _elapsed])
 	else:
@@ -82,6 +83,9 @@ func _finish(round_over: bool) -> void:
 			_games[_index], mean, 1000.0 / mean,
 			_samples[int(_samples.size() * 0.95)], _samples[_samples.size() - 1],
 			get_tree().get_node_count(), OS.get_static_memory_usage() / 1048576.0, note])
+	if "--screenshots" in OS.get_cmdline_user_args():
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("/tmp/kras-perf-%s.png" % _games[_index])
 	_scene.teardown(); _scene.queue_free(); _scene = null
 	_index += 1
 	if _index >= _games.size():
@@ -92,3 +96,4 @@ func _finish(round_over: bool) -> void:
 	else:
 		await get_tree().process_frame
 		_start()
+		set_process(true)

@@ -203,9 +203,10 @@ func flush() -> void:
 		_dirty.clear()
 		return
 	for slot in _dirty.keys():
-		_write_slot(slot, _cache.get(slot, {}))
-	_dirty.clear()
-	profile_saved.emit()
+		if _write_slot(slot, _cache.get(slot, {})):
+			_dirty.erase(slot)
+	if _dirty.is_empty():
+		profile_saved.emit()
 
 
 func set_profile(data: Dictionary) -> void:
@@ -248,7 +249,7 @@ func _path(slot: String) -> String:
 	return DIR + slot + ".json"
 
 
-func _write_slot(slot: String, data: Dictionary) -> void:
+func _write_slot(slot: String, data: Dictionary) -> bool:
 	data["schema"] = SCHEMA_VERSION
 	var payload := JSON.stringify(data)
 	var envelope := JSON.stringify({"checksum": payload.md5_text(), "body": payload})
@@ -256,12 +257,15 @@ func _write_slot(slot: String, data: Dictionary) -> void:
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		Log.e("cannot open %s for write" % tmp, "Save")
-		return
+		return false
 	f.store_string(envelope)
 	f.flush()
+	var write_error := f.get_error()
 	f.close()
+	if write_error != OK:
+		return false
 	# Rotate: current good file becomes the backup, tmp becomes current.
-	if FileAccess.file_exists(_path(slot)):
+	if _read(_path(slot)) != null:
 		var prev := FileAccess.open(_path(slot), FileAccess.READ)
 		if prev != null:
 			var prev_text := prev.get_as_text()
@@ -271,8 +275,7 @@ func _write_slot(slot: String, data: Dictionary) -> void:
 				bf.store_string(prev_text)
 				bf.close()
 	var da := DirAccess.open(DIR)
-	if da != null:
-		da.rename(tmp.get_file(), _path(slot).get_file())
+	return da != null and da.rename(tmp.get_file(), _path(slot).get_file()) == OK
 
 
 func _read(path: String):
@@ -288,6 +291,8 @@ func _read(path: String):
 		return null
 	var env = json.data
 	if not (env is Dictionary) or not env.has("body") or not env.has("checksum"):
+		return null
+	if not (env["body"] is String) or not (env["checksum"] is String):
 		return null
 	var body: String = env["body"]
 	if body.md5_text() != env["checksum"]:

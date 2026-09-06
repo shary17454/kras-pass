@@ -47,6 +47,7 @@ var _floor_mesh: MeshInstance3D
 var _floor_shape: CylinderShape3D
 var _arctic_water_layers: Array = []
 var _arctic_waves: Array = []
+var _arctic_wave_mesh: MultiMesh
 var _arctic_floes: Array = []
 var _arctic_shrink_followers: Array[Node3D] = []
 var _arctic_time := 0.0
@@ -835,16 +836,28 @@ func _add_arctic_set_dressing() -> void:
 	ocean_glow.material_override = MeshFactory.transparent(Color(0.08, 0.60, 0.82), 0.08)
 	_static_root.add_child(ocean_glow)
 
+	# Foam repeats one mesh; instance it in one draw instead of 54 scene nodes.
+	var foam := MultiMeshInstance3D.new()
+	foam.name = "ArcticFoam"
+	_arctic_wave_mesh = MultiMesh.new()
+	_arctic_wave_mesh.transform_format = MultiMesh.TRANSFORM_3D
+	var foam_mesh := BoxMesh.new()
+	foam_mesh.size = Vector3.ONE
+	_arctic_wave_mesh.mesh = foam_mesh
+	_arctic_wave_mesh.instance_count = 54
+	foam.multimesh = _arctic_wave_mesh
+	foam.material_override = MeshFactory.transparent(Color(0.72, 0.97, 1.0), 0.56)
+	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_static_root.add_child(foam)
 	for i in 54:
 		var ang := TAU * float(i) / 54.0
 		var r := def.radius * (1.20 + 2.5 * float(i % 9) / 8.0)
-		var wave := MeshFactory.box(Vector3(1.7 + 0.55 * float(i % 4), 0.022, 0.05), Color(0.68, 0.93, 1.0))
-		wave.name = "ArcticWave%d" % i
-		wave.position = Vector3(cos(ang) * r, -0.53 + 0.025 * sin(float(i)), sin(ang) * r)
-		wave.rotation.y = -ang + 0.18 * sin(float(i) * 1.9)
-		wave.material_override = MeshFactory.transparent(Color(0.72, 0.97, 1.0), 0.56)
-		_static_root.add_child(wave)
-		_arctic_waves.append({"node": wave, "base": wave.position, "angle": ang, "phase": float(i) * 0.37})
+		var origin := Vector3(cos(ang) * r, -0.53 + 0.025 * sin(float(i)), sin(ang) * r)
+		var basis := Basis(Vector3.UP, -ang + 0.18 * sin(float(i) * 1.9))
+		basis = basis.scaled_local(Vector3(1.7 + 0.55 * float(i % 4), 0.022, 0.05))
+		var transform := Transform3D(basis, origin)
+		_arctic_wave_mesh.set_instance_transform(i, transform)
+		_arctic_waves.append({"transform": transform, "phase": float(i) * 0.37})
 
 	var floe_rim := MeshFactory.torus(def.radius - 0.28, def.radius + 0.34, Color(0.78, 0.95, 1.0), 0.22)
 	floe_rim.name = "IceFloeRim"
@@ -1086,14 +1099,13 @@ func _tick_arctic_water(delta: float) -> void:
 			sin(_arctic_time * 0.82 + phase) * 0.026,
 			cos(_arctic_time * 0.29 + phase) * 0.22)
 		n.rotation.y += float(entry["speed"]) * delta
-	for entry in _arctic_waves:
-		var n: Node3D = entry["node"]
-		if not is_instance_valid(n):
-			continue
-		var base: Vector3 = entry["base"]
+	for i in _arctic_waves.size():
+		var entry: Dictionary = _arctic_waves[i]
+		var transform: Transform3D = entry["transform"]
 		var phase := float(entry["phase"])
-		n.position = base + Vector3(0, sin(_arctic_time * 2.1 + phase) * 0.055, 0)
-		n.scale.x = 1.0 + sin(_arctic_time * 1.7 + phase) * 0.18
+		transform.origin.y += sin(_arctic_time * 2.1 + phase) * 0.055
+		transform.basis = transform.basis.scaled_local(Vector3(1.0 + sin(_arctic_time * 1.7 + phase) * 0.18, 1, 1))
+		_arctic_wave_mesh.set_instance_transform(i, transform)
 	for entry in _arctic_floes:
 		var n: Node3D = entry["node"]
 		if not is_instance_valid(n):
