@@ -14,6 +14,8 @@ extends RefCounted
 ## mistakes — is shared.
 
 const Btn := InputFrame.Btn
+const HISTORY_SAMPLE_INTERVAL := 1.0 / 20.0
+const HISTORY_CAP := 32
 
 var slot := 0
 var ctx: MatchContext
@@ -44,7 +46,11 @@ var aim := Vector2.ZERO
 var bits := 0
 
 var _decision_clock := 0.0
-var _history: Array = []          # ring of {t, positions}
+var _history_times := PackedFloat32Array()
+var _history_positions: Array[PackedVector3Array] = []
+var _history_head := 0
+var _history_count := 0
+var _history_sample_clock := 0.0
 var _time := 0.0
 var _mistake_timer := 0.0
 var _noise_phase := 0.0
@@ -81,7 +87,11 @@ func on_configured() -> void:
 
 func on_round_start() -> void:
 	_decision_clock = 0.0
-	_history.clear()
+	_history_times.clear()
+	_history_positions.clear()
+	_history_head = 0
+	_history_count = 0
+	_history_sample_clock = 0.0
 	move = Vector2.ZERO
 	bits = 0
 
@@ -89,7 +99,10 @@ func on_round_start() -> void:
 ## Called every physics tick by MatchScene.
 func tick(delta: float) -> void:
 	_time += delta
-	_record_history()
+	_history_sample_clock -= delta
+	if _history_sample_clock <= 0.0:
+		_record_history()
+		_history_sample_clock = HISTORY_SAMPLE_INTERVAL
 	_mistake_timer = maxf(0.0, _mistake_timer - delta)
 	_decision_clock -= delta
 	if _decision_clock <= 0.0:
@@ -128,13 +141,19 @@ func _publish() -> void:
 # --- perception ------------------------------------------------------------
 
 func _record_history() -> void:
-	var snapshot := []
-	for f in ctx.fighters:
-		snapshot.append(f.global_position if f != null and is_instance_valid(f) else Vector3.ZERO)
-	_history.append({"t": _time, "p": snapshot})
-	# Keep a little more than the slowest reaction time.
-	while _history.size() > 2 and float(_history[0]["t"]) < _time - 0.7:
-		_history.pop_front()
+	var snapshot := PackedVector3Array()
+	snapshot.resize(ctx.fighters.size())
+	for i in ctx.fighters.size():
+		var f := ctx.fighters[i]
+		snapshot[i] = f.global_position if f != null and is_instance_valid(f) else Vector3.ZERO
+	if _history_count < HISTORY_CAP:
+		_history_positions.append(snapshot)
+		_history_times.append(_time)
+		_history_count += 1
+		return
+	_history_positions[_history_head] = snapshot
+	_history_times[_history_head] = _time
+	_history_head = (_history_head + 1) % HISTORY_CAP
 
 
 ## Position of `target_slot` as this brain currently believes it to be: the true
@@ -143,11 +162,12 @@ func perceive(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
 		return Vector3.ZERO
 	var want := _time - reaction_time
-	for i in range(_history.size() - 1, -1, -1):
-		if float(_history[i]["t"]) <= want:
-			return _history[i]["p"][target_slot]
-	if _history.size() > 0:
-		return _history[0]["p"][target_slot]
+	for offset in range(_history_count - 1, -1, -1):
+		var idx := (_history_head + offset) % HISTORY_CAP
+		if float(_history_times[idx]) <= want:
+			return _history_positions[idx][target_slot]
+	if _history_count > 0:
+		return _history_positions[_history_head][target_slot]
 	var f := ctx.fighter(target_slot)
 	return f.global_position if f != null and is_instance_valid(f) else Vector3.ZERO
 

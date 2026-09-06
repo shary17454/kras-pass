@@ -12,9 +12,11 @@ const FREE_SECONDS := 2.6
 const TAG_RADIUS := 1.7
 const HANDOVER_GRACE := 1.3
 const HUNTER_SPEED := 1.13
+const TAG_TOAST_COOLDOWN := 1.6
 
 var _hunter := -1
 var _grace := 0.0
+var _toast_cooldown := 0.0
 var _free_accum: Array[float] = []
 var _mark: Node3D
 var _base_speed := {}
@@ -42,6 +44,7 @@ func on_round_start() -> void:
 
 func tick(delta: float) -> void:
 	_grace = maxf(0.0, _grace - delta)
+	_toast_cooldown = maxf(0.0, _toast_cooldown - delta)
 	if _hunter < 0 or not ctx.is_alive(_hunter):
 		_set_hunter(_pick_any_alive())
 		return
@@ -85,7 +88,9 @@ func _tag(victim: int) -> void:
 		AudioManager.play_sfx("bounce", f.global_position)
 	InputRouter.rumble(victim, 0.7, 0.18)
 	InputRouter.rumble(scorer, 0.45, 0.12)
-	EventBus.notify(Loc.t("tag.passed", {"name": _name_of(victim)}), "☄")
+	if _toast_cooldown <= 0.0:
+		EventBus.notify(Loc.t("tag.passed", {"name": _name_of(victim)}), "☄")
+		_toast_cooldown = TAG_TOAST_COOLDOWN
 	_set_hunter(victim)
 	_grace = HANDOVER_GRACE
 
@@ -116,8 +121,10 @@ func _pick_any_alive() -> int:
 
 
 func _build_mark(f: Fighter) -> void:
-	_clear_mark()
 	if DisplayServer.get_name() == "headless":
+		return
+	if _mark != null and is_instance_valid(_mark):
+		_mark.global_position = f.global_position + Vector3(0, 2.35, 0)
 		return
 	_mark = Node3D.new()
 	_mark.name = "HunterMark"
