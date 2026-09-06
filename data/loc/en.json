@@ -6,6 +6,7 @@
   "account.delete_confirm": "Your server account and access will be deleted and Apple authorization revoked. Local game progress will remain on this device. Continue?",
   "account.connecting": "Connecting...",
   "account.connected": "Signed in",
+  "account.owner_active": "Signed in — all games are enabled for this account",
   "account.disconnected": "Not signed in",
   "account.deleted": "Account deleted and authorization revoked",
   "account.failed": "Unable to complete the request. Check your connection and try again.",

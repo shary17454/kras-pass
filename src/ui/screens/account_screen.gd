@@ -29,6 +29,8 @@ func _update() -> void:
 	var key := AppleAccount.status_key
 	if key.is_empty():
 		key = "account.connected" if AppleAccount.signed_in else "account.disconnected"
+	if AppleAccount.has_all_games() and (key.is_empty() or key == "account.connected"):
+		key = "account.owner_active"
 	if not AppleAccount.available():
 		key = "account.ios_only"
 	_status.text = Loc.t(key)
