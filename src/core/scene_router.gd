@@ -25,6 +25,7 @@ const SCREENS := {
 	"achievements": "res://src/ui/screens/achievements_screen.gd",
 	"stats": "res://src/ui/screens/stats_screen.gd",
 	"settings": "res://src/ui/screens/settings_screen.gd",
+	"updates": "res://src/ui/screens/updates_screen.gd",
 	"profile": "res://src/ui/screens/profile_screen.gd",
 	"account": "res://src/ui/screens/account_screen.gd",
 	"results": "res://src/ui/screens/results_screen.gd",

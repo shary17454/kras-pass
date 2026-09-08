@@ -26,6 +26,7 @@
   "menu.rewards": "Rewards",
   "menu.achievements": "Achievements",
   "menu.stats": "Statistics",
+  "menu.updates": "Updates",
   "menu.settings": "Settings",
   "menu.profile": "Profile",
   "menu.quit": "Quit",
@@ -650,5 +651,12 @@
   "arena.frost_hairpin.name": "Frost Hairpin",
   "arena.magma_ring.name": "Magma Ring",
   "arena.sky_causeway.name": "Sky Causeway",
-  "results.stat.hits": "Hits"
+  "results.stat.hits": "Hits",
+  "updates.title": "Updates",
+  "updates.version": "Latest update - version {version}",
+  "updates.item.liquid_glass": "Refined the interface with a lightweight translucent glass style.",
+  "updates.item.performance": "Improved smoothness and reduced pressure on the in-game HUD.",
+  "updates.item.ai": "Improved AI balance in Gem Grab.",
+  "updates.item.ice": "Improved ice and water arena readability during play.",
+  "updates.item.rocket": "Added and refined Rocket Rally and special crates."
 }

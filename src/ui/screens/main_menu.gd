@@ -39,11 +39,14 @@ func build() -> void:
 	_add_mode(modes, "menu.training", "training")
 	_add_mode(modes, "menu.daily", "daily")
 
-	var secondary := UIKit.hbox(10)
+	var secondary := GridContainer.new()
+	secondary.columns = 4
+	secondary.add_theme_constant_override("h_separation", 10)
+	secondary.add_theme_constant_override("v_separation", 10)
 	modes.add_child(secondary)
 	var entries := [["menu.profile", "profile"], ["menu.characters", "characters"],
 			["menu.achievements", "achievements"], ["replay.title", "replays"],
-			["menu.stats", "stats"], ["menu.settings", "settings"]]
+			["menu.stats", "stats"], ["menu.updates", "updates"], ["menu.settings", "settings"]]
 	if AppleAccount.available():
 		entries.append(["account.title", "account"])
 	for entry in entries:

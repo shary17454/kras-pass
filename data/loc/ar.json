@@ -26,6 +26,7 @@
   "menu.rewards": "الجوائز",
   "menu.achievements": "الإنجازات",
   "menu.stats": "الإحصاءات",
+  "menu.updates": "التحديثات",
   "menu.settings": "الإعدادات",
   "menu.profile": "الملف الشخصي",
   "menu.quit": "خروج",
@@ -650,5 +651,12 @@
   "arena.frost_hairpin.name": "منعطف الصقيع",
   "arena.magma_ring.name": "حلقة الحمم",
   "arena.sky_causeway.name": "جسر السماء",
-  "results.stat.hits": "إصابات"
+  "results.stat.hits": "إصابات",
+  "updates.title": "التحديثات",
+  "updates.version": "آخر تحديث - الإصدار {version}",
+  "updates.item.liquid_glass": "تحسين شكل الواجهة بمظهر زجاجي شفاف وخفيف.",
+  "updates.item.performance": "تحسين السلاسة وتقليل الضغط على واجهة اللعب.",
+  "updates.item.ai": "تحسين توازن الذكاء الاصطناعي في جمع الجواهر.",
+  "updates.item.ice": "تحسين وضوح حلبات الجليد والماء داخل اللعب.",
+  "updates.item.rocket": "إضافة وتحسين سباق الصواريخ والصناديق الخاصة."
 }
