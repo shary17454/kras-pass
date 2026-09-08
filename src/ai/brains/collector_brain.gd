@@ -8,9 +8,12 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## uses: pick up whatever is close first, and only detour to a rival when the
 ## gap is genuinely worth it and they are genuinely reachable.
 
-const CLOSE_LOOT := 6.5
-const MUG_RANGE := 8.0
-const MUG_GAP := 5
+const CLOSE_LOOT_EASY := 4.8
+const CLOSE_LOOT_EXPERT := 8.4
+const MUG_RANGE_EASY := 6.4
+const MUG_RANGE_EXPERT := 9.0
+const MUG_GAP_EASY := 7
+const MUG_GAP_EXPERT := 4
 
 
 func decide(_delta: float) -> void:
@@ -25,9 +28,12 @@ func decide(_delta: float) -> void:
 
 	var loot := nearest_in_group("pickups", _tree) if _tree != null else null
 	var loot_distance := distance_to(loot.global_position) if loot != null else INF
+	var close_loot := lerpf(CLOSE_LOOT_EASY, CLOSE_LOOT_EXPERT, strategy)
+	var mug_range := lerpf(MUG_RANGE_EASY, MUG_RANGE_EXPERT, strategy)
+	var mug_gap := roundi(lerpf(MUG_GAP_EASY, MUG_GAP_EXPERT, strategy))
 
 	# Anything within easy reach is free value; take it before anything else.
-	if loot != null and loot_distance < CLOSE_LOOT:
+	if loot != null and loot_distance < close_loot:
 		_go_get(loot, loot_distance)
 		return
 
@@ -38,7 +44,7 @@ func decide(_delta: float) -> void:
 		var reach := distance_to(spot)
 		# Worth mugging only when they are meaningfully ahead, close enough to
 		# catch, and not further away than the loot we would otherwise fetch.
-		if gap >= MUG_GAP and reach < MUG_RANGE and reach < loot_distance \
+		if gap >= mug_gap and reach < mug_range and reach < loot_distance \
 				and rng.randf() < aggression * strategy:
 			steer_to(spot)
 			maybe_attack(target, 2.6)
@@ -54,9 +60,9 @@ func decide(_delta: float) -> void:
 
 
 func _go_get(loot: Node3D, distance: float) -> void:
-	steer_to(loot.global_position)
+	steer_to(loot.global_position, lerpf(0.78, 1.0, accuracy))
 	if distance > 4.5:
-		maybe_dash(0.7)
+		maybe_dash(lerpf(0.3, 0.9, strategy))
 	# Swat anyone standing between us and the pickup, but never detour for it.
 	var rival := nearest_rival()
 	if rival >= 0 and distance_to(perceive(rival)) < 2.2:
