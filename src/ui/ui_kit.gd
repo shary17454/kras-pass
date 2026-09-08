@@ -14,6 +14,10 @@ extends RefCounted
 const BG := Color("#0d1020")
 const PANEL := Color("#1a1f3a")
 const PANEL_HI := Color("#252c52")
+const GLASS := Color(0.18, 0.23, 0.42, 0.58)
+const GLASS_HI := Color(0.26, 0.32, 0.58, 0.68)
+const GLASS_EDGE := Color(0.82, 0.92, 1.0, 0.34)
+const GLASS_SHADOW := Color(0.0, 0.0, 0.0, 0.28)
 const ACCENT := Color("#ffb347")
 const ACCENT_2 := Color("#57e0c0")
 const TEXT := Color("#f2f4ff")
@@ -62,6 +66,18 @@ static func text_color() -> Color:
 
 static func dim_color() -> Color:
 	return Color(0.85, 0.87, 0.95) if bool(UserSettings.get_value("high_contrast")) else TEXT_DIM
+
+
+static func liquid_glass_color(color: Color, lifted := false) -> Color:
+	if bool(UserSettings.get_value("high_contrast")):
+		return Color(color.r, color.g, color.b, maxf(color.a, 0.94))
+	var base := GLASS_HI if lifted else GLASS
+	return Color(
+		clampf(color.r * 0.42 + base.r * 0.58, 0.0, 1.0),
+		clampf(color.g * 0.42 + base.g * 0.58, 0.0, 1.0),
+		clampf(color.b * 0.42 + base.b * 0.58, 0.0, 1.0),
+		maxf(color.a * 0.62, base.a)
+	)
 
 
 ## Colour-vision adjustment. Applied to every player/team colour so the four
@@ -134,6 +150,10 @@ static func stylebox(color: Color, radius: int = 14, border := 0, border_color :
 	sb.content_margin_right = 22
 	sb.content_margin_top = 13
 	sb.content_margin_bottom = 13
+	if color.a < 0.98 and not bool(UserSettings.get_value("high_contrast")):
+		sb.shadow_color = GLASS_SHADOW
+		sb.shadow_size = 10
+		sb.shadow_offset = Vector2(0, 5)
 	if border > 0:
 		sb.border_width_left = border
 		sb.border_width_right = border
@@ -143,9 +163,14 @@ static func stylebox(color: Color, radius: int = 14, border := 0, border_color :
 	return sb
 
 
+static func liquid_glass_stylebox(color: Color = PANEL, radius: int = 18, lifted := false) -> StyleBoxFlat:
+	var edge := GLASS_EDGE.lightened(0.14) if lifted else GLASS_EDGE
+	return stylebox(liquid_glass_color(color, lifted), radius, 1, edge)
+
+
 static func panel(color: Color = PANEL, radius: int = 18) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", stylebox(color, radius))
+	p.add_theme_stylebox_override("panel", liquid_glass_stylebox(color, radius))
 	return p
 
 
@@ -158,11 +183,11 @@ static func button(text: String, size: int = SIZE_BODY) -> Button:
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
 	b.add_theme_color_override("font_focus_color", BG)
 	b.add_theme_color_override("font_pressed_color", BG)
-	b.add_theme_stylebox_override("normal", stylebox(PANEL, 14, 2, PANEL_HI))
-	b.add_theme_stylebox_override("hover", stylebox(PANEL_HI, 14, 2, ACCENT))
+	b.add_theme_stylebox_override("normal", liquid_glass_stylebox(PANEL, 18))
+	b.add_theme_stylebox_override("hover", liquid_glass_stylebox(PANEL_HI, 18, true))
 	b.add_theme_stylebox_override("focus", stylebox(ACCENT, 14, 2, Color.WHITE))
-	b.add_theme_stylebox_override("pressed", stylebox(ACCENT.darkened(0.15), 14))
-	b.add_theme_stylebox_override("disabled", stylebox(PANEL.darkened(0.3), 14))
+	b.add_theme_stylebox_override("pressed", stylebox(ACCENT.darkened(0.15), 18))
+	b.add_theme_stylebox_override("disabled", liquid_glass_stylebox(PANEL.darkened(0.3), 18))
 	b.custom_minimum_size = Vector2(0, 68 * scale())
 	b.focus_mode = Control.FOCUS_ALL
 	# Menu audio is wired here so no screen has to remember it.
