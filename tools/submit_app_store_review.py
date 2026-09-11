@@ -18,16 +18,16 @@ API = "https://api.appstoreconnect.apple.com/v1"
 ISSUER_ID = "26cc2279-524d-4d33-ba75-9333cf111ad1"
 KEY_ID = "668Z2T3Q47"
 APP_ID = os.environ.get("APP_STORE_APP_ID", "6801506973")
-VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.5")
-BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "82")
+VERSION_STRING = os.environ.get("APP_STORE_VERSION", "1.1.6")
+BUILD_NUMBER = os.environ.get("APP_STORE_BUILD", "87")
 
 WHATS_NEW_AR = (
-    "إضافة زر التحديثات داخل القائمة الرئيسية، وتحسين مظهر Liquid Glass، "
-    "مع إصلاح توازن الذكاء الاصطناعي وتحسينات للسلاسة."
+    "تحسين موثوقية الاتصال بخدمة الحسابات الإنتاجية، مع تحديثات استقرار "
+    "وتجهيزات نشر محسنة."
 )
 WHATS_NEW_EN = (
-    "Adds the Updates screen to the main menu, refines the Liquid Glass UI style, "
-    "and includes AI balance and smoothness improvements."
+    "Improves reliability for the production account service connection, "
+    "with stability and deployment readiness updates."
 )
 
 
