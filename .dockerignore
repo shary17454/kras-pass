@@ -1,0 +1,13 @@
+.git
+.godot
+.import
+build/ios/KrasPass.xcarchive
+build/ios/exported-appstore
+build/ios/**/*.a
+exports
+server/node_modules
+server/.env
+server/*.sqlite*
+*.tmp
+*.log
+.DS_Store
