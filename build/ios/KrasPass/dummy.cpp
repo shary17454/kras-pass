@@ -28,6 +28,20 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+extern void register_dynamic_symbol(char *name, void *address);
+extern void add_apple_embedded_platform_init_callback(void (*cb)());
+
+extern "C" void kras_apple_init();
+void kras_apple_init_init() {
+  if (&kras_apple_init) register_dynamic_symbol((char *)"kras_apple_init", (void *)kras_apple_init);
+}
+struct kras_apple_init_struct {
+  kras_apple_init_struct() {
+    add_apple_embedded_platform_init_callback(kras_apple_init_init);
+  }
+};
+kras_apple_init_struct kras_apple_init_struct_instance;
+
 
 // Godot Plugins
 void godot_apple_embedded_plugins_initialize();
