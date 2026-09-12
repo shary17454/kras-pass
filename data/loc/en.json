@@ -430,6 +430,8 @@
   "settings.quality.high": "High",
   "settings.quality.ultra": "Ultra",
   "settings.fps": "Frame rate limit",
+  "settings.fps.60": "60 FPS",
+  "settings.fps.120": "120 FPS",
   "settings.fps.auto": "Display refresh",
   "settings.language": "Language",
   "settings.accessibility": "Accessibility",

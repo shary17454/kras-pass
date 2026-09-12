@@ -58,8 +58,9 @@ func build() -> void:
 	v.add_child(UIKit.row(Loc.t("settings.quality"), quality))
 
 	var fps_values := [0, 30, 60, 120, 144]
-	var fps := UIKit.option([Loc.t("settings.fps.auto"), "30", "60", "120", "144"],
+	var fps := UIKit.option([Loc.t("settings.fps.auto"), "30", Loc.t("settings.fps.60"), Loc.t("settings.fps.120"), "144"],
 		maxi(0, fps_values.find(int(UserSettings.get_value("fps_limit")))))
+	fps.name = "FrameRateOptions"
 	fps.item_selected.connect(func(i): UserSettings.set_value("fps_limit", fps_values[i]))
 	v.add_child(UIKit.row(Loc.t("settings.fps"), fps))
 
