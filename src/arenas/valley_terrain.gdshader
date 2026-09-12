@@ -44,6 +44,14 @@ void fragment() {
     } else if (biome == 3) {
         ALBEDO = vec3(grain * 0.35 + 0.025);
         ROUGHNESS = 0.9;
+    } else if (biome == 6) {
+        ALBEDO = mix(vec3(0.43, 0.34, 0.20), vec3(0.76, 0.69, 0.46), clamp(grain * 1.7, 0.0, 1.0));
+        ROUGHNESS = 0.78;
+    } else if (biome == 7) {
+        vec3 sand = mix(vec3(0.40, 0.26, 0.12), vec3(0.76, 0.60, 0.33), clamp(grain * 1.8, 0.0, 1.0));
+        float bank = 1.0 - smoothstep(18.0, 35.0, abs(world_position.x - 145.0));
+        ALBEDO = mix(sand, vec3(0.12, 0.23, 0.06) + grain * 0.14, bank);
+        ROUGHNESS = 0.85;
     } else if (biome == 5) {
         vec3 sandstone = mix(vec3(0.21, 0.12, 0.065), vec3(0.52, 0.35, 0.22), clamp(grain * 1.6, 0.0, 1.0));
         ALBEDO = sandstone;

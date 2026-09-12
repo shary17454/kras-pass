@@ -96,6 +96,7 @@ locale/fallback="ar"
 
 3d/default_gravity=26.0
 common/physics_ticks_per_second=60
+common/physics_interpolation=true
 
 [rendering]
 

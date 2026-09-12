@@ -9,12 +9,16 @@ void vertex() {
 }
 
 void fragment() {
-    float a = sin(world_position.x * 4.7 + world_position.z * 1.9 + TIME * 1.8);
-    float b = sin(world_position.z * 7.2 - world_position.x * 3.1 - TIME * 2.4);
-    float c = sin(world_position.z * 1.3 + world_position.x * 0.7 - TIME * 0.8);
+    float phase_a = world_position.x * 1.7 + world_position.z * 0.9 + TIME * 1.8;
+    float phase_b = world_position.z * 2.2 - world_position.x * 1.1 - TIME * 2.4;
+    // Fade sub-pixel ripples before they turn into distant moire stripes.
+    float a = sin(phase_a) * (1.0 - smoothstep(0.3, 1.8, fwidth(phase_a)));
+    float b = sin(phase_b) * (1.0 - smoothstep(0.3, 1.8, fwidth(phase_b)));
+    float c = sin(world_position.z * 0.23 + world_position.x * 0.17 - TIME * 0.8) * 0.45
+            + sin(world_position.x * 0.31 - world_position.z * 0.12 + TIME * 0.53) * 0.35;
     NORMAL_MAP = normalize(vec3((a + c) * 0.06, (b + c) * 0.05, 1.0)) * 0.5 + 0.5;
-    ALBEDO = mix(vec3(0.02, 0.08, 0.075), vec3(0.04, 0.13, 0.115), c * 0.5 + 0.5);
-    ROUGHNESS = 0.14;
+    ALBEDO = vec3(0.017, 0.092, 0.115) + c * 0.004;
+    ROUGHNESS = 0.32;
     METALLIC = 0.0;
     SPECULAR = 0.28;
 }

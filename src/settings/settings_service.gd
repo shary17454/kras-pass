@@ -25,7 +25,7 @@ const DEFAULTS := {
 	"camera_distance": 1.0,
 	"camera_shake": 1.0,
 	"graphics_quality": 3,  # 0 low, 1 medium, 2 high, 3 ultra
-	"fps_limit": 0,  # 0 = display refresh
+	"fps_limit": 120,  # Preferred ceiling; presentation remains display-limited.
 	"language": "",  # "" = no explicit choice yet -> Arabic, the primary
 	"text_scale": 1.0,
 	"high_contrast": false,
@@ -127,9 +127,10 @@ func _persist() -> void:
 
 
 func _apply_engine_settings() -> void:
-	Engine.max_fps = int(get_value("fps_limit"))
 	if DisplayServer.get_name() == "headless":
+		Engine.max_fps = 0
 		return
+	Engine.max_fps = frame_limit_for_display(int(get_value("fps_limit")), DisplayServer.screen_get_refresh_rate())
 	var quality := int(get_value("graphics_quality"))
 	# Scale the 3D render resolution rather than dropping features, which keeps
 	# gameplay readability identical across quality tiers.
@@ -153,3 +154,8 @@ func _apply_engine_settings() -> void:
 	get_tree().root.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED \
 		if quality >= 2 else Viewport.SCREEN_SPACE_AA_FXAA
 	get_tree().root.use_taa = rich and quality >= 2
+
+
+func frame_limit_for_display(requested: int, refresh: float) -> int:
+	var limit := 120 if requested <= 0 else clampi(requested, 30, 144)
+	return mini(limit, maxi(30, int(round(refresh)))) if refresh > 0.0 else limit

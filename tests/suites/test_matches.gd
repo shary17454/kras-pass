@@ -19,6 +19,12 @@ var _host: Node
 func run(t: TestHarness, host: Node) -> void:
 	_host = host
 	t.suite("matches (integration)")
+	t.test("high refresh presentation does not accelerate physics")
+	t.equal(UserSettings.frame_limit_for_display(120, 120.0), 120, "120 Hz screens can request 120 frames")
+	t.equal(UserSettings.frame_limit_for_display(120, 60.0), 60, "60 Hz screens are not forced to render 120 frames")
+	t.equal(UserSettings.frame_limit_for_display(30, 120.0), 30, "explicit power-saving choice is retained")
+	t.equal(UserSettings.frame_limit_for_display(0, -1.0), 120, "unknown refresh is bounded instead of unlimited")
+	t.equal(Engine.physics_ticks_per_second, 60, "physics remains at its tested 60 Hz")
 	await _every_minigame(t)
 	await _multi_round(t)
 	await _pause_and_restart(t)
@@ -43,7 +49,7 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 		if arena.def.shape == "circuit":
 			var world := arena.get_node("FantasyWorld")
 			t.ok(world.get_node_or_null("WoodlandTerrain") != null, "natural world has sculpted terrain")
-			if arena_id not in ["dune_circuit", "magma_ring", "alula_rain"]:
+			if arena_id not in ["dune_circuit", "magma_ring", "alula_rain", "sinbad_coast"]:
 				t.ok(world.get_node_or_null("River") != null, "river biome has water")
 			if arena_id == "magma_ring":
 				t.not_null(world.get_node_or_null("Lava"), "volcano has an animated lava crater")
@@ -57,6 +63,11 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 				t.ok(formations.get_child_count() >= 20, "AlUla has scanned cliffs and matching collision")
 				var cliff := formations.get_node("ScannedCliff4") as MeshInstance3D
 				t.ok((cliff.transform * cliff.mesh.get_aabb()).size.y > 40.0, "AlUla has tall scanned sandstone mountains")
+			if arena_id == "sinbad_coast":
+				t.not_null(world.get_node_or_null("Ocean"), "Sinbad has a surrounding ocean")
+				t.not_null(world.get_node_or_null("SinbadHarbour"), "Sinbad has its own harbour and sailing ships")
+			if arena_id == "pharaoh_valley":
+				t.not_null(world.get_node_or_null("PharaohMonuments"), "Pharaoh course has pyramids and a temple")
 			if arena_id in ["neon_spiral", "alula_rain"]:
 				t.not_null(world.get_node_or_null("Weather/Rain"), "storm biome has rain")
 				var weather = world.get_node("Weather")

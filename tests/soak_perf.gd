@@ -42,6 +42,10 @@ func _ready() -> void:
 	UserSettings._values["fps_limit"] = cap
 	UserSettings._apply_engine_settings()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	# Measure render throughput independently of the connected monitor's refresh.
+	Engine.max_fps = cap
+	report["display_refresh_hz"] = DisplayServer.screen_get_refresh_rate()
+	report["benchmark_cap"] = cap
 	Loc.set_locale("ar")
 	nodes_before = get_tree().get_node_count()
 	memory_before = OS.get_static_memory_usage() / 1048576.0

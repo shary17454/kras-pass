@@ -781,7 +781,9 @@
         "frost_hairpin",
         "magma_ring",
         "sky_causeway",
-        "alula_rain"
+        "alula_rain",
+        "sinbad_coast",
+        "pharaoh_valley"
       ],
       "duration": 140.0,
       "rounds": 1,

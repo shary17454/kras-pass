@@ -91,6 +91,8 @@ func build(arena_def: ArenaDef) -> void:
 		var scenery_path := "res://src/arenas/racing_biome.gd"
 		if def.id == "alula_rain":
 			scenery_path = "res://src/arenas/alula_world.gd"
+		elif def.id in ["sinbad_coast", "pharaoh_valley"]:
+			scenery_path = "res://src/arenas/voyage_world.gd"
 		var scenery: Node3D = load(scenery_path).new()
 		add_child(scenery)
 		scenery.build(self)

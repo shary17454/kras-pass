@@ -574,6 +574,7 @@ func respawn_at(p: Vector3) -> void:
 	if _markers != null and is_instance_valid(_markers):
 		_markers.visible = true
 	global_position = p
+	reset_physics_interpolation()
 	velocity = Vector3.ZERO
 	_impulse = Vector3.ZERO
 	_stun = 0.0

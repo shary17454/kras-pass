@@ -108,6 +108,7 @@ func is_intro_active() -> bool:
 
 
 func _process(delta: float) -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	var view := get_viewport().get_visible_rect().size
 	keep_aspect = Camera3D.KEEP_WIDTH if view.x < view.y else Camera3D.KEEP_HEIGHT
 	var sensitivity := float(UserSettings.get_value("camera_sensitivity"))
@@ -116,7 +117,7 @@ func _process(delta: float) -> void:
 		return
 	if mode == Mode.CHASE and is_instance_valid(local_target):
 		var heading: Vector3 = local_target.facing.normalized()
-		var subject: Vector3 = local_target.global_position
+		var subject: Vector3 = local_target.get_global_transform_interpolated().origin
 		var wanted := subject - heading * 10.0 + Vector3.UP * 6.0
 		global_position = global_position.lerp(wanted, 1.0 - exp(-5.0 * delta))
 		focus = subject

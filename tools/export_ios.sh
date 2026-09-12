@@ -89,6 +89,8 @@ fi
 # --- orientation patch ------------------------------------------------------
 # Preserve portrait and landscape support when regenerating the iOS export.
 PLIST="$OUT/KrasPass/KrasPass-Info.plist"
+/usr/libexec/PlistBuddy -c 'Delete :CADisableMinimumFrameDurationOnPhone' "$PLIST" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c 'Add :CADisableMinimumFrameDurationOnPhone bool true' "$PLIST"
 ENTITLEMENTS="$OUT/KrasPass/KrasPass.entitlements"
 /usr/libexec/PlistBuddy -c 'Delete :com.apple.developer.applesignin' "$ENTITLEMENTS" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c 'Add :com.apple.developer.applesignin array' "$ENTITLEMENTS"
