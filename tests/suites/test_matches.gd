@@ -26,6 +26,105 @@ func run(t: TestHarness, host: Node) -> void:
 	await _difficulty_separation(t)
 	await _rocket_rally_rules(t)
 	await _ring_ordnance_rules(t)
+	await _tank_battle_rules(t)
+	await _fantasy_world_rules(t)
+
+
+func _fantasy_world_rules(t: TestHarness) -> void:
+	t.test("fantasy circuits have continuous elevated driveable roads")
+	for arena_id in Registry.minigame("sabaq_sawarikh").arena_ids:
+		var arena := Arena.new()
+		_host.add_child(arena)
+		arena.build(Registry.arena(arena_id))
+		await _host.get_tree().physics_frame
+		t.ok(arena.get_node_or_null("FantasyWorld") != null, "world scenery exists")
+		if arena_id == "sky_causeway":
+			var world := arena.get_node("FantasyWorld")
+			t.ok(world.get_node_or_null("WoodlandTerrain") != null, "natural world has sculpted terrain")
+			t.ok(world.get_node_or_null("River") != null, "natural world has water")
+			t.equal(world._rock_meshes.size(), 6, "six scanned rock variations loaded")
+			t.equal(world._tree_meshes.size(), 3, "three optimized pine variations loaded")
+			t.ok(world.get_node("GravelRoad").material_override.albedo_texture != null, "road uses photographed texture")
+			for mesh in world._tree_meshes:
+				var triangle_count := 0
+				for surface in mesh.get_surface_count():
+					triangle_count += mesh.surface_get_array_index_len(surface) / 3
+				t.ok(triangle_count < 15000, "each pine stays within its geometry budget")
+		for index in range(0, 120, 10):
+			var p := arena.track_point(float(index) / 120.0)
+			t.ok(arena.is_inside(p), "elevation does not affect lateral track containment")
+			var ray := PhysicsRayQueryParameters3D.create(p + Vector3.UP * 2, p + Vector3.DOWN * 2, 1)
+			var hit := arena.get_world_3d().direct_space_state.intersect_ray(ray)
+			t.ok(not hit.is_empty(), "road has collision at every sampled hill")
+			if not hit.is_empty():
+				t.ok(absf(hit.position.y - p.y) < 0.3, "road visual and collision heights agree")
+		t.ok(arena.track_point(0.25).y > 3, "circuit has an actual climb")
+		arena.queue_free()
+		await _host.get_tree().process_frame
+
+
+func _tank_battle_rules(t: TestHarness) -> void:
+	t.test("tank battle armor, elimination, cover and round reset on all maps")
+	for arena_id in Registry.minigame("tank_arena").arena_ids:
+		var cfg := _make_config("tank_arena", PlayerConfig.Difficulty.EASY)
+		cfg.arena_id = arena_id
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		_host.add_child(scene)
+		scene.setup({"config": cfg, "on_finished": func(_r): pass})
+		var game = scene.controller
+		t.equal(game.armor.size(), 4, "all four tanks have armor")
+		var quad = scene.ctx.fighter(0)._visual.get_node_or_null("QuadBike")
+		t.not_null(quad, "uses a four-wheel ATV, not an armored tank")
+		if quad != null:
+			t.equal(quad._wheels.size(), 4, "ATV has exactly four wheels")
+			t.equal(quad._steering.size(), 2, "front wheels steer")
+			quad.animate(0.1, 4.0, 1.0)
+			t.ok(absf(quad._wheels[0].rotation.x) > 0.01, "quad tires rotate while driving")
+			t.ok(absf(quad._steering[0].rotation.y) > 0.01, "front tires follow steering input")
+		var shot := Projectile.new()
+		scene.add_child(shot)
+		await _host.get_tree().physics_frame
+		t.equal(game.cover.size(), 16, "each battlefield has sixteen solid rock covers")
+		t.not_null(game.world.get_node_or_null("TerrainCollision"), "natural terrain has physical collision")
+		t.not_null(game.world.get_node_or_null("Pines0"), "battlefield uses the pine models")
+		for cover in game.cover:
+			t.ok(cover.get_child(0).mesh is ArrayMesh, "cover uses scanned geometry instead of primitive boxes")
+		for id in game.world.roads.get_point_ids():
+			var point: Vector3 = game.world.roads.get_point_position(id)
+			var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 2, point + Vector3.DOWN, 1)
+			var ground: Dictionary = scene.arena.get_world_3d().direct_space_state.intersect_ray(query)
+			t.ok(not ground.is_empty(), "all trail intersections have driveable ground")
+			if not ground.is_empty():
+				t.ok(absf(ground.position.y) < 0.3, "navigation stays on the trail surface")
+		t.ok(scene.arena.def.radius >= 46, "tank district is a full road map")
+		t.ok(game.world.route(Vector3(-36, 0, -36), Vector3(36, 0, 36)).size() >= 9, "roads connect across the district")
+		t.equal(scene.camera.mode, ArenaCamera.Mode.WORLD, "tank battle uses a follow camera")
+		scene.camera.local_target = scene.ctx.fighter(0)
+		t.ok(scene.camera._wanted_focus().is_equal_approx(scene.ctx.fighter(0).global_position), "camera follows the selected tank without centre bias")
+		var barrier: StaticBody3D = game.cover[0]
+		shot.fire(barrier.global_position + Vector3(0, 0, -7), Vector3.BACK, 0, 30, 25, 30)
+		shot.tick(0.4)
+		t.ok(not shot.active, "cover stops a shell swept through it")
+		shot.damage = 25.0
+		game._on_hit(shot, 0, 1)
+		t.equal(game.armor[1], 75, "a shell removes 25 armor")
+		t.ok(scene.ctx.is_alive(1), "survives the first hit")
+		for i in 3:
+			game._on_hit(shot, 0, 1)
+		t.ok(not scene.ctx.is_alive(1), "four shells eliminate a tank")
+		t.ok(game.compute_scores()[0] > game.compute_scores()[1], "survivor ranks above destroyed tank")
+		game._on_hit(shot, 0, 1)
+		t.equal(game.armor[1], 0, "duplicate hits cannot take armor below zero")
+		for victim in [2, 3]:
+			for i in 4:
+				game._on_hit(shot, 0, victim)
+		t.ok(game.is_round_over(), "last tank ends the round")
+		game.on_round_start()
+		t.equal(game.armor[1], 100, "next round restores armor")
+		shot.free()
+		scene.teardown()
+		scene.queue_free()
+		await _host.get_tree().process_frame
 
 
 func _characters() -> Array:

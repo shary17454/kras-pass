@@ -8,7 +8,8 @@ extends Camera3D
 ## fit with padding, and clamps so a single leftover player does not push the
 ## view to a useless extreme.
 
-enum Mode { ARENA, TOP_DOWN, ISOMETRIC, THIRD_PERSON, RACE }
+enum Mode { ARENA, TOP_DOWN, ISOMETRIC, THIRD_PERSON, RACE, WORLD, CHASE }
+var local_target: Node3D
 
 var mode: Mode = Mode.ARENA
 var targets: Array = []
@@ -66,6 +67,10 @@ func configure(m: Mode, a: Arena) -> void:
 		_target_zoom = clampf(a.def.radius / 12.0, _min_zoom, _max_zoom)
 		_zoom = _target_zoom
 	match mode:
+		Mode.WORLD:
+			_height = 7.0
+			_distance = 12.0
+			_yaw = 0.0
 		Mode.TOP_DOWN:
 			_pitch = -78.0
 			_height = 22.0
@@ -109,6 +114,14 @@ func _process(delta: float) -> void:
 	if _intro_left > 0.0:
 		_tick_intro(delta)
 		return
+	if mode == Mode.CHASE and is_instance_valid(local_target):
+		var heading: Vector3 = local_target.facing.normalized()
+		var subject: Vector3 = local_target.global_position
+		var wanted := subject - heading * 10.0 + Vector3.UP * 6.0
+		global_position = global_position.lerp(wanted, 1.0 - exp(-5.0 * delta))
+		focus = subject
+		look_at(subject + heading * 5.0 + Vector3.UP)
+		return
 	_update_focus_and_zoom(false)
 	_shake = maxf(0.0, _shake - _shake_decay * delta)
 	_noise_t += delta * 34.0
@@ -136,7 +149,7 @@ func _tick_intro(delta: float) -> void:
 		# Hand the framing back where it can see everyone, without a jump: the
 		# focus and zoom were never touched, so this only re-seeds the yaw the
 		# gameplay camera orbits from.
-		_yaw = _intro_yaw
+		_yaw = 0.0 if mode == Mode.WORLD else _intro_yaw
 		_update_focus_and_zoom(false)
 
 
@@ -167,6 +180,12 @@ func _live_targets() -> Array:
 
 
 func _update_focus_and_zoom(instant: bool) -> void:
+	if mode == Mode.WORLD:
+		_target_zoom = 1.0
+		if instant:
+			focus = _wanted_focus()
+			_zoom = 1.0
+		return
 	var live := _live_targets()
 	if live.is_empty():
 		if arena != null:
@@ -228,16 +247,31 @@ func _apply(weight: float, delta: float) -> void:
 	if mode != Mode.RACE:
 		framing = maxf(framing, 1.12)
 	var offset := Vector3(sin(_yaw), 0.0, cos(_yaw)) * _distance * _zoom * framing
+	var look_focus := live_focus + Vector3.UP
+	if mode == Mode.WORLD and is_instance_valid(local_target):
+		var heading: Vector3 = local_target.facing.normalized()
+		offset = -heading * _distance * framing
+		look_focus += heading * 5.0
 	var pos := live_focus + Vector3(offset.x, _height * _zoom * framing, offset.z)
+	if mode == Mode.WORLD and is_inside_tree():
+		var ray := PhysicsRayQueryParameters3D.create(live_focus + Vector3.UP * 2, pos, 1)
+		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+		if not hit.is_empty():
+			pos = hit.position + hit.normal * 0.6
 	if _shake > 0.001:
 		var s := minf(_shake, _max_shake)
 		pos += Vector3(sin(_noise_t * 1.7), cos(_noise_t * 2.3), sin(_noise_t * 1.1)) * s * 0.9
 	global_position = pos
-	look_at(live_focus + Vector3(0, 1.0, 0), Vector3.UP)
+	look_at(look_focus, Vector3.UP)
 	rotation.x = clampf(rotation.x, deg_to_rad(-88.0), deg_to_rad(-8.0))
 
 
 func _wanted_focus() -> Vector3:
+	if mode == Mode.WORLD:
+		if is_instance_valid(local_target) and (not local_target is Fighter or local_target.alive):
+			return local_target.global_position
+		var survivors := _live_targets()
+		return survivors[0].global_position if not survivors.is_empty() else focus
 	var live := _live_targets()
 	if live.is_empty():
 		return arena.global_position if arena != null else focus

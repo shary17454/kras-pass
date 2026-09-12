@@ -87,6 +87,11 @@ func build(arena_def: ArenaDef) -> void:
 	_build_hazards()
 	if spawn_points.is_empty():
 		spawn_points = def.spawns_for(4)
+	if def.shape == "circuit":
+		var scenery_path := "res://src/arenas/natural_valley.gd" if def.id == "sky_causeway" else "res://src/arenas/fantasy_circuit.gd"
+		var scenery: Node3D = load(scenery_path).new()
+		add_child(scenery)
+		scenery.build(self)
 
 
 # --- queries used by gameplay and AI ---------------------------------------
@@ -614,7 +619,8 @@ func _build_circuit() -> void:
 	for i in samples:
 		var t := TAU * float(i) / float(samples)
 		var r: float = def.radius * (1.0 + wobble * cos(float(lobes) * t))
-		circuit_line.append(Vector3(cos(t) * r, 0.0, sin(t) * r))
+		var elevation := 1.6 * (1.0 - cos(t * 2.0))
+		circuit_line.append(Vector3(cos(t) * r, elevation, sin(t) * r))
 
 	for i in samples:
 		var a: Vector3 = circuit_line[i]
@@ -625,16 +631,19 @@ func _build_circuit() -> void:
 		# end to end leaves wedge-shaped gaps a kart drops through.
 		var body := _add_static_box(
 			Vector3(seg.length() * 1.35, def.thickness, track_width),
-			Vector3(mid.x, -def.thickness * 0.5, mid.z),
+			Vector3(mid.x, mid.y - def.thickness * 0.5, mid.z),
 			def.floor_color if i % 8 < 4 else def.floor_color.lightened(0.045))
-		body.rotation.y = -atan2(seg.z, seg.x)
+		var across := Vector3(-seg.z, 0, seg.x).normalized()
+		body.basis = Basis(seg.normalized(), across.cross(seg).normalized(), across)
+		_circuit_solid_mesh(body, Vector3(seg.length() * 1.35, def.thickness, track_width), def.floor_color.lightened(0.16))
+		body.set_meta("circuit_floor", true)
 
 	checkpoints.clear()
 	var cp_count := 12
 	for i in cp_count:
 		var idx := int(float(i) / float(cp_count) * float(samples))
 		var p: Vector3 = circuit_line[idx]
-		checkpoints.append(Vector3(p.x, 1.0, p.z))
+		checkpoints.append(p + Vector3.UP)
 
 	var start: Vector3 = circuit_line[0]
 	var fwd: Vector3 = (circuit_line[1] - circuit_line[samples - 1]).normalized()
@@ -669,6 +678,23 @@ func _circuit_walls(h: float) -> void:
 				mid + side * (track_width * 0.5 + 0.25) * s + Vector3(0, h * 0.5, 0),
 				def.accent_color.darkened(0.45) if i % 8 < 4 else def.accent_color.darkened(0.15))
 			body.rotation.y = -atan2(seg.z, seg.x)
+			_circuit_solid_mesh(body, Vector3(seg.length() * 1.35, h, 0.5), def.accent_color)
+			body.set_meta("circuit_wall", true)
+
+
+func _circuit_solid_mesh(body: StaticBody3D, size: Vector3, color: Color) -> void:
+	var old := body.get_child(0)
+	body.remove_child(old)
+	old.queue_free()
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = size
+	mesh.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 0.78
+	mesh.material_override = mat
+	body.add_child(mesh)
 
 
 func _circuit_nearest(pos: Vector3) -> Vector3:
@@ -679,7 +705,7 @@ func _circuit_nearest(pos: Vector3) -> Vector3:
 	var best_d := INF
 	var p := Vector3(pos.x - global_position.x, 0.0, pos.z - global_position.z)
 	for i in n:
-		var d: float = p.distance_squared_to(circuit_line[i])
+		var d: float = Vector2(p.x, p.z).distance_squared_to(Vector2(circuit_line[i].x, circuit_line[i].z))
 		if d < best_d:
 			best_d = d
 			best = circuit_line[i]
@@ -695,7 +721,7 @@ func _circuit_offset(pos: Vector3) -> float:
 	var p := Vector3(pos.x - global_position.x, 0.0, pos.z - global_position.z)
 	var best := INF
 	for i in n:
-		var d: float = p.distance_squared_to(circuit_line[i])
+		var d: float = Vector2(p.x, p.z).distance_squared_to(Vector2(circuit_line[i].x, circuit_line[i].z))
 		if d < best:
 			best = d
 	return sqrt(best)
@@ -707,7 +733,7 @@ func track_point(t: float) -> Vector3:
 	if def.shape == "circuit" and not circuit_line.is_empty():
 		var idx := int(fposmod(t, 1.0) * float(circuit_line.size())) % circuit_line.size()
 		var p: Vector3 = circuit_line[idx]
-		return global_position + Vector3(p.x, 0.0, p.z)
+		return global_position + p
 	# Oval and everything else: the mid-ring is the racing line.
 	var mid: float = (def.radius + def.radius * 0.55) * 0.5
 	var ang := TAU * fposmod(t, 1.0)

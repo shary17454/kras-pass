@@ -35,7 +35,7 @@ func _ready() -> void:
 	var started := Time.get_ticks_msec()
 	for path in SUITES:
 		var script: Script = load(path)
-		if script == null:
+		if script == null or not script.can_instantiate():
 			_t.suite(path)
 			_t.ok(false, "suite failed to load")
 			continue

@@ -2,6 +2,21 @@
   "_comment": "Arena recipes. ArenaBuilder generates geometry from these at load time — the project contains no scene or model files for venues. shape: disc|square|ring|cross|tiles|grid|track|oval|pit|islands",
   "arenas": [
     {
+      "id": "tank_foundry", "shape": "square", "radius": 46.0,
+      "thickness": 1.0, "wall_height": 2.0,
+      "palette": {"floor": "#41444b", "accent": "#e6b535", "sky_top": "#263447", "sky_bottom": "#7b8c91"}
+    },
+    {
+      "id": "tank_oasis", "shape": "square", "radius": 46.0,
+      "thickness": 1.0, "wall_height": 2.0,
+      "palette": {"floor": "#66806c", "accent": "#dcc998", "sky_top": "#548bae", "sky_bottom": "#a6ced3"}
+    },
+    {
+      "id": "tank_frost", "shape": "square", "radius": 46.0,
+      "thickness": 1.0, "wall_height": 2.0,
+      "palette": {"floor": "#aeced9", "accent": "#e5f5f8", "sky_top": "#2b4765", "sky_bottom": "#7fa8bb"}
+    },
+    {
       "id": "vortex_ring",
       "shape": "disc",
       "radius": 16.0,
@@ -474,7 +489,7 @@
     {
       "id": "sky_causeway",
       "shape": "circuit",
-      "radius": 19.5,
+      "radius": 34.0,
       "thickness": 1.0,
       "wall_height": 1.3,
       "palette": {
@@ -484,9 +499,9 @@
         "sky_bottom": "#5f7fb8"
       },
       "params": {
-        "lobes": 6,
-        "wobble": 0.24,
-        "width": 7.0
+        "lobes": 3,
+        "wobble": 0.18,
+        "width": 10.0
       }
     }
   ]

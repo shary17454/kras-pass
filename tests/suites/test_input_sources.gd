@@ -13,6 +13,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _sources_are_indistinguishable(t, host)
 	_touch_profiles(t)
 	_touch_layout_rules(t)
+	_tank_controls(t)
 	_haptics(t)
 	_haptic_events(t)
 
@@ -74,11 +75,46 @@ func _touch_profiles(t: TestHarness) -> void:
 			missing.append("%s (no movement, but the profile shows a stick)" % def.id)
 	t.empty(missing, "control profiles match declared controls")
 
-	t.test("driving games use the steering layout")
+	t.test("driving games offer steering buttons or a two-axis stick")
 	for def in Registry.all_minigames():
 		if def.control_hints.has("drive"):
-			t.equal(ControlProfile.name_of(def.control_profile), "steering",
-				"%s drives, so it steers" % def.id)
+			t.ok(def.control_profile in [ControlProfile.Kind.STEERING, ControlProfile.Kind.MOVEMENT_ACTION, ControlProfile.Kind.ATV],
+				"%s exposes turn and throttle axes" % def.id)
+
+
+func _tank_controls(t: TestHarness) -> void:
+	t.test("tank touch supports steering, reverse and sustained cannon fire together")
+	var touch := TouchSource.new()
+	touch.profile = Registry.minigame("tank_arena").control_profile
+	touch.buttons = ControlProfile.buttons_for(touch.profile, Registry.minigame("tank_arena").control_hints)
+	touch._haptics = false
+	t.equal(touch.profile, ControlProfile.Kind.ATV, "quad gets a dedicated layout")
+	t.equal(Registry.minigame("sabaq_sawarikh").control_profile, ControlProfile.Kind.ATV, "off-road race uses quad controls too")
+	t.equal(touch.buttons, ["shoot"], "tank shows cannon, not melee or boost")
+	t.ok(touch._glyph("shoot") != "✊", "vehicle weapon is not a fist")
+	for viewport in [Vector2(1920, 1080), Vector2(720, 1280)]:
+		touch.size = viewport
+		for handed in [false, true]:
+			touch._left_handed = handed
+			var stick := touch._stick_centre()
+			var fire := touch._button_centre(0)
+			t.ok(stick.distance_to(fire) > TouchSource.STICK_RADIUS + TouchSource.BUTTON_RADIUS, "drive and fire do not overlap")
+			t.ok(Rect2(Vector2.ZERO, viewport).encloses(Rect2(fire - Vector2.ONE * 74, Vector2.ONE * 148)), "cannon stays in viewport")
+			touch._handle_press(1, stick, true)
+			touch._handle_drag(1, stick + Vector2(45, -90))
+			touch._handle_press(2, fire, true)
+			t.ok(touch._move.x > 0 and touch._move.y < 0, "turn and forward work together")
+			t.ok((touch._bits & InputFrame.Btn.ATTACK) != 0, "fire held while moving")
+			touch._handle_press(3, fire, true)
+			touch._handle_press(2, fire, false)
+			t.ok(touch._bits != 0, "second finger preserves held fire")
+			touch._handle_drag(3, viewport * 0.5)
+			t.equal(touch._bits, 0, "sliding off releases fire")
+			touch._handle_drag(1, stick + Vector2(0, 90))
+			t.ok(touch._move.y > 0, "stick down reverses")
+			touch._handle_press(1, stick, false)
+			t.equal(touch._move, Vector2.ZERO, "releasing stick stops input")
+	touch.free()
 
 
 func _touch_layout_rules(t: TestHarness) -> void:

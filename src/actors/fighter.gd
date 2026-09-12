@@ -207,7 +207,11 @@ func _build_visual() -> void:
 	add_child(_visual)
 	var d := data if data != null else CharacterData.new()
 	if locomotion == Locomotion.DRIVE:
-		_visual.add_child(MeshFactory.kart(d.color, d.accent))
+		if _visual_theme == "atv":
+			var vehicle = load("res://src/fx/quad_bike.gd").new()
+			_visual.add_child(vehicle.build(d.color, d.accent))
+		else:
+			_visual.add_child(MeshFactory.kart(d.color, d.accent))
 	elif _visual_theme == "arctic":
 		var mount := MeshFactory.arctic_mount(slot, d.color, d.accent)
 		mount.name = "Mount"
@@ -743,6 +747,10 @@ func _apply_scale() -> void:
 func _update_visual(delta: float, wish: Vector3) -> void:
 	if _visual == null or not is_instance_valid(_visual):
 		return
+	if _visual_theme == "atv":
+		var vehicle := _visual.get_node_or_null("QuadBike")
+		if vehicle != null:
+			vehicle.animate(delta, velocity.dot(facing), wish.x)
 	if facing.length_squared() > 0.001:
 		var target := atan2(facing.x, facing.z)
 		_visual.rotation.y = lerp_angle(_visual.rotation.y, target, clampf(18.0 * delta, 0.0, 1.0))

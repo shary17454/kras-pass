@@ -132,10 +132,13 @@ func _pooling(t: TestHarness) -> void:
 ## a solid" are different claims and only the first was ever being checked.
 func _procedural_geometry(t: TestHarness) -> void:
 	t.test("rounded boxes are closed solids wound consistently outward")
-	# A hand-written winding table had 320 of 364 triangles inside out. With
-	# back-face culling that discards the bevel strips and every box in every
-	# arena shows open seams at its edges — invisible to a script-level test and
-	# easy to miss in a screenshot, because the strips are thin.
+	# Use an engine primitive as the oracle, not a mathematical CCW assumption.
+	var reference := BoxMesh.new().get_mesh_arrays()
+	var rv: PackedVector3Array = reference[Mesh.ARRAY_VERTEX]
+	var rn: PackedVector3Array = reference[Mesh.ARRAY_NORMAL]
+	var ri: PackedInt32Array = reference[Mesh.ARRAY_INDEX]
+	var native_sign := signf((rv[ri[1]] - rv[ri[0]]).cross(rv[ri[2]] - rv[ri[0]]).dot(rn[ri[0]]))
+	t.equal(native_sign, -1.0, "engine primitive uses clockwise front faces")
 	for size in [Vector3(1, 1, 1), Vector3(1.5, 0.45, 2.1), Vector3(6.2, 1.0, 9.0)]:
 		var mesh := MeshFactory._rounded_box_mesh(size, MeshFactory.BEVEL, MeshFactory.BEVEL_SEGMENTS)
 		var arrays := mesh.surface_get_arrays(0)
@@ -155,12 +158,13 @@ func _procedural_geometry(t: TestHarness) -> void:
 			if geometric.length() < 0.000001:
 				continue
 			var supplied := norms[i * 3] + norms[i * 3 + 1] + norms[i * 3 + 2]
-			if geometric.dot(supplied) < 0.0:
+			if signf(geometric.dot(supplied)) != native_sign:
 				flipped += 1
-		t.equal(flipped, 0, "%s: every triangle winds with its own normal" % str(size))
+		t.equal(flipped, 0, "%s: every triangle matches engine front-face winding" % str(size))
 		# The bevel removes material at the corners, so the solid is a little
 		# smaller than its bounding box and never larger.
 		var box_volume: float = size.x * size.y * size.z
+		volume = absf(volume)
 		t.ok(volume > box_volume * 0.9 and volume <= box_volume,
 			"%s: encloses %.3f of its %.3f box" % [str(size), volume, box_volume])
 

@@ -364,18 +364,12 @@ static func _uv_for(p: Vector3, n: Vector3) -> Vector2:
 	return Vector2(p.x, p.y) * 0.5
 
 
-## Emits the quad with whichever winding agrees with the supplied normals.
-##
-## Tracking winding by hand is how 88% of these triangles ended up inside out:
-## the correct order depends on the product of three axis signs across six
-## faces, twelve swept edges and eight octants, and a hand-written sign table
-## is wrong more often than it is right. With back-face culling on, the bevel
-## strips were being discarded and every box showed open seams at its edges.
-## Deriving the winding from the geometry cannot drift.
+## Godot's front faces are clockwise: their cross product opposes the outward
+## shading normal. Matching the normal instead turns the entire solid inside out.
 static func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
 		na: Vector3, nb: Vector3, nc: Vector3, nd: Vector3) -> void:
 	var tris: Array
-	if (b - a).cross(c - a).dot(na + nb + nc) < 0.0:
+	if (b - a).cross(c - a).dot(na + nb + nc) > 0.0:
 		tris = [[a, na, c, nc, b, nb], [a, na, d, nd, c, nc]]
 	else:
 		tris = [[a, na, b, nb, c, nc], [a, na, c, nc, d, nd]]
@@ -771,6 +765,46 @@ static func seal_mount(rider_color: Color, accent: Color) -> Node3D:
 
 
 ## A small kart: body, cabin, four wheels. Used by the vehicle games.
+static func tank(color: Color, accent: Color) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Tank"
+	root.rotation.y = PI
+	var hull := tank_plate(Vector3(1.65, 0.6, 2.0), color)
+	hull.position.y = 0.55
+	hull.material_override = satin(color, 0.32, 0.5, 0.12)
+	root.add_child(hull)
+	for side in [-1.0, 1.0]:
+		var track := tank_plate(Vector3(0.42, 0.6, 2.35), Color("252830"))
+		track.position = Vector3(side * 0.94, 0.35, 0)
+		root.add_child(track)
+		for z in [-0.8, -0.3, 0.3, 0.8]:
+			var wheel := cylinder(0.23, 0.46, accent, 0, 12)
+			wheel.rotation.z = PI / 2.0
+			wheel.position = Vector3(side * 0.96, 0.35, z)
+			root.add_child(wheel)
+	var turret := cylinder(0.65, 0.48, color.lightened(0.16), 0, 20)
+	turret.position.y = 1.05
+	root.add_child(turret)
+	var barrel := cylinder(0.16, 1.55, accent, 0, 12)
+	barrel.rotation.x = PI / 2.0
+	barrel.position = Vector3(0, 1.05, -1.0)
+	root.add_child(barrel)
+	var muzzle := cylinder(0.22, 0.25, Color("252830"), 0, 12)
+	muzzle.rotation.x = PI / 2.0
+	muzzle.position = Vector3(0, 1.05, -1.78)
+	root.add_child(muzzle)
+	return root
+
+
+static func tank_plate(size: Vector3, color: Color) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	var shape := BoxMesh.new()
+	shape.size = size
+	part.mesh = shape
+	part.material_override = satin(color, 0.4, 0.25, 0.08)
+	return part
+
+
 static func kart(color: Color, accent: Color) -> Node3D:
 	var root := Node3D.new()
 	var body := box(Vector3(1.5, 0.45, 2.1), color)

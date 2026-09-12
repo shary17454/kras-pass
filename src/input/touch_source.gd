@@ -136,6 +136,9 @@ func _aim_centre() -> Vector2:
 ## Buttons fan out in an arc away from the stick hand.
 func _button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
+	if profile == ControlProfile.Kind.ATV:
+		var x := _left_edge() + r if _left_handed else _right_edge() - r
+		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
 	if size.x < size.y and buttons.size() > 2:
 		var x := _right_edge() - r - float(1 - index % 2) * r * 2.2
 		if _left_handed:
@@ -222,12 +225,16 @@ func _handle_press(index: int, pos: Vector2, pressed: bool) -> void:
 	var mid := size.x * 0.5
 	var on_stick_side := (pos.x < mid) != _left_handed
 	if ControlProfile.shows_move_stick(profile) and on_stick_side:
+		if _owners_has("move"):
+			return
 		_owners[index] = {"kind": "move"}
 		_move_origin = pos
 		_move_knob = pos
 		queue_redraw()
 		return
 	if ControlProfile.shows_aim_stick(profile) and not on_stick_side:
+		if _owners_has("aim"):
+			return
 		_owners[index] = {"kind": "aim"}
 		_aim_origin = pos
 		_aim_knob = pos
@@ -250,8 +257,8 @@ func _handle_drag(index: int, pos: Vector2) -> void:
 		"button":
 			# Sliding off a button releases it, which is what a player expects.
 			if _button_hit(pos) != int(owner["id"]):
-				_press_button(int(owner["id"]), false)
 				_owners.erase(index)
+				_press_button(int(owner["id"]), false)
 
 
 func _release(index: int) -> void:
@@ -286,6 +293,10 @@ func _stick_vector(origin: Vector2, pos: Vector2) -> Vector2:
 func _press_button(index: int, down: bool) -> void:
 	if index < 0 or index >= buttons.size():
 		return
+	if not down:
+		for owner in _owners.values():
+			if owner["kind"] == "button" and int(owner["id"]) == index:
+				return
 	var bit: int = ControlProfile.BUTTON_BITS.get(buttons[index], 0)
 	if down:
 		_bits |= bit
@@ -346,6 +357,12 @@ func _draw() -> void:
 		_draw_stick(_stick_centre() if not _owners_has("move") else _move_origin,
 			_move_knob if _owners_has("move") else _stick_centre(), ink, fill,
 			STICK_RADIUS * _scale * ControlProfile.stick_scale(profile))
+		if profile == ControlProfile.Kind.ATV:
+			var origin := _move_origin if _owners_has("move") else _stick_centre()
+			var radius := STICK_RADIUS * _scale
+			for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+				var glyph := "▲" if direction == Vector2.UP else "▼" if direction == Vector2.DOWN else "◀" if direction == Vector2.LEFT else "▶"
+				_label(glyph, origin + direction * radius * 0.77, Color.WHITE, 25)
 
 	if ControlProfile.shows_aim_stick(profile):
 		_draw_stick(_aim_centre() if not _owners_has("aim") else _aim_origin,
@@ -408,14 +425,18 @@ func _button_color(action: String) -> Color:
 
 ## The same word the rules card shows for this verb.
 func _action_name(action: String) -> String:
+	if profile in [ControlProfile.Kind.STEERING, ControlProfile.Kind.ATV] and action in ["attack", "shoot"]:
+		return Loc.t("controls.weapon")
 	var key := "controls.%s" % action
 	return Loc.t(key) if Loc.has(key) else ""
 
 
 func _glyph(action: String) -> String:
+	if action == "shoot" or (profile in [ControlProfile.Kind.STEERING, ControlProfile.Kind.ATV] and action == "attack"):
+		return "⌖"
 	match action:
 		"jump": return "▲"
-		"attack", "shoot": return "✊"
+		"attack": return "✊"
 		"action": return "◉"
 		"dash", "boost": return "➤"
 		"ability": return "★"

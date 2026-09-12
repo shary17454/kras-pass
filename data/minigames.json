@@ -2,6 +2,19 @@
   "_comment": "The mini-game catalogue. One entry + one script under src/minigames/ is a complete new game — see docs/adding-a-minigame.md. 'controls' names the glyphs shown on the pre-round card.",
   "games": [
     {
+      "id": "tank_arena",
+      "category": "vehicle",
+      "scoring": "survival",
+      "arenas": ["tank_foundry", "tank_oasis", "tank_frost"],
+      "duration": 150.0,
+      "rounds": 1,
+      "controls": ["drive", "shoot"],
+      "control_profile": "atv",
+      "glyph": "⌖",
+      "tags": ["vehicle", "shooting"],
+      "machine": false
+    },
+    {
       "id": "ring_rumble", "machine": true,
       "category": "push_out",
       "scoring": "survival",
@@ -777,7 +790,7 @@
         "attack",
         "boost"
       ],
-      "control_profile": "steering",
+      "control_profile": "atv",
       "glyph": "➤",
       "tags": [
         "race",

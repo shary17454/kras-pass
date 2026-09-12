@@ -44,7 +44,7 @@ func tick(delta: float) -> void:
 		if not ctx.is_alive(i):
 			continue
 		var frame := InputRouter.frame(i)
-		if frame.just_pressed(InputFrame.Btn.ATTACK) and _cooldowns[i] <= 0.0:
+		if wants_fire(frame) and _cooldowns[i] <= 0.0:
 			_fire(i)
 	var i := _shots.size() - 1
 	while i >= 0:
@@ -56,6 +56,10 @@ func tick(delta: float) -> void:
 		else:
 			s.tick(delta)
 		i -= 1
+
+
+func wants_fire(frame: InputFrame) -> bool:
+	return frame.just_pressed(InputFrame.Btn.ATTACK)
 
 
 func _fire(slot: int) -> void:

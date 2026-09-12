@@ -202,8 +202,20 @@ func _build() -> void:
 	camera.name = "Camera"
 	add_child(camera)
 	camera.targets = _fighters
+	if config.minigame_id == "tank_arena":
+		var locals := config.human_slots()
+		camera.local_target = _fighters[locals[0] if not locals.is_empty() else 0]
 	camera.configure(controller.camera_mode(), arena)
+	if arena.def.shape == "circuit" and config.human_slots().size() == 1:
+		camera.local_target = _fighters[config.human_slots()[0]]
+		camera.mode = ArenaCamera.Mode.CHASE
 	camera.current = true
+	if config.minigame_id == "tank_arena":
+		var radar_layer := CanvasLayer.new()
+		add_child(radar_layer)
+		var radar: Control = load("res://src/ui/tank_radar.gd").new()
+		radar.ctx = ctx
+		radar_layer.add_child(radar)
 
 	hud = MatchHUD.new()
 	hud.name = "HUD"
@@ -232,7 +244,7 @@ func _spawn_fighters(def: MiniGameDef) -> void:
 		var character := p.character()
 		if character == null:
 			character = Registry.characters()[p.slot % maxi(1, Registry.characters().size())]
-		f.setup(p.slot, character, mode, arena.def.theme)
+		f.setup(p.slot, character, mode, "atv" if config.minigame_id in ["tank_arena", "sabaq_sawarikh"] else arena.def.theme)
 		f.can_jump = controller.allows_jump()
 		f.can_attack = controller.allows_attack()
 		f.can_dash = controller.allows_dash()
