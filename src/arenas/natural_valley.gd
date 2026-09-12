@@ -109,7 +109,8 @@ func _terrain() -> void:
 			var px := float(x - 100) * 3
 			var pz := float(z - 100) * 3
 			surface.set_uv(Vector2(px, pz) * 0.12)
-			surface.add_vertex(Vector3(px, ground_height(px, pz), pz))
+			var bridge_cut: float = preload("res://src/arenas/race_structures.gd").excavation(arena, Vector3(px, 0, pz))
+			surface.add_vertex(Vector3(px, ground_height(px, pz) - bridge_cut, pz))
 	for z in side - 1:
 		for x in side - 1:
 			var i := z * side + x
@@ -209,6 +210,7 @@ func _rock(index: int, p: Vector3, scale_value: float) -> void:
 		var away := Vector3(p.x - closest.x, 0, p.z - closest.z).normalized()
 		p = closest + away * clearance
 		p.y = ground_height(p.x, p.z) - 0.3
+	p.y -= preload("res://src/arenas/race_structures.gd").excavation(arena, p)
 	rock.position = p
 	rock.rotation.y = float(index) * 2.4
 	rock.scale = Vector3.ONE * scale_value

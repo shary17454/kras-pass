@@ -96,6 +96,9 @@ func build(arena_def: ArenaDef) -> void:
 		var scenery: Node3D = load(scenery_path).new()
 		add_child(scenery)
 		scenery.build(self)
+		var structures: Node3D = load("res://src/arenas/race_structures.gd").new()
+		add_child(structures)
+		structures.build(self)
 
 
 # --- queries used by gameplay and AI ---------------------------------------

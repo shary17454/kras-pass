@@ -172,7 +172,7 @@ func _tick_crates(delta: float) -> void:
 			var f := ctx.fighter(i)
 			if f == null or not is_instance_valid(f) or not ctx.is_alive(i):
 				continue
-			if held[i] != Item.NONE or finish_times[i] != UNFINISHED:
+			if held[i] != Item.NONE or finish_times[i] != UNFINISHED or is_recovering(i):
 				continue
 			var to: Vector3 = f.global_position - crate["pos"]
 			to.y = 0.0
@@ -215,7 +215,7 @@ func _progress_of(slot: int) -> int:
 func _tick_items(delta: float) -> void:
 	for i in ctx.fighters.size():
 		shielded[i] = maxf(0.0, shielded[i] - delta)
-		if not ctx.is_alive(i):
+		if not ctx.is_alive(i) or is_recovering(i):
 			continue
 		# A finished racer keeps `is_alive` true — Kart Sprint only clears
 		# `control_enabled`, and this reads InputRouter directly. Without this
@@ -374,6 +374,8 @@ func _on_missile_hit(p: Projectile, shooter: int, victim: int) -> void:
 ## One shared punishment for every weapon, so the player learns a single rule:
 ## being hit costs you a moment, never the race.
 func _spin_out(slot: int, by_slot: int, push: Vector3) -> void:
+	if is_recovering(slot):
+		return
 	if shielded[slot] > 0.0:
 		shielded[slot] = 0.0
 		AudioManager.play_sfx("bounce", ctx.fighter(slot).global_position if ctx.fighter(slot) != null else Vector3.ZERO)

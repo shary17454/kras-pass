@@ -119,7 +119,15 @@ func _process(delta: float) -> void:
 		var heading: Vector3 = local_target.facing.normalized()
 		var subject: Vector3 = local_target.get_global_transform_interpolated().origin
 		var wanted := subject - heading * 10.0 + Vector3.UP * 6.0
-		global_position = global_position.lerp(wanted, 1.0 - exp(-5.0 * delta))
+		var candidate := global_position.lerp(wanted, 1.0 - exp(-5.0 * delta))
+		# Keep the camera on the driver's side of tunnel walls and ceilings.
+		var anchor := subject + Vector3.UP * 1.2
+		var query := PhysicsRayQueryParameters3D.create(anchor, candidate, 1, [local_target.get_rid()])
+		query.hit_back_faces = true
+		var hit := get_world_3d().direct_space_state.intersect_ray(query)
+		if not hit.is_empty():
+			candidate = hit.position + (anchor - hit.position).normalized() * 0.5
+		global_position = candidate
 		focus = subject
 		look_at(subject + heading * 5.0 + Vector3.UP)
 		return

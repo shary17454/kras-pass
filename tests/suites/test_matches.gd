@@ -35,6 +35,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _tank_battle_rules(t)
 	await _fantasy_world_rules(t)
 	await _race_lap_rules(t)
+	await _race_recovery_rules(t)
 	await _extended_races_finish(t)
 
 
@@ -48,6 +49,15 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 		t.ok(arena.get_node_or_null("FantasyWorld") != null, "world scenery exists")
 		if arena.def.shape == "circuit":
 			var world := arena.get_node("FantasyWorld")
+			var structures := arena.get_node("RaceStructures")
+			if arena_id == "dune_circuit":
+				t.ok(structures.is_below_bridge(Vector3(73.92507, 1.918043, 30.31306)), "shallow bridge-bank trap also rescues racer")
+			t.not_null(structures.get_node_or_null("TunnelCollision"), "tunnel has physical walls and ceiling")
+			if arena_id == "magma_ring":
+				t.not_null(structures.get_node_or_null("LavaUnderBridge"), "lava flows under bridge")
+			var bridge_center: Vector3 = arena.circuit_line[26]
+			t.ok(structures.is_below_bridge(bridge_center + Vector3.DOWN * 6), "bridge fall triggers rescue")
+			t.ok(not structures.is_below_bridge(bridge_center + Vector3.UP), "bridge road remains safe")
 			t.ok(world.get_node_or_null("WoodlandTerrain") != null, "natural world has sculpted terrain")
 			if arena_id not in ["dune_circuit", "magma_ring", "alula_rain", "sinbad_coast"]:
 				t.ok(world.get_node_or_null("River") != null, "river biome has water")
@@ -92,13 +102,19 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 				var across := Vector3(-forward.z, 0, forward.x).normalized()
 				for side in [-1.0, 1.0]:
 					var shoulder: Vector3 = center + across * side * (arena.track_width * 0.5 + 2.0)
-					var query := PhysicsRayQueryParameters3D.create(shoulder + Vector3.UP * 4, shoulder + Vector3.DOWN * 4, 1)
+					var cut: float = structures.excavation(arena, shoulder)
+					var query := PhysicsRayQueryParameters3D.create(shoulder + Vector3.UP * 2, shoulder + Vector3.DOWN * 20, 1)
 					var ground := arena.get_world_3d().direct_space_state.intersect_ray(query)
 					t.ok(not ground.is_empty(), "both road shoulders have solid ground")
 					var crossing_end := shoulder + Vector3.UP
 					if not ground.is_empty():
 						crossing_end.y = ground.position.y + 1.0
-						t.ok(absf(ground.position.y - center.y) < (arena.track_width * 0.5 + 2.0) * 0.55, "driveable shoulder slope %s sample %d" % [arena_id, sample])
+						if cut < 0.1:
+							t.ok(absf(ground.position.y - center.y) < (arena.track_width * 0.5 + 2.0) * 0.55, "driveable shoulder slope %s sample %d" % [arena_id, sample])
+						elif cut > 10.0 and ground.collider.name != "RoadCollision":
+							t.ok(ground.position.y < center.y - 5.0, "bridge ground %s sample %d side %.0f collider %s" % [arena_id, sample, side, ground.collider.name])
+					if cut > 0.1:
+						continue
 					var crossing := PhysicsRayQueryParameters3D.create(center + Vector3.UP, crossing_end, 1)
 					t.ok(arena.get_world_3d().direct_space_state.intersect_ray(crossing).is_empty(), "open road edge %s sample %d side %.0f" % [arena_id, sample, side])
 			t.equal(world._rock_meshes.size(), 6, "six scanned rock variations loaded")
@@ -243,6 +259,13 @@ func _play(cfg: MatchConfig) -> Dictionary:
 				if scene.ctx.fighters[i].global_position.distance_to(start_positions[i]) > 1.0:
 					moved = true
 					break
+	if captured.is_empty() and cfg.minigame_id == "sabaq_sawarikh":
+		print("RACE WATCHDOG ", scene.arena.def.id, " laps=", scene.controller.lap, " checkpoints=", scene.controller._next_cp)
+		for driver in scene.ctx.fighters:
+			print("driver ", driver.slot, " position=", driver.global_position, " alive=", driver.alive)
+			print("target=", scene.controller.next_checkpoint(driver.slot), " velocity=", driver.velocity)
+			for collision_index in driver.get_slide_collision_count():
+				print("blocked by ", driver.get_slide_collision(collision_index).get_collider().name)
 	var out := {
 		"result": captured[0] if captured.size() > 0 else null,
 		"phase": scene.phase,
@@ -344,6 +367,52 @@ func _race_lap_rules(t: TestHarness) -> void:
 	var replay := ReplayData.new()
 	replay.rules = {"race_laps": 8}
 	t.equal(replay.to_config().rule("race_laps", 3), 8, "replay configuration preserves lap count")
+	scene.teardown()
+	scene.queue_free()
+	await _host.get_tree().process_frame
+
+
+func _race_recovery_rules(t: TestHarness) -> void:
+	t.test("race rescue costs time without granting checkpoint progress")
+	var cfg := _make_config("sabaq_sawarikh", PlayerConfig.Difficulty.EASY, 1, 1)
+	cfg.arena_id = "magma_ring"
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	_host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	game.on_round_start()
+	var f: Fighter = scene.ctx.fighter(0)
+	var layer := f.collision_layer
+	var mask := f.collision_mask
+	game._started[0] = true
+	game._next_cp[0] = 14
+	f.global_position = scene.arena.circuit_line[26] + Vector3.DOWN * 6
+	game.tick(0.02)
+	t.ok(game.is_recovering(0), "fall below bridge starts rescue")
+	t.ok(not f.control_enabled and not f.alive, "rescued racer cannot steer or collide")
+	t.equal(f.collision_layer, 0, "rescue cannot hit opponents")
+	game.process_respawns(1.0)
+	game.on_fighter_fell(0)
+	t.near(game._recoveries[0].time, 1.0, 0.001, "duplicate fall does not restart rescue")
+	game.process_respawns(1.9)
+	t.ok(game.is_recovering(0), "rescue lasts the full penalty")
+	game.tick(0.02)
+	t.equal(game._next_cp[0], 14, "rescue does not advance checkpoints")
+	t.equal(game.lap[0], 0, "rescue does not award a lap")
+	game.process_respawns(0.11)
+	t.ok(not game.is_recovering(0), "rescue ends after three seconds")
+	t.ok(f.alive and f.control_enabled and f.is_physics_processing(), "driver regains control")
+	t.equal(f.collision_layer, layer, "collision layer restored")
+	t.equal(f.collision_mask, mask, "collision mask restored")
+	t.ok(f.global_position.distance_to(game._checkpoints[13] + Vector3.UP * 1.4) < 0.01, "return is to previous checkpoint")
+	var heading: Vector3 = game._checkpoints[14] - game._checkpoints[13]
+	heading.y = 0.0
+	f._integrate_drive(Vector3.ZERO, 0.0)
+	t.ok(f.facing.dot(heading.normalized()) > 0.999, "steering keeps the restored road heading on next physics tick")
+	game.on_fighter_fell(0)
+	game.on_round_end()
+	t.ok(not game.is_recovering(0) and f.collision_mask == mask, "round end cleans rescue state")
 	scene.teardown()
 	scene.queue_free()
 	await _host.get_tree().process_frame

@@ -570,6 +570,14 @@ func on_fell_out() -> void:
 	AudioManager.play_sfx("fall", global_position, _voice())
 
 
+func face_direction(direction: Vector3) -> void:
+	var horizontal := Vector3(direction.x, 0.0, direction.z)
+	if horizontal.length_squared() < 0.0001:
+		return
+	facing = horizontal.normalized()
+	_steer = atan2(facing.x, facing.z)
+
+
 func respawn_at(p: Vector3) -> void:
 	if _markers != null and is_instance_valid(_markers):
 		_markers.visible = true

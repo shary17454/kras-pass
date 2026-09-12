@@ -7,6 +7,8 @@ extends MiniGameController
 
 const UNFINISHED := 1000000000
 const LAPS := 3
+const RECOVERY_SECONDS := 3.0
+var _recoveries := {}
 
 var finish_times: Array[int] = []
 var lap: Array[int] = []
@@ -92,6 +94,7 @@ func camera_mode() -> int:
 
 
 func on_round_start() -> void:
+	_clear_recoveries()
 	_elapsed = 0.0
 	_finished = 0
 	finish_times.fill(UNFINISHED)
@@ -105,10 +108,16 @@ func tick(delta: float) -> void:
 	if _checkpoints.is_empty():
 		return
 	for i in ctx.fighters.size():
+		if is_recovering(i):
+			continue
 		if finish_times[i] != UNFINISHED:
 			continue
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f):
+			continue
+		var structures := ctx.arena.get_node_or_null("RaceStructures")
+		if structures != null and structures.is_below_bridge(f.global_position):
+			on_fighter_fell(i)
 			continue
 		var target: Vector3 = _checkpoints[_next_cp[i]]
 		var checkpoint_radius: float = maxf(3.6, ctx.arena.track_width * 0.48)
@@ -148,11 +157,75 @@ func _check_boost(slot: int, f, delta: float) -> void:
 
 func on_fighter_fell(slot: int) -> void:
 	var f := ctx.fighter(slot)
-	if f == null or not is_instance_valid(f) or _checkpoints.is_empty():
+	if f == null or not is_instance_valid(f) or _checkpoints.is_empty() or is_recovering(slot) or finish_times[slot] != UNFINISHED:
 		return
-	# Rejoin at the last checkpoint passed, facing the right way.
-	var idx := (_next_cp[slot] - 1 + _checkpoints.size()) % _checkpoints.size()
-	f.respawn_at(_checkpoints[idx] + Vector3(0, 1.4, 0))
+	var idx := (_next_cp[slot] - 1 + _checkpoints.size()) % _checkpoints.size() if _started[slot] else 0
+	var target := _checkpoints[idx] + Vector3(0, 1.4, 0)
+	var start: Vector3 = f.global_position
+	start.y = maxf(start.y, target.y - 5.0)
+	var effect := load("res://src/fx/race_recovery.gd").new() as Node3D
+	ctx.world_root.add_child(effect)
+	effect.global_position = start
+	_recoveries[slot] = {"time": 0.0, "start": start, "target": target, "layer": f.collision_layer, "mask": f.collision_mask, "effect": effect}
+	f.alive = false
+	f.control_enabled = false
+	f.set_physics_process(false)
+	f.collision_layer = 0
+	f.collision_mask = 0
+	f.velocity = Vector3.ZERO
+	f.global_position = start
+	f.reset_physics_interpolation()
+	ctx.bump_detail(slot, "falls")
+
+
+func is_recovering(slot: int) -> bool:
+	return _recoveries.has(slot)
+
+
+func process_respawns(delta: float) -> void:
+	super.process_respawns(delta)
+	for slot in _recoveries.keys():
+		var state: Dictionary = _recoveries[slot]
+		state.time += delta
+		var progress := clampf(float(state.time) / RECOVERY_SECONDS, 0.0, 1.0)
+		var f := ctx.fighter(slot)
+		if f == null or not is_instance_valid(f):
+			state.effect.queue_free()
+			_recoveries.erase(slot)
+			continue
+		f.global_position = (state.start as Vector3).lerp(state.target, smoothstep(0, 1, progress)) + Vector3.UP * sin(progress * PI) * 7.0
+		state.effect.global_position = f.global_position
+		state.effect.animate(progress)
+		if progress >= 1.0:
+			f.collision_layer = state.layer
+			f.collision_mask = state.mask
+			f.control_enabled = true
+			f.respawn_at(state.target)
+			f.face_direction(_checkpoints[_next_cp[slot]] - f.global_position)
+			state.effect.queue_free()
+			_recoveries.erase(slot)
+
+
+func cleanup() -> void:
+	_clear_recoveries()
+
+
+func _clear_recoveries() -> void:
+	for slot in _recoveries:
+		var state: Dictionary = _recoveries[slot]
+		var f := ctx.fighter(slot)
+		if is_instance_valid(f):
+			f.collision_layer = state.layer
+			f.collision_mask = state.mask
+			f.control_enabled = true
+			f.respawn_at(state.target)
+		if is_instance_valid(state.effect):
+			state.effect.queue_free()
+	_recoveries.clear()
+
+
+func on_round_end() -> void:
+	_clear_recoveries()
 
 
 func is_round_over() -> bool:
