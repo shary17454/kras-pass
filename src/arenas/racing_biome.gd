@@ -24,6 +24,10 @@ func build(a: Arena) -> void:
 	asphalt.set_shader_parameter("road_width", arena.track_width)
 	asphalt.set_shader_parameter("wet", biome in [4, 5])
 	get_node("GravelRoad").material_override = asphalt
+	if a.def.id == "sky_causeway":
+		var wildlife := load("res://src/arenas/forest_life.gd").new() as Node3D
+		add_child(wildlife)
+		wildlife.build(self)
 	if biome in [2, 3, 4, 5]:
 		weather = load("res://src/arenas/racing_weather.gd").new()
 		add_child(weather)
