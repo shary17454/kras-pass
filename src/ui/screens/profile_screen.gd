@@ -11,7 +11,7 @@ func build() -> void:
 	var completion := Progression.completion_percent()
 	body.add_child(Widgets.progress_row(Loc.t("profile.completion"), "%.1f%%" % completion, completion / 100.0, UIKit.ACCENT))
 
-	var strip := UIKit.hbox(18)
+	var strip := UIKit.adaptive_columns(18)
 	body.add_child(strip)
 	strip.add_child(_tile("🏆", Loc.t("profile.trophies"), str(Progression.trophies())))
 	strip.add_child(_tile("💎", Loc.t("profile.gems"), str(Progression.gems())))
@@ -31,7 +31,7 @@ func build() -> void:
 			float(prog["cleared"]) / float(total),
 			CharacterData._color(w.get("color", "#ffffff"))))
 
-	var row := UIKit.hbox(14)
+	var row := UIKit.adaptive_columns(14)
 	body.add_child(row)
 	for entry in [["menu.stats", "stats"], ["menu.achievements", "achievements"], ["menu.rewards", "rewards"]]:
 		var b := UIKit.button(Loc.t(String(entry[0])), UIKit.SIZE_SMALL)

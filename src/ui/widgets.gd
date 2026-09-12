@@ -60,7 +60,8 @@ static func minigame_card(m: MiniGameDef, unlocked: bool) -> Control:
 	card.add_child(v)
 	var top := UIKit.hbox(10)
 	top.add_child(UIKit.label(m.icon_glyph, UIKit.SIZE_HEADING, UIKit.ACCENT, true))
-	var name := UIKit.label(m.display_name() if unlocked else Loc.t("common.locked"), UIKit.SIZE_BODY, UIKit.text_color(), true)
+	var name := UIKit.label(m.display_name(), UIKit.SIZE_BODY, UIKit.text_color(), true)
+	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name)
 	v.add_child(top)
@@ -116,6 +117,11 @@ static func scroll_grid(columns: int) -> Array:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var grid := GridContainer.new()
 	grid.columns = columns
+	var fit := func(): grid.columns = 1 if grid.get_viewport_rect().size.x < grid.get_viewport_rect().size.y else columns
+	grid.tree_entered.connect(func():
+		grid.get_viewport().size_changed.connect(fit)
+		fit.call())
+	grid.tree_exiting.connect(func(): grid.get_viewport().size_changed.disconnect(fit))
 	grid.add_theme_constant_override("h_separation", 24)
 	grid.add_theme_constant_override("v_separation", 24)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -1,4 +1,9 @@
 {
+  "game.ring_rumble.controls": "Dash: a quick burst in your movement direction\nAttack: hit a rival, or throw the bomb you are carrying",
+  "library.title": "Choose your game",
+  "library.choose_another": "Another game",
+  "hud.you": "You: {name}",
+  "hud.ready_hint": "When you are ready, press Start",
   "account.title": "Account",
   "account.sign_in": "Sign in with Apple",
   "account.sign_out": "Sign Out",
@@ -200,7 +205,7 @@
   "stage.boss.skyloft": "Loft Championship",
   "stage.boss.cogworks": "Grand Final",
   "game.ring_rumble.name": "Ring Rumble",
-  "game.ring_rumble.desc": "Four competitors, one shrinking ring.",
+  "game.ring_rumble.desc": "Stay on the ice. The last player standing wins the round.",
   "game.ring_rumble.rules": "Push the others over the edge. Pick up drops to carry a random bomb, then throw it with attack; the first blast knocks the mount away, and the next can burn, freeze or splash them out.",
   "game.crumble_court.name": "Crumble Court",
   "game.crumble_court.desc": "The floor gives way where you stand.",

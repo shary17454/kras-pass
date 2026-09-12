@@ -30,9 +30,13 @@ var _last_safe := Rect2i()
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_detect_form()
+	if is_mobile:
+		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_SENSOR)
+	_update_content_size()
 	_refresh_safe_area()
 	if not Engine.is_editor_hint():
 		get_tree().root.size_changed.connect(_refresh_safe_area)
+		get_tree().root.size_changed.connect(_update_content_size)
 	Log.i("platform: %s, mobile=%s, safe=%s" % [_form_name(), is_mobile, safe_area], "Platform")
 
 
@@ -49,6 +53,13 @@ func _detect_form() -> void:
 	# name: a tablet gets larger touch targets and can host four players.
 	var model := OS.get_model_name().to_lower()
 	form = Form.TABLET if model.contains("ipad") or _screen_is_large() else Form.PHONE
+
+
+func _update_content_size() -> void:
+	var window := get_tree().root
+	var base := Vector2i(720, 1280) if window.size.x < window.size.y else Vector2i(1920, 1080)
+	if window.content_scale_size != base:
+		window.content_scale_size = base
 
 
 func _screen_is_large() -> bool:

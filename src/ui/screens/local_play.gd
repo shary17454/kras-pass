@@ -31,7 +31,7 @@ func build() -> void:
 
 	body.add_child(UIKit.label(Loc.t("local.join_hint"), UIKit.SIZE_SMALL, UIKit.dim_color()))
 
-	var row := UIKit.hbox(16)
+	var row := UIKit.adaptive_columns(16)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(row)
 	for i in SLOTS:
@@ -41,7 +41,7 @@ func build() -> void:
 		row.add_child(holder)
 		_cards.append(holder)
 
-	var controls := UIKit.hbox(14)
+	var controls := UIKit.adaptive_columns(14)
 	body.add_child(controls)
 	_game_holder = Control.new()
 	_game_holder.custom_minimum_size = Vector2(320, 150)

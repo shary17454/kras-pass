@@ -188,6 +188,15 @@ func _device_loss(t: TestHarness) -> void:
 	var guard := 0
 	while not MatchPhase.is_live(scene.phase) and guard < 2000:
 		await tree.physics_frame
+		if scene.phase == MatchPhase.P.INSTRUCTIONS:
+			InputRouter.frame(0).bits = 0
+			scene._advance_timed_phase(20.0)
+			t.equal(scene.phase, MatchPhase.P.INSTRUCTIONS, "instructions wait for human readiness")
+			InputRouter.frame(0).bits = InputFrame.Btn.ATTACK
+			InputRouter.frame(0).prev_bits = 0
+			scene._advance_timed_phase(0.5)
+			t.equal(scene.phase, MatchPhase.P.COUNTDOWN, "action starts the countdown")
+			InputRouter.frame(0).clear()
 		guard += 1
 	EventBus.player_device_lost.emit(0)
 	await tree.physics_frame

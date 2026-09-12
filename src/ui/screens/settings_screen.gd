@@ -90,6 +90,10 @@ func build() -> void:
 		v.add_child(UIKit.label(Loc.t("keyboard.profile.%d" % (profile + 1)), UIKit.SIZE_SMALL, UIKit.ACCENT))
 		var grid := GridContainer.new()
 		grid.columns = 3
+		var fit := func(): grid.columns = 1 if get_viewport_rect().size.x < get_viewport_rect().size.y else 3
+		get_viewport().size_changed.connect(fit)
+		tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit))
+		fit.call()
 		grid.add_theme_constant_override("h_separation", 12)
 		v.add_child(grid)
 		for action in ["up", "down", "left", "right", "jump", "attack", "action", "dash", "ability"]:

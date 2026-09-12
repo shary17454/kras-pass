@@ -71,7 +71,7 @@ func _schedule_strip() -> Control:
 
 
 func _add_actions() -> void:
-	var row := UIKit.hbox(14)
+	var row := UIKit.adaptive_columns(14)
 	body.add_child(row)
 	if session.is_complete():
 		var again := UIKit.button(Loc.t("results.rematch"), UIKit.SIZE_BODY)

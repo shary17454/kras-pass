@@ -34,7 +34,7 @@ func build() -> void:
 	body.add_child(banner)
 	UIKit.animate_in(banner, 0.05)
 
-	var columns := UIKit.hbox(32)
+	var columns := UIKit.adaptive_columns(32)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 
@@ -123,7 +123,7 @@ func _build_rewards(parent: VBoxContainer) -> void:
 
 
 func _add_actions() -> void:
-	var row := UIKit.hbox(14)
+	var row := UIKit.adaptive_columns(14)
 	body.add_child(row)
 	if not adventure.is_empty():
 		var back_to_map := UIKit.button(Loc.t("adventure.title"), UIKit.SIZE_BODY)
@@ -148,6 +148,10 @@ func _add_actions() -> void:
 			SceneRouter.go_to("replay_player", {"id": String(latest[0]["id"])}))
 		row.add_child(watch)
 	var menu := UIKit.button(Loc.t("results.quit"), UIKit.SIZE_BODY)
+	var choose := UIKit.button(Loc.t("library.choose_another"), UIKit.SIZE_BODY)
+	choose.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	choose.pressed.connect(func(): SceneRouter.go_to("game_library", {}, false))
+	row.add_child(choose)
 	menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	menu.pressed.connect(func(): SceneRouter.go_to("main_menu", {}, false))
 	row.add_child(menu)

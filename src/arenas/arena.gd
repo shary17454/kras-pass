@@ -355,7 +355,7 @@ func _build_environment() -> void:
 
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.16, 0.42, 0.54) if _is_arctic() else def.sky_bottom
-	env.fog_density = 0.006 if _is_arctic() else 0.008
+	env.fog_density = 0.0015 if _is_arctic() else 0.003
 	env.fog_sky_affect = 0.35
 	env.fog_aerial_perspective = 0.28
 
@@ -375,7 +375,7 @@ func _build_environment() -> void:
 		env.ssr_fade_in = 0.2
 		env.ssr_fade_out = 6.0
 		env.volumetric_fog_enabled = true
-		env.volumetric_fog_density = 0.012 if _is_arctic() else 0.008
+		env.volumetric_fog_density = 0.003 if _is_arctic() else 0.004
 		env.volumetric_fog_gi_inject = 0.6
 		env.volumetric_fog_length = 96.0
 

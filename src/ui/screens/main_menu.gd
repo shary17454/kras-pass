@@ -15,7 +15,7 @@ func build() -> void:
 	title(Loc.t("app.title"), false)
 	header.add_child(_currency_strip())
 
-	var columns := UIKit.hbox(36)
+	var columns := UIKit.adaptive_columns(36)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 
@@ -24,15 +24,11 @@ func build() -> void:
 	var side := UIKit.vbox(14)
 	side.custom_minimum_size = Vector2(520, 0)
 
-	if Loc.is_rtl():
-		columns.add_child(side)
-		columns.add_child(modes)
-	else:
-		columns.add_child(modes)
-		columns.add_child(side)
+	columns.add_child(modes)
+	columns.add_child(side)
 
 	_add_mode(modes, "menu.adventure", "adventure")
-	_add_mode(modes, "menu.quick_play", "quick_play")
+	_add_mode(modes, "library.title", "game_library")
 	_add_mode(modes, "menu.tournament", "tournament")
 	_add_mode(modes, "menu.local", "local_play")
 	_add_mode(modes, "menu.online", "online")
@@ -41,6 +37,10 @@ func build() -> void:
 
 	var secondary := GridContainer.new()
 	secondary.columns = 4
+	var fit := func(): secondary.columns = 2 if get_viewport_rect().size.x < get_viewport_rect().size.y else 4
+	get_viewport().size_changed.connect(fit)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit))
+	fit.call()
 	secondary.add_theme_constant_override("h_separation", 10)
 	secondary.add_theme_constant_override("v_separation", 10)
 	modes.add_child(secondary)

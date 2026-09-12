@@ -31,7 +31,13 @@ func setup(a: Dictionary) -> void:
 	column.add_child(header)
 	body = UIKit.vbox(16)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(body)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	scroll.add_child(body)
 	build()
 	UIKit.animate_in(column)
 	call_deferred("_focus_first")
@@ -44,6 +50,7 @@ func build() -> void:
 
 func title(text: String, show_back := true) -> void:
 	var label := UIKit.label(text, UIKit.SIZE_TITLE, UIKit.ACCENT, true)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if show_back:
 		var back := UIKit.button("←" if not Loc.is_rtl() else "→", UIKit.SIZE_HEADING)

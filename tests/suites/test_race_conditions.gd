@@ -39,6 +39,11 @@ func _wait_live(scene: Node) -> void:
 	var guard := 0
 	while not MatchPhase.is_live(scene.phase) and guard < 3000:
 		await tree.physics_frame
+		if scene.phase == MatchPhase.P.INSTRUCTIONS and not scene.config.human_slots().is_empty():
+			InputRouter.frame(0).bits = InputFrame.Btn.ATTACK
+			InputRouter.frame(0).prev_bits = 0
+			scene._advance_timed_phase(0.5)
+			InputRouter.frame(0).clear()
 		guard += 1
 
 

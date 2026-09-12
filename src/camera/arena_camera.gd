@@ -103,6 +103,8 @@ func is_intro_active() -> bool:
 
 
 func _process(delta: float) -> void:
+	var view := get_viewport().get_visible_rect().size
+	keep_aspect = Camera3D.KEEP_WIDTH if view.x < view.y else Camera3D.KEEP_HEIGHT
 	var sensitivity := float(UserSettings.get_value("camera_sensitivity"))
 	if _intro_left > 0.0:
 		_tick_intro(delta)
@@ -223,6 +225,8 @@ func _apply(weight: float, delta: float) -> void:
 		_zoom = lerp(_zoom, _target_zoom, clampf(_zoom_lerp * delta, 0.0, 1.0))
 
 	var framing := clampf(float(UserSettings.get_value("camera_distance")), 0.75, 1.4)
+	if mode != Mode.RACE:
+		framing = maxf(framing, 1.12)
 	var offset := Vector3(sin(_yaw), 0.0, cos(_yaw)) * _distance * _zoom * framing
 	var pos := live_focus + Vector3(offset.x, _height * _zoom * framing, offset.z)
 	if _shake > 0.001:

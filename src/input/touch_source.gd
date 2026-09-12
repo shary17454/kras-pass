@@ -62,6 +62,13 @@ func setup(player_slot: int, def: MiniGameDef) -> void:
 
 
 func _fit_to_viewport() -> void:
+	_owners.clear()
+	_pressed_buttons.clear()
+	_move = Vector2.ZERO
+	_aim = Vector2.ZERO
+	_bits = 0
+	_steer = 0.0
+	_throttle = 0.0
 	position = Vector2.ZERO
 	size = get_viewport_rect().size
 	# Keep the thumb targets clear of the notch and the home indicator.
@@ -129,6 +136,11 @@ func _aim_centre() -> Vector2:
 ## Buttons fan out in an arc away from the stick hand.
 func _button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
+	if size.x < size.y and buttons.size() > 2:
+		var x := _right_edge() - r - float(1 - index % 2) * r * 2.2
+		if _left_handed:
+			x = _left_edge() + r + float(1 - index % 2) * r * 2.2
+		return Vector2(x, _bottom_edge() - r - float(index / 2) * r * 2.2)
 	var base_x := _right_edge() - r * 1.2
 	var dir := -1.0
 	if _left_handed:
@@ -349,12 +361,14 @@ func _draw() -> void:
 		var c := _button_centre(i)
 		var down: bool = _pressed_buttons.has(i)
 		var tint := _button_color(buttons[i])
-		var body := Color(tint.r, tint.g, tint.b, a * (0.85 if down else 0.55))
+		var body := Color(tint.r * 0.45, tint.g * 0.45, tint.b * 0.45, maxf(0.78, a))
 		var edge := Color(1, 1, 1, a * 0.95)
 		draw_circle(c, br, body)
 		draw_arc(c, br, 0.0, TAU, 36, edge, 4.0, true)
-		_label(_glyph(buttons[i]), c - Vector2(0, br * 0.14), Color(1, 1, 1, a), 40)
-		_label(_action_name(buttons[i]), c + Vector2(0, br * 0.52), Color(1, 1, 1, a * 0.95), 26)
+		_label(_glyph(buttons[i]), c - Vector2(0, br * 0.22), Color.WHITE, 40)
+		_label(_action_name(buttons[i]), c + Vector2(0, br * 0.43), Color.WHITE, 34)
+		if down:
+			draw_arc(c, br - 6.0, 0.0, TAU, 36, tint, 5.0, true)
 
 
 func _draw_stick(origin: Vector2, knob: Vector2, ink: Color, fill: Color, r: float) -> void:

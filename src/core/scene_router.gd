@@ -11,6 +11,7 @@ signal screen_changed(id: String)
 signal transition_finished()
 
 const SCREENS := {
+	"game_library": "res://src/ui/screens/game_library.gd",
 	"boot": "res://src/ui/screens/boot_screen.gd",
 	"main_menu": "res://src/ui/screens/main_menu.gd",
 	"adventure": "res://src/ui/screens/adventure_map.gd",

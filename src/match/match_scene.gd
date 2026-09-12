@@ -209,6 +209,9 @@ func _build() -> void:
 	hud.name = "HUD"
 	add_child(hud)
 	hud.setup(ctx, controller)
+	hud.ready_requested.connect(func():
+		if phase == P.INSTRUCTIONS:
+			_set_phase(P.COUNTDOWN))
 	hud.set_round(_round_index, _total_rounds)
 
 	_create_brains()
@@ -345,6 +348,9 @@ func _enter_phase(p: int) -> void:
 			camera.begin_intro(_phase_timer)
 		P.INSTRUCTIONS:
 			hud.show_rules(true)
+			if touch != null:
+				touch.set_process_input(false)
+				touch.visible = false
 			var known := not UserSettings.should_show_tutorial(ctx.definition.id)
 			_phase_timer = float(_tuning.get("instructions_seconds_known", 3.5)) if known \
 				else float(_tuning.get("instructions_seconds", 7.0))
@@ -354,6 +360,9 @@ func _enter_phase(p: int) -> void:
 				_phase_timer = minf(_phase_timer, 1.0)
 		P.COUNTDOWN:
 			hud.show_rules(false)
+			if touch != null:
+				touch.set_process_input(true)
+				touch.visible = true
 			hud.show_hints(true)
 			UserSettings.mark_tutorial_seen(ctx.definition.id)
 			_countdown_value = int(_tuning.get("countdown_seconds", 3))
@@ -467,6 +476,10 @@ func _tick_playback(delta: float) -> void:
 
 func _advance_timed_phase(delta: float) -> void:
 	_phase_timer -= delta
+	if phase == P.INSTRUCTIONS and not config.human_slots().is_empty():
+		if _phase_timer < _phase_duration - 0.4 and _any_human_pressed():
+			_set_phase(P.COUNTDOWN)
+		return
 	# Any button skips the intro and the rules card once a player is ready.
 	if phase == P.INSTRUCTIONS and _any_human_pressed() and _phase_timer < _phase_duration - 0.4:
 		_phase_timer = 0.0

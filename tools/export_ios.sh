@@ -87,10 +87,7 @@ if [[ -n "$MANIFEST_BACKUP" ]]; then
 fi
 
 # --- orientation patch ------------------------------------------------------
-# Godot 4.7 writes a single interface orientation per device family, and picks
-# opposite ones for iPhone and iPad. A party game gets passed around a table, so
-# it has to accept the device being flipped; without this the screen stays
-# upside down until you flip it back.
+# Preserve portrait and landscape support when regenerating the iOS export.
 PLIST="$OUT/KrasPass/KrasPass-Info.plist"
 ENTITLEMENTS="$OUT/KrasPass/KrasPass.entitlements"
 /usr/libexec/PlistBuddy -c 'Delete :com.apple.developer.applesignin' "$ENTITLEMENTS" 2>/dev/null || true
@@ -104,12 +101,16 @@ PRIVACY="$OUT/PrivacyInfo.xcprivacy"
 /usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypeTracking bool false' "$PRIVACY"
 /usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypePurposes array' "$PRIVACY"
 /usr/libexec/PlistBuddy -c 'Add :NSPrivacyCollectedDataTypes:0:NSPrivacyCollectedDataTypePurposes:0 string NSPrivacyCollectedDataTypePurposeAppFunctionality' "$PRIVACY"
-echo "==> Patching supported orientations (both landscape, both families)"
+echo "==> Patching supported orientations (portrait and landscape)"
 for KEY in "UISupportedInterfaceOrientations" "UISupportedInterfaceOrientations~ipad"; do
 	/usr/libexec/PlistBuddy -c "Delete :$KEY" "$PLIST" 2>/dev/null || true
 	/usr/libexec/PlistBuddy -c "Add :$KEY array" "$PLIST"
 	/usr/libexec/PlistBuddy -c "Add :$KEY:0 string UIInterfaceOrientationLandscapeLeft" "$PLIST"
 	/usr/libexec/PlistBuddy -c "Add :$KEY:1 string UIInterfaceOrientationLandscapeRight" "$PLIST"
+	/usr/libexec/PlistBuddy -c "Add :$KEY:2 string UIInterfaceOrientationPortrait" "$PLIST"
+	if [ "$KEY" = "UISupportedInterfaceOrientations~ipad" ]; then
+		/usr/libexec/PlistBuddy -c "Add :$KEY:3 string UIInterfaceOrientationPortraitUpsideDown" "$PLIST"
+	fi
 done
 
 # --- game controller declaration -------------------------------------------

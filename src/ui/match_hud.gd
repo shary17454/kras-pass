@@ -8,6 +8,7 @@ extends CanvasLayer
 ## score chips at 60 Hz is pure waste on a handheld.
 
 var ctx: MatchContext
+signal ready_requested()
 var controller: MiniGameController
 
 var _chips: Array = []
@@ -70,20 +71,24 @@ func _build() -> void:
 	# strip down there covers the action and sits under the player's thumbs.
 	# One container with an expanding gap in the middle means the clock can
 	# never overlap a chip at any window width.
-	var chips := HBoxContainer.new()
+	var chips := GridContainer.new()
+	chips.columns = 5
 	chips.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	chips.offset_top = 14
 	chips.offset_bottom = 156
 	chips.offset_left = 26
 	chips.offset_right = -26
-	chips.add_theme_constant_override("separation", 14)
+	chips.add_theme_constant_override("h_separation", 14)
+	chips.add_theme_constant_override("v_separation", 14)
 	chips.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(chips)
 	var players: Array = ctx.config.players
 	var half := int(ceil(players.size() / 2.0))
+	var clock_gap: Control
 	for i in players.size():
 		if i == half:
 			var gap := Control.new()
+			clock_gap = gap
 			gap.custom_minimum_size = Vector2(380, 0)
 			gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -94,6 +99,21 @@ func _build() -> void:
 		tail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		chips.add_child(tail)
+	var fit_chips := func():
+		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
+		var inset := Platform.safe_insets()
+		chips.columns = 2 if portrait else 5
+		chips.offset_top = (180 if portrait else 14) + inset.y
+		chips.offset_left = 26 + inset.x
+		chips.offset_right = -26 - inset.z
+		top.offset_top = 18 + inset.y
+		if clock_gap != null:
+			clock_gap.visible = not portrait
+		for chip in _chips:
+			chip["root"].size_flags_horizontal = Control.SIZE_EXPAND_FILL if portrait else Control.SIZE_SHRINK_CENTER
+	get_viewport().size_changed.connect(fit_chips)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_chips))
+	fit_chips.call()
 
 	# --- centre announcements ---------------------------------------------
 	_centre_label = UIKit.centered("", 120, UIKit.ACCENT, true)
@@ -108,14 +128,28 @@ func _build() -> void:
 	_rules_card.visible = false
 
 	# --- control hint strip -----------------------------------------------
-	_hint_label = UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.dim_color())
+	_hint_label = UIKit.centered(Loc.t(ctx.definition.desc_key), UIKit.SIZE_SMALL, Color.WHITE)
+	_hint_label.add_theme_color_override("font_shadow_color", Color.BLACK)
+	_hint_label.add_theme_constant_override("shadow_offset_y", 2)
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_hint_label.anchor_left = 0.0
-	_hint_label.anchor_right = 1.0
-	_hint_label.offset_top = -58
+	_hint_label.anchor_left = 0.25
+	_hint_label.anchor_right = 0.75
+	_hint_label.offset_top = -120
 	_hint_label.offset_bottom = -22
 	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hint_label)
+	var fit_hint := func():
+		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
+		_hint_label.anchor_left = 0.08 if portrait else 0.25
+		_hint_label.anchor_right = 0.92 if portrait else 0.75
+		_hint_label.anchor_top = 0.0 if portrait else 1.0
+		_hint_label.anchor_bottom = _hint_label.anchor_top
+		_hint_label.offset_top = 460 + Platform.safe_insets().y if portrait else -120
+		_hint_label.offset_bottom = 560 + Platform.safe_insets().y if portrait else -22
+	get_viewport().size_changed.connect(fit_hint)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_hint))
+	fit_hint.call()
 
 	# --- toasts ------------------------------------------------------------
 	_toast_box = VBoxContainer.new()
@@ -164,6 +198,8 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# it in here is what pushed the name into being clipped.
 	var character := p.character()
 	var shown: String = character.display_name() if character != null else p.display_name()
+	if p.is_human:
+		shown = Loc.t("hud.you", {"name": shown})
 	var name_label := UIKit.label(shown, UIKit.SIZE_SMALL, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.clip_text = true
@@ -265,16 +301,30 @@ func _make_rules_card() -> Control:
 	v.add_child(UIKit.centered(d.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT, true))
 	var rules := UIKit.centered(Loc.t(d.rules_key), UIKit.SIZE_BODY)
 	rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	rules.custom_minimum_size = Vector2(1000, 0)
+	rules.custom_minimum_size = Vector2.ZERO
 	v.add_child(rules)
-	v.add_child(UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.ACCENT_2))
+	var controls := UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
+	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(controls)
+	v.add_child(UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, Color.WHITE))
+	var start := UIKit.button(Loc.t("common.start"), UIKit.SIZE_HEADING)
+	start.custom_minimum_size.y = 80
+	start.pressed.connect(func(): ready_requested.emit())
+	v.add_child(start)
 	if ctx.config.subtitle_key != "":
 		v.add_child(UIKit.centered(Loc.t(ctx.config.subtitle_key), UIKit.SIZE_SMALL, UIKit.dim_color()))
 	wrapper.add_child(card)
+	var fit_rules := func(): card.custom_minimum_size.x = minf(1080, get_viewport().get_visible_rect().size.x - 96)
+	get_viewport().size_changed.connect(fit_rules)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_rules))
+	fit_rules.call()
 	return wrapper
 
 
 func _control_hint_text() -> String:
+	var specific := "game.%s.controls" % ctx.definition.id
+	if Loc.has(specific):
+		return Loc.t(specific)
 	var parts: Array[String] = []
 	for hint in ctx.definition.control_hints:
 		var key := "controls.%s" % hint

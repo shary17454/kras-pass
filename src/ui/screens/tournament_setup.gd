@@ -34,7 +34,7 @@ func build() -> void:
 		if _characters[i].id == last:
 			_character_index = i
 
-	var columns := UIKit.hbox(32)
+	var columns := UIKit.adaptive_columns(32)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 	var left := UIKit.vbox(14)

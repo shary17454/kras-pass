@@ -4,12 +4,12 @@ extends Screen
 
 func build() -> void:
 	title(Loc.t("stats.title"))
-	var columns := UIKit.hbox(28)
+	var columns := UIKit.adaptive_columns(28)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 
 	var left := UIKit.vbox(8)
-	left.custom_minimum_size = Vector2(620, 0)
+	left.custom_minimum_size = Vector2(560, 0)
 	columns.add_child(left)
 	for row in Stats.summary_rows():
 		var card := UIKit.panel(UIKit.PANEL, 12)

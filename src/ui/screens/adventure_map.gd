@@ -9,7 +9,7 @@ var _world_index := 0
 var _character_index := 0
 var _characters: Array[CharacterData] = []
 var _stage_holder: VBoxContainer
-var _world_tabs: HBoxContainer
+var _world_tabs: BoxContainer
 
 
 func build() -> void:
@@ -30,11 +30,11 @@ func build() -> void:
 			if int(prog["cleared"]) < int(prog["total"]):
 				break
 
-	_world_tabs = UIKit.hbox(10)
+	_world_tabs = UIKit.adaptive_columns(10)
 	body.add_child(_world_tabs)
 	_build_tabs()
 
-	var columns := UIKit.hbox(28)
+	var columns := UIKit.adaptive_columns(28)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 	_stage_holder = UIKit.vbox(10)

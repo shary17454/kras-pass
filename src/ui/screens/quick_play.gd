@@ -19,6 +19,7 @@ var _game_card_holder: Control
 var _character_card_holder: Control
 var _arena_option: OptionButton
 var _rounds_option: OptionButton
+var _game_option: OptionButton
 
 
 func build() -> void:
@@ -33,8 +34,21 @@ func build() -> void:
 		if _characters[i].id == last:
 			_character_index = i
 	_rounds = _games[_game_index].default_rounds
+	var selected_id := String(args.get("game_id", ""))
+	for i in _games.size():
+		if _games[i].id == selected_id:
+			_game_index = i
+	var game_names: Array[String] = []
+	for game in _games:
+		game_names.append(game.display_name())
+	_game_option = UIKit.option(game_names, _game_index)
+	_game_option.item_selected.connect(func(i):
+		_game_index = i
+		_arena_index = 0
+		_refresh_game())
+	body.add_child(UIKit.row(Loc.t("quick.game"), _game_option))
 
-	var columns := UIKit.hbox(32)
+	var columns := UIKit.adaptive_columns(32)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 
@@ -42,12 +56,8 @@ func build() -> void:
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var right := UIKit.vbox(12)
 	right.custom_minimum_size = Vector2(560, 0)
-	if Loc.is_rtl():
-		columns.add_child(right)
-		columns.add_child(left)
-	else:
-		columns.add_child(left)
-		columns.add_child(right)
+	columns.add_child(left)
+	columns.add_child(right)
 
 	left.add_child(UIKit.heading(Loc.t("quick.game")))
 	_game_card_holder = _picker(left, func(step): _cycle_game(step))
@@ -120,6 +130,7 @@ func _cycle_character(step: int) -> void:
 
 
 func _refresh_game() -> void:
+	_game_option.select(_game_index)
 	for c in _game_card_holder.get_children():
 		c.queue_free()
 	var def := _games[_game_index]
@@ -140,7 +151,12 @@ func _refresh_game() -> void:
 func _refresh_character() -> void:
 	for c in _character_card_holder.get_children():
 		c.queue_free()
-	var card := Widgets.character_card(_characters[_character_index], true, true)
+	var character := _characters[_character_index]
+	var card := UIKit.panel(UIKit.PANEL, 12)
+	var details := UIKit.vbox(8)
+	card.add_child(details)
+	details.add_child(UIKit.centered(character.display_name(), UIKit.SIZE_HEADING, character.color, true))
+	details.add_child(UIKit.centered(Loc.t(character.realm_key), UIKit.SIZE_BODY))
 	card.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_character_card_holder.add_child(card)
 

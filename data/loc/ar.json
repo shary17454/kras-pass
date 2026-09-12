@@ -1,4 +1,9 @@
 {
+  "game.ring_rumble.controls": "الاندفاع: دفعة سريعة نحو اتجاه الحركة\nالهجوم: ضرب الخصم، أو رمي القنبلة التي تحملها",
+  "library.title": "اختر لعبتك",
+  "library.choose_another": "لعبة أخرى",
+  "hud.you": "أنت: {name}",
+  "hud.ready_hint": "عندما تكون جاهزًا، اضغط ابدأ",
   "account.title": "الحساب",
   "account.sign_in": "تسجيل الدخول مع Apple",
   "account.sign_out": "تسجيل الخروج",
@@ -200,7 +205,7 @@
   "stage.boss.skyloft": "بطولة العلّية",
   "stage.boss.cogworks": "النهائي الكبير",
   "game.ring_rumble.name": "زحام الحلقة",
-  "game.ring_rumble.desc": "أربعة متنافسين وحلقة تضيق.",
+  "game.ring_rumble.desc": "ابق على الجليد؛ آخر لاعب يبقى يفوز بالجولة.",
   "game.ring_rumble.rules": "ادفع الباقين خارج الحافة. التقط السواقط لتحمل قنبلة عشوائية، ثم ارمها بالهجوم؛ أول ضربة تطيّر المطية، وبعدها يبدأ الحرق أو التجميد أو الدفع للماء.",
   "game.crumble_court.name": "الساحة المنهارة",
   "game.crumble_court.desc": "الأرض تنهار من تحت قدميك.",

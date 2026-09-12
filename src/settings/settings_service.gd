@@ -134,6 +134,8 @@ func _apply_engine_settings() -> void:
 	# Scale the 3D render resolution rather than dropping features, which keeps
 	# gameplay readability identical across quality tiers.
 	var scale: float = [0.7, 0.85, 1.0, 1.15][clampi(quality, 0, 3)]
+	if OS.get_name() in ["iOS", "Android"]:
+		scale = minf(scale, 1.0)
 	get_tree().root.scaling_3d_scale = scale
 	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
 	# Multisampling is what keeps a bevelled edge from crawling as the camera
@@ -141,7 +143,7 @@ func _apply_engine_settings() -> void:
 	if quality >= 3 and rich:
 		get_tree().root.msaa_3d = Viewport.MSAA_8X
 	elif quality >= 2:
-		get_tree().root.msaa_3d = Viewport.MSAA_4X if rich else Viewport.MSAA_2X
+		get_tree().root.msaa_3d = Viewport.MSAA_4X if rich or quality >= 3 else Viewport.MSAA_2X
 	elif quality == 1:
 		get_tree().root.msaa_3d = Viewport.MSAA_2X
 	else:

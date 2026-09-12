@@ -82,6 +82,20 @@ func _touch_profiles(t: TestHarness) -> void:
 
 
 func _touch_layout_rules(t: TestHarness) -> void:
+	t.test("portrait action buttons stay on screen in either handedness")
+	var touch := TouchSource.new()
+	touch.size = Vector2(720, 1560)
+	touch.buttons.assign(["attack", "jump", "dash", "ability"])
+	for left_handed in [false, true]:
+		touch._left_handed = left_handed
+		for i in touch.buttons.size():
+			var point := touch._button_centre(i)
+			var radius := TouchSource.BUTTON_RADIUS
+			t.ok(point.x >= radius and point.x <= touch.size.x - radius, "button fits horizontal bounds")
+			t.ok(point.y >= radius and point.y <= touch.size.y - radius, "button fits vertical bounds")
+			for j in i:
+				t.ok(point.distance_to(touch._button_centre(j)) > radius * 2.0, "buttons do not overlap")
+	touch.free()
 	t.test("touch buttons are derived from declared controls, never duplicated")
 	for def in Registry.all_minigames():
 		var buttons := ControlProfile.buttons_for(def.control_profile, def.control_hints)

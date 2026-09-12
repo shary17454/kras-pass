@@ -248,6 +248,14 @@ static func row(label_text: String, control: Control) -> HBoxContainer:
 	l.custom_minimum_size = Vector2(390 * scale(), 0)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.size_flags_horizontal = Control.SIZE_SHRINK_END
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var fit := func():
+		var portrait := h.get_viewport_rect().size.x < h.get_viewport_rect().size.y
+		l.custom_minimum_size.x = (200 if portrait else 390) * scale()
+	h.tree_entered.connect(func():
+		h.get_viewport().size_changed.connect(fit)
+		fit.call())
+	h.tree_exiting.connect(func(): h.get_viewport().size_changed.disconnect(fit))
 	if Loc.is_rtl():
 		h.add_child(control)
 		h.add_child(l)
@@ -298,6 +306,12 @@ static func margin(child: Control, m: int = 56) -> MarginContainer:
 	var insets := Platform.ui_margin(m)
 	for side in ["left", "right", "top", "bottom"]:
 		mc.add_theme_constant_override("margin_" + side, int(insets[side]))
+	var fit := func():
+		var current := Platform.ui_margin(m)
+		for side in ["left", "right", "top", "bottom"]:
+			mc.add_theme_constant_override("margin_" + side, int(current[side]))
+	mc.tree_entered.connect(func(): mc.get_viewport().size_changed.connect(fit))
+	mc.tree_exiting.connect(func(): mc.get_viewport().size_changed.disconnect(fit))
 	mc.add_child(child)
 	return mc
 
@@ -312,6 +326,18 @@ static func hbox(separation: int = 14) -> HBoxContainer:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", separation)
 	return h
+
+
+static func adaptive_columns(separation: int = 24) -> BoxContainer:
+	var box := BoxContainer.new()
+	box.add_theme_constant_override("separation", separation)
+	var fit := func():
+		var view := box.get_viewport_rect().size
+		box.vertical = view.x < view.y
+	box.resized.connect(fit)
+	box.tree_entered.connect(func(): box.get_viewport().size_changed.connect(fit))
+	box.tree_exiting.connect(func(): box.get_viewport().size_changed.disconnect(fit))
+	return box
 
 
 ## Rise entrance used by every screen so navigation feels continuous.

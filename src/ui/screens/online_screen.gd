@@ -25,7 +25,7 @@ func build() -> void:
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(notice)
 
-	var columns := UIKit.hbox(28)
+	var columns := UIKit.adaptive_columns(28)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(columns)
 	var left := UIKit.vbox(12)
