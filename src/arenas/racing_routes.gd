@@ -5,6 +5,9 @@ static func points(id: String) -> PackedVector3Array:
 	var anchors: Array[Vector3] = []
 	var length := 460.0
 	match id:
+		"alula_rain":
+			length = 520.0
+			anchors = [Vector3(90, 2, -80), Vector3(115, 3, -15), Vector3(60, 4, 20), Vector3(85, 3, 85), Vector3(10, 2, 110), Vector3(-55, 3, 65), Vector3(-105, 4, 85), Vector3(-130, 3, 10), Vector3(-90, 2, -65), Vector3(-35, 3, -35), Vector3(15, 4, -95)]
 		"dune_circuit":
 			length = 430.0
 			anchors = [Vector3(95, 1, -60), Vector3(115, 2, 5), Vector3(75, 3, 65), Vector3(5, 1, 90), Vector3(-70, 2, 65), Vector3(-110, 4, 10), Vector3(-80, 2, -60), Vector3(-15, 1, -85)]

@@ -487,6 +487,20 @@
       }
     },
     {
+      "id": "alula_rain",
+      "shape": "circuit",
+      "radius": 100.0,
+      "thickness": 1.0,
+      "wall_height": 1.3,
+      "palette": {
+        "floor": "#735447",
+        "accent": "#e5bf88",
+        "sky_top": "#495b68",
+        "sky_bottom": "#a6adb0"
+      },
+      "params": { "width": 14.0 }
+    },
+    {
       "id": "sky_causeway",
       "shape": "circuit",
       "radius": 90.0,

@@ -89,6 +89,8 @@ func build(arena_def: ArenaDef) -> void:
 		spawn_points = def.spawns_for(4)
 	if def.shape == "circuit":
 		var scenery_path := "res://src/arenas/racing_biome.gd"
+		if def.id == "alula_rain":
+			scenery_path = "res://src/arenas/alula_world.gd"
 		var scenery: Node3D = load(scenery_path).new()
 		add_child(scenery)
 		scenery.build(self)

@@ -43,14 +43,21 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 		if arena.def.shape == "circuit":
 			var world := arena.get_node("FantasyWorld")
 			t.ok(world.get_node_or_null("WoodlandTerrain") != null, "natural world has sculpted terrain")
-			if arena_id not in ["dune_circuit", "magma_ring"]:
+			if arena_id not in ["dune_circuit", "magma_ring", "alula_rain"]:
 				t.ok(world.get_node_or_null("River") != null, "river biome has water")
 			if arena_id == "magma_ring":
 				t.not_null(world.get_node_or_null("Lava"), "volcano has an animated lava crater")
 				t.not_null(world.get_node_or_null("LavaFlow"), "volcano has lava flowing down its slope")
 			if arena_id == "frost_hairpin":
 				t.not_null(world.get_node_or_null("Weather/Snow"), "snow biome has snowfall")
-			if arena_id == "neon_spiral":
+			if arena_id == "alula_rain":
+				t.equal(int(world.get_meta("biome")), 5, "AlUla has its own sandstone biome")
+				t.ok(world.get_node("GravelRoad").material_override.get_shader_parameter("wet"), "AlUla asphalt is wet")
+				var formations := world.get_node("SandstoneFormations")
+				t.ok(formations.get_child_count() >= 20, "AlUla has scanned cliffs and matching collision")
+				var cliff := formations.get_node("ScannedCliff4") as MeshInstance3D
+				t.ok((cliff.transform * cliff.mesh.get_aabb()).size.y > 40.0, "AlUla has tall scanned sandstone mountains")
+			if arena_id in ["neon_spiral", "alula_rain"]:
 				t.not_null(world.get_node_or_null("Weather/Rain"), "storm biome has rain")
 				var weather = world.get_node("Weather")
 				var original_flashes = UserSettings.get_value("reduce_flashes")

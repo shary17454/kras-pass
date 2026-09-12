@@ -7,7 +7,7 @@ const VOLCANO := Vector2(-135, -100)
 
 
 func build(a: Arena) -> void:
-	biome = {"dune_circuit": 1, "frost_hairpin": 2, "magma_ring": 3, "neon_spiral": 4}.get(a.def.id, 0)
+	biome = {"dune_circuit": 1, "frost_hairpin": 2, "magma_ring": 3, "neon_spiral": 4, "alula_rain": 5}.get(a.def.id, 0)
 	super.build(a)
 	set_meta("biome", biome)
 	var terrain := get_node("WoodlandTerrain") as MeshInstance3D
@@ -22,12 +22,12 @@ func build(a: Arena) -> void:
 	asphalt.set_shader_parameter("aggregate", _road_material.albedo_texture)
 	asphalt.set_shader_parameter("surface_normal", _road_material.normal_texture)
 	asphalt.set_shader_parameter("road_width", arena.track_width)
-	asphalt.set_shader_parameter("wet", biome == 4)
+	asphalt.set_shader_parameter("wet", biome in [4, 5])
 	get_node("GravelRoad").material_override = asphalt
-	if biome in [2, 3, 4]:
+	if biome in [2, 3, 4, 5]:
 		weather = load("res://src/arenas/racing_weather.gd").new()
 		add_child(weather)
-		weather.build(arena, biome, Vector3(VOLCANO.x, 32, VOLCANO.y))
+		weather.build(arena, 4 if biome == 5 else biome, Vector3(VOLCANO.x, 32, VOLCANO.y))
 
 
 func river_center_x() -> float:

@@ -44,6 +44,11 @@ void fragment() {
     } else if (biome == 3) {
         ALBEDO = vec3(grain * 0.35 + 0.025);
         ROUGHNESS = 0.9;
+    } else if (biome == 5) {
+        vec3 sandstone = mix(vec3(0.21, 0.12, 0.065), vec3(0.52, 0.35, 0.22), clamp(grain * 1.6, 0.0, 1.0));
+        ALBEDO = sandstone;
+        ROUGHNESS = mix(0.65, 0.83, slope);
+        NORMAL_MAP_DEPTH = 0.35;
     } else if (biome == 4) {
         ALBEDO *= 0.62;
         ROUGHNESS = mix(0.22, 0.55, slope);
