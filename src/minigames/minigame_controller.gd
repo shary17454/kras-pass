@@ -54,6 +54,13 @@ func setup(context: MatchContext) -> void:
 
 # --- overridable declaration -----------------------------------------------
 
+func uses_round_clock() -> bool:
+	return true
+
+
+func hud_primary_value() -> String:
+	return ""
+
 ## Declare how this game wants the shared systems set up. Called before `build`.
 func configure() -> void:
 	pass

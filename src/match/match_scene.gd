@@ -555,11 +555,15 @@ func _tick_live(delta: float) -> void:
 	_check_water_line()
 	# 6. clock
 	if not (DevTools.available() and DevTools.freeze_timer):
-		ctx.time_left = maxf(0.0, ctx.time_left - delta)
+		if controller.uses_round_clock():
+			ctx.time_left = maxf(0.0, ctx.time_left - delta)
 		_round_elapsed += delta
-	EventBus.match_time_changed.emit(ctx.time_left)
-	hud.set_time(ctx.time_left, float(_tuning.get("hurry_time", 5.0)))
-	_tick_time_warning()
+	if controller.uses_round_clock():
+		EventBus.match_time_changed.emit(ctx.time_left)
+		hud.set_time(ctx.time_left, float(_tuning.get("hurry_time", 5.0)))
+		_tick_time_warning()
+	else:
+		hud.set_race_progress(controller.hud_primary_value())
 	_evaluate_end(delta)
 
 
@@ -734,7 +738,7 @@ func _evaluate_end(_delta: float) -> void:
 		_phase_locked = true
 		_set_phase(P.FINISH)
 		return
-	if ctx.time_left > 0.0:
+	if not controller.uses_round_clock() or ctx.time_left > 0.0:
 		return
 	_phase_locked = true
 	if phase == P.PLAYING and config.sudden_death and ctx.definition.supports_sudden_death and controller.is_tied():

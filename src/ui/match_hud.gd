@@ -351,6 +351,14 @@ func set_round(index: int, total: int) -> void:
 	_round_label.text = Loc.t("hud.round_of", {"n": index + 1, "total": total}) if total > 1 else ""
 
 
+func set_race_progress(value: String) -> void:
+	_timer_label.text_direction = Control.TEXT_DIRECTION_LTR
+	_timer_label.text = value
+	_timer_label.scale = Vector2.ONE
+	_low_time = false
+	_timer_label.add_theme_color_override("font_color", UIKit.TEXT)
+
+
 func set_banner(text: String) -> void:
 	_banner_label.text = text
 

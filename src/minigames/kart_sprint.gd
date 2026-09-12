@@ -5,12 +5,13 @@ extends MiniGameController
 ## cutting across the infield does not count as a lap and a kart that spins and
 ## crosses backwards does not gain one either.
 
-const UNFINISHED := 99999
+const UNFINISHED := 1000000000
 const LAPS := 3
 
 var finish_times: Array[int] = []
 var lap: Array[int] = []
 var _next_cp: Array[int] = []
+var _started: Array[bool] = []
 var _elapsed := 0.0
 var _finished := 0
 var _checkpoints: Array[Vector3] = []
@@ -20,7 +21,17 @@ var _boost_pads: Array = []
 ## Overridable so a game on a longer circuit can run fewer laps. Distance is
 ## what has to stay comparable between race games, not lap count.
 func laps() -> int:
-	return LAPS
+	return clampi(int(ctx.config.rule("race_laps", LAPS)), 3, 10) if ctx != null else LAPS
+
+
+func uses_round_clock() -> bool:
+	return false
+
+
+func hud_primary_value() -> String:
+	var humans := ctx.config.human_slots()
+	var slot := humans[0] if not humans.is_empty() else 0
+	return "%d / %d" % [mini(lap[slot] + 1, laps()), laps()] if not lap.is_empty() else ""
 
 
 func configure() -> void:
@@ -36,6 +47,8 @@ func build() -> void:
 	lap.fill(0)
 	_next_cp.resize(n)
 	_next_cp.fill(0)
+	_started.resize(n)
+	_started.fill(false)
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -54,14 +67,20 @@ func _build_boost_pads(arena: Arena) -> void:
 		var here := arena.track_point(t)
 		var ahead := arena.track_point(t + 0.005)
 		var pos := here + Vector3(0, 0.09, 0)
-		var pad := MeshFactory.box(Vector3(2.4, 0.12, 2.4), UIKit.ACCENT_2, 1.2)
+		var pad := MeshInstance3D.new()
+		pad.name = "GreenBoostPad%d" % i
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(4.0, 4.0)
+		pad.mesh = plane
+		var material := ShaderMaterial.new()
+		material.shader = load("res://src/arenas/racing_boost.gdshader")
+		pad.material_override = material
 		pad.position = pos
-		var fwd := ahead - here
-		fwd.y = 0.0
+		var fwd := (ahead - here).normalized()
 		if fwd.length_squared() > 0.0001:
-			pad.rotation.y = -atan2(fwd.z, fwd.x)
+			pad.basis = Basis.looking_at(fwd, Vector3.UP)
 		ctx.world_root.add_child(pad)
-		_boost_pads.append({"pos": pos, "radius": 1.6, "cooldown": {}})
+		_boost_pads.append({"pos": pos, "radius": 2.0, "cooldown": {}})
 
 
 func locomotion() -> int:
@@ -78,6 +97,7 @@ func on_round_start() -> void:
 	finish_times.fill(UNFINISHED)
 	lap.fill(0)
 	_next_cp.fill(0)
+	_started.fill(false)
 
 
 func tick(delta: float) -> void:
@@ -91,9 +111,11 @@ func tick(delta: float) -> void:
 		if f == null or not is_instance_valid(f):
 			continue
 		var target: Vector3 = _checkpoints[_next_cp[i]]
-		if f.global_position.distance_to(target) < 3.6:
+		var checkpoint_radius: float = maxf(3.6, ctx.arena.track_width * 0.48)
+		if f.global_position.distance_to(target) < checkpoint_radius:
+			var crossed_start := _next_cp[i] == 0
 			_next_cp[i] = (_next_cp[i] + 1) % _checkpoints.size()
-			if _next_cp[i] == 0:
+			if crossed_start and _started[i]:
 				lap[i] += 1
 				AudioManager.play_sfx("score" if lap[i] >= laps() else "tick")
 				if lap[i] >= laps():
@@ -102,6 +124,8 @@ func tick(delta: float) -> void:
 					ctx.set_detail(i, "laps", lap[i])
 					_finished += 1
 					f.control_enabled = false
+			if crossed_start:
+				_started[i] = true
 		_check_boost(i, f, delta)
 
 
@@ -132,7 +156,15 @@ func on_fighter_fell(slot: int) -> void:
 
 
 func is_round_over() -> bool:
-	return ctx.early_finish or _finished >= ctx.player_count()
+	if ctx.early_finish or _finished >= ctx.player_count():
+		return true
+	var humans := ctx.config.human_slots()
+	if humans.is_empty():
+		return false
+	for slot in humans:
+		if finish_times[slot] == UNFINISHED:
+			return false
+	return true
 
 
 func compute_scores() -> Array[int]:
@@ -146,7 +178,7 @@ func compute_scores() -> Array[int]:
 		if finish_times[i] != UNFINISHED:
 			out.append(finish_times[i])
 		else:
-			var progress := lap[i] * _checkpoints.size() + _next_cp[i]
+			var progress := progress_steps(i)
 			var toward := 0
 			var f := ctx.fighter(i)
 			if f != null and is_instance_valid(f) and not _checkpoints.is_empty():
@@ -154,6 +186,11 @@ func compute_scores() -> Array[int]:
 				toward = clampi(int(99.0 - minf(gap, 99.0)), 0, 99)
 			out.append(UNFINISHED - progress * 100 - toward)
 	return out
+
+
+func progress_steps(slot: int) -> int:
+	var next := _checkpoints.size() if _next_cp[slot] == 0 and _started[slot] else _next_cp[slot]
+	return lap[slot] * _checkpoints.size() + next
 
 
 ## Where the boost pads this kart can currently use sit, for brains that plan
@@ -177,7 +214,7 @@ func hud_value(slot: int) -> String:
 
 
 func hud_banner() -> String:
-	return "%.2f" % _elapsed
+	return Loc.t("race.laps")
 
 
 func ai_script() -> Script:

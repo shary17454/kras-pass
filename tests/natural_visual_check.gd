@@ -6,6 +6,8 @@ func _ready() -> void:
 	UserSettings._values["touch_controls"] = "on"
 	var cfg := MatchConfig.build("sabaq_sawarikh", ["fanoos", "mowja", "ramla", "nabta"], 1, 1, 72)
 	cfg.arena_id = "sky_causeway"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--arena="): cfg.arena_id = arg.get_slice("=", 1)
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	add_child(scene)
 	var begin := Time.get_ticks_msec()
@@ -25,7 +27,7 @@ func _ready() -> void:
 		return
 	var suffix := "portrait" if get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y else "landscape"
 	suffix += "-" + RenderingServer.get_current_rendering_method()
-	for index in [0, 18, 60]:
+	for index in [0, 12, 18, 60]:
 		var fighter: Fighter = scene.ctx.fighter(0)
 		var p: Vector3 = scene.arena.circuit_line[index]
 		fighter.respawn_at(p + Vector3.UP * 1.3)
@@ -43,8 +45,17 @@ func _ready() -> void:
 			push_error("Natural world rendered blank")
 			get_tree().quit(1)
 			return
-		shot.save_png("/tmp/kras-natural-%s-%d.png" % [suffix, index])
+		shot.save_png("/tmp/kras-%s-%s-%d.png" % [cfg.arena_id, suffix, index])
 		print("Natural view ", index, " fps=", Performance.get_monitor(Performance.TIME_FPS), " draw_calls=", Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), " primitives=", Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
+	scene.camera.set_physics_process(false)
+	scene.camera.set_process(false)
+	scene.camera.global_position = Vector3(72, 52, 85)
+	scene.camera.look_at(Vector3(-5, 3, -10))
+	var world = scene.arena.get_node("FantasyWorld")
+	if cfg.arena_id == "neon_spiral":
+		world.weather.trigger_lightning()
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("/tmp/kras-%s-%s-overview.png" % [cfg.arena_id, suffix])
 	scene.teardown()
 	scene.queue_free()
 	await get_tree().process_frame

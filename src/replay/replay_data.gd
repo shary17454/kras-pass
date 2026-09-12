@@ -43,6 +43,7 @@ var arena_id := ""
 var seed_value := 0
 var rounds := 1
 var duration_override := 0.0
+var rules := {}
 var allow_powerups := true
 var sudden_death := true
 var players: Array = []      # [{slot, character, name, human, difficulty}]
@@ -84,6 +85,7 @@ static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictio
 	r.seed_value = config.seed
 	r.rounds = config.rounds
 	r.duration_override = config.duration_override
+	r.rules = config.rules.duplicate(true)
 	r.allow_powerups = config.allow_powerups
 	r.sudden_death = config.sudden_death
 	r.tick_rate = int(ProjectSettings.get_setting("physics/common/physics_ticks_per_second", 60))
@@ -131,6 +133,7 @@ func to_config() -> MatchConfig:
 	cfg.seed = seed_value
 	cfg.rounds = rounds
 	cfg.duration_override = duration_override
+	cfg.rules = rules.duplicate(true)
 	cfg.allow_powerups = allow_powerups
 	cfg.sudden_death = sudden_death
 	cfg.context = MatchConfig.Context.QUICK
@@ -262,6 +265,7 @@ func to_dict() -> Dictionary:
 		"seed": seed_value,
 		"rounds": rounds,
 		"duration_override": duration_override,
+		"rules": rules,
 		"allow_powerups": allow_powerups,
 		"sudden_death": sudden_death,
 		"tick_rate": tick_rate,
@@ -294,6 +298,8 @@ static func from_dict(d: Dictionary) -> ReplayData:
 	r.seed_value = int(d.get("seed", 0))
 	r.rounds = int(d.get("rounds", 1))
 	r.duration_override = float(d.get("duration_override", 0.0))
+	var saved_rules = d.get("rules", {})
+	r.rules = saved_rules.duplicate(true) if saved_rules is Dictionary else {}
 	r.allow_powerups = bool(d.get("allow_powerups", true))
 	r.sudden_death = bool(d.get("sudden_death", true))
 	r.tick_rate = int(d.get("tick_rate", 60))

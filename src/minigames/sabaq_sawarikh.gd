@@ -51,7 +51,7 @@ var _missiles: Array[Projectile] = []
 ## 22% and flagged, on the same roster and the same brain. Three laps put the
 ## race length back on the reference, and the 140 s clock holds it comfortably.
 func laps() -> int:
-	return 3
+	return super.laps()
 
 
 func build() -> void:
@@ -87,10 +87,33 @@ func _build_crates() -> void:
 		var side := Vector3(-fwd.z, 0.0, fwd.x)
 		# Lane spacing, not half-width: four lanes span 3x this, and the narrowest
 		# circuit is 7m across, so a kart plus clearance has to fit inside it.
-		var spread: float = minf(arena.track_width * 0.22, 1.7)
+		var spread: float = arena.track_width * 0.22
 		for lane: float in [-1.5, -0.5, 0.5, 1.5]:
 			var pos := here + side * spread * lane + Vector3(0, 0.85, 0)
-			var mesh := MeshFactory.crate(1.05, UIKit.ACCENT, UIKit.ACCENT_2)
+			var mesh := Node3D.new()
+			mesh.name = "WeaponCrate"
+			var body := MeshFactory.box(Vector3.ONE * 1.25, Color("9a5729"))
+			mesh.add_child(body)
+			for axis in 3:
+				for a in [-1.0, 1.0]:
+					for b in [-1.0, 1.0]:
+						var size := Vector3.ONE * 0.12
+						size[axis] = 1.32
+						var beam := MeshFactory.box(size, Color("edbd64"))
+						beam.position[(axis + 1) % 3] = a * 0.6
+						beam.position[(axis + 2) % 3] = b * 0.6
+						mesh.add_child(beam)
+			for face in 4:
+				var mark := Label3D.new()
+				mark.text = "?"
+				mark.font_size = 96
+				mark.pixel_size = 0.009
+				mark.modulate = Color("fff5c5")
+				mark.outline_modulate = Color("382212")
+				mark.outline_size = 12
+				mark.rotation.y = face * PI * 0.5
+				mark.position = Vector3(sin(mark.rotation.y), 0, cos(mark.rotation.y)) * 0.65
+				mesh.add_child(mark)
 			mesh.position = pos
 			ctx.world_root.add_child(mesh)
 			_crates.append({"pos": pos, "node": mesh, "cooldown": 0.0})
@@ -186,7 +209,7 @@ func _roll_item(slot: int) -> int:
 func _progress_of(slot: int) -> int:
 	if slot >= lap.size():
 		return 0
-	return lap[slot] * 1000 + _next_cp[slot]
+	return progress_steps(slot)
 
 
 func _tick_items(delta: float) -> void:

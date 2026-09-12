@@ -14,6 +14,8 @@ var _games: Array[MiniGameDef] = []
 var _difficulty := 1
 var _rounds := 1
 var _game_holder: Control
+var _laps := 3
+var _laps_row: Control
 
 
 func build() -> void:
@@ -63,6 +65,11 @@ func build() -> void:
 		for s in _slots:
 			s["difficulty"] = i)
 	controls.add_child(UIKit.row(Loc.t("quick.difficulty"), diff))
+	var laps_option := UIKit.option(["3", "4", "5", "6", "7", "8", "9", "10"], 0)
+	laps_option.get_popup().add_theme_font_size_override("font_size", UIKit.SIZE_BODY)
+	laps_option.item_selected.connect(func(i): _laps = i + 3)
+	_laps_row = UIKit.row(Loc.t("race.laps"), laps_option)
+	body.add_child(_laps_row)
 
 	var start := UIKit.button(Loc.t("local.start"), UIKit.SIZE_HEADING)
 	start.custom_minimum_size = Vector2(0, 72)
@@ -168,6 +175,7 @@ func _refresh_game() -> void:
 	card.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_game_holder.add_child(card)
 	_rounds = _games[_game_index].default_rounds
+	_laps_row.visible = _games[_game_index].id in ["kart_sprint", "sabaq_sawarikh"]
 
 
 func _start() -> void:
@@ -179,6 +187,7 @@ func _start() -> void:
 	cfg.minigame_id = def.id
 	cfg.context = MatchConfig.Context.QUICK
 	cfg.rounds = _rounds
+	cfg.rules["race_laps"] = _laps
 	cfg.sudden_death = def.supports_sudden_death
 	cfg.seed = randi() & 0x7FFFFFFF
 	cfg.arena_id = def.arena_ids[0] if def.arena_ids.size() > 0 else ""

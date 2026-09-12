@@ -88,7 +88,7 @@ func build(arena_def: ArenaDef) -> void:
 	if spawn_points.is_empty():
 		spawn_points = def.spawns_for(4)
 	if def.shape == "circuit":
-		var scenery_path := "res://src/arenas/natural_valley.gd" if def.id == "sky_causeway" else "res://src/arenas/fantasy_circuit.gd"
+		var scenery_path := "res://src/arenas/racing_biome.gd"
 		var scenery: Node3D = load(scenery_path).new()
 		add_child(scenery)
 		scenery.build(self)
@@ -605,22 +605,11 @@ func _build_oval() -> void:
 		spawn_points.append(Vector3(ring_mid + (i % 2) * 1.8 - 0.9, 1.3, -1.4 - float(i / 2) * 2.6))
 
 
-## A closed racing circuit whose centre line is r(t) = radius * (1 + wobble *
-## cos(lobes * t)). Two numbers per arena is all it takes to turn one ring into
-## a track with hairpins and straights, and because the line is stored the AI,
-## the respawn logic and the "are you on the road" test all read the same
-## geometry the road was laid on.
+## Authored centre lines are shared by road geometry, checkpoints and the AI.
 func _build_circuit() -> void:
-	var lobes := int(def.param("lobes", 3.0))
-	var wobble: float = clampf(def.param("wobble", 0.22), 0.0, 0.45)
 	track_width = maxf(def.param("width", 8.0), 4.0)
 	var samples := 120
-	circuit_line = PackedVector3Array()
-	for i in samples:
-		var t := TAU * float(i) / float(samples)
-		var r: float = def.radius * (1.0 + wobble * cos(float(lobes) * t))
-		var elevation := 1.6 * (1.0 - cos(t * 2.0))
-		circuit_line.append(Vector3(cos(t) * r, elevation, sin(t) * r))
+	circuit_line = load("res://src/arenas/racing_routes.gd").points(def.id)
 
 	for i in samples:
 		var a: Vector3 = circuit_line[i]
@@ -639,7 +628,7 @@ func _build_circuit() -> void:
 		body.set_meta("circuit_floor", true)
 
 	checkpoints.clear()
-	var cp_count := 12
+	var cp_count := 60
 	for i in cp_count:
 		var idx := int(float(i) / float(cp_count) * float(samples))
 		var p: Vector3 = circuit_line[idx]
@@ -648,7 +637,7 @@ func _build_circuit() -> void:
 	var start: Vector3 = circuit_line[0]
 	var fwd: Vector3 = (circuit_line[1] - circuit_line[samples - 1]).normalized()
 	var line := MeshFactory.box(Vector3(0.7, 0.12, track_width), def.accent_color, 0.9)
-	line.position = Vector3(start.x, 0.08, start.z)
+	line.position = start + Vector3.UP * 0.08
 	line.rotation.y = -atan2(fwd.z, fwd.x)
 	_static_root.add_child(line)
 

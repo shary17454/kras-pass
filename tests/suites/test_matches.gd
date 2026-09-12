@@ -28,6 +28,8 @@ func run(t: TestHarness, host: Node) -> void:
 	await _ring_ordnance_rules(t)
 	await _tank_battle_rules(t)
 	await _fantasy_world_rules(t)
+	await _race_lap_rules(t)
+	await _extended_races_finish(t)
 
 
 func _fantasy_world_rules(t: TestHarness) -> void:
@@ -38,13 +40,54 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 		arena.build(Registry.arena(arena_id))
 		await _host.get_tree().physics_frame
 		t.ok(arena.get_node_or_null("FantasyWorld") != null, "world scenery exists")
-		if arena_id == "sky_causeway":
+		if arena.def.shape == "circuit":
 			var world := arena.get_node("FantasyWorld")
 			t.ok(world.get_node_or_null("WoodlandTerrain") != null, "natural world has sculpted terrain")
-			t.ok(world.get_node_or_null("River") != null, "natural world has water")
+			if arena_id not in ["dune_circuit", "magma_ring"]:
+				t.ok(world.get_node_or_null("River") != null, "river biome has water")
+			if arena_id == "magma_ring":
+				t.not_null(world.get_node_or_null("Lava"), "volcano has an animated lava crater")
+				t.not_null(world.get_node_or_null("LavaFlow"), "volcano has lava flowing down its slope")
+			if arena_id == "frost_hairpin":
+				t.not_null(world.get_node_or_null("Weather/Snow"), "snow biome has snowfall")
+			if arena_id == "neon_spiral":
+				t.not_null(world.get_node_or_null("Weather/Rain"), "storm biome has rain")
+				var weather = world.get_node("Weather")
+				var original_flashes = UserSettings.get_value("reduce_flashes")
+				UserSettings._values["reduce_flashes"] = true
+				weather.trigger_lightning()
+				t.ok(not weather.bolt.visible, "lightning respects reduced flashes")
+				UserSettings._values["reduce_flashes"] = false
+				weather.trigger_lightning()
+				t.ok(weather.bolt.visible, "storm has a visible lightning strike")
+				weather._process(0.4)
+				t.ok(not weather.bolt.visible, "lightning ends without leaving a bright sky")
+				t.ok(absf(arena._light.light_energy - weather.base_energy) < 0.001, "light energy returns to normal")
+				UserSettings._values["reduce_flashes"] = original_flashes
+			t.ok(world.get_node_or_null("Guardrail") == null, "open course has no roadside fence")
+			t.not_null(world.get_node_or_null("TerrainCollision"), "surrounding ground is driveable")
+			for body in arena._static_root.get_children():
+				t.ok(not body.has_meta("circuit_wall"), "no invisible track wall remains")
+			for sample in range(120):
+				var center := arena.circuit_line[sample]
+				var forward := (arena.circuit_line[(sample + 1) % 120] - center).normalized()
+				var across := Vector3(-forward.z, 0, forward.x).normalized()
+				for side in [-1.0, 1.0]:
+					var shoulder: Vector3 = center + across * side * (arena.track_width * 0.5 + 2.0)
+					var query := PhysicsRayQueryParameters3D.create(shoulder + Vector3.UP * 4, shoulder + Vector3.DOWN * 4, 1)
+					var ground := arena.get_world_3d().direct_space_state.intersect_ray(query)
+					t.ok(not ground.is_empty(), "both road shoulders have solid ground")
+					var crossing_end := shoulder + Vector3.UP
+					if not ground.is_empty():
+						crossing_end.y = ground.position.y + 1.0
+						t.ok(absf(ground.position.y - center.y) < (arena.track_width * 0.5 + 2.0) * 0.55, "driveable shoulder slope %s sample %d" % [arena_id, sample])
+					var crossing := PhysicsRayQueryParameters3D.create(center + Vector3.UP, crossing_end, 1)
+					t.ok(arena.get_world_3d().direct_space_state.intersect_ray(crossing).is_empty(), "open road edge %s sample %d side %.0f" % [arena_id, sample, side])
 			t.equal(world._rock_meshes.size(), 6, "six scanned rock variations loaded")
 			t.equal(world._tree_meshes.size(), 3, "three optimized pine variations loaded")
-			t.ok(world.get_node("GravelRoad").material_override.albedo_texture != null, "road uses photographed texture")
+			var asphalt: ShaderMaterial = world.get_node("GravelRoad").material_override
+			t.ok(asphalt.get_shader_parameter("surface_normal") != null, "road retains detailed surface normals")
+			t.ok(arena.track_width >= 12.0, "asphalt road is wide enough for four racers")
 			for mesh in world._tree_meshes:
 				var triangle_count := 0
 				for surface in mesh.get_surface_count():
@@ -58,7 +101,15 @@ func _fantasy_world_rules(t: TestHarness) -> void:
 			t.ok(not hit.is_empty(), "road has collision at every sampled hill")
 			if not hit.is_empty():
 				t.ok(absf(hit.position.y - p.y) < 0.3, "road visual and collision heights agree")
-		t.ok(arena.track_point(0.25).y > 3, "circuit has an actual climb")
+		var road_length := 0.0
+		var low := INF
+		var high := -INF
+		for i in arena.circuit_line.size():
+			road_length += arena.circuit_line[i].distance_to(arena.circuit_line[(i + 1) % arena.circuit_line.size()])
+			low = minf(low, arena.circuit_line[i].y)
+			high = maxf(high, arena.circuit_line[i].y)
+		t.ok(road_length > 400.0, "authored route is at least twice the former short circuit")
+		t.ok(high - low > 0.5, "route follows varied elevation")
 		arena.queue_free()
 		await _host.get_tree().process_frame
 
@@ -157,7 +208,7 @@ func _play(cfg: MatchConfig) -> Dictionary:
 	var elapsed := 0.0
 	var max_focus_offset := 0.0
 	var tree := _host.get_tree()
-	while captured.is_empty() and elapsed < MAX_SECONDS_PER_MATCH:
+	while captured.is_empty() and elapsed < _match_window(cfg):
 		await tree.physics_frame
 		elapsed += 1.0 / 60.0
 		# Track how far the camera's subject drifts from the arena. A camera
@@ -215,7 +266,69 @@ func _every_minigame(t: TestHarness) -> void:
 		if int(run_result["camera_mode"]) != ArenaCamera.Mode.RACE:
 			t.ok(float(run_result["max_focus_offset"]) <= float(run_result["arena_radius"]),
 				"%s: the camera never leaves the arena chasing a falling player" % def.id)
-		t.ok(float(run_result["seconds"]) < MAX_SECONDS_PER_MATCH, "%s finished before the timeout" % def.id)
+		t.ok(float(run_result["seconds"]) < _match_window(cfg), "%s finished before the test watchdog" % def.id)
+
+
+func _match_window(cfg: MatchConfig) -> float:
+	return 420.0 if cfg.minigame_id in ["kart_sprint", "sabaq_sawarikh"] else MAX_SECONDS_PER_MATCH
+
+
+func _extended_races_finish(t: TestHarness) -> void:
+	for arena_id in Registry.minigame("sabaq_sawarikh").arena_ids:
+		t.test("three real AI laps finish on %s without a countdown" % arena_id)
+		var cfg := _make_config("sabaq_sawarikh", PlayerConfig.Difficulty.MEDIUM)
+		cfg.arena_id = arena_id
+		var played := await _play(cfg)
+		var result: MatchResult = played["result"]
+		t.not_null(result, "all drivers can finish the authored route")
+		if result != null:
+			for score in result.scores:
+				t.ok(score < 1000000, "driver finished rather than being ranked unfinished")
+		t.equal(played["errors"], 0, "extended race logged no gameplay errors")
+
+
+func _race_lap_rules(t: TestHarness) -> void:
+	t.test("races end at the selected finish line, never on a countdown")
+	var cfg := _make_config("sabaq_sawarikh", PlayerConfig.Difficulty.EASY, 1, 1)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	_host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	t.ok(not game.uses_round_clock(), "race has no time limit")
+	for count in range(3, 11):
+		cfg.rules["race_laps"] = count
+		game.on_round_start()
+		t.equal(game.laps(), count, "selected %d laps are used" % count)
+		scene.phase = MatchPhase.P.PLAYING
+		scene._phase_locked = false
+		scene.ctx.time_left = 0.0
+		scene._evaluate_end(0.1)
+		t.equal(scene.phase, MatchPhase.P.PLAYING, "zero time does not end a race")
+		var driver: Fighter = scene.ctx.fighter(0)
+		driver.global_position = game._checkpoints[0]
+		game.tick(0.02)
+		t.equal(game.lap[0], 0, "initial start line crossing is not a completed lap")
+		for completed in count:
+			for checkpoint in range(1, game._checkpoints.size()):
+				driver.global_position = game._checkpoints[checkpoint]
+				game.tick(0.02)
+			t.ok(not game.is_round_over(), "race stays live until the finish line")
+			driver.global_position = game._checkpoints[0]
+			game.tick(0.02)
+			t.equal(game.lap[0], completed + 1, "lap counts at the finish line")
+		t.ok(game.is_round_over(), "selected lap count finishes the human race")
+		t.ok(game.compute_scores()[0] < game.compute_scores()[1], "finisher always ranks before unfinished rivals")
+	cfg.rules["race_laps"] = 99
+	t.equal(game.laps(), 10, "lap count is capped at ten")
+	cfg.rules["race_laps"] = 1
+	t.equal(game.laps(), 3, "lap count has a minimum of three")
+	var replay := ReplayData.new()
+	replay.rules = {"race_laps": 8}
+	t.equal(replay.to_config().rule("race_laps", 3), 8, "replay configuration preserves lap count")
+	scene.teardown()
+	scene.queue_free()
+	await _host.get_tree().process_frame
 
 
 func _multi_round(t: TestHarness) -> void:
@@ -386,6 +499,17 @@ func _rocket_rally_rules(t: TestHarness) -> void:
 		# button, because a headless AI never presses attack — a test that waits
 		# for input here passes whether the guard exists or not.
 		var driver: Fighter = scene.ctx.fighter(0)
+		if driver != null and not game._boost_pads.is_empty():
+			var pad: Dictionary = game._boost_pads[0]
+			pad["cooldown"].clear()
+			driver.global_position = pad["pos"]
+			driver.facing = Vector3.FORWARD
+			driver._impulse = Vector3.ZERO
+			game._check_boost(0, driver, 0.02)
+			t.ok(driver._impulse.length() > 10.0, "green pad accelerates the vehicle")
+			var impulse := driver._impulse
+			game._check_boost(0, driver, 0.02)
+			t.equal(driver._impulse, impulse, "pad cooldown prevents repeated acceleration every frame")
 		if driver != null and is_instance_valid(driver) and not game._crates.is_empty():
 			var crate: Dictionary = game._crates[0]
 			crate["cooldown"] = 0.0

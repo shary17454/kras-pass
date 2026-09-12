@@ -70,7 +70,12 @@ func pbr(id: String, resolution: String, triplanar: bool) -> StandardMaterial3D:
 func _nearest(x: float, z: float) -> Vector3:
 	var best := INF
 	var result := Vector3.ZERO
-	for p in arena.circuit_line:
+	for i in arena.circuit_line.size():
+		var a := arena.circuit_line[i]
+		var b := arena.circuit_line[(i + 1) % arena.circuit_line.size()]
+		var segment := Vector2(b.x - a.x, b.z - a.z)
+		var t := clampf(Vector2(x - a.x, z - a.z).dot(segment) / segment.length_squared(), 0.0, 1.0)
+		var p := a.lerp(b, t)
 		var d := Vector2(x, z).distance_squared_to(Vector2(p.x, p.z))
 		if d < best:
 			best = d
@@ -78,15 +83,19 @@ func _nearest(x: float, z: float) -> Vector3:
 	return Vector3(sqrt(best), result.y, 0)
 
 
+func river_center_x() -> float:
+	return 90.0
+
+
 func ground_height(x: float, z: float) -> float:
 	var nearest := _nearest(x, z)
 	var distance := nearest.x
 	var away := smoothstep(6, 34, distance)
 	var ridge := 3 + noise.get_noise_2d(x, z) * 15
-	var h := nearest.y - 0.5 + away * ridge
+	var h := nearest.y - 0.05 + away * ridge
 	h += smoothstep(55, 110, Vector2(x, z).length()) * (12 + noise.get_noise_2d(x + 240, z) * 36)
-	# River gorge crosses beneath the elevated road twice.
-	var river := 1.0 - smoothstep(5.0, 17.0, absf(x + sin(z * 0.035) * 5.0))
+	# Keep the river outside the course so both road shoulders remain driveable.
+	var river := 1.0 - smoothstep(5.0, 17.0, absf(x - river_center_x() + sin(z * 0.035) * 5.0))
 	h -= river * 12.0
 	return h
 
@@ -94,11 +103,11 @@ func ground_height(x: float, z: float) -> float:
 func _terrain() -> void:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var side := 151
+	var side := 201
 	for z in side:
 		for x in side:
-			var px := float(x - 75) * 2
-			var pz := float(z - 75) * 2
+			var px := float(x - 100) * 3
+			var pz := float(z - 100) * 3
 			surface.set_uv(Vector2(px, pz) * 0.12)
 			surface.add_vertex(Vector3(px, ground_height(px, pz), pz))
 	for z in side - 1:
@@ -119,7 +128,16 @@ func _terrain() -> void:
 			material.set_shader_parameter(prefix + "_" + map, load(ROOT + id + "/" + id + "_" + map + "_2k.jpg"))
 	terrain.material_override = material
 	add_child(terrain)
-	# A separate rocky ridge behind the road anchors the horizon at a believable scale.
+	var body := StaticBody3D.new()
+	body.name = "TerrainCollision"
+	var collision := CollisionShape3D.new()
+	collision.shape = terrain.mesh.create_trimesh_shape()
+	body.add_child(collision)
+	add_child(body)
+	_add_distant_rocks()
+
+
+func _add_distant_rocks() -> void:
 	for i in 8:
 		var angle := -0.5 + float(i) * 0.42
 		var p := Vector3(cos(angle) * 85, 0, sin(angle) * 85)
@@ -129,10 +147,9 @@ func _terrain() -> void:
 
 func _road() -> void:
 	for body in arena._static_root.get_children():
-		if body.has_meta("circuit_floor") or body.has_meta("circuit_wall"):
-			for child in body.get_children():
-				if child is MeshInstance3D:
-					child.visible = false
+		if body.has_meta("circuit_wall") or body.has_meta("circuit_floor"):
+			arena._static_root.remove_child(body)
+			body.queue_free()
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var points := arena.circuit_line
@@ -158,25 +175,12 @@ func _road() -> void:
 	road.mesh = surface.commit()
 	road.material_override = _road_material
 	add_child(road)
-	var rails: Array[Transform3D] = []
-	for i in points.size():
-		var next := points[(i + 1) % points.size()]
-		var p := points[i]
-		var d := (next - p).normalized()
-		var across := Vector3(-d.z, 0, d.x).normalized()
-		for sign_value in [-1, 1]:
-			var edge: Vector3 = across * sign_value * (arena.track_width * 0.5 + 0.2)
-			var b := Basis(d, across.cross(d), across)
-			rails.append(Transform3D(Basis(b.x * p.distance_to(next) * 1.02, b.y * 0.16, b.z * 0.16), (p + next) * 0.5 + edge + Vector3.UP * 1.15))
-			if i % 3 == 0:
-				rails.append(Transform3D(Basis.IDENTITY.scaled(Vector3(0.22, 1.4, 0.22)), p + edge + Vector3.UP * 0.6))
-	var cube := BoxMesh.new()
-	cube.size = Vector3.ONE
-	var wood := StandardMaterial3D.new()
-	wood.albedo_color = Color("796d59")
-	wood.roughness = 0.88
-	cube.material = wood
-	_instances(cube, rails, "Guardrail")
+	var body := StaticBody3D.new()
+	body.name = "RoadCollision"
+	var collision := CollisionShape3D.new()
+	collision.shape = road.mesh.create_trimesh_shape()
+	body.add_child(collision)
+	add_child(body)
 
 
 func _load_meshes(path: String, output: Array[Mesh]) -> void:
@@ -216,12 +220,12 @@ func _dress() -> void:
 	rng.seed = 9182
 	var trees: Array[Transform3D] = []
 	var ferns: Array[Transform3D] = []
-	for i in 64:
-		var p := arena.track_point(float(i) / 64.0)
+	for i in vegetation_samples():
+		var p := arena.track_point(float(i) / vegetation_samples())
 		var radial := Vector3(p.x, 0, p.z).normalized()
 		p += radial * (rng.randf_range(9, 18) if i % 3 != 0 else -rng.randf_range(10, 16))
 		p.y = ground_height(p.x, p.z)
-		if p.y < -4 or _nearest(p.x, p.z).x < arena.track_width * 0.5 + 2:
+		if p.y < -4 or _nearest(p.x, p.z).x < arena.track_width * 0.5 + 10:
 			continue
 		if i % 3 == 0:
 			_rock(i, p - Vector3.UP * 0.3, rng.randf_range(1.5, 3.8))
@@ -241,6 +245,10 @@ func _dress() -> void:
 		_instances(mesh, ferns, "Ferns")
 
 
+func vegetation_samples() -> int:
+	return 64
+
+
 func _instances(mesh: Mesh, transforms: Array[Transform3D], label: String) -> void:
 	var node := MultiMeshInstance3D.new()
 	node.name = label
@@ -256,13 +264,14 @@ func _instances(mesh: Mesh, transforms: Array[Transform3D], label: String) -> vo
 
 func _water() -> void:
 	var mesh := PlaneMesh.new()
-	mesh.size = Vector2(20, 300)
+	mesh.size = Vector2(20, 600)
 	mesh.subdivide_width = 16
 	mesh.subdivide_depth = 80
 	var river := MeshInstance3D.new()
 	river.name = "River"
 	river.mesh = mesh
 	river.position.y = -6.0
+	river.position.x = river_center_x()
 	var material := ShaderMaterial.new()
 	material.shader = load("res://src/arenas/valley_water.gdshader")
 	river.material_override = material

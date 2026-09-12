@@ -165,6 +165,7 @@ func _rematch() -> void:
 	fresh.arena_id = config.arena_id
 	fresh.context = config.context
 	fresh.rounds = config.rounds
+	fresh.rules = config.rules.duplicate(true)
 	fresh.allow_powerups = config.allow_powerups
 	fresh.sudden_death = config.sudden_death
 	fresh.subtitle_key = config.subtitle_key

@@ -6,6 +6,7 @@ uniform sampler2D ground_rough : filter_linear_mipmap_anisotropic, repeat_enable
 uniform sampler2D rock_diff : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D rock_nor_gl : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D rock_rough : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform int biome = 0;
 varying vec3 world_position;
 varying vec3 world_normal;
 
@@ -27,4 +28,24 @@ void fragment() {
     NORMAL_MAP = mix(texture(ground_nor_gl, p.xz).rgb, texture(rock_nor_gl, p.xz).rgb, slope);
     NORMAL_MAP_DEPTH = 0.55;
     ROUGHNESS = mix(texture(ground_rough, p.xz).r, texture(rock_rough, p.xz).r, slope);
+    float grain = dot(ALBEDO, vec3(0.299, 0.587, 0.114));
+    if (biome == 0) {
+        vec3 grass = vec3(grain * 0.52, grain * 0.85, grain * 0.36);
+        ALBEDO = mix(ALBEDO, grass, (1.0 - slope) * 0.55);
+    } else if (biome == 1) {
+        float ripples = sin(world_position.x * 2.6 + sin(world_position.z * 0.24) * 3.0);
+        ALBEDO = mix(vec3(0.56, 0.34, 0.15), vec3(0.84, 0.65, 0.38), clamp(grain * 2.0, 0.0, 1.0));
+        ALBEDO *= 0.96 + ripples * 0.04;
+        ROUGHNESS = 0.95;
+    } else if (biome == 2) {
+        ALBEDO = mix(vec3(0.68, 0.79, 0.86) + grain * 0.18, vec3(grain * 0.65), slope * 0.85);
+        NORMAL_MAP_DEPTH = 0.18;
+        ROUGHNESS = 0.66;
+    } else if (biome == 3) {
+        ALBEDO = vec3(grain * 0.35 + 0.025);
+        ROUGHNESS = 0.9;
+    } else if (biome == 4) {
+        ALBEDO *= 0.62;
+        ROUGHNESS = mix(0.22, 0.55, slope);
+    }
 }
