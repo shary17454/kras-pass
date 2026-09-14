@@ -41,6 +41,11 @@ const DEFAULTS := {
 	"touch_scale": 1.0,
 	"touch_opacity": 0.5,
 	"touch_left_handed": false,
+	# Goal Guard has three independent touch zones. Keeping these separate lets
+	# a player move one action without reversing the rest of the game controls.
+	"touch_keeper_move_side": "left",
+	"touch_keeper_dash_side": "right",
+	"touch_keeper_return_side": "right",
 }
 
 var _values := {}

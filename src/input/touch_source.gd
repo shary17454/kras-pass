@@ -118,8 +118,20 @@ func _bottom_edge() -> float:
 
 
 func _move_on_right() -> bool:
+	if profile == ControlProfile.Kind.KEEPER:
+		return _keeper_side("touch_keeper_move_side") == "right"
 	# ATV controls default to right-hand steering; the setting mirrors both sides.
 	return not _left_handed if profile == ControlProfile.Kind.ATV else _left_handed
+
+
+func _keeper_side(setting: String) -> String:
+	var side := String(UserSettings.get_value(setting))
+	return side if side in ["left", "right"] else "right"
+
+
+func _keeper_button_on_right(action: String) -> bool:
+	var setting := "touch_keeper_return_side" if action == "attack" else "touch_keeper_dash_side"
+	return _keeper_side(setting) == "right"
 
 
 func _stick_centre() -> Vector2:
@@ -141,9 +153,24 @@ func _aim_centre() -> Vector2:
 ## Buttons fan out in an arc away from the stick hand.
 func _button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
-	if profile in [ControlProfile.Kind.ATV, ControlProfile.Kind.KEEPER]:
+	if profile == ControlProfile.Kind.ATV:
 		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
 		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
+	if profile == ControlProfile.Kind.KEEPER:
+		var action := buttons[index]
+		var on_right := _keeper_button_on_right(action)
+		var rank := 0
+		for earlier in index:
+			if _keeper_button_on_right(buttons[earlier]) == on_right:
+				rank += 1
+		# The movement stick owns the lowest spot on its side. An action assigned
+		# there moves above it, keeping every legal layout usable with two thumbs.
+		if on_right == _move_on_right():
+			rank += 1
+		var x := _right_edge() - r if on_right else _left_edge() + r
+		# A keeper stick is wider than an action button; three radii leaves an
+		# actual thumb gap when an action shares the steering side.
+		return Vector2(x, _bottom_edge() - r - rank * r * 3.2)
 	if size.x < size.y and buttons.size() > 2:
 		var x := _right_edge() - r - float(1 - index % 2) * r * 2.2
 		if _left_handed:

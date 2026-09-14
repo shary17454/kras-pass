@@ -21,10 +21,20 @@ func run(t: TestHarness, host: Node) -> void:
 	touch.setup(0, scene.ctx.definition)
 	for view in [Vector2(720, 1560), Vector2(1920, 1080)]:
 		touch.size = view
-		for mirrored in [false, true]:
-			touch._left_handed = mirrored
+		for layout in [
+			{"touch_keeper_move_side": "left", "touch_keeper_dash_side": "right", "touch_keeper_return_side": "right"},
+			{"touch_keeper_move_side": "right", "touch_keeper_dash_side": "left", "touch_keeper_return_side": "left"},
+			{"touch_keeper_move_side": "left", "touch_keeper_dash_side": "left", "touch_keeper_return_side": "right"},
+			{"touch_keeper_move_side": "right", "touch_keeper_dash_side": "right", "touch_keeper_return_side": "left"},
+		]:
+			for key in layout:
+				UserSettings.set_value(key, layout[key])
+			var steering_on_right: bool = layout["touch_keeper_move_side"] == "right"
+			t.equal(touch._stick_centre().x > view.x * 0.5, steering_on_right, "steering follows its selected side")
 			for index in touch.buttons.size():
 				var p := touch._button_centre(index)
+				var setting := "touch_keeper_return_side" if touch.buttons[index] == "attack" else "touch_keeper_dash_side"
+				t.equal(p.x > view.x * 0.5, layout[setting] == "right", "action follows its selected side")
 				t.ok(p.distance_to(touch._stick_centre()) > 184.0, "buttons do not overlap steering")
 				t.equal(touch._button_hit(p), index, "button hit area matches drawing")
 				t.ok(Rect2(Vector2.ZERO, view).has_point(p), "button remains inside viewport")
@@ -60,6 +70,9 @@ func run(t: TestHarness, host: Node) -> void:
 	game._on_goal(heavy, 2)
 	t.equal(scene.ctx.scores[0], 10, "heavy goal costs two points")
 	touch.queue_free()
+	UserSettings.set_value("touch_keeper_move_side", "left")
+	UserSettings.set_value("touch_keeper_dash_side", "right")
+	UserSettings.set_value("touch_keeper_return_side", "right")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

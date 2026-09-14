@@ -49,6 +49,10 @@ func build() -> void:
 	_slider(v, "settings.touch_scale", "touch_scale", 0.7, 1.6)
 	_slider(v, "settings.touch_opacity", "touch_opacity", 0.15, 1.0)
 	_toggle(v, "settings.touch_left_handed", "touch_left_handed")
+	v.add_child(UIKit.label(Loc.t("settings.keeper_layout"), UIKit.SIZE_SMALL, UIKit.ACCENT))
+	_side_option(v, "settings.keeper_move_side", "touch_keeper_move_side")
+	_side_option(v, "settings.keeper_dash_side", "touch_keeper_dash_side")
+	_side_option(v, "settings.keeper_return_side", "touch_keeper_return_side")
 
 	_section(v, "settings.graphics")
 	var quality := UIKit.option([
@@ -214,6 +218,14 @@ func _toggle(parent: VBoxContainer, key: String, setting: String, rebuild := fal
 			UIKit.invalidate_theme()
 			SceneRouter.go_to("settings", {}, false, 0.1))
 	parent.add_child(UIKit.row(Loc.t(key), c))
+
+
+func _side_option(parent: VBoxContainer, key: String, setting: String) -> void:
+	var values := ["right", "left"]
+	var option := UIKit.option([Loc.t("settings.side.right"), Loc.t("settings.side.left")],
+		maxi(0, values.find(String(UserSettings.get_value(setting)))))
+	option.item_selected.connect(func(index): UserSettings.set_value(setting, values[index]))
+	parent.add_child(UIKit.row(Loc.t(key), option))
 
 
 func _binding_button(profile: int, action: String) -> Button:
