@@ -117,10 +117,15 @@ func _bottom_edge() -> float:
 	return size.y - EDGE_MARGIN - _inset_bottom
 
 
+func _move_on_right() -> bool:
+	# ATV controls default to right-hand steering; the setting mirrors both sides.
+	return not _left_handed if profile == ControlProfile.Kind.ATV else _left_handed
+
+
 func _stick_centre() -> Vector2:
 	var r := STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)
 	var x := _left_edge() + r
-	if _left_handed:
+	if _move_on_right():
 		x = _right_edge() - r
 	return Vector2(x, _bottom_edge() - r)
 
@@ -137,7 +142,7 @@ func _aim_centre() -> Vector2:
 func _button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
 	if profile == ControlProfile.Kind.ATV:
-		var x := _left_edge() + r if _left_handed else _right_edge() - r
+		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
 		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
 	if size.x < size.y and buttons.size() > 2:
 		var x := _right_edge() - r - float(1 - index % 2) * r * 2.2
@@ -223,7 +228,7 @@ func _handle_press(index: int, pos: Vector2, pressed: bool) -> void:
 	# Sticks claim their half of the screen, not just their drawn circle: a
 	# thumb that lands slightly off should still grab the stick.
 	var mid := size.x * 0.5
-	var on_stick_side := (pos.x < mid) != _left_handed
+	var on_stick_side := (pos.x < mid) != _move_on_right()
 	if ControlProfile.shows_move_stick(profile) and on_stick_side:
 		if _owners_has("move"):
 			return

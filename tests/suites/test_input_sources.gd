@@ -98,6 +98,8 @@ func _tank_controls(t: TestHarness) -> void:
 			touch._left_handed = handed
 			var stick := touch._stick_centre()
 			var fire := touch._button_centre(0)
+			t.equal(stick.x > viewport.x * 0.5, not handed, "ATV steering defaults to the right")
+			t.equal(fire.x < viewport.x * 0.5, not handed, "ATV weapon defaults to the left")
 			t.ok(stick.distance_to(fire) > TouchSource.STICK_RADIUS + TouchSource.BUTTON_RADIUS, "drive and fire do not overlap")
 			t.ok(Rect2(Vector2.ZERO, viewport).encloses(Rect2(fire - Vector2.ONE * 74, Vector2.ONE * 148)), "cannon stays in viewport")
 			touch._handle_press(1, stick, true)
