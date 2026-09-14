@@ -141,7 +141,7 @@ func _aim_centre() -> Vector2:
 ## Buttons fan out in an arc away from the stick hand.
 func _button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
-	if profile == ControlProfile.Kind.ATV:
+	if profile in [ControlProfile.Kind.ATV, ControlProfile.Kind.KEEPER]:
 		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
 		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
 	if size.x < size.y and buttons.size() > 2:
@@ -368,6 +368,10 @@ func _draw() -> void:
 			for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
 				var glyph := "▲" if direction == Vector2.UP else "▼" if direction == Vector2.DOWN else "◀" if direction == Vector2.LEFT else "▶"
 				_label(glyph, origin + direction * radius * 0.77, Color.WHITE, 25)
+		if profile == ControlProfile.Kind.KEEPER:
+			var origin := _move_origin if _owners_has("move") else _stick_centre()
+			for direction in [-1.0, 1.0]:
+				_label("◀" if direction < 0 else "▶", origin + Vector2(direction * STICK_RADIUS * _scale * 0.77, 0), Color.WHITE, 25)
 
 	if ControlProfile.shows_aim_stick(profile):
 		_draw_stick(_aim_centre() if not _owners_has("aim") else _aim_origin,
@@ -430,6 +434,8 @@ func _button_color(action: String) -> Color:
 
 ## The same word the rules card shows for this verb.
 func _action_name(action: String) -> String:
+	if profile == ControlProfile.Kind.KEEPER and action == "attack":
+		return Loc.t("controls.return_ball")
 	if profile in [ControlProfile.Kind.STEERING, ControlProfile.Kind.ATV] and action in ["attack", "shoot"]:
 		return Loc.t("controls.weapon")
 	var key := "controls.%s" % action

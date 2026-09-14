@@ -16,7 +16,7 @@ func on_configured() -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
-	var side := slot % 4
+	var side: int = controller.side_for(slot) if controller.has_method("side_for") else slot % 4
 	var r := arena.def.radius - 2.2
 	var spots := [Vector3(r, 0, 0), Vector3(-r, 0, 0), Vector3(0, 0, r), Vector3(0, 0, -r)]
 	_goal_pos = arena.global_position + spots[side]

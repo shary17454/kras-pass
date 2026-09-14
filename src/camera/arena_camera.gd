@@ -8,7 +8,7 @@ extends Camera3D
 ## fit with padding, and clamps so a single leftover player does not push the
 ## view to a useless extreme.
 
-enum Mode { ARENA, TOP_DOWN, ISOMETRIC, THIRD_PERSON, RACE, WORLD, CHASE }
+enum Mode { ARENA, TOP_DOWN, ISOMETRIC, THIRD_PERSON, RACE, WORLD, CHASE, COURT }
 var local_target: Node3D
 
 var mode: Mode = Mode.ARENA
@@ -112,6 +112,16 @@ func _process(delta: float) -> void:
 	var view := get_viewport().get_visible_rect().size
 	keep_aspect = Camera3D.KEEP_WIDTH if view.x < view.y else Camera3D.KEEP_HEIGHT
 	var sensitivity := float(UserSettings.get_value("camera_sensitivity"))
+	if mode == Mode.COURT and arena != null:
+		_intro_left = 0.0
+		projection = Camera3D.PROJECTION_ORTHOGONAL
+		var diameter := arena.def.radius * 2.0 + 2.8
+		var aspect := view.x / maxf(view.y, 1.0)
+		# Fixed north-up framing keeps every goal visible and movement predictable.
+		size = diameter if aspect < 1.0 else maxf(diameter / aspect, diameter * 1.12)
+		global_position = arena.global_position + Vector3(0, 30, 17)
+		look_at(arena.global_position, Vector3.UP)
+		return
 	if _intro_left > 0.0:
 		_tick_intro(delta)
 		return

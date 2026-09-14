@@ -18,6 +18,7 @@ enum Kind {
 	MEMORY,           # stick only, enlarged; no action buttons
 	AIM_AND_MOVE,     # move stick + aim stick
 	ATV,             # off-road quad: two-axis drive stick and vehicle actions
+	KEEPER,
 }
 
 const NAMES := {
@@ -28,6 +29,7 @@ const NAMES := {
 	Kind.MEMORY: "memory",
 	Kind.AIM_AND_MOVE: "aim_and_move",
 	Kind.ATV: "atv",
+	Kind.KEEPER: "keeper",
 }
 
 ## Buttons a profile is willing to show, in the order they are laid out.

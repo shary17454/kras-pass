@@ -102,8 +102,8 @@ func _build() -> void:
 	var fit_chips := func():
 		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
 		var inset := Platform.safe_insets()
-		chips.columns = 2 if portrait else 5
-		chips.offset_top = (180 if portrait else 14) + inset.y
+		chips.columns = (4 if ctx.definition.id == "goal_guard" else 2) if portrait else 5
+		chips.offset_top = ((120 if ctx.definition.id == "goal_guard" else 180) if portrait else 14) + inset.y
 		chips.offset_left = 26 + inset.x
 		chips.offset_right = -26 - inset.z
 		top.offset_top = 18 + inset.y
@@ -145,8 +145,9 @@ func _build() -> void:
 		_hint_label.anchor_right = 0.92 if portrait else 0.75
 		_hint_label.anchor_top = 0.0 if portrait else 1.0
 		_hint_label.anchor_bottom = _hint_label.anchor_top
-		_hint_label.offset_top = 460 + Platform.safe_insets().y if portrait else -120
-		_hint_label.offset_bottom = 560 + Platform.safe_insets().y if portrait else -22
+		var hint_y := 230 if ctx.definition.id == "goal_guard" else 460
+		_hint_label.offset_top = hint_y + Platform.safe_insets().y if portrait else -120
+		_hint_label.offset_bottom = hint_y + 100 + Platform.safe_insets().y if portrait else -22
 	get_viewport().size_changed.connect(fit_hint)
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_hint))
 	fit_hint.call()
@@ -176,6 +177,8 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# 56 px off the left of a 1920-wide screen.
 	_tighten(card, 10, 8)
 	card.custom_minimum_size = Vector2(246, 0)
+	if ctx.definition.id == "goal_guard":
+		card.custom_minimum_size.x = 150
 	# Shrink, don't fill: a filling chip eats the gap the clock sits in.
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -187,6 +190,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	portrait.custom_minimum_size = Vector2(74, 74)
 	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(portrait)
+	portrait.visible = ctx.definition.id != "goal_guard"
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
@@ -204,10 +208,15 @@ func _make_chip(p: PlayerConfig) -> Control:
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.clip_text = true
 	name_label.custom_minimum_size = Vector2(120, 0)
+	if ctx.definition.id == "goal_guard":
+		name_label.custom_minimum_size.x = 0
+		name_label.add_theme_font_size_override("font_size", 22)
 	box.add_child(name_label)
 
 	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
 	value.name = "Value"
+	if ctx.definition.id == "goal_guard":
+		value.add_theme_font_size_override("font_size", 28)
 	value.clip_text = true
 	box.add_child(value)
 
@@ -431,6 +440,8 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 	if f == null or not is_instance_valid(f):
 		return
 	var value: float = clampf(f.charge, 0.0, 1.0)
+	if ctx.definition.id == "goal_guard" and controller != null:
+		value = controller.charges[slot]
 	# Only resize on a visible change: this runs for four chips at the HUD
 	# refresh rate and a full-width relayout per frame is pure waste.
 	if absf(value - float(chip["charge"])) < 0.02:
