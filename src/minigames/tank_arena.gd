@@ -1,9 +1,16 @@
 extends "res://src/minigames/turret_duel.gd"
 
 const MAX_ARMOR := 100
+const SHELLS := ["standard", "rapid", "heavy", "homing"]
+const SHELL_COLORS := [Color("ffd66b"), Color("63e6fc"), Color("ff7459"), Color("aaef71")]
+const CRATE_RESPAWN := 9.0
 var armor: Array[int] = []
 var cover: Array[StaticBody3D] = []
 var world: Node3D
+var shell_types: Array[int] = []
+var ammo: Array[int] = []
+var crates: Array[Dictionary] = []
+var _engine: AudioStreamPlayer
 
 
 func configure() -> void:
@@ -29,6 +36,17 @@ func build() -> void:
 	world.build(arena)
 	cover.assign(world.buildings)
 	arena.set_meta("tank_world", world)
+	shell_types.resize(ctx.player_count())
+	shell_types.fill(0)
+	ammo.resize(ctx.player_count())
+	ammo.fill(0)
+	_build_weapon_crates()
+	if AudioManager.enabled:
+		_engine = AudioStreamPlayer.new()
+		_engine.bus = "SFX"
+		_engine.stream = AudioManager._ambience_stream("atv_engine")
+		_engine.volume_db = -15.0
+		add_child(_engine)
 
 
 func on_round_start() -> void:
@@ -36,6 +54,81 @@ func on_round_start() -> void:
 	armor.fill(MAX_ARMOR)
 	_cooldowns.fill(0.0)
 	_shot_damage = 25.0
+	shell_types.fill(0)
+	ammo.fill(0)
+	for crate in crates:
+		crate.cooldown = 0.0
+		crate.node.visible = true
+
+
+func _build_weapon_crates() -> void:
+	for id in [6, 8, 12, 16, 18]:
+		var pos: Vector3 = world.roads.get_point_position(id)
+		pos.y = world.ground_height(pos.x, pos.z) + 0.85
+		var box := Node3D.new()
+		box.name = "AmmoCrate"
+		box.add_child(MeshFactory.box(Vector3.ONE * 1.3, Color("a16734")))
+		for axis in 3:
+			var band := Vector3.ONE * 1.36
+			band[axis] = 0.14
+			box.add_child(MeshFactory.box(band, Color("ffcf65")))
+		var label := Label3D.new()
+		label.text = "?"
+		label.font_size = 80
+		label.pixel_size = 0.014
+		label.position.y = 1.1
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		box.add_child(label)
+		add_child(box)
+		box.global_position = pos
+		crates.append({"node": box, "pos": pos, "cooldown": 0.0})
+
+
+func tick(delta: float) -> void:
+	_tick_crates(delta)
+	super.tick(delta)
+	if is_instance_valid(_engine):
+		var speed := -1.0
+		for i in ctx.player_count():
+			if InputRouter.is_human(i) and ctx.is_alive(i):
+				speed = ctx.fighter(i).velocity.length()
+				break
+		if speed < 0.0:
+			_engine.stop()
+		else:
+			_engine.pitch_scale = lerpf(_engine.pitch_scale, 0.7 + minf(speed / 10.0, 1.4), minf(delta * 5.0, 1.0))
+			if not _engine.playing:
+				_engine.play()
+
+
+func _tick_crates(delta: float) -> void:
+	for crate in crates:
+		crate.cooldown = maxf(0.0, float(crate.cooldown) - delta)
+		crate.node.visible = crate.cooldown <= 0.0
+		if crate.cooldown > 0.0:
+			continue
+		crate.node.rotation.y += delta * 0.7
+		var winner := -1
+		var nearest := 2.2
+		for i in ctx.player_count():
+			if not ctx.is_alive(i) or ammo[i] > 0:
+				continue
+			var distance: float = ctx.fighter(i).global_position.distance_to(crate.pos)
+			if distance < nearest:
+				nearest = distance
+				winner = i
+		if winner >= 0:
+			shell_types[winner] = ctx.rng.randi_range(1, 3)
+			ammo[winner] = 6 if shell_types[winner] == 1 else 3
+			crate.cooldown = CRATE_RESPAWN
+			crate.node.visible = false
+			AudioManager.play_sfx("crate_break", crate.pos)
+			InputRouter.haptic(winner, InputRouter.Haptic.LIGHT)
+
+
+func on_round_end() -> void:
+	if is_instance_valid(_engine):
+		_engine.stop()
 
 
 func wants_fire(frame: InputFrame) -> bool:
@@ -50,10 +143,40 @@ func _fire(slot: int) -> void:
 	if not get_world_3d().direct_space_state.intersect_ray(query).is_empty():
 		_cooldowns[slot] = _cooldown
 		return
-	var before := _shots.size()
-	super._fire(slot)
-	if _shots.size() > before:
-		_shots.back().notify_only = true
+	var kind := shell_types[slot] if ammo[slot] > 0 else 0
+	var shot: Projectile = Pool.acquire(POOL_KEY)
+	if shot == null:
+		return
+	if shot.get_parent() == null:
+		ctx.world_root.add_child(shot)
+	shot.configure(SHELL_COLORS[kind])
+	if not shot.hit_fighter.is_connected(_on_hit):
+		shot.hit_fighter.connect(_on_hit)
+	var dir := fighter.facing.normalized()
+	var damage: float = [25.0, 15.0, 40.0, 25.0][kind]
+	shot.fire(origin + dir * 1.6, dir, slot, [22.0, 36.0, 17.0, 24.0][kind],
+		damage * (_shot_damage / 25.0), 52.0)
+	shot.notify_only = true
+	shot.impact_sound = "explode"
+	if kind == 3:
+		var target := -1
+		var nearest := 40.0
+		for i in ctx.player_count():
+			if i == slot or not ctx.is_alive(i):
+				continue
+			var offset := ctx.fighter(i).global_position - fighter.global_position
+			if dir.dot(offset.normalized()) > 0.2 and offset.length() < nearest:
+				target = i
+				nearest = offset.length()
+		if target >= 0:
+			shot.guide(ctx, target, 1.5)
+	_shots.append(shot)
+	_cooldowns[slot] = 0.25 if kind == 1 else 1.15 if kind == 2 else 0.75
+	if ammo[slot] > 0:
+		ammo[slot] -= 1
+		if ammo[slot] == 0:
+			shell_types[slot] = 0
+	AudioManager.play_sfx("cannon_fire", origin, [1.0, 1.4, 0.7, 1.1][kind])
 
 
 func _on_hit(_projectile: Projectile, shooter: int, victim: int) -> void:
@@ -62,7 +185,7 @@ func _on_hit(_projectile: Projectile, shooter: int, victim: int) -> void:
 	var damage := mini(armor[victim], int(_projectile.damage))
 	armor[victim] -= damage
 	ctx.bump_detail(shooter, "damage", damage)
-	AudioManager.play_sfx("bounce", ctx.fighter(victim).global_position)
+	AudioManager.play_sfx("explode", ctx.fighter(victim).global_position)
 	InputRouter.haptic(victim, InputRouter.Haptic.HEAVY)
 	if armor[victim] <= 0:
 		ctx.bump_detail(shooter, "knockouts", 1)
@@ -106,4 +229,30 @@ func ai_script() -> Script:
 
 
 func hud_value(slot: int) -> String:
-	return "%d%%" % armor[slot] if ctx.is_alive(slot) else Loc.t("hud.eliminated")
+	if not ctx.is_alive(slot):
+		return Loc.t("hud.eliminated")
+	if ammo[slot] > 0:
+		return "%d%%\n%s %d" % [armor[slot], Loc.t("tank.shell." + SHELLS[shell_types[slot]]), ammo[slot]]
+	return "%d%%\n%s" % [armor[slot], Loc.t("tank.shell.standard")]
+
+
+func cleanup() -> void:
+	super.cleanup()
+	if is_instance_valid(_engine):
+		_engine.stop()
+
+
+func crate_target(slot: int) -> Vector3:
+	var origin := ctx.fighter(slot).global_position
+	var target := origin
+	var distance := 30.0
+	if ammo[slot] > 0:
+		return target
+	for crate in crates:
+		if float(crate.cooldown) > 0.0:
+			continue
+		var d := origin.distance_to(crate.pos)
+		if d < distance:
+			distance = d
+			target = crate.pos
+	return target

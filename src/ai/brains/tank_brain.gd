@@ -31,3 +31,6 @@ func decide(_delta: float) -> void:
 	if delta.length() < 25.0 and me.facing.dot(delta.normalized()) > lerpf(0.85, 0.97, accuracy):
 		if _has_line_of_sight(me.global_position, target):
 			press(Btn.ATTACK)
+	var crate: Vector3 = controller.crate_target(slot)
+	if me.global_position.distance_to(crate) > 1.0 and _has_line_of_sight(me.global_position, crate):
+		drive_to(crate)

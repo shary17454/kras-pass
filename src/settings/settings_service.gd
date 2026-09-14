@@ -14,6 +14,7 @@ const DEFAULTS := {
 	"access_token": "",
 	"volume_master": 0.9,
 	"volume_music": 0.7,
+	"music_enabled": true,
 	"volume_sfx": 1.0,
 	"volume_ui": 0.8,
 	"vibration": true,
@@ -84,7 +85,7 @@ func volume_linear(bus: String) -> float:
 	var master := float(get_value("volume_master"))
 	match bus:
 		"music":
-			return master * float(get_value("volume_music"))
+			return master * float(get_value("volume_music")) if bool(get_value("music_enabled")) else 0.0
 		"sfx":
 			return master * float(get_value("volume_sfx"))
 		"ui":

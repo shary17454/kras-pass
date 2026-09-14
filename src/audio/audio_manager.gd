@@ -73,7 +73,7 @@ func _ensure_buses() -> void:
 
 
 func _on_setting_changed(key: String, _value) -> void:
-	if key.begins_with("volume") or key == "*":
+	if key.begins_with("volume") or key in ["music_enabled", "*"]:
 		_apply_volumes()
 
 
@@ -87,7 +87,8 @@ func set_suspended(value: bool) -> void:
 	if value:
 		for p in _sfx_players:
 			p.stop()
-		_ui_player.stop()
+		if is_instance_valid(_ui_player):
+			_ui_player.stop()
 
 
 func is_suspended() -> bool:
@@ -197,6 +198,10 @@ func _ambience_stream(id: String) -> AudioStreamWAV:
 ## repeated gusts, because a loop short enough to hear is a loop you hear.
 func _render_ambience(id: String):
 	match id:
+		"atv_engine":
+			return Synth.voice({"freq": 80, "dur": 1.0, "wave": W.SAW, "gain": 0.18,
+				"attack": 0.0, "release": 0.0, "sustain": 1.0, "drive": 0.35,
+				"vibrato": 0.025, "vibrato_hz": 20})
 		"wind":
 			var layers := []
 			for i in 3:
@@ -254,6 +259,11 @@ func _sound(id: String) -> AudioStreamWAV:
 
 func _render_sfx(id: String):
 	match id:
+		"cannon_fire":
+			return Synth.mix([
+				Synth.voice({"freq": 170, "freq_to": 45, "dur": 0.23, "wave": W.SINE, "gain": 0.5}),
+				Synth.voice({"freq": 1300, "freq_to": 180, "dur": 0.13, "wave": W.NOISE, "gain": 0.38}),
+			])
 		"ui_move":
 			return Synth.voice({"freq": 620, "freq_to": 720, "dur": 0.06, "wave": W.SQUARE, "gain": 0.28, "release": 0.03})
 		"ui_select":
@@ -488,5 +498,6 @@ func warm_match_bank() -> void:
 			"score", "crate_break", "explode", "shield_break", "bounce",
 			"countdown", "go", "tick", "whistle", "splash", "burn", "win", "lose",
 			"shock", "ice_crack", "skid", "machine_alert", "beam", "machine_hum",
-			"rumble", "gust"]:
+			"rumble", "gust", "cannon_fire"]:
 		_sound(id)
+	_ambience_stream("atv_engine")

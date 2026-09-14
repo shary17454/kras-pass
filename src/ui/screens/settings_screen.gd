@@ -26,6 +26,7 @@ func build() -> void:
 
 	_section(v, "settings.audio")
 	_volume(v, "settings.master", "volume_master")
+	_toggle(v, "settings.music_enabled", "music_enabled")
 	_volume(v, "settings.music", "volume_music")
 	_volume(v, "settings.sfx", "volume_sfx")
 	_volume(v, "settings.ui", "volume_ui")

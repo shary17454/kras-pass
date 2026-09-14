@@ -158,6 +158,7 @@ func _tank_battle_rules(t: TestHarness) -> void:
 		scene.setup({"config": cfg, "on_finished": func(_r): pass})
 		var game = scene.controller
 		t.equal(game.armor.size(), 4, "all four tanks have armor")
+		t.equal(game.crates.size(), 5, "five refillable weapon crates per battlefield")
 		var quad = scene.ctx.fighter(0)._visual.get_node_or_null("QuadBike")
 		t.not_null(quad, "uses a four-wheel ATV, not an armored tank")
 		if quad != null:
@@ -169,6 +170,32 @@ func _tank_battle_rules(t: TestHarness) -> void:
 		var shot := Projectile.new()
 		scene.add_child(shot)
 		await _host.get_tree().physics_frame
+		var crate: Dictionary = game.crates[0]
+		scene.ctx.fighter(0).global_position = crate.pos - Vector3.UP * 0.8
+		game._tick_crates(0.01)
+		t.ok(game.ammo[0] > 0, "driving into a crate grants ammunition")
+		t.ok(game.shell_types[0] in [1, 2, 3], "crate selects a special shell")
+		t.ok(not crate.node.visible and crate.cooldown > 0, "collected crate is unavailable")
+		var ammunition: int = game.ammo[0]
+		game._tick_crates(0.01)
+		t.equal(game.ammo[0], ammunition, "crate cannot be collected twice")
+		game._tick_crates(10.0)
+		t.ok(crate.node.visible, "crate respawns without replacing held ammunition")
+		for kind in [1, 2, 3]:
+			game.shell_types[0] = kind
+			game.ammo[0] = 1
+			scene.ctx.fighter(0).facing = Vector3.FORWARD
+			scene.ctx.fighter(1).global_position = scene.ctx.fighter(0).global_position + Vector3.FORWARD * 10
+			var count: int = game._shots.size()
+			game._fire(0)
+			t.equal(game._shots.size(), count + 1, "special shell launches")
+			t.equal(game.ammo[0], 0, "shot consumes ammunition")
+			t.equal(game.shell_types[0], 0, "empty ammunition restores standard shell")
+			var special: Projectile = game._shots.back()
+			t.equal(special.damage, [0.0, 15.0, 40.0, 25.0][kind], "shell has its own damage")
+			t.equal(special.impact_sound, "explode", "shell impact uses explosion audio")
+			if kind == 3:
+				t.equal(special.homing_slot, 1, "guided shell tracks a forward opponent")
 		t.equal(game.cover.size(), 16, "each battlefield has sixteen solid rock covers")
 		t.not_null(game.world.get_node_or_null("TerrainCollision"), "natural terrain has physical collision")
 		t.not_null(game.world.get_node_or_null("Pines0"), "battlefield uses the pine models")
@@ -206,6 +233,9 @@ func _tank_battle_rules(t: TestHarness) -> void:
 		t.ok(game.is_round_over(), "last tank ends the round")
 		game.on_round_start()
 		t.equal(game.armor[1], 100, "next round restores armor")
+		t.equal(game.ammo, [0, 0, 0, 0], "round reset clears special ammunition")
+		for box in game.crates:
+			t.ok(box.node.visible and box.cooldown == 0, "round reset restores weapon crates")
 		shot.free()
 		scene.teardown()
 		scene.queue_free()

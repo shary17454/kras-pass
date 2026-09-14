@@ -27,6 +27,7 @@ var turn_rate := 0.0
 ## hitstop have already landed. Off by default; the games that want the built-in
 ## hit keep it.
 var notify_only := false
+var impact_sound := "bounce"
 var _ctx: MatchContext
 
 var _mesh: Node3D
@@ -66,6 +67,7 @@ func fire(from: Vector3, dir: Vector3, by_slot: int, shot_speed: float, shot_dam
 	homing_slot = -1
 	turn_rate = 0.0
 	notify_only = false
+	impact_sound = "bounce"
 	set_deferred("monitoring", true)
 	look_at(from + direction, Vector3.UP)
 
@@ -105,7 +107,7 @@ func tick(delta: float) -> void:
 	var hit := space.intersect_ray(query)
 	if not hit.is_empty():
 		global_position = hit["position"]
-		AudioManager.play_sfx("bounce", global_position, 0.7)
+		AudioManager.play_sfx(impact_sound, global_position, 0.7)
 		_expire()
 		return
 	global_position += direction * step

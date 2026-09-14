@@ -206,7 +206,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	name_label.custom_minimum_size = Vector2(120, 0)
 	box.add_child(name_label)
 
-	var value := UIKit.label("0", 40, Color.WHITE, true)
+	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
 	value.name = "Value"
 	value.clip_text = true
 	box.add_child(value)

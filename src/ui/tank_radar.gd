@@ -13,7 +13,7 @@ func _ready() -> void:
 
 func _layout() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	position = Vector2(22, 410 if get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y else 115)
+	position = Vector2(22, 450 if get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y else 150)
 	size = Vector2(120, 120)
 
 

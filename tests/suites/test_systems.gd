@@ -6,12 +6,30 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("systems")
 	_input_frames(t)
+	_music_toggle(t)
 	_platform(t)
 	_ai_profiles(t)
 	_pooling(t)
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _music_toggle(t: TestHarness) -> void:
+	t.test("music switch mutes only music and restores the chosen level")
+	var before = UserSettings.get_value("music_enabled")
+	var level = UserSettings.get_value("volume_music")
+	var sfx := UserSettings.volume_linear("sfx")
+	UserSettings.set_value("music_enabled", false)
+	t.equal(UserSettings.volume_linear("music"), 0.0, "music disabled")
+	t.ok(AudioServer.is_bus_mute(AudioServer.get_bus_index("Music")), "music bus muted immediately")
+	t.equal(UserSettings.volume_linear("sfx"), sfx, "engine and projectiles remain audible")
+	t.equal(SaveSystem.settings().get("music_enabled"), false, "music preference persisted")
+	UserSettings.set_value("music_enabled", true)
+	t.equal(UserSettings.get_value("volume_music"), level, "volume preference preserved")
+	t.not_null(AudioManager._sound("cannon_fire"), "cannon sound available")
+	t.not_null(AudioManager._ambience_stream("atv_engine"), "engine loop available")
+	UserSettings.set_value("music_enabled", before)
 
 
 func _input_frames(t: TestHarness) -> void:
