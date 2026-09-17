@@ -46,7 +46,8 @@ func build() -> void:
 	modes.add_child(secondary)
 	var entries := [["menu.profile", "profile"], ["menu.characters", "characters"],
 			["menu.achievements", "achievements"], ["replay.title", "replays"],
-			["menu.stats", "stats"], ["menu.updates", "updates"], ["menu.settings", "settings"]]
+			["menu.stats", "stats"], ["menu.updates", "updates"], ["menu.settings", "settings"],
+			["menu.credits", "credits"]]
 	if AppleAccount.available():
 		entries.append(["account.title", "account"])
 	for entry in entries:
@@ -54,6 +55,11 @@ func build() -> void:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func(): SceneRouter.go_to(String(entry[1])))
 		secondary.add_child(b)
+
+	var quit_button := UIKit.button(Loc.t("menu.quit"), UIKit.SIZE_SMALL)
+	quit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quit_button.pressed.connect(_confirm_quit)
+	secondary.add_child(quit_button)
 
 	side.add_child(_profile_card())
 	side.add_child(_next_up_card())
@@ -138,6 +144,19 @@ func _next_stage() -> Dictionary:
 				"stage_name": m.display_name() if m != null else sid,
 			}
 	return {}
+
+
+func _confirm_quit() -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = Loc.t("menu.quit_confirm_title")
+	dialog.dialog_text = Loc.t("menu.quit_confirm_body")
+	dialog.ok_button_text = Loc.t("menu.quit")
+	dialog.cancel_button_text = Loc.t("common.cancel")
+	add_child(dialog)
+	dialog.confirmed.connect(func():
+		SaveSystem.flush()
+		get_tree().quit())
+	dialog.popup_centered()
 
 
 func go_back() -> void:
