@@ -63,6 +63,8 @@ func ground_height(x: float, z: float) -> float:
 
 
 func _rock(index: int, p: Vector3, scale_value: float) -> void:
+	if _rock_meshes.is_empty():
+		return
 	var rock := MeshInstance3D.new()
 	rock.mesh = _rock_meshes[posmod(index + _variant, _rock_meshes.size())]
 	rock.position = Vector3(p.x, ground_height(p.x, p.z) - 0.5, p.z)
@@ -72,6 +74,8 @@ func _rock(index: int, p: Vector3, scale_value: float) -> void:
 
 
 func _cover(index: int, p: Vector3) -> void:
+	if _rock_meshes.is_empty():
+		return
 	var mesh := _rock_meshes[(index + _variant) % _rock_meshes.size()]
 	var bounds := mesh.get_aabb()
 	var scale_value := (7.2 + (index % 3) * 0.5) / maxf(bounds.size.x, bounds.size.z)

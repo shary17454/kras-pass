@@ -186,14 +186,21 @@ func _road() -> void:
 
 func _load_meshes(path: String, output: Array[Mesh]) -> void:
 	var packed: PackedScene = load(path)
+	if packed == null:
+		Log.e("could not load mesh source '%s'" % path, "NaturalValley")
+		return
 	var instance := packed.instantiate()
 	for child in instance.find_children("*", "MeshInstance3D", true, false):
 		if child.mesh != null:
 			output.append(child.mesh)
 	instance.free()
+	if output.is_empty():
+		Log.e("'%s' contained no usable meshes" % path, "NaturalValley")
 
 
 func _rock(index: int, p: Vector3, scale_value: float) -> void:
+	if _rock_meshes.is_empty():
+		return
 	var rock := MeshInstance3D.new()
 	rock.mesh = _rock_meshes[index % _rock_meshes.size()]
 	var bounds := rock.mesh.get_aabb()

@@ -107,6 +107,7 @@ var _shocked := 0.0         ## sparks + lost control from an electric hit
 var _state_fx: Node3D       ## persistent status visuals, built on first need
 var _size_mutator := 1.0
 var _size_power := 1.0
+var _size_game := 1.0        ## per-mini-game baseline, independent of mutators/power-ups
 var _wish_smooth := Vector3.ZERO
 var _snow_timer := 0.0
 
@@ -730,8 +731,19 @@ func set_powerup_scale(value: float) -> void:
 	_apply_scale()
 
 
+## A mini-game's own baseline size, set once in `build()`. Kept separate from
+## the mutator and power-up scales so a game that wants bigger, clearer bodies
+## does not fight either system over the same number.
+func set_game_scale(value: float) -> void:
+	value = clampf(value, 0.4, 2.0)
+	if is_equal_approx(_size_game, value):
+		return
+	_size_game = value
+	_apply_scale()
+
+
 func body_scale() -> float:
-	return clampf(_size_mutator * _size_power, 0.4, 2.2)
+	return clampf(_size_mutator * _size_power * _size_game, 0.4, 2.2)
 
 
 ## Resize the collision body. The visual half is applied every frame inside

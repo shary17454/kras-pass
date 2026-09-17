@@ -16,6 +16,12 @@ const ORDNANCE_BLAST_RADIUS := 4.9
 const ORDNANCE_THROW_SPEED := 18.5
 const ORDNANCE_MAX_LIVE := 4
 const ORDNANCE_CARRY_FLAG := 2
+## Ring Rumble is read from across the whole ring, including the shrinking
+## rim where a body's silhouette is the only warning a player gets that
+## someone is closing in. A touch bigger than the shared default keeps every
+## competitor legible at that distance without throwing off the hitboxes,
+## which scale with the same number.
+const CHARACTER_SCALE := 1.18
 
 var arctic_ordnance_enabled := true
 var _ordnance: Array = []
@@ -28,6 +34,10 @@ func configure() -> void:
 
 
 func build() -> void:
+	for i in ctx.fighters.size():
+		var f := ctx.fighter(i)
+		if f != null and is_instance_valid(f):
+			f.set_game_scale(CHARACTER_SCALE)
 	_clear_ordnance()
 	_ordnance_drop_timer = 2.4
 
