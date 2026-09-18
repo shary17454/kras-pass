@@ -36,6 +36,31 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 	return card
 
 
+static func palette_card(id: String, unlocked: bool, selected: bool) -> Control:
+	var swatch_color := UIKit.adapt(Color.html(String(Registry.palette(id).get("color", "#9a9aa8"))))
+	var card := UIKit.panel(
+		Color(swatch_color.r * 0.3, swatch_color.g * 0.3, swatch_color.b * 0.3, 0.95) if unlocked
+			else Color(0.12, 0.13, 0.2, 0.9), 18)
+	if selected:
+		card.add_theme_stylebox_override("panel", UIKit.stylebox(
+			Color(swatch_color.r * 0.4, swatch_color.g * 0.4, swatch_color.b * 0.4, 1.0), 18, 4, UIKit.ACCENT))
+	card.custom_minimum_size = Vector2(220, 220)
+	var v := UIKit.vbox(6)
+	card.add_child(v)
+	var dot := UIKit.panel(swatch_color if unlocked else Color(0.25, 0.25, 0.3), 12)
+	dot.custom_minimum_size = Vector2(0, 88)
+	v.add_child(dot)
+	v.add_child(UIKit.centered(
+		Loc.t("palette.%s.name" % id) if unlocked else Loc.t("common.locked"),
+		UIKit.SIZE_BODY, UIKit.text_color(), true))
+	if not unlocked:
+		var hint := UIKit.centered(Progression.unlock_hint(Registry.palette(id).get("unlock", {})),
+			UIKit.SIZE_TINY, UIKit.ACCENT)
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(hint)
+	return card
+
+
 static func stat_block(c: CharacterData) -> Control:
 	var v := UIKit.vbox(3)
 	var rows := [

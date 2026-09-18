@@ -152,6 +152,28 @@ func achievement_defs() -> Array:
 	return Balance.list("achievements", "achievements")
 
 
+func palettes() -> Array:
+	return Balance.list("cosmetics", "palettes")
+
+
+func palette(id: String) -> Dictionary:
+	for p in palettes():
+		if String(p.get("id", "")) == id:
+			return p
+	return {}
+
+
+func titles() -> Array:
+	return Balance.list("cosmetics", "titles")
+
+
+func title_def(id: String) -> Dictionary:
+	for t in titles():
+		if String(t.get("id", "")) == id:
+			return t
+	return {}
+
+
 ## Deterministic pick used by "random game" buttons and the tournament roller,
 ## seeded so a replay or a networked lobby lands on the same choice.
 func random_minigame(rng: RandomNumberGenerator, pool: Array = []) -> MiniGameDef:
@@ -233,4 +255,20 @@ func validate(check_localization: bool = true) -> PackedStringArray:
 			var gid := String(stage.get("game", ""))
 			if minigame(gid) == null:
 				problems.append("adventure world '%s' references unknown game '%s'" % [w.get("id", "?"), gid])
+
+	var cosmetic_seen := {}
+	for p in palettes():
+		var pid := String(p.get("id", ""))
+		if pid == "" or cosmetic_seen.has("p" + pid):
+			problems.append("duplicate or empty palette id '%s'" % pid)
+		cosmetic_seen["p" + pid] = true
+		if check_localization and not Loc.has("palette.%s.name" % pid):
+			problems.append("palette '%s' missing loc key palette.%s.name" % [pid, pid])
+	for t in titles():
+		var tid := String(t.get("id", ""))
+		if tid == "" or cosmetic_seen.has("t" + tid):
+			problems.append("duplicate or empty title id '%s'" % tid)
+		cosmetic_seen["t" + tid] = true
+		if check_localization and not Loc.has("title.%s.name" % tid):
+			problems.append("title '%s' missing loc key title.%s.name" % [tid, tid])
 	return problems

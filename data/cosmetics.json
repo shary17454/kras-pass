@@ -1,0 +1,15 @@
+{
+  "palettes": [
+    {"id": "classic", "unlock": {}},
+    {"id": "ember", "color": "#ff7a3d", "accent": "#ffe0a3", "unlock": {"type": "trophies", "amount": 15}},
+    {"id": "tide", "color": "#33b6e0", "accent": "#d8fbff", "unlock": {"type": "trophies", "amount": 30}},
+    {"id": "shadow", "color": "#3a3944", "accent": "#a3a3ba", "unlock": {"type": "wins", "amount": 10}},
+    {"id": "gold", "color": "#f2c14e", "accent": "#fff3d1", "unlock": {"type": "tournaments", "amount": 3}}
+  ],
+  "titles": [
+    {"id": "rookie", "unlock": {}},
+    {"id": "veteran", "unlock": {"type": "wins", "amount": 20}},
+    {"id": "champion", "unlock": {"type": "tournaments", "amount": 1}},
+    {"id": "unstoppable", "unlock": {"type": "trophies", "amount": 50}}
+  ]
+}

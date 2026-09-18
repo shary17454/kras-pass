@@ -21,6 +21,7 @@ const FILES := [
 	"adventure",
 	"ai",
 	"mutators",
+	"cosmetics",
 ]
 
 var _tables := {}

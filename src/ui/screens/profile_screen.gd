@@ -8,6 +8,7 @@ func build() -> void:
 		var account_button := UIKit.button(Loc.t("account.title"), UIKit.SIZE_SMALL)
 		account_button.pressed.connect(func(): SceneRouter.go_to("account"))
 		header.add_child(account_button)
+	body.add_child(UIKit.label(Loc.t("title.%s.name" % Progression.selected_title()), UIKit.SIZE_BODY, UIKit.ACCENT_2, true))
 	var completion := Progression.completion_percent()
 	body.add_child(Widgets.progress_row(Loc.t("profile.completion"), "%.1f%%" % completion, completion / 100.0, UIKit.ACCENT))
 
@@ -33,7 +34,8 @@ func build() -> void:
 
 	var row := UIKit.adaptive_columns(14)
 	body.add_child(row)
-	for entry in [["menu.stats", "stats"], ["menu.achievements", "achievements"], ["menu.rewards", "rewards"]]:
+	for entry in [["menu.stats", "stats"], ["menu.achievements", "achievements"], ["menu.rewards", "rewards"],
+			["menu.customize", "customize"]]:
 		var b := UIKit.button(Loc.t(String(entry[0])), UIKit.SIZE_SMALL)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func(): SceneRouter.go_to(String(entry[1])))

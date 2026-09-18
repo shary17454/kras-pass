@@ -241,7 +241,7 @@ func _spawn_fighters(def: MiniGameDef) -> void:
 		f.name = "Fighter%d" % p.slot
 		add_child(f)
 		f.add_to_group("fighters")
-		var character := p.character()
+		var character := p.character_with_cosmetics()
 		if character == null:
 			character = Registry.characters()[p.slot % maxi(1, Registry.characters().size())]
 		f.setup(p.slot, character, mode, "atv" if config.minigame_id in ["tank_arena", "sabaq_sawarikh"] else arena.def.theme)

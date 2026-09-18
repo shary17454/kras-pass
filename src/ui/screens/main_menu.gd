@@ -45,6 +45,7 @@ func build() -> void:
 	secondary.add_theme_constant_override("v_separation", 10)
 	modes.add_child(secondary)
 	var entries := [["menu.profile", "profile"], ["menu.characters", "characters"],
+			["menu.customize", "customize"],
 			["menu.achievements", "achievements"], ["replay.title", "replays"],
 			["menu.stats", "stats"], ["menu.updates", "updates"], ["menu.settings", "settings"],
 			["menu.credits", "credits"]]

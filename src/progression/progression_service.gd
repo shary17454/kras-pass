@@ -31,6 +31,10 @@ func _load() -> void:
 		"tournaments_won": 0,
 		"last_character": "",
 		"seen_intro": false,
+		"palettes": [],
+		"titles": [],
+		"selected_palette": "classic",
+		"selected_title": "rookie",
 	}
 	for k in defaults:
 		if not _p.has(k):
@@ -42,6 +46,14 @@ func _load() -> void:
 	for m in Registry.minigames():
 		if m.unlock.is_empty() and not _p["games"].has(m.id):
 			_p["games"].append(m.id)
+	for p in Registry.palettes():
+		var pid := String(p.get("id", ""))
+		if pid != "" and Dictionary(p.get("unlock", {})).is_empty() and not _p["palettes"].has(pid):
+			_p["palettes"].append(pid)
+	for t in Registry.titles():
+		var tid := String(t.get("id", ""))
+		if tid != "" and Dictionary(t.get("unlock", {})).is_empty() and not _p["titles"].has(tid):
+			_p["titles"].append(tid)
 	var worlds := Registry.worlds()
 	if worlds.size() > 0 and _p["worlds"].is_empty():
 		_p["worlds"].append(String(worlds[0].get("id", "")))
@@ -152,6 +164,66 @@ func unlock_game(id: String, announce := true) -> bool:
 		EventBus.notify(Loc.t("unlock.minigame", {"name": m.display_name() if m else id}), "◆")
 	save_now()
 	return true
+
+
+func unlocked_palettes() -> Array:
+	return _p.get("palettes", [])
+
+
+func is_palette_unlocked(id: String) -> bool:
+	return all_unlocked() or unlocked_palettes().has(id)
+
+
+func unlock_palette(id: String, announce := true) -> bool:
+	if unlocked_palettes().has(id):
+		return false
+	_p["palettes"].append(id)
+	_commit()
+	if announce:
+		EventBus.notify(Loc.t("unlock.palette", {"name": Loc.t("palette.%s.name" % id)}), "🎨")
+	return true
+
+
+func selected_palette() -> String:
+	var id := String(_p.get("selected_palette", "classic"))
+	return id if is_palette_unlocked(id) else "classic"
+
+
+func set_selected_palette(id: String) -> void:
+	if not is_palette_unlocked(id):
+		return
+	_p["selected_palette"] = id
+	save_now()
+
+
+func unlocked_titles() -> Array:
+	return _p.get("titles", [])
+
+
+func is_title_unlocked(id: String) -> bool:
+	return all_unlocked() or unlocked_titles().has(id)
+
+
+func unlock_title(id: String, announce := true) -> bool:
+	if unlocked_titles().has(id):
+		return false
+	_p["titles"].append(id)
+	_commit()
+	if announce:
+		EventBus.notify(Loc.t("unlock.title", {"name": Loc.t("title.%s.name" % id)}), "🏷")
+	return true
+
+
+func selected_title() -> String:
+	var id := String(_p.get("selected_title", "rookie"))
+	return id if is_title_unlocked(id) else "rookie"
+
+
+func set_selected_title(id: String) -> void:
+	if not is_title_unlocked(id):
+		return
+	_p["selected_title"] = id
+	save_now()
 
 
 func playable_characters() -> Array[CharacterData]:
@@ -285,6 +357,14 @@ func _check_unlocks() -> void:
 	for m in Registry.minigames():
 		if not unlocked_games().has(m.id) and _rule_met(m.unlock):
 			unlock_game(m.id)
+	for p in Registry.palettes():
+		var pid := String(p.get("id", ""))
+		if pid != "" and not unlocked_palettes().has(pid) and _rule_met(p.get("unlock", {})):
+			unlock_palette(pid)
+	for t in Registry.titles():
+		var tid := String(t.get("id", ""))
+		if tid != "" and not unlocked_titles().has(tid) and _rule_met(t.get("unlock", {})):
+			unlock_title(tid)
 
 
 func _check_world_unlocks() -> void:

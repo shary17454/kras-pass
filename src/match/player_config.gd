@@ -36,3 +36,20 @@ func display_name() -> String:
 func color() -> Color:
 	var c := character()
 	return c.color if c != null else Color.WHITE
+
+
+## The character this player plays, recoloured by their chosen palette when
+## they are human and own a non-default one. AI opponents always show a
+## character's true colours — a cosmetic is a human player's preference, not
+## part of the game's content.
+func character_with_cosmetics() -> CharacterData:
+	var c := character()
+	if c == null or not is_human:
+		return c
+	var palette := Registry.palette(Progression.selected_palette())
+	if not palette.has("color"):
+		return c
+	var variant := c.duplicate() as CharacterData
+	variant.color = Color.html(String(palette.get("color", "")))
+	variant.accent = Color.html(String(palette.get("accent", palette.get("color", ""))))
+	return variant
