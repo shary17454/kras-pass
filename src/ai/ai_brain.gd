@@ -48,6 +48,7 @@ var bits := 0
 var _decision_clock := 0.0
 var _history_times := PackedFloat32Array()
 var _history_positions: Array[PackedVector3Array] = []
+var _history_velocities: Array[PackedVector3Array] = []
 var _history_head := 0
 var _history_count := 0
 var _history_sample_clock := 0.0
@@ -89,6 +90,7 @@ func on_round_start() -> void:
 	_decision_clock = 0.0
 	_history_times.clear()
 	_history_positions.clear()
+	_history_velocities.clear()
 	_history_head = 0
 	_history_count = 0
 	_history_sample_clock = 0.0
@@ -141,19 +143,36 @@ func _publish() -> void:
 # --- perception ------------------------------------------------------------
 
 func _record_history() -> void:
-	var snapshot := PackedVector3Array()
-	snapshot.resize(ctx.fighters.size())
+	var positions := PackedVector3Array()
+	var velocities := PackedVector3Array()
+	positions.resize(ctx.fighters.size())
+	velocities.resize(ctx.fighters.size())
 	for i in ctx.fighters.size():
 		var f := ctx.fighters[i]
-		snapshot[i] = f.global_position if f != null and is_instance_valid(f) else Vector3.ZERO
+		var valid := f != null and is_instance_valid(f)
+		positions[i] = f.global_position if valid else Vector3.ZERO
+		velocities[i] = f.velocity if valid else Vector3.ZERO
 	if _history_count < HISTORY_CAP:
-		_history_positions.append(snapshot)
+		_history_positions.append(positions)
+		_history_velocities.append(velocities)
 		_history_times.append(_time)
 		_history_count += 1
 		return
-	_history_positions[_history_head] = snapshot
+	_history_positions[_history_head] = positions
+	_history_velocities[_history_head] = velocities
 	_history_times[_history_head] = _time
 	_history_head = (_history_head + 1) % HISTORY_CAP
+
+
+## Ring-buffer slot holding the newest sample at or before `want`, so both
+## `perceive()` and `_perceived_velocity()` look up the same delayed instant
+## instead of one reading history and the other reading the live frame.
+func _history_index(want: float) -> int:
+	for offset in range(_history_count - 1, -1, -1):
+		var idx := (_history_head + offset) % HISTORY_CAP
+		if float(_history_times[idx]) <= want:
+			return idx
+	return _history_head if _history_count > 0 else -1
 
 
 ## Position of `target_slot` as this brain currently believes it to be: the true
@@ -161,15 +180,24 @@ func _record_history() -> void:
 func perceive(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
 		return Vector3.ZERO
-	var want := _time - reaction_time
-	for offset in range(_history_count - 1, -1, -1):
-		var idx := (_history_head + offset) % HISTORY_CAP
-		if float(_history_times[idx]) <= want:
-			return _history_positions[idx][target_slot]
-	if _history_count > 0:
-		return _history_positions[_history_head][target_slot]
+	var idx := _history_index(_time - reaction_time)
+	if idx >= 0:
+		return _history_positions[idx][target_slot]
 	var f := ctx.fighter(target_slot)
 	return f.global_position if f != null and is_instance_valid(f) else Vector3.ZERO
+
+
+## Same delay as `perceive()`, for the velocity `predict()` leads with — a
+## target's exact current velocity is not something a human opponent can read
+## either, so the aim lead is built from the same stale snapshot as its position.
+func _perceived_velocity(target_slot: int) -> Vector3:
+	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return Vector3.ZERO
+	var idx := _history_index(_time - reaction_time)
+	if idx >= 0:
+		return _history_velocities[idx][target_slot]
+	var f := ctx.fighter(target_slot)
+	return f.velocity if f != null and is_instance_valid(f) else Vector3.ZERO
 
 
 ## Where a target will be shortly, blended by `prediction`. At low skill this
@@ -179,7 +207,7 @@ func predict(target_slot: int, lead: float = 0.35) -> Vector3:
 	if f == null or not is_instance_valid(f):
 		return Vector3.ZERO
 	var seen := perceive(target_slot)
-	var velocity: Vector3 = f.velocity
+	var velocity := _perceived_velocity(target_slot)
 	velocity.y = 0.0
 	return seen + velocity * lead * prediction
 

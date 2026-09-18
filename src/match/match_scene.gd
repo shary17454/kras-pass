@@ -1069,14 +1069,20 @@ func _ready() -> void:
 
 
 ## Lead and last-place changes are what the comeback and late-swing detectors
-## look for, so they are derived here rather than polled.
+## look for, so they are derived here rather than polled. The lead change is
+## also the HUD's cue for its leader indicator, so it is tracked whether or
+## not this match is being recorded.
 func _on_score_noted(_slot: int, _value: int) -> void:
-	if ctx == null or not _replay_enabled:
+	if ctx == null:
 		return
 	var leader := ctx.leader_slot()
 	if leader != _noted_leader:
 		_noted_leader = leader
-		_note("lead", leader)
+		EventBus.lead_changed.emit(leader)
+		if _replay_enabled:
+			_note("lead", leader)
+	if not _replay_enabled:
+		return
 	var worst := -1
 	var worst_score := 2147483647
 	for i in ctx.scores.size():

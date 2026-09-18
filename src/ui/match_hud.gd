@@ -36,6 +36,7 @@ func setup(context: MatchContext, ctrl: MiniGameController) -> void:
 	EventBus.score_changed.connect(_on_score_changed)
 	EventBus.player_eliminated.connect(_on_eliminated)
 	EventBus.notification_requested.connect(show_toast)
+	EventBus.lead_changed.connect(_on_lead_changed)
 
 
 func _build() -> void:
@@ -204,6 +205,13 @@ func _make_chip(p: PlayerConfig) -> Control:
 	var shown: String = character.display_name() if character != null else p.display_name()
 	if p.is_human:
 		shown = Loc.t("hud.you", {"name": shown})
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 4)
+	box.add_child(name_row)
+	var crown := UIKit.label("👑", UIKit.SIZE_SMALL)
+	crown.name = "Crown"
+	crown.visible = false
+	name_row.add_child(crown)
 	var name_label := UIKit.label(shown, UIKit.SIZE_SMALL, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.clip_text = true
@@ -211,7 +219,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	if ctx.definition.id == "goal_guard":
 		name_label.custom_minimum_size.x = 0
 		name_label.add_theme_font_size_override("font_size", 22)
-	box.add_child(name_label)
+	name_row.add_child(name_label)
 
 	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
 	value.name = "Value"
@@ -234,7 +242,8 @@ func _make_chip(p: PlayerConfig) -> Control:
 	box.add_child(effects)
 
 	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
-		"color": col, "meter": meter, "meter_fill": meter.get_child(0), "charge": -1.0})
+		"color": col, "meter": meter, "meter_fill": meter.get_child(0), "charge": -1.0,
+		"crown": crown})
 	return card
 
 
@@ -481,3 +490,13 @@ func _on_eliminated(slot: int, _place: int) -> void:
 		if chip["slot"] == slot:
 			chip["root"].modulate = Color(1, 1, 1, 0.4)
 			return
+
+
+## Crowns the current leader's chip. Ties resolve to the same slot
+## `MatchScene` already settled on for the replay's own lead marker, so the
+## HUD and the highlight reel never disagree about who was ahead.
+func _on_lead_changed(leader: int) -> void:
+	for chip in _chips:
+		var crown: Label = chip["crown"]
+		if is_instance_valid(crown):
+			crown.visible = chip["slot"] == leader
