@@ -32,7 +32,6 @@ signal powerup_collected(player_slot: int, powerup_id: String)
 signal powerup_expired(player_slot: int, powerup_id: String)
 signal pickup_collected(player_slot: int, kind: String, amount: int)
 signal camera_shake_requested(strength: float, duration: float)
-signal hitstop_requested(duration: float)
 
 # --- meta ------------------------------------------------------------------
 signal achievement_unlocked(id: String)
@@ -53,10 +52,6 @@ signal player_device_lost(player_slot: int)
 func shake(strength: float, duration: float = 0.25) -> void:
 	if UserSettings != null and not bool(UserSettings.get_value("reduce_effects")):
 		camera_shake_requested.emit(strength * float(UserSettings.get_value("camera_shake")), duration)
-
-
-func hitstop(duration: float) -> void:
-	hitstop_requested.emit(duration)
 
 
 func notify(text: String, icon: String = "") -> void:
