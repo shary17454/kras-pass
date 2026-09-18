@@ -89,6 +89,7 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	f.carrying = 1
 	f.can_attack = false
 	AudioManager.play_sfx("pickup", f.global_position)
+	EventBus.pickup_collected.emit(slot, "crate", 1)
 
 
 func _check_deliveries() -> void:

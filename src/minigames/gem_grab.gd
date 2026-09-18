@@ -81,6 +81,7 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	ctx.add_score(slot, gain)
 	ctx.bump_detail(slot, "collected", gain)
 	AudioManager.play_sfx("pickup", Vector3.ZERO, 1.0 + minf(0.5, ctx.scores[slot] * 0.01))
+	EventBus.pickup_collected.emit(slot, "gem", gain)
 
 
 func on_credited_knockout(attacker: int, victim: int) -> void:

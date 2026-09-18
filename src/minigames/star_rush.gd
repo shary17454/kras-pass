@@ -96,6 +96,7 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	if f != null and is_instance_valid(f):
 		f.carrying = mini(MAX_CARRY, f.carrying + item.value)
 	AudioManager.play_sfx("pickup")
+	EventBus.pickup_collected.emit(slot, "star", int(item.value))
 
 
 func on_fighter_knocked_out(slot: int, by_slot: int) -> void:

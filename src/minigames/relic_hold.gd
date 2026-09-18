@@ -112,6 +112,7 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	f.can_attack = false
 	_build_mark(f)
 	AudioManager.play_sfx("pickup", f.global_position)
+	EventBus.pickup_collected.emit(slot, "relic", 1)
 	EventBus.notify(Loc.t("relic.taken", {"name": player_name(slot)}), "✦")
 
 

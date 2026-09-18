@@ -31,7 +31,6 @@ signal player_respawned(player_slot: int)
 signal powerup_collected(player_slot: int, powerup_id: String)
 signal powerup_expired(player_slot: int, powerup_id: String)
 signal pickup_collected(player_slot: int, kind: String, amount: int)
-signal hazard_triggered(kind: String, position: Vector3)
 signal camera_shake_requested(strength: float, duration: float)
 signal hitstop_requested(duration: float)
 
