@@ -89,7 +89,7 @@ func _tag(victim: int) -> void:
 	InputRouter.rumble(victim, 0.7, 0.18)
 	InputRouter.rumble(scorer, 0.45, 0.12)
 	if _toast_cooldown <= 0.0:
-		EventBus.notify(Loc.t("tag.passed", {"name": _name_of(victim)}), "☄")
+		EventBus.notify(Loc.t("tag.passed", {"name": player_name(victim)}), "☄")
 		_toast_cooldown = TAG_TOAST_COOLDOWN
 	_set_hunter(victim)
 	_grace = HANDOVER_GRACE
@@ -146,11 +146,6 @@ func _clear_mark() -> void:
 	_mark = null
 
 
-func _name_of(slot: int) -> String:
-	var p := ctx.config.player_at(slot)
-	return p.display_name() if p != null else "P%d" % (slot + 1)
-
-
 # --- shared-layer answers --------------------------------------------------
 
 func hunter() -> int:
@@ -168,7 +163,7 @@ func hud_value(slot: int) -> String:
 func hud_banner() -> String:
 	if _hunter < 0:
 		return ""
-	return Loc.t("tag.hunter", {"name": _name_of(_hunter)})
+	return Loc.t("tag.hunter", {"name": player_name(_hunter)})
 
 
 func ai_script() -> Script:

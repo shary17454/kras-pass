@@ -338,3 +338,21 @@ func attach(node: Node3D, pos: Vector3) -> Node3D:
 	add_child(node)
 	node.global_position = pos
 	return node
+
+
+## A player's display name, for banners and notifications that call a
+## specific competitor out by name ("Fanoos has the relic").
+func player_name(slot: int) -> String:
+	var p := ctx.config.player_at(slot)
+	return p.display_name() if p != null else "P%d" % (slot + 1)
+
+
+## How many pooled collectibles in `items` are still out there and pickable —
+## the gate every collection game (Gem Grab, Star Rush, Crate Relay) checks
+## before spawning another one, so the field never floods past its cap.
+static func count_live(items: Array) -> int:
+	var n := 0
+	for i in items:
+		if is_instance_valid(i) and i.available:
+			n += 1
+	return n

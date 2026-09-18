@@ -25,7 +25,7 @@ func build() -> void:
 
 
 func _spawn_gem(at: Vector3 = Vector3.INF) -> void:
-	if _live_count() >= MAX_ON_FIELD:
+	if count_live(_items) >= MAX_ON_FIELD:
 		return
 	var arena := ctx.arena as Arena
 	var item: Collectible = Pool.acquire(POOL_KEY)
@@ -63,14 +63,6 @@ func _has_ground(p: Vector3) -> bool:
 	return not space.intersect_ray(q).is_empty()
 
 
-func _live_count() -> int:
-	var n := 0
-	for i in _items:
-		if is_instance_valid(i) and i.available:
-			n += 1
-	return n
-
-
 func tick(delta: float) -> void:
 	for item in _items:
 		if is_instance_valid(item):
@@ -78,7 +70,7 @@ func tick(delta: float) -> void:
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = 1.6
-		if _live_count() < 8:
+		if count_live(_items) < 8:
 			_spawn_gem()
 
 

@@ -66,17 +66,9 @@ func tick(delta: float) -> void:
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = 1.3
-		if _live_count() < 8:
+		if count_live(_items) < 8:
 			_spawn_star()
 	_check_deposits()
-
-
-func _live_count() -> int:
-	var n := 0
-	for i in _items:
-		if is_instance_valid(i) and i.available:
-			n += 1
-	return n
 
 
 func _check_deposits() -> void:

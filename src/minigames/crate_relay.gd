@@ -71,18 +71,10 @@ func tick(delta: float) -> void:
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = 2.2
-		if _live_count() < 4:
+		if count_live(_items) < 4:
 			_spawn_crate()
 	_check_deliveries()
 	_update_carry_visuals()
-
-
-func _live_count() -> int:
-	var n := 0
-	for i in _items:
-		if is_instance_valid(i) and i.available:
-			n += 1
-	return n
 
 
 func _on_taken(item: Collectible, slot: int) -> void:

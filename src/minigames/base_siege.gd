@@ -204,14 +204,9 @@ func _destroy(base: Dictionary, attacker: int) -> void:
 		body.collision_layer = 0
 	AudioManager.play_sfx("explode", node.global_position if is_instance_valid(node) else ctx.arena_center())
 	EventBus.shake(0.5, 0.35)
-	EventBus.notify(Loc.t("siege.broken", {"name": _name_of(slot)}), "✖")
+	EventBus.notify(Loc.t("siege.broken", {"name": player_name(slot)}), "✖")
 	if ctx.is_alive(slot):
 		ctx.eliminate(slot)
-
-
-func _name_of(slot: int) -> String:
-	var p := ctx.config.player_at(slot)
-	return p.display_name() if p != null else "P%d" % (slot + 1)
 
 
 # --- shared-layer answers --------------------------------------------------

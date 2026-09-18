@@ -300,6 +300,13 @@ Useful overrides: `locomotion()` (walk / drive / float), `camera_mode()`,
 `uses_powerups()`, `music_track()`, `compute_scores()`, `is_round_over()`,
 `hud_value()`, `hud_banner()`, `ai_script()`, `on_sudden_death()`.
 
+Useful shared helpers already on the base class, so a new game never
+reimplements them: `spawn_position()` / `safe_respawn_position()`,
+`lives()` / `spend_life()`, `player_name(slot)` for banners that call a
+competitor out by name, and `count_live(items)` for the "how many of my
+pooled collectibles are still on the field" gate every collection game
+(Gem Grab, Star Rush, Crate Relay) checks before spawning another.
+
 ### A new character
 
 Add to `data/characters.json`. Stats are 0..1 and should sum to ~3.00 (the test

@@ -112,7 +112,7 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	f.can_attack = false
 	_build_mark(f)
 	AudioManager.play_sfx("pickup", f.global_position)
-	EventBus.notify(Loc.t("relic.taken", {"name": _name_of(slot)}), "✦")
+	EventBus.notify(Loc.t("relic.taken", {"name": player_name(slot)}), "✦")
 
 
 func on_fighter_knocked_out(slot: int, by_slot: int) -> void:
@@ -175,11 +175,6 @@ func _clear_mark() -> void:
 	_mark = null
 
 
-func _name_of(slot: int) -> String:
-	var p := ctx.config.player_at(slot)
-	return p.display_name() if p != null else "P%d" % (slot + 1)
-
-
 # --- shared-layer answers --------------------------------------------------
 
 func holder() -> int:
@@ -203,7 +198,7 @@ func hud_value(slot: int) -> String:
 func hud_banner() -> String:
 	if _holder < 0:
 		return Loc.t("relic.loose")
-	return Loc.t("relic.holding", {"name": _name_of(_holder)})
+	return Loc.t("relic.holding", {"name": player_name(_holder)})
 
 
 func max_carry() -> int:
