@@ -18,7 +18,9 @@ extends Resource
 ## Per-slot free-form numbers a game wants on the results screen,
 ## e.g. [{"knockouts": 3, "falls": 1}, ...]
 @export var details: Array = []
-@export var rounds: Array[MatchResult] = []  # populated on the aggregate result
+# A self-typed default array retains this script at shutdown in Godot 4.7.1.
+# Only aggregate() populates this collection, from checked MatchResult values.
+@export var rounds: Array[Resource] = []
 
 
 func winner_slot() -> int:
@@ -114,7 +116,7 @@ static func aggregate(minigame_id: String, round_results: Array[MatchResult], hi
 	agg.arena_id = round_results[round_results.size() - 1].arena_id
 	agg.scores = totals
 	agg.places = compute_places(totals, higher_is_better)
-	agg.rounds = round_results.duplicate()
+	agg.rounds.assign(round_results)
 	for i in slots:
 		var merged := {}
 		for r in round_results:

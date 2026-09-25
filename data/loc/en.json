@@ -1,4 +1,5 @@
 {
+  "save.newer_version": "Your save requires a newer version. Update the game to restore your progress. You can play temporarily, but changes will not be saved.",
   "playlist.delete": "Delete tournament",
   "playlist.confirm_delete": "Delete saved tournament '{name}'?",
   "playlist.title": "Build your tournament",

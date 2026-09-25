@@ -432,6 +432,12 @@ future schema changes. Corruption recovery is covered by
 `tests/suites/test_save.gd`, which deliberately truncates a save and asserts the
 backup is used.
 
+A newer schema in either file protects both files from writes and resets by an
+older app. Local play uses temporary supported state, and the main menu explains
+that an update is needed to restore the saved progress. This does not downgrade
+or silently replace the player's data. Invalid schema field types are treated
+as corruption and fall back to a supported backup.
+
 ---
 
 ## Multiplayer
@@ -492,13 +498,21 @@ macOS, Windows, iOS and Android without shipping or licensing a font file.
 ## Tests
 
 ```bash
-sh tools/check_party.sh  # isolated saves, compilation, dependency inventory, tests, race regression
+sh tools/check_party.sh  # isolated saves, compile, inventory, tests, race and cleanup regression
+KRAS_STABILITY_CYCLES=3 sh tools/check_party.sh  # 117 repeated match lifecycles
+sh tests/check_party_wrapper.sh  # verify failure detection even on engine exit 0
 ```
 
 Use the wrapper so the tests never read or overwrite the player's real files.
 It exits non-zero on test failure or GDScript errors, even when Godot exits zero.
 See [the stage-zero audit](docs/stage0-audit-2026-09-25.md) and
 [current architecture](docs/architecture.md) before starting another development stage.
+
+`.github/workflows/game-quality.yml` runs these checks on main pushes and PRs
+using a checksum-pinned Godot 4.7.1 Linux binary. It imports the class cache first,
+uses isolated synthetic saves, rejects retained-resource warnings, and uploads
+diagnostic logs. The workflow does not sign, deploy, or submit the iOS app. Its
+presence is not proof of a successful GitHub run or a required branch check.
 
 | Suite | Covers |
 |---|---|

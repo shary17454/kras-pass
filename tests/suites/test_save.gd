@@ -12,6 +12,8 @@ func run(t: TestHarness) -> void:
 	_corruption(t)
 	_failed_write(t)
 	_migration(t)
+	_future_schema(t)
+	_schema_edge_cases(t)
 	_profiles(t)
 	_unlocks(t)
 	_completion(t)
@@ -124,6 +126,103 @@ func _migration(t: TestHarness) -> void:
 
 
 ## Several people share a console; they should not share a save.
+func _future_schema(t: TestHarness) -> void:
+	t.test("a downgraded app never overwrites a newer save or its backup")
+	SaveSystem.erase(SLOT)
+	var path := SaveSystem._path(SLOT)
+	var future := {"schema": SaveSystem.SCHEMA_VERSION + 1, "unknown_progress": {"cups": 91}}
+	var before := future.duplicate(true)
+	t.equal(SaveSystem._migrate(future), before, "migration leaves a future schema intact")
+	t.equal(future, before, "migration does not modify the caller's future document")
+	var body := JSON.stringify(before)
+	var envelope := JSON.stringify({"body": body, "checksum": body.md5_text()})
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(envelope)
+	f.close()
+	var backup := FileAccess.open(path + ".bak", FileAccess.WRITE)
+	backup.store_string(envelope)
+	backup.close()
+	var loaded := SaveSystem.load_slot(SLOT)
+	t.ok(not loaded.has("unknown_progress"), "unsupported state is not handed to old consumers")
+	t.ok(SaveSystem.is_read_only(SLOT), "newer save is marked read-only")
+	SaveSystem._cache[SLOT] = {"schema": SaveSystem.SCHEMA_VERSION, "session_only": true}
+	SaveSystem.mark_dirty(SLOT)
+	SaveSystem.flush()
+	t.equal(FileAccess.get_file_as_string(path), envelope, "autosave preserves the future file byte for byte")
+	t.equal(FileAccess.get_file_as_string(path + ".bak"), envelope, "autosave preserves its backup byte for byte")
+	t.ok(not SaveSystem._write_slot(SLOT, {}), "direct writes cannot bypass the downgrade guard")
+	SaveSystem.erase(SLOT)
+	t.ok(FileAccess.file_exists(path), "reset cannot delete a protected save")
+	t.ok(FileAccess.file_exists(path + ".bak"), "reset cannot delete its protected backup")
+	# The fixture belongs to the test, not to the application's erase API.
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path + ".bak")
+	SaveSystem.load_slot(SLOT)
+	t.ok(not SaveSystem.is_read_only(SLOT), "loading a clean slot clears the read-only state")
+	SaveSystem.erase(SLOT)
+	t.ok(SaveSystem._write_slot(SLOT, {"known": true}), "supported data can be saved again")
+	SaveSystem.erase(SLOT)
+
+
+func _schema_edge_cases(t: TestHarness) -> void:
+	t.test("future backups are protected, even with a supported main file")
+	var path := SaveSystem._path(SLOT)
+	for main in ["broken", "old", "missing"]:
+		_write_envelope(path + ".bak", {"schema": 99, "future_cups": 88})
+		var expected := FileAccess.get_file_as_string(path + ".bak")
+		if main == "old":
+			_write_envelope(path, {"schema": 2, "old": true})
+		elif main == "broken":
+			var f := FileAccess.open(path, FileAccess.WRITE)
+			f.store_string("invalid json")
+			f.close()
+		else:
+			DirAccess.remove_absolute(path)
+		var loaded := SaveSystem.load_slot(SLOT)
+		t.ok(SaveSystem.is_read_only(SLOT), "newer backup protects " + main + " main")
+		t.ok(not loaded.has("future_cups"), "unknown branches are never interpreted")
+		t.ok(not SaveSystem._write_slot(SLOT, {}), "write blocked with " + main + " main")
+		SaveSystem.erase(SLOT)
+		t.equal(FileAccess.get_file_as_string(path + ".bak"), expected, "newer backup bytes retained")
+		DirAccess.remove_absolute(path)
+		DirAccess.remove_absolute(path + ".bak")
+		SaveSystem.load_slot(SLOT)
+	SaveSystem.erase(SLOT)
+	t.test("invalid schema fields recover from a supported backup")
+	for invalid in [[], {}, "2", null, -1, 2.5]:
+		_write_envelope(path + ".bak", {"schema": 2, "recovered": true})
+		_write_envelope(path, {"schema": invalid})
+		var loaded := SaveSystem.load_slot(SLOT)
+		t.ok(bool(loaded.get("recovered", false)), "malformed schema falls back to backup")
+		t.ok(not SaveSystem.is_read_only(SLOT), "malformed version is not a future schema")
+	SaveSystem.erase(SLOT)
+	t.test("writes and resets detect future files even without loading first")
+	for suffix in ["", ".bak"]:
+		_write_envelope(path + suffix, {"schema": 99, "future": true})
+		var expected := FileAccess.get_file_as_string(path + suffix)
+		t.ok(not SaveSystem._write_slot(SLOT, {}), "direct write checks " + suffix)
+		t.equal(FileAccess.get_file_as_string(path + suffix), expected, "direct write preserves bytes")
+		DirAccess.remove_absolute(path + suffix)
+		SaveSystem.load_slot(SLOT)
+		_write_envelope(path + suffix, {"schema": 99, "future": true})
+		SaveSystem.erase(SLOT)
+		t.ok(FileAccess.file_exists(path + suffix), "direct reset checks " + suffix)
+		DirAccess.remove_absolute(path + suffix)
+		SaveSystem.load_slot(SLOT)
+	SaveSystem.erase(SLOT)
+	t.test("migration from schema zero is idempotent and keeps progress")
+	var migrated := SaveSystem._migrate({"stats": {"wins": 9}})
+	t.equal(migrated.profiles.default.stats.wins, 9, "old wins survive both migrations")
+	t.equal(SaveSystem._migrate(migrated.duplicate(true)), migrated, "running migration twice changes nothing")
+
+
+func _write_envelope(path: String, data: Dictionary) -> void:
+	var body := JSON.stringify(data)
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"body": body, "checksum": body.md5_text()}))
+	f.close()
+
+
 func _profiles(t: TestHarness) -> void:
 	t.test("profiles isolate progress from each other")
 	var original := SaveSystem.active_profile_id()

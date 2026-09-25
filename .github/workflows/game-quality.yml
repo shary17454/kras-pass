@@ -1,0 +1,68 @@
+name: Game Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: game-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  godot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GODOT_VERSION: 4.7.1
+      GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install verified Godot binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl --fail --location --retry 3 --max-time 300 \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${archive}" \
+            --output "$RUNNER_TEMP/godot.zip"
+          printf '%s  %s\n' "$GODOT_SHA256" "$RUNNER_TEMP/godot.zip" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot-bin"
+          mv "$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$RUNNER_TEMP/godot-bin/godot"
+          chmod +x "$RUNNER_TEMP/godot-bin/godot"
+          echo "$RUNNER_TEMP/godot-bin" >> "$GITHUB_PATH"
+      - name: Import assets and class cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --version
+          godot --headless --path . --log-file "$RUNNER_TEMP/godot-import.log" --import \
+            -- --test-data-dir="$RUNNER_TEMP/kras-import" 2>&1 | tee "$RUNNER_TEMP/godot-import.stdout"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Error importing|ERROR:' "$RUNNER_TEMP/godot-import.stdout"; then
+            exit 1
+          fi
+      - name: Compile, content, regression and cleanup checks
+        env:
+          TMPDIR: ${{ runner.temp }}
+          KRAS_STABILITY_CYCLES: '3'
+        run: |
+          sh tests/check_party_wrapper.sh
+          sh tools/check_party.sh
+      - name: Preserve QA evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: game-quality-${{ github.sha }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/godot-import.stdout
+            ${{ runner.temp }}/kras-party-check.*/*.stdout
+            ${{ runner.temp }}/kras-party-check.*/saves-stability/stability.json
+            build/stage0/inventory.json

@@ -15,6 +15,11 @@ func build() -> void:
 	title(Loc.t("app.title"), false)
 	header.add_child(_currency_strip())
 	body.add_child(UIKit.centered(Loc.t("party.tagline"), UIKit.SIZE_BODY, UIKit.ACCENT_2))
+	if SaveSystem.is_read_only(SaveSystem.PROFILE) or SaveSystem.is_read_only(SaveSystem.SETTINGS):
+		var notice := UIKit.label(Loc.t("save.newer_version"), UIKit.SIZE_BODY, UIKit.DANGER)
+		notice.name = "SaveCompatibilityNotice"
+		notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(notice)
 
 	var columns := UIKit.adaptive_columns(36)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL

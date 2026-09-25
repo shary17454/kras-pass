@@ -38,6 +38,8 @@ var storage_root := DIR
 
 var _cache := {}
 var _dirty := {}
+## Paths, not slot names: tests and recovery tools can use another storage root.
+var _read_only_paths := {}
 var _batch_depth := 0
 var _autosave_accum := 0.0
 var autosave_interval := 5.0
@@ -217,7 +219,13 @@ func settings() -> Dictionary:
 
 
 func mark_dirty(slot: String) -> void:
+	if is_read_only(slot):
+		return
 	_dirty[slot] = true
+
+
+func is_read_only(slot: String) -> bool:
+	return _read_only_paths.has(_path(slot))
 
 
 ## Persist every dirty slot immediately. Called on pause, on quit, and after
@@ -231,7 +239,9 @@ func flush() -> void:
 	for slot in _dirty.keys():
 		if _write_slot(slot, _cache.get(slot, {})):
 			_dirty.erase(slot)
-	if _dirty.is_empty():
+		elif is_read_only(slot):
+			_dirty.erase(slot)
+	if _dirty.is_empty() and not is_read_only(PROFILE) and not is_read_only(SETTINGS):
 		profile_saved.emit()
 
 
@@ -256,10 +266,14 @@ func set_settings(data: Dictionary) -> void:
 
 
 func load_slot(slot: String) -> Dictionary:
+	_read_only_paths.erase(_path(slot))
 	var main = _read(_path(slot))
+	var backup = _read(_path(slot) + ".bak")
+	for saved in [main, backup]:
+		if saved is Dictionary and _protect_newer(slot, saved):
+			return {"schema": SCHEMA_VERSION}
 	if main != null:
 		return _migrate(main)
-	var backup = _read(_path(slot) + ".bak")
 	if backup != null:
 		Log.w("slot '%s' corrupt — recovered from backup" % slot, "Save")
 		recovered_from_backup.emit(slot)
@@ -269,6 +283,8 @@ func load_slot(slot: String) -> Dictionary:
 
 ## Wipe a slot. Used by the "reset progress" settings action and by tests.
 func erase(slot: String) -> void:
+	if is_read_only(slot) or _protect_newer_on_disk(slot):
+		return
 	_cache[slot] = {"schema": SCHEMA_VERSION}
 	if enabled:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(slot)))
@@ -286,6 +302,8 @@ func _path(slot: String) -> String:
 
 
 func _write_slot(slot: String, data: Dictionary) -> bool:
+	if is_read_only(slot) or _protect_newer(slot, data) or _protect_newer_on_disk(slot):
+		return false
 	data["schema"] = SCHEMA_VERSION
 	var payload := JSON.stringify(data)
 	var envelope := JSON.stringify({"checksum": payload.md5_text(), "body": payload})
@@ -337,12 +355,37 @@ func _read(path: String):
 	var inner := JSON.new()
 	if inner.parse(body) != OK:
 		return null
-	return inner.data if inner.data is Dictionary else null
+	if not inner.data is Dictionary:
+		return null
+	var version = inner.data.get("schema", 0)
+	if not (version is int or version is float) or not is_finite(float(version)) \
+			or float(version) < 0 or float(version) != floorf(float(version)):
+		return null
+	return inner.data
+
+
+func _protect_newer_on_disk(slot: String) -> bool:
+	for suffix in ["", ".bak"]:
+		var saved = _read(_path(slot) + suffix)
+		if saved is Dictionary and _protect_newer(slot, saved):
+			return true
+	return false
+
+
+func _protect_newer(slot: String, data: Dictionary) -> bool:
+	if float(data.get("schema", 0)) <= SCHEMA_VERSION:
+		return false
+	if not is_read_only(slot):
+		Log.w("slot '%s' uses a newer schema; keeping its files read-only" % slot, "Save")
+	_read_only_paths[_path(slot)] = true
+	return true
 
 
 ## Each schema bump adds one clause, so an old save is upgraded rather than
 ## discarded. Migrations run oldest-first and are idempotent.
 func _migrate(data: Dictionary) -> Dictionary:
+	if float(data.get("schema", 0)) > SCHEMA_VERSION:
+		return data
 	var v := int(data.get("schema", 0))
 	if v < 1:
 		v = 1

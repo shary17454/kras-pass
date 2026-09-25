@@ -4,6 +4,10 @@ var _errors: Array[String] = []
 
 
 func _ready() -> void:
+	if SaveSystem.storage_root == SaveSystem.DIR or DisplayServer.get_name() == "headless":
+		push_error("Party visual QA requires a renderer and isolated --test-data-dir")
+		get_tree().quit(1)
+		return
 	UserSettings.set_value("replay_capture", false)
 	UserSettings.set_value("announcer_enabled", false)
 	UserSettings.set_value("touch_controls", "on")
@@ -18,6 +22,17 @@ func _ready() -> void:
 				await _settle()
 				_scan(SceneRouter.current_node, orientation + "/" + locale + "/" + id)
 				_capture("%s-%s-%s" % [orientation, locale, id])
+			SaveSystem._read_only_paths[SaveSystem._path(SaveSystem.PROFILE)] = true
+			SceneRouter.go_to("main_menu", {}, false, 0)
+			await _settle()
+			_scan(SceneRouter.current_node, orientation + "/" + locale + "/save-compatibility")
+			var notice := SceneRouter.current_node.find_child("SaveCompatibilityNotice", true, false) as Label
+			if notice == null or notice.text != Loc.t("save.newer_version"):
+				_errors.append("newer-save warning missing or not localized")
+			elif not get_viewport().get_visible_rect().encloses(notice.get_global_rect()):
+				_errors.append("newer-save warning is outside viewport")
+			_capture("%s-%s-save-compatibility" % [orientation, locale])
+			SaveSystem._read_only_paths.erase(SaveSystem._path(SaveSystem.PROFILE))
 			var s := TournamentSession.from_preset("long", PartyRoster.last_players(), 22)
 			SceneRouter.go_to("standings", {"session": s}, false, 0)
 			await _settle()

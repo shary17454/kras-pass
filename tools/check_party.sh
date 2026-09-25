@@ -12,7 +12,7 @@ run_check() {
   code=0
   "$GODOT_BIN" --headless --fixed-fps 60 --path . --log-file "$OUT/$label.log" "$scene" -- --test-data-dir="$OUT/saves-$label" "$@" >"$OUT/$label.stdout" 2>&1 || code=$?
   tail -n 22 "$OUT/$label.stdout"
-  if grep -Eq 'SCRIPT ERROR:|Parse Error:|FAIL:|FAILED|Required object .* is null' "$OUT/$label.stdout"; then
+  if grep -Eq 'SCRIPT ERROR:|Parse Error:|FAIL:|FAILED|Required object .* is null|ObjectDB instances (were )?leaked|resources still in use|RID allocations|PagedAllocator.*pages in use' "$OUT/$label.stdout"; then
     code=1
   fi
   if [ "$code" -ne 0 ]; then
@@ -24,4 +24,5 @@ run_check compile tests/compile_check.tscn
 run_check inventory tools/stage_zero_audit.tscn
 run_check tests tests/test_runner.tscn
 run_check race_regression tests/party_race_check.tscn
+run_check stability tests/stage_zero_stability.tscn --cycles="${KRAS_STABILITY_CYCLES:-1}"
 printf 'Compile and tests passed; inspect device performance separately.\n'
