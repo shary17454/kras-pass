@@ -18,15 +18,18 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 	var v := UIKit.vbox(6)
 	card.add_child(v)
 
-	var swatch := UIKit.panel(col if unlocked else Color(0.25, 0.25, 0.3), 12)
-	swatch.custom_minimum_size = Vector2(0, 104)
-	var glyph := UIKit.centered("?" if not unlocked else "◆", 54, UIKit.BG, true)
-	swatch.add_child(glyph)
-	v.add_child(swatch)
+	if unlocked:
+		v.add_child(character_portrait(c))
+	else:
+		v.add_child(UIKit.centered("?", 54, UIKit.dim_color(), true))
 
 	v.add_child(UIKit.centered(c.display_name() if unlocked else Loc.t("common.locked"), UIKit.SIZE_BODY, UIKit.text_color(), true))
 	v.add_child(UIKit.centered(Loc.t(c.realm_key) if unlocked else "", UIKit.SIZE_TINY, UIKit.dim_color()))
 	if unlocked:
+		v.add_child(UIKit.centered(Loc.t("archetype." + c.archetype), UIKit.SIZE_TINY, UIKit.ACCENT))
+		var perk := UIKit.centered(Loc.t("perk." + c.perk), UIKit.SIZE_TINY, UIKit.dim_color())
+		perk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(perk)
 		v.add_child(stat_block(c))
 	else:
 		var hint := UIKit.centered(Progression.unlock_hint(c.unlock), UIKit.SIZE_TINY, UIKit.ACCENT)
@@ -34,6 +37,36 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 		hint.custom_minimum_size = Vector2(250, 0)
 		v.add_child(hint)
 	return card
+
+
+static func character_portrait(character: CharacterData) -> Control:
+	var image := TextureRect.new()
+	image.custom_minimum_size = Vector2(160, 160)
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if DisplayServer.get_name() == "headless":
+		return image
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(256, 256)
+	viewport.transparent_bg = true
+	viewport.own_world_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	image.add_child(viewport)
+	var model := MeshFactory.character_body(character)
+	model.position.y = -0.62
+	model.rotation.y = PI + 0.5
+	viewport.add_child(model)
+	var camera := Camera3D.new()
+	camera.position = Vector3(0, 0.35, 3.0)
+	camera.fov = 42.0
+	viewport.add_child(camera)
+	var light := DirectionalLight3D.new()
+	light.rotation_degrees = Vector3(-32, 38, 0)
+	light.light_energy = 1.4
+	viewport.add_child(light)
+	image.texture = viewport.get_texture()
+	return image
 
 
 static func palette_card(id: String, unlocked: bool, selected: bool) -> Control:
@@ -106,6 +139,7 @@ static func minigame_card(m: MiniGameDef, unlocked: bool) -> Control:
 
 static func standings_row(rank: int, name: String, color: Color, value: String, highlight: bool) -> Control:
 	var card := UIKit.panel(UIKit.PANEL_HI if highlight else UIKit.PANEL, 12)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var h := UIKit.hbox(16)
 	card.add_child(h)
 	var place := UIKit.label(Loc.t("ordinal.%d" % mini(rank, 4)), UIKit.SIZE_BODY, UIKit.ACCENT, true)
@@ -116,6 +150,8 @@ static func standings_row(rank: int, name: String, color: Color, value: String, 
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(dot)
 	var label := UIKit.label(name, UIKit.SIZE_BODY)
+	label.name = "PlayerName"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(label)
 	h.add_child(UIKit.label(value, UIKit.SIZE_BODY, UIKit.text_color(), true))

@@ -48,6 +48,7 @@ static func from_preset(preset_id: String, rng_seed: int, pool_override: Array =
 		"powerups": powerups,
 		"mutators": mutator_ids,
 		"preset": preset_id,
+		"rules": preset.get("rules", {}),
 	}
 
 
@@ -60,7 +61,7 @@ static func _resolve_pool(pool_override: Array, categories: Array) -> Array[Mini
 		source = Progression.playable_games()
 	for m in source:
 		var def: MiniGameDef = m if m is MiniGameDef else Registry.minigame(String(m))
-		if def == null:
+		if def == null or def.is_boss or out.has(def):
 			continue
 		if not categories.is_empty() and not categories.has(def.category_name()):
 			continue

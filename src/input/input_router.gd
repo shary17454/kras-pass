@@ -127,6 +127,7 @@ func clear_slot(slot: int) -> void:
 	_sources[slot] = Source.NONE
 	_device_ids[slot] = -1
 	_frames[slot].clear()
+	_virtual_pending[slot].clear()
 
 
 func clear_all() -> void:

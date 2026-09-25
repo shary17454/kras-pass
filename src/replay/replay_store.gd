@@ -16,18 +16,24 @@ var _index: Array = []
 
 
 func _ready() -> void:
-	DirAccess.make_dir_recursive_absolute(DIR)
+	DirAccess.make_dir_recursive_absolute(SaveSystem.storage_root.path_join("replays"))
 	_load_index()
 
 
 func _load_index() -> void:
-	_index = SaveSystem.shared_branch(INDEX_BRANCH, [])
+	var stored = SaveSystem.shared_branch(INDEX_BRANCH, [])
+	_index = stored if stored is Array else []
 	# Drop entries whose file has gone: a user deleting files by hand should not
 	# leave the library full of ghosts.
 	var alive: Array = []
+	var seen := {}
 	for entry in _index:
-		if FileAccess.file_exists(_path(String(entry.get("id", "")))):
+		if not entry is Dictionary:
+			continue
+		var id := String(entry.get("id", ""))
+		if _valid_id(id) and not seen.has(id) and FileAccess.file_exists(_path(id)):
 			alive.append(entry)
+			seen[id] = true
 	if alive.size() != _index.size():
 		_index = alive
 		_commit()
@@ -39,7 +45,16 @@ func _commit() -> void:
 
 
 func _path(id: String) -> String:
-	return "%s/%s.json" % [DIR, id]
+	return SaveSystem.storage_root.path_join("replays").path_join(id + ".json")
+
+
+func _valid_id(id: String) -> bool:
+	if id.is_empty() or id.length() > 128:
+		return false
+	for c in id:
+		if not c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-":
+			return false
+	return true
 
 
 ## Newest first.
@@ -54,7 +69,7 @@ func count() -> int:
 
 
 func save(replay: ReplayData) -> bool:
-	if replay == null or replay.frames.is_empty():
+	if replay == null or replay.frames.is_empty() or not _valid_id(replay.id):
 		return false
 	var f := FileAccess.open(_path(replay.id), FileAccess.WRITE)
 	if f == null:
@@ -62,6 +77,10 @@ func save(replay: ReplayData) -> bool:
 		return false
 	f.store_string(JSON.stringify(replay.to_dict()))
 	f.close()
+	# A retry replaces its entry instead of leaving dangling index duplicates.
+	for i in range(_index.size() - 1, -1, -1):
+		if String(_index[i].get("id", "")) == replay.id:
+			_index.remove_at(i)
 	_index.append({
 		"id": replay.id,
 		"game": replay.minigame_id,
@@ -95,6 +114,8 @@ func _prune() -> void:
 
 
 func load_replay(id: String) -> ReplayData:
+	if not _valid_id(id):
+		return null
 	var path := _path(id)
 	if not FileAccess.file_exists(path):
 		return null
@@ -113,6 +134,8 @@ func load_replay(id: String) -> ReplayData:
 
 
 func erase(id: String) -> void:
+	if not _valid_id(id):
+		return
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(id)))
 	for i in _index.size():
 		if String(_index[i].get("id", "")) == id:
@@ -124,7 +147,9 @@ func erase(id: String) -> void:
 
 func erase_all() -> void:
 	for entry in _index:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(String(entry["id"]))))
+		var id := String(entry["id"])
+		if _valid_id(id):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(id)))
 	_index.clear()
 	_commit()
 	library_changed.emit()

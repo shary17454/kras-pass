@@ -8,7 +8,10 @@ extends MiniGameController
 const UNFINISHED := 1000000000
 const LAPS := 3
 const RECOVERY_SECONDS := 3.0
+const STUCK_SECONDS := 3.0
 var _recoveries := {}
+var _drive_anchors: Array[Vector3] = []
+var _stuck_seconds: Array[float] = []
 
 var finish_times: Array[int] = []
 var lap: Array[int] = []
@@ -23,7 +26,10 @@ var _boost_pads: Array = []
 ## Overridable so a game on a longer circuit can run fewer laps. Distance is
 ## what has to stay comparable between race games, not lap count.
 func laps() -> int:
-	return clampi(int(ctx.config.rule("race_laps", LAPS)), 3, 10) if ctx != null else LAPS
+	if ctx == null:
+		return LAPS
+	var minimum := 1 if bool(ctx.config.rule("party_short_race", false)) else LAPS
+	return clampi(int(ctx.config.rule("race_laps", LAPS)), minimum, 10)
 
 
 func uses_round_clock() -> bool:
@@ -51,6 +57,9 @@ func build() -> void:
 	_next_cp.fill(0)
 	_started.resize(n)
 	_started.fill(false)
+	_drive_anchors.resize(n)
+	_stuck_seconds.resize(n)
+	_stuck_seconds.fill(0.0)
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -101,6 +110,9 @@ func on_round_start() -> void:
 	lap.fill(0)
 	_next_cp.fill(0)
 	_started.fill(false)
+	_stuck_seconds.fill(0.0)
+	for i in ctx.fighters.size():
+		_drive_anchors[i] = ctx.fighter(i).global_position
 
 
 func tick(delta: float) -> void:
@@ -114,6 +126,8 @@ func tick(delta: float) -> void:
 			continue
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f):
+			continue
+		if _recover_stalled_driver(i, f, delta):
 			continue
 		var structures := ctx.arena.get_node_or_null("RaceStructures")
 		if structures != null and structures.is_below_bridge(f.global_position):
@@ -136,6 +150,24 @@ func tick(delta: float) -> void:
 			if crossed_start:
 				_started[i] = true
 		_check_boost(i, f, delta)
+
+
+func _recover_stalled_driver(slot: int, f: Fighter, delta: float) -> bool:
+	# Velocity can stay nonzero when a terrain seam blocks move_and_slide.
+	# Measure displacement and driving intent, equally for every input source.
+	var trying := absf(InputRouter.frame(slot).move.y) > 0.2
+	var impaired := f._stun > 0.0 or float(f.mods.get("frozen", 0.0)) > 0.0
+	if not trying or impaired or not f.alive or not f.control_enabled \
+			or f.get_slide_collision_count() == 0 \
+			or f.global_position.distance_squared_to(_drive_anchors[slot]) > 0.25:
+		_drive_anchors[slot] = f.global_position
+		_stuck_seconds[slot] = 0.0
+		return false
+	_stuck_seconds[slot] += delta
+	if _stuck_seconds[slot] < STUCK_SECONDS:
+		return false
+	on_fighter_fell(slot)
+	return true
 
 
 func _check_boost(slot: int, f, delta: float) -> void:
@@ -167,6 +199,8 @@ func on_fighter_fell(slot: int) -> void:
 	ctx.world_root.add_child(effect)
 	effect.global_position = start
 	_recoveries[slot] = {"time": 0.0, "start": start, "target": target, "layer": f.collision_layer, "mask": f.collision_mask, "effect": effect}
+	_stuck_seconds[slot] = 0.0
+	_drive_anchors[slot] = target
 	f.alive = false
 	f.control_enabled = false
 	f.set_physics_process(false)

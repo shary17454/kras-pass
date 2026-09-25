@@ -172,7 +172,7 @@ func _on_collected(pickup: PowerUpPickup, slot: int) -> void:
 	var d := pickup.def
 	_retire(pickup)
 	AudioManager.play_sfx("powerup", pickup.global_position)
-	Stats.record_powerup()
+	ctx.bump_detail(slot, "powerups", 1)
 	EventBus.powerup_collected.emit(slot, d.id)
 	if d.targets_rivals:
 		for i in ctx.fighters.size():

@@ -15,6 +15,8 @@ const SUITES := [
 	"res://tests/suites/test_input_sources.gd",
 	"res://tests/suites/test_replay.gd",
 	"res://tests/suites/test_playlist.gd",
+	"res://tests/suites/test_party.gd",
+	"res://tests/suites/test_party_progress.gd",
 	"res://tests/suites/test_mutators.gd",
 	"res://tests/suites/test_matches.gd",
 	"res://tests/suites/test_goal_guard.gd",
@@ -34,7 +36,15 @@ func _ready() -> void:
 		Engine.get_version_info().string, OS.get_name()])
 	_backup()
 	var started := Time.get_ticks_msec()
+	var filter := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--suite="):
+			filter = argument.trim_prefix("--suite=")
+	var selected := 0
 	for path in SUITES:
+		if not filter.is_empty() and not path.ends_with("test_%s.gd" % filter):
+			continue
+		selected += 1
 		var script: Script = load(path)
 		if script == null or not script.can_instantiate():
 			_t.suite(path)
@@ -46,6 +56,7 @@ func _ready() -> void:
 			await suite.run(_t, self)
 		else:
 			suite.run(_t)
+	_t.ok(selected > 0, "at least one test suite was selected")
 	var elapsed := (Time.get_ticks_msec() - started) / 1000.0
 	print("\nfinished in %.1fs" % elapsed)
 	_restore()

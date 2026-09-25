@@ -48,6 +48,8 @@ func setup(context: MatchContext) -> void:
 	_lives.resize(ctx.player_count())
 	_lives.fill(lives_per_player)
 	configure()
+	if bool(ctx.config.rule("family", false)):
+		respawn_delay = minf(respawn_delay, 0.75)
 	_lives.fill(lives_per_player)
 	build()
 

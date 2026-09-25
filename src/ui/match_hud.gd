@@ -103,8 +103,8 @@ func _build() -> void:
 	var fit_chips := func():
 		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
 		var inset := Platform.safe_insets()
-		chips.columns = (4 if ctx.definition.id == "goal_guard" else 2) if portrait else 5
-		chips.offset_top = ((120 if ctx.definition.id == "goal_guard" else 180) if portrait else 14) + inset.y
+		chips.columns = (4 if _compact_players() else 2) if portrait else 5
+		chips.offset_top = ((120 if _compact_players() else 180) if portrait else 14) + inset.y
 		chips.offset_left = 26 + inset.x
 		chips.offset_right = -26 - inset.z
 		top.offset_top = 18 + inset.y
@@ -141,7 +141,8 @@ func _build() -> void:
 	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hint_label)
 	var fit_hint := func():
-		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
+		var viewport_size := root.get_viewport_rect().size
+		var portrait := viewport_size.x < viewport_size.y
 		_hint_label.anchor_left = 0.08 if portrait else 0.25
 		_hint_label.anchor_right = 0.92 if portrait else 0.75
 		_hint_label.anchor_top = 0.0 if portrait else 1.0
@@ -149,6 +150,16 @@ func _build() -> void:
 		var hint_y := 230 if ctx.definition.id == "goal_guard" else 460
 		_hint_label.offset_top = hint_y + Platform.safe_insets().y if portrait else -120
 		_hint_label.offset_bottom = hint_y + 100 + Platform.safe_insets().y if portrait else -22
+		var touch_count := 0
+		for p in ctx.config.players:
+			if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
+				touch_count += 1
+		if touch_count > 1:
+			var controls_top := TouchSource.party_region(viewport_size, 0, touch_count).position.y / viewport_size.y
+			_hint_label.anchor_top = controls_top
+			_hint_label.anchor_bottom = controls_top
+			_hint_label.offset_top = -100
+			_hint_label.offset_bottom = -16
 	get_viewport().size_changed.connect(fit_hint)
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_hint))
 	fit_hint.call()
@@ -178,7 +189,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# 56 px off the left of a 1920-wide screen.
 	_tighten(card, 10, 8)
 	card.custom_minimum_size = Vector2(246, 0)
-	if ctx.definition.id == "goal_guard":
+	if _compact_players():
 		card.custom_minimum_size.x = 150
 	# Shrink, don't fill: a filling chip eats the gap the clock sits in.
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -191,7 +202,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	portrait.custom_minimum_size = Vector2(74, 74)
 	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(portrait)
-	portrait.visible = ctx.definition.id != "goal_guard"
+	portrait.visible = not _compact_players()
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 1)
@@ -203,8 +214,11 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# it in here is what pushed the name into being clipped.
 	var character := p.character()
 	var shown: String = character.display_name() if character != null else p.display_name()
-	if p.is_human:
+	if p.is_human and ctx.config.human_slots().size() == 1:
 		shown = Loc.t("hud.you", {"name": shown})
+	elif p.is_human and not p.display_name_override.is_empty():
+		shown = p.display_name_override
+	shown = p.symbol() + " " + shown
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 4)
 	box.add_child(name_row)
@@ -216,14 +230,14 @@ func _make_chip(p: PlayerConfig) -> Control:
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.clip_text = true
 	name_label.custom_minimum_size = Vector2(120, 0)
-	if ctx.definition.id == "goal_guard":
+	if _compact_players():
 		name_label.custom_minimum_size.x = 0
 		name_label.add_theme_font_size_override("font_size", 22)
 	name_row.add_child(name_label)
 
 	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
 	value.name = "Value"
-	if ctx.definition.id == "goal_guard":
+	if _compact_players():
 		value.add_theme_font_size_override("font_size", 28)
 	value.clip_text = true
 	box.add_child(value)
@@ -232,7 +246,6 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# would be a permanently full decoration, so it is hidden instead.
 	var meter := UIKit.stat_bar(1.0, col, METER_WIDTH)
 	meter.name = "Meter"
-	_tighten(meter, 0, 0)
 	meter.visible = controller != null and controller.allows_dash()
 	box.add_child(meter)
 
@@ -242,9 +255,21 @@ func _make_chip(p: PlayerConfig) -> Control:
 	box.add_child(effects)
 
 	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
-		"color": col, "meter": meter, "meter_fill": meter.get_child(0), "charge": -1.0,
+		"color": col, "meter": meter, "charge": -1.0,
 		"crown": crown})
 	return card
+
+
+func _compact_players() -> bool:
+	return ctx.definition.id == "goal_guard" or (ctx.config.human_slots().size() > 1 \
+		and (ctx.definition.id == "tank_arena" or ctx.arena.def.shape == "circuit"))
+
+
+func occupied_top() -> float:
+	var bottom := 0.0
+	for chip in _chips:
+		bottom = maxf(bottom, chip["root"].get_global_rect().end.y)
+	return bottom
 
 
 ## Replace a UIKit panel's padding with something a HUD can live with, reusing
@@ -442,7 +467,7 @@ func _refresh_chips() -> void:
 
 
 func _refresh_meter(chip: Dictionary, slot: int) -> void:
-	var meter: Control = chip["meter"]
+	var meter := chip["meter"] as ProgressBar
 	if not meter.visible:
 		return
 	var f := ctx.fighter(slot)
@@ -456,9 +481,8 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 	if absf(value - float(chip["charge"])) < 0.02:
 		return
 	chip["charge"] = value
-	var fill := chip["meter_fill"] as Control
-	if fill != null:
-		fill.custom_minimum_size.x = maxf(6.0, METER_WIDTH * UIKit.scale() * value)
+	if meter != null:
+		meter.value = value
 
 
 func _refresh_effects(chip: Dictionary, slot: int) -> void:

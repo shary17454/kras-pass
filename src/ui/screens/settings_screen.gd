@@ -30,6 +30,8 @@ func build() -> void:
 	_volume(v, "settings.music", "volume_music")
 	_volume(v, "settings.sfx", "volume_sfx")
 	_volume(v, "settings.ui", "volume_ui")
+	_toggle(v, "settings.announcer_enabled", "announcer_enabled")
+	_volume(v, "settings.announcer", "volume_announcer")
 
 	_section(v, "settings.gameplay")
 	_toggle(v, "settings.vibration", "vibration")
@@ -40,6 +42,17 @@ func build() -> void:
 	_slider(v, "settings.camera_distance", "camera_distance", 0.75, 1.4)
 
 	_section(v, "settings.touch")
+	var preset_ids := ["normal", "small", "large", "left"]
+	var presets := UIKit.option([Loc.t("party.controls.normal"), Loc.t("party.controls.small"),
+		Loc.t("party.controls.large"), Loc.t("party.controls.left")], 0)
+	presets.item_selected.connect(func(i):
+		UserSettings.apply_touch_preset(preset_ids[i])
+		_refresh())
+	v.add_child(UIKit.row(Loc.t("party.controls_preset"), presets))
+	var edit := UIKit.button(Loc.t("party.edit_controls"), UIKit.SIZE_SMALL)
+	edit.pressed.connect(func(): SceneRouter.go_to("touch_layout"))
+	edit.disabled = bool(args.get("in_match", false))
+	v.add_child(edit)
 	var touch_values := ["auto", "on", "off"]
 	var touch := UIKit.option([
 		Loc.t("settings.touch.auto"), Loc.t("settings.touch.on"), Loc.t("settings.touch.off"),
@@ -48,6 +61,7 @@ func build() -> void:
 	v.add_child(UIKit.row(Loc.t("settings.touch_controls"), touch))
 	_slider(v, "settings.touch_scale", "touch_scale", 0.7, 1.6)
 	_slider(v, "settings.touch_opacity", "touch_opacity", 0.15, 1.0)
+	_slider(v, "party.dead_zone", "touch_dead_zone", 0.05, 0.4)
 	_toggle(v, "settings.touch_left_handed", "touch_left_handed")
 	v.add_child(UIKit.label(Loc.t("settings.keeper_layout"), UIKit.SIZE_SMALL, UIKit.ACCENT))
 	_side_option(v, "settings.keeper_move_side", "touch_keeper_move_side")
@@ -55,6 +69,7 @@ func build() -> void:
 	_side_option(v, "settings.keeper_return_side", "touch_keeper_return_side")
 
 	_section(v, "settings.graphics")
+	_toggle(v, "party.battery_saver", "battery_saver")
 	var quality := UIKit.option([
 		Loc.t("settings.quality.low"), Loc.t("settings.quality.medium"), Loc.t("settings.quality.high"),
 		Loc.t("settings.quality.ultra"),
@@ -76,7 +91,7 @@ func build() -> void:
 		UIKit.invalidate_theme()
 		# The whole UI is direction-sensitive, so rebuild it rather than trying
 		# to mirror a live tree.
-		SceneRouter.go_to("settings", {}, false, 0.12))
+		_refresh())
 	v.add_child(UIKit.row(Loc.t("settings.language"), lang))
 
 	_section(v, "settings.accessibility")
@@ -108,7 +123,7 @@ func build() -> void:
 	var reset_binds := UIKit.button(Loc.t("settings.reset_bindings"), UIKit.SIZE_SMALL)
 	reset_binds.pressed.connect(func():
 		InputRouter.reset_bindings()
-		SceneRouter.go_to("settings", {}, false, 0.1))
+		_refresh())
 	v.add_child(reset_binds)
 
 	_section(v, "common.default")
@@ -116,15 +131,27 @@ func build() -> void:
 	reset.pressed.connect(func():
 		UserSettings.reset_to_defaults()
 		UIKit.invalidate_theme()
-		SceneRouter.go_to("settings", {}, false, 0.1))
+		_refresh())
 	v.add_child(reset)
 
 	var wipe := UIKit.button(Loc.t("settings.reset_progress"), UIKit.SIZE_SMALL)
 	wipe.add_theme_color_override("font_color", UIKit.DANGER)
 	wipe.pressed.connect(_confirm_wipe)
+	wipe.disabled = bool(args.get("in_match", false))
 	v.add_child(wipe)
 
 	_build_version_line(v)
+
+
+func _refresh() -> void:
+	if not bool(args.get("in_match", false)):
+		SceneRouter.go_to("settings", {}, false, 0.1)
+		return
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	first_focus = null
+	setup(args)
 
 
 ## The version, at the bottom of the settings list, where every app puts it.
@@ -179,7 +206,7 @@ func _on_access_submitted(text: String) -> void:
 	_access_field.visible = false
 	EventBus.notify(Loc.t("settings.access_ok"), "✓")
 	AudioManager.play_ui("ui_select")
-	SceneRouter.go_to("settings", {}, false, 0.1)
+	_refresh()
 
 
 func _section(parent: VBoxContainer, key: String) -> void:
@@ -206,7 +233,7 @@ func _slider(parent: VBoxContainer, key: String, setting: String, lo: float, hi:
 	if rebuild:
 		s.drag_ended.connect(func(changed):
 			if changed:
-				SceneRouter.go_to("settings", {}, false, 0.1))
+				_refresh())
 	parent.add_child(UIKit.row(Loc.t(key), s))
 
 
@@ -216,7 +243,7 @@ func _toggle(parent: VBoxContainer, key: String, setting: String, rebuild := fal
 		UserSettings.set_value(setting, v)
 		if rebuild:
 			UIKit.invalidate_theme()
-			SceneRouter.go_to("settings", {}, false, 0.1))
+			_refresh())
 	parent.add_child(UIKit.row(Loc.t(key), c))
 
 

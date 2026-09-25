@@ -1,6 +1,9 @@
 {
   "_comment": "Achievement definitions. 'condition.type' must be handled by Achievements._measure(); tests/test_achievements.gd asserts every type here is implemented.",
   "achievements": [
+    {"id": "comeback_cup", "icon": "↗", "condition": {"type": "comeback_cups", "amount": 1}},
+    {"id": "sure_footed", "icon": "◆", "condition": {"type": "no_fall_wins", "amount": 1}},
+    {"id": "tank_master", "icon": "◎", "condition": {"type": "game_wins", "game": "tank_arena", "amount": 5}},
     {"id": "first_win",        "icon": "🥇", "condition": {"type": "wins", "amount": 1}},
     {"id": "ten_wins",         "icon": "🏅", "condition": {"type": "wins", "amount": 10}},
     {"id": "fifty_wins",       "icon": "🏆", "condition": {"type": "wins", "amount": 50}},

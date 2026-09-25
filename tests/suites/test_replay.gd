@@ -10,8 +10,67 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("replay")
 	_format(t)
+	_capture_contract(t)
 	await _record_and_replay(t, host)
 	_highlights(t)
+
+
+func _capture_contract(t: TestHarness) -> void:
+	t.test("recordings retain match modifiers and teams")
+	var cfg := MatchConfig.build("duo_clash", ["nabta", "sakhra", "fanoos", "ramla"], 0, 1, 75)
+	cfg.mutators = PackedStringArray(["low_gravity"])
+	cfg.chaos = true
+	cfg.players[0].team = 1
+	cfg.players[1].team = 0
+	var captured := ReplayData.from_match(cfg, [], {}, {}, null)
+	var decoded := ReplayData.from_dict(captured.to_dict())
+	t.not_null(decoded, "new recording loads")
+	if decoded != null:
+		var restored := decoded.to_config()
+		t.equal(Array(restored.mutators), Array(cfg.mutators), "mutators survive disk round trip")
+		t.equal(restored.chaos, cfg.chaos, "chaos schedule remains enabled")
+		t.equal(restored.players[0].team, 1, "team assignment survives")
+		t.equal(restored.players[1].team, 0, "second team survives")
+	var ids := {}
+	for i in 32:
+		var next := ReplayData.from_match(cfg, [], {}, {}, null)
+		ids[next.id] = true
+	t.equal(ids.size(), 32, "rapid recordings cannot overwrite the same second's file")
+
+	t.test("saving a recording twice keeps one library entry")
+	var packet := PackedByteArray()
+	for i in cfg.players.size():
+		packet.append_array(InputFrame.new().encode())
+	captured.frames.append(packet)
+	var before := Replays.count()
+	t.ok(Replays.save(captured), "initial save succeeds")
+	t.ok(Replays.save(captured), "retry succeeds")
+	t.equal(Replays.count(), before + 1, "retry is idempotent")
+	Replays.erase(captured.id)
+	t.equal(Replays.count(), before, "erase leaves no duplicate entry")
+
+	t.test("replay file access never accepts a path as its id")
+	var original_id := captured.id
+	for unsafe in ["", "../profile", "nested/file", "..\\profile", "/tmp/replay"]:
+		captured.id = unsafe
+		t.ok(not Replays.save(captured), "unsafe id is refused: " + unsafe)
+		t.ok(Replays.load_replay(unsafe) == null, "unsafe id cannot be loaded")
+	captured.id = original_id
+
+	t.test("capture limit drops all channels instead of saving a partial match")
+	var match_node = load("res://src/match/match_scene.gd").new()
+	match_node._replay_enabled = true
+	match_node._replay.resize(60 * 60 * 4)
+	match_node._checkpoints = {"0": 1}
+	match_node._keyframes = {"0": PackedByteArray([0])}
+	match_node._world_events = {"0": ["event"]}
+	match_node._timeline = [{"tick": 0}]
+	match_node._record_replay_tick()
+	t.ok(not match_node._replay_enabled, "over-budget match is not advertised as fully recorded")
+	for channel in [match_node._replay, match_node._checkpoints, match_node._keyframes,
+			match_node._world_events, match_node._timeline]:
+		t.ok(channel.is_empty(), "capture releases its memory budget")
+	match_node.free()
 
 
 func _format(t: TestHarness) -> void:
@@ -72,6 +131,17 @@ func _format(t: TestHarness) -> void:
 	t.not_null(migrated, "still loads")
 	if migrated != null:
 		t.ok(not migrated.verifiable(), "but cannot be verified")
+	t.test("version 4 retains its frames without invented modifiers")
+	var previous := r.to_dict()
+	previous["version"] = 4
+	previous.erase("mutators")
+	previous.erase("chaos")
+	var v4 := ReplayData.from_dict(previous)
+	t.not_null(v4, "v4 is still supported")
+	if v4 != null:
+		t.equal(v4.frames.size(), 120, "v4 input format stays readable")
+		t.ok(v4.to_config().mutators.is_empty() and not v4.to_config().chaos, "unknown historical modifiers are not invented")
+		t.equal(v4.to_config().players[0].team, -1, "missing team keeps its legacy default")
 
 
 ## The real test: play, then replay, then compare.

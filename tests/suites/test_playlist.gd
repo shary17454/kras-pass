@@ -90,7 +90,7 @@ func _presets_match_data(t: TestHarness) -> void:
 
 	t.test("from_preset() honours each preset's own shape")
 	var quick := PlaylistGenerator.from_preset("quick", 1)
-	t.equal(int(quick["entries"].size()), 5, "quick party is 5 games")
+	t.equal(int(quick["entries"].size()), 3, "quick party is 3 games")
 	t.ok(bool(quick["powerups"]), "quick keeps power-ups on")
 	t.ok(not bool(quick["chaos"]), "quick is not chaos")
 
@@ -141,7 +141,9 @@ func _tournament_from_preset(t: TestHarness) -> void:
 	if cfg != null:
 		var def := Registry.minigame(session.game_ids[0])
 		t.ok(def.arena_ids.has(cfg.arena_id), "the pre-picked arena is valid for that game")
-		t.equal(str(cfg.mutators), str(session.mutators), "the config carries the session's mutators")
+		t.equal(cfg.mutators.size(), 1, "chaos opens each round with one readable mutator")
+		t.ok(MutatorSystem.available_for(cfg.definition()).has(cfg.mutators[0]), "opening mutator suits this game")
+		t.equal(str(cfg.mutators), str(session.next_config().mutators), "same round seed reproduces its mutator")
 		t.equal(cfg.chaos, session.chaos, "and its chaos flag")
 
 	t.test("a session built the old way (no preset) still works — arena falls back to random")

@@ -2,11 +2,6 @@ class_name ReplayData
 extends RefCounted
 ## A recorded match, stored as seed + input frames + metadata.
 ##
-## A full state recording of a four-player match would be megabytes; this is
-## ~1.2 KB per second, because the simulation is reproducible from the same
-## seed and the same inputs. That is the same property the network layer will
-## need, so the format is deliberately the transport format too.
-##
 ## **This is a hybrid recording, not a deterministic one — deliberately.**
 ##
 ## Measured: replaying identical inputs through Godot's physics diverges within
@@ -17,11 +12,11 @@ extends RefCounted
 ##
 ## So the format carries both: inputs at every tick for motion and feel, and a
 ## light position keyframe ten times a second that playback snaps to. Drift is
-## therefore bounded to a tenth of a second and the replay always shows what
-## actually happened. The cost is about 220 bytes per second on top of the
-## inputs — a rounding error against being wrong.
+## corrected at those intervals; unsaved object state can still diverge.
+## Four-player raw inputs cost 2160 bytes/s and keyframes 600 bytes/s at 60 Hz,
+## excluding events, hashes, container overhead and JSON/base64 encoding.
 
-const VERSION := 4
+const VERSION := 5
 const HASH_INTERVAL := 30    # ticks between state checkpoints
 const KEYFRAME_INTERVAL := 6 # ticks between position corrections (10 Hz)
 ## Position, liveness, score — and velocity, which is the half that was
@@ -46,6 +41,8 @@ var duration_override := 0.0
 var rules := {}
 var allow_powerups := true
 var sudden_death := true
+var mutators: PackedStringArray = []
+var chaos := false
 var players: Array = []      # [{slot, character, name, human, difficulty}]
 var tick_rate := 60
 
@@ -77,7 +74,7 @@ var duration := 0.0
 static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictionary,
 		keys: Dictionary, result: MatchResult, world_events: Dictionary = {}) -> ReplayData:
 	var r := ReplayData.new()
-	r.id = "%d_%s" % [Time.get_unix_time_from_system(), config.minigame_id]
+	r.id = "%d_%s" % [Time.get_unix_time_from_system(), Crypto.new().generate_random_bytes(16).hex_encode()]
 	r.created_at = int(Time.get_unix_time_from_system())
 	r.engine_build = Engine.get_version_info().get("string", "")
 	r.minigame_id = config.minigame_id
@@ -88,6 +85,8 @@ static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictio
 	r.rules = config.rules.duplicate(true)
 	r.allow_powerups = config.allow_powerups
 	r.sudden_death = config.sudden_death
+	r.mutators = config.mutators.duplicate()
+	r.chaos = config.chaos
 	r.tick_rate = int(ProjectSettings.get_setting("physics/common/physics_ticks_per_second", 60))
 	for p in config.players:
 		r.players.append({
@@ -96,6 +95,8 @@ static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictio
 			"name": p.display_name(),
 			"human": p.is_human,
 			"difficulty": p.ai_difficulty,
+			"team": p.team,
+			"palette": p.cosmetic_palette() if p.is_human or not p.palette_id.is_empty() else "classic",
 		})
 	# `captured` is an untyped Array; assigning it straight to a typed
 	# Array[PackedByteArray] fails at runtime, silently losing the recording.
@@ -136,6 +137,8 @@ func to_config() -> MatchConfig:
 	cfg.rules = rules.duplicate(true)
 	cfg.allow_powerups = allow_powerups
 	cfg.sudden_death = sudden_death
+	cfg.mutators = mutators.duplicate()
+	cfg.chaos = chaos
 	cfg.context = MatchConfig.Context.QUICK
 	for p in players:
 		var pc := PlayerConfig.new()
@@ -143,7 +146,9 @@ func to_config() -> MatchConfig:
 		pc.character_id = String(p["character"])
 		pc.is_human = false
 		pc.ai_difficulty = int(p.get("difficulty", 1))
+		pc.team = int(p.get("team", -1))
 		pc.display_name_override = String(p.get("name", ""))
+		pc.palette_id = String(p.get("palette", "classic"))
 		cfg.players.append(pc)
 	return cfg
 
@@ -268,10 +273,12 @@ func to_dict() -> Dictionary:
 		"rules": rules,
 		"allow_powerups": allow_powerups,
 		"sudden_death": sudden_death,
+		"mutators": Array(mutators),
+		"chaos": chaos,
 		"tick_rate": tick_rate,
 		"players": players,
 		"tick_count": frames.size(),
-		"frames_b64": Marshalls.raw_to_base64(flat),
+		"frames_b64": "" if flat.is_empty() else Marshalls.raw_to_base64(flat),
 		"hashes": hashes,
 		"events": events,
 		"keyframe_ticks": keyframes.keys(),
@@ -302,6 +309,9 @@ static func from_dict(d: Dictionary) -> ReplayData:
 	r.rules = saved_rules.duplicate(true) if saved_rules is Dictionary else {}
 	r.allow_powerups = bool(d.get("allow_powerups", true))
 	r.sudden_death = bool(d.get("sudden_death", true))
+	for modifier in d.get("mutators", []):
+		r.mutators.append(String(modifier))
+	r.chaos = bool(d.get("chaos", false))
 	r.tick_rate = int(d.get("tick_rate", 60))
 	r.players = d.get("players", [])
 	r.hashes = d.get("hashes", {})

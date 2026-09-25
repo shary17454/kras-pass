@@ -1,8 +1,10 @@
 extends "res://src/minigames/turret_duel.gd"
 
 const MAX_ARMOR := 100
-const SHELLS := ["standard", "rapid", "heavy", "homing"]
-const SHELL_COLORS := [Color("ffd66b"), Color("63e6fc"), Color("ff7459"), Color("aaef71")]
+const SHELLS := ["standard", "rapid", "heavy", "homing", "ricochet", "triple", "sticky"]
+const SHELL_COLORS := [Color("ffd66b"), Color("63e6fc"), Color("ff7459"), Color("aaef71"), Color("bca4fa"), Color("ffffff"), Color("f19cb8")]
+const SHELL_DAMAGE := [25.0, 15.0, 40.0, 25.0, 22.0, 14.0, 35.0]
+const SHELL_SPEED := [22.0, 36.0, 17.0, 24.0, 26.0, 25.0, 18.0]
 const CRATE_RESPAWN := 9.0
 var armor: Array[int] = []
 var cover: Array[StaticBody3D] = []
@@ -118,7 +120,7 @@ func _tick_crates(delta: float) -> void:
 				nearest = distance
 				winner = i
 		if winner >= 0:
-			shell_types[winner] = ctx.rng.randi_range(1, 3)
+			shell_types[winner] = ctx.rng.randi_range(1, SHELLS.size() - 1)
 			ammo[winner] = 6 if shell_types[winner] == 1 else 3
 			crate.cooldown = CRATE_RESPAWN
 			crate.node.visible = false
@@ -144,6 +146,22 @@ func _fire(slot: int) -> void:
 		_cooldowns[slot] = _cooldown
 		return
 	var kind := shell_types[slot] if ammo[slot] > 0 else 0
+	if String(ctx.config.rule("tank_variant", "normal")) == "ricochet":
+		kind = 4
+	var dir := fighter.facing.normalized()
+	_spawn_shell(slot, kind, origin, dir)
+	if kind == 5:
+		_spawn_shell(slot, kind, origin, dir.rotated(Vector3.UP, -0.16))
+		_spawn_shell(slot, kind, origin, dir.rotated(Vector3.UP, 0.16))
+	_cooldowns[slot] = 0.25 if kind == 1 else 1.15 if kind == 2 else 0.75
+	if ammo[slot] > 0 and String(ctx.config.rule("tank_variant", "normal")) != "infinite":
+		ammo[slot] -= 1
+		if ammo[slot] == 0:
+			shell_types[slot] = 0
+	AudioManager.play_sfx("cannon_fire", origin, 0.7 if kind == 2 else 1.0)
+
+
+func _spawn_shell(slot: int, kind: int, origin: Vector3, dir: Vector3) -> void:
 	var shot: Projectile = Pool.acquire(POOL_KEY)
 	if shot == null:
 		return
@@ -152,31 +170,30 @@ func _fire(slot: int) -> void:
 	shot.configure(SHELL_COLORS[kind])
 	if not shot.hit_fighter.is_connected(_on_hit):
 		shot.hit_fighter.connect(_on_hit)
-	var dir := fighter.facing.normalized()
-	var damage: float = [25.0, 15.0, 40.0, 25.0][kind]
-	shot.fire(origin + dir * 1.6, dir, slot, [22.0, 36.0, 17.0, 24.0][kind],
+	var damage: float = SHELL_DAMAGE[kind]
+	if String(ctx.config.rule("tank_variant", "normal")) == "one_shot":
+		damage = MAX_ARMOR
+	shot.fire(origin + dir * 1.6, dir, slot, SHELL_SPEED[kind],
 		damage * (_shot_damage / 25.0), 52.0)
 	shot.notify_only = true
 	shot.impact_sound = "explode"
+	if kind == 4:
+		shot.bounces_left = 2
+	elif kind == 6:
+		shot.arm_sticky(ctx)
 	if kind == 3:
 		var target := -1
 		var nearest := 40.0
 		for i in ctx.player_count():
 			if i == slot or not ctx.is_alive(i):
 				continue
-			var offset := ctx.fighter(i).global_position - fighter.global_position
+			var offset := ctx.fighter(i).global_position - origin
 			if dir.dot(offset.normalized()) > 0.2 and offset.length() < nearest:
 				target = i
 				nearest = offset.length()
 		if target >= 0:
 			shot.guide(ctx, target, 1.5)
 	_shots.append(shot)
-	_cooldowns[slot] = 0.25 if kind == 1 else 1.15 if kind == 2 else 0.75
-	if ammo[slot] > 0:
-		ammo[slot] -= 1
-		if ammo[slot] == 0:
-			shell_types[slot] = 0
-	AudioManager.play_sfx("cannon_fire", origin, [1.0, 1.4, 0.7, 1.1][kind])
 
 
 func _on_hit(_projectile: Projectile, shooter: int, victim: int) -> void:

@@ -39,6 +39,7 @@ var attack_chance := 0.55
 var powerup_interest := 0.6
 var edge_awareness := 0.7
 var mistake_chance := 0.1
+var personality := "balanced"
 
 ## Output for this tick; `decide()` writes these.
 var move := Vector2.ZERO
@@ -77,8 +78,30 @@ func configure(player_slot: int, context: MatchContext, difficulty: int, seed_va
 	powerup_interest = float(profile.get("powerup_interest", 0.6))
 	edge_awareness = float(profile.get("edge_awareness", 0.7))
 	mistake_chance = float(profile.get("mistake_chance", 0.1))
+	if bool(ctx.config.rule("ai_personalities", false)):
+		_apply_personality(seed_value, player_slot)
 	_noise_phase = rng.randf() * TAU
 	on_configured()
+
+
+func _apply_personality(seed_value: int, player_slot: int) -> void:
+	var personalities := ["aggressive", "cautious", "collector", "chaser", "defensive"]
+	personality = personalities[posmod(seed_value + player_slot, personalities.size())]
+	match personality:
+		"aggressive":
+			aggression = minf(1.0, aggression * 1.15)
+			risk = minf(1.0, risk * 1.1)
+		"cautious":
+			risk *= 0.75
+			aggression *= 0.85
+		"collector":
+			powerup_interest = minf(1.0, powerup_interest * 1.2)
+			aggression *= 0.9
+		"chaser":
+			strategy = minf(1.0, strategy * 1.15)
+		"defensive":
+			edge_awareness = minf(1.0, edge_awareness * 1.15)
+			risk *= 0.85
 
 
 ## Hook for subclasses that need per-match state.

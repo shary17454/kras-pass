@@ -34,8 +34,11 @@ const DEFAULT_PROFILE := "default"
 ## Branches stored per player rather than per device.
 const PLAYER_BRANCHES := ["progress", "stats", "achievements", "rewards_claimed", "daily_done"]
 
+var storage_root := DIR
+
 var _cache := {}
 var _dirty := {}
+var _batch_depth := 0
 var _autosave_accum := 0.0
 var autosave_interval := 5.0
 ## Disabled by the test harness so unit tests never touch the real profile.
@@ -43,6 +46,14 @@ var enabled := true
 
 
 func _ready() -> void:
+	# Editor-only test runs must never read or rotate the player's real saves.
+	if OS.has_feature("editor"):
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--test-data-dir="):
+				var requested := argument.trim_prefix("--test-data-dir=")
+				if requested.is_absolute_path():
+					storage_root = requested.path_join("")
+		DirAccess.make_dir_recursive_absolute(storage_root)
 	_cache[PROFILE] = load_slot(PROFILE)
 	_cache[SETTINGS] = load_slot(SETTINGS)
 	profile_loaded.emit(_cache[PROFILE])
@@ -162,10 +173,23 @@ func delete_profile(id: String) -> void:
 ## Read one branch of the *active* player. This is what Progression, Stats and
 ## Achievements use, so switching profile switches all of them at once.
 func player_branch(name: String) -> Dictionary:
-	var p := _ensure_profile(active_profile_id(), "player.you")
+	return profile_branch(active_profile_id(), name)
+
+
+func profile_branch(id: String, name: String) -> Dictionary:
+	if not _profiles().has(id):
+		return {}
+	var p: Dictionary = _profiles()[id]
 	if not p.has(name):
 		p[name] = {}
 	return p[name]
+
+
+func set_profile_branch(id: String, name: String, data: Dictionary) -> void:
+	if not _profiles().has(id):
+		return
+	_profiles()[id][name] = data
+	mark_dirty(PROFILE)
 
 
 func set_player_branch(name: String, data) -> void:
@@ -199,6 +223,8 @@ func mark_dirty(slot: String) -> void:
 ## Persist every dirty slot immediately. Called on pause, on quit, and after
 ## any progression milestone so a crash cannot swallow a trophy.
 func flush() -> void:
+	if _batch_depth > 0:
+		return
 	if not enabled:
 		_dirty.clear()
 		return
@@ -207,6 +233,16 @@ func flush() -> void:
 			_dirty.erase(slot)
 	if _dirty.is_empty():
 		profile_saved.emit()
+
+
+func begin_batch() -> void:
+	_batch_depth += 1
+
+
+func end_batch() -> void:
+	_batch_depth = maxi(0, _batch_depth - 1)
+	if _batch_depth == 0:
+		flush()
 
 
 func set_profile(data: Dictionary) -> void:
@@ -246,7 +282,7 @@ func _notification(what: int) -> void:
 
 
 func _path(slot: String) -> String:
-	return DIR + slot + ".json"
+	return storage_root.path_join(slot + ".json")
 
 
 func _write_slot(slot: String, data: Dictionary) -> bool:
@@ -274,7 +310,7 @@ func _write_slot(slot: String, data: Dictionary) -> bool:
 			if bf != null:
 				bf.store_string(prev_text)
 				bf.close()
-	var da := DirAccess.open(DIR)
+	var da := DirAccess.open(storage_root)
 	return da != null and da.rename(tmp.get_file(), _path(slot).get_file()) == OK
 
 

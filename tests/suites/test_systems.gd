@@ -187,8 +187,10 @@ func _procedural_geometry(t: TestHarness) -> void:
 			"%s: encloses %.3f of its %.3f box" % [str(size), volume, box_volume])
 
 	t.test("clearing the cache releases meshes as well as materials")
-	MeshFactory.box(Vector3(3.1, 0.4, 7.7), Color.RED)
+	var probe := MeshFactory.box(Vector3(3.1, 0.4, 7.7), Color.RED)
 	t.ok(MeshFactory._mesh_cache.size() > 0, "building a box caches its mesh")
+	probe.free()
+	t.ok(not is_instance_valid(probe), "the unattached geometry probe is freed")
 	# `PlatformService._on_memory_warning()` calls this, so anything it misses
 	# stays resident exactly when the device is asking for memory back.
 	MeshFactory.clear_cache()

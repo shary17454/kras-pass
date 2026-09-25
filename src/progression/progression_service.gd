@@ -20,7 +20,11 @@ func _ready() -> void:
 
 
 func _load() -> void:
-	_p = SaveSystem.player_branch(BRANCH)
+	_p = prepare_profile(SaveSystem.active_profile_id())
+
+
+func prepare_profile(profile_id: String) -> Dictionary:
+	var data := SaveSystem.profile_branch(profile_id, BRANCH)
 	var defaults := {
 		"characters": [],
 		"games": [],
@@ -37,27 +41,69 @@ func _load() -> void:
 		"selected_title": "rookie",
 	}
 	for k in defaults:
-		if not _p.has(k):
-			_p[k] = defaults[k]
+		if not data.has(k):
+			data[k] = defaults[k]
 	# Starter content is always available, even on a corrupted profile.
 	for c in Registry.starter_characters():
-		if not _p["characters"].has(c.id):
-			_p["characters"].append(c.id)
+		if not data["characters"].has(c.id):
+			data["characters"].append(c.id)
 	for m in Registry.minigames():
-		if m.unlock.is_empty() and not _p["games"].has(m.id):
-			_p["games"].append(m.id)
+		if m.unlock.is_empty() and not data["games"].has(m.id):
+			data["games"].append(m.id)
 	for p in Registry.palettes():
 		var pid := String(p.get("id", ""))
-		if pid != "" and Dictionary(p.get("unlock", {})).is_empty() and not _p["palettes"].has(pid):
-			_p["palettes"].append(pid)
+		if pid != "" and Dictionary(p.get("unlock", {})).is_empty() and not data["palettes"].has(pid):
+			data["palettes"].append(pid)
 	for t in Registry.titles():
 		var tid := String(t.get("id", ""))
-		if tid != "" and Dictionary(t.get("unlock", {})).is_empty() and not _p["titles"].has(tid):
-			_p["titles"].append(tid)
+		if tid != "" and Dictionary(t.get("unlock", {})).is_empty() and not data["titles"].has(tid):
+			data["titles"].append(tid)
 	var worlds := Registry.worlds()
-	if worlds.size() > 0 and _p["worlds"].is_empty():
-		_p["worlds"].append(String(worlds[0].get("id", "")))
-	_commit()
+	if worlds.size() > 0 and data["worlds"].is_empty():
+		data["worlds"].append(String(worlds[0].get("id", "")))
+	SaveSystem.set_profile_branch(profile_id, BRANCH, data)
+	return data
+
+
+func reward_profile(profile_id: String, gem_count := 0, cup := false) -> void:
+	if not SaveSystem.profile_ids().has(profile_id) or bool(SaveSystem.profile_meta(profile_id).get("guest", false)):
+		return
+	var data := prepare_profile(profile_id)
+	data["gems"] = int(data["gems"]) + maxi(0, gem_count)
+	data["tournaments_won"] = int(data["tournaments_won"]) + int(cup)
+	SaveSystem.set_profile_branch(profile_id, BRANCH, data)
+	if profile_id == SaveSystem.active_profile_id():
+		_p = data
+		gems_changed.emit(gems())
+	reconcile_profile(profile_id)
+
+
+func reconcile_profile(profile_id: String) -> void:
+	if not SaveSystem.profile_ids().has(profile_id):
+		return
+	var data := prepare_profile(profile_id)
+	var entries: Array = []
+	for c in Registry.characters():
+		entries.append(["characters", c.id, c.unlock])
+	for m in Registry.minigames():
+		entries.append(["games", m.id, m.unlock])
+	for branch in ["palettes", "titles"]:
+		for item in Registry.palettes() if branch == "palettes" else Registry.titles():
+			entries.append([branch, String(item.get("id", "")), item.get("unlock", {})])
+	# Monotonic unlocks may depend on another unlock or achievement. The bound
+	# is the number of possible additions, not an unbounded signal recursion.
+	for _pass in entries.size() + Achievements.total_count() + 1:
+		var changed := Achievements.evaluate_profile(profile_id)
+		for entry in entries:
+			if not data[entry[0]].has(entry[1]) and ProfileMetrics.rule_met(entry[2], profile_id, true):
+				data[entry[0]].append(entry[1])
+				changed = true
+		if not changed:
+			break
+	SaveSystem.set_profile_branch(profile_id, BRANCH, data)
+	if profile_id == SaveSystem.active_profile_id():
+		_p = data
+	SaveSystem.flush()
 
 
 func _commit() -> void:

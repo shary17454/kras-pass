@@ -14,6 +14,7 @@ func setup(a: Dictionary) -> void:
 func build() -> void:
 	title(Loc.t("app.title"), false)
 	header.add_child(_currency_strip())
+	body.add_child(UIKit.centered(Loc.t("party.tagline"), UIKit.SIZE_BODY, UIKit.ACCENT_2))
 
 	var columns := UIKit.adaptive_columns(36)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -27,11 +28,20 @@ func build() -> void:
 	columns.add_child(modes)
 	columns.add_child(side)
 
+	var quick := UIKit.button(Loc.t("party.quick_start"), UIKit.SIZE_HEADING)
+	quick.custom_minimum_size.y = 86
+	quick.pressed.connect(_quick_start)
+	modes.add_child(quick)
+	first_focus = quick
+	var saved := TournamentSession.saved_session()
+	if saved != null:
+		var resume := UIKit.button(Loc.t("party.resume"), UIKit.SIZE_BODY)
+		resume.pressed.connect(func(): _resume(saved))
+		modes.add_child(resume)
 	_add_mode(modes, "menu.adventure", "adventure")
 	_add_mode(modes, "library.title", "game_library")
 	_add_mode(modes, "menu.tournament", "tournament")
 	_add_mode(modes, "menu.local", "local_play")
-	_add_mode(modes, "menu.online", "online")
 	_add_mode(modes, "menu.training", "training")
 	_add_mode(modes, "menu.daily", "daily")
 
@@ -64,6 +74,24 @@ func build() -> void:
 
 	side.add_child(_profile_card())
 	side.add_child(_next_up_card())
+
+
+func _quick_start() -> void:
+	var saved := TournamentSession.saved_session()
+	if saved != null:
+		_resume(saved)
+		return
+	var session := TournamentSession.from_preset("quick", PartyRoster.last_players(), randi() & 0x7FFFFFFF)
+	if session.game_ids.is_empty():
+		return
+	session.checkpoint()
+	SceneRouter.start_match(session.next_config(), Callable(session, "on_match_finished"))
+
+
+func _resume(session: TournamentSession) -> void:
+	if SaveSystem.profile_ids().has(session.owner_profile):
+		SaveSystem.switch_profile(session.owner_profile)
+	SceneRouter.go_to("standings", {"session": session}, false)
 
 
 func _add_mode(parent: VBoxContainer, key: String, screen: String) -> void:

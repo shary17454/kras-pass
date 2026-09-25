@@ -35,6 +35,9 @@ extends Resource
 @export var celebration := "spin"  # spin | leap | flex | bow | shimmer
 @export var unlock := {}  # e.g. {"type": "trophies", "amount": 6}
 @export var starter := false
+@export var archetype := "balanced"
+@export var perk := ""
+@export var perk_scale := 1.0
 
 
 static func from_dict(d: Dictionary) -> CharacterData:
@@ -62,7 +65,14 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.celebration = String(d.get("celebration", "spin"))
 	c.unlock = d.get("unlock", {})
 	c.starter = bool(d.get("starter", false))
+	c.archetype = String(d.get("archetype", "balanced"))
+	c.perk = String(d.get("perk", ""))
+	c.perk_scale = clampf(float(d.get("perk_scale", 1.0)), 0.9, 1.1)
 	return c
+
+
+func perk_factor(kind: String) -> float:
+	return perk_scale if perk == kind else 1.0
 
 
 ## Total stat budget. The balance test asserts every character lands inside a

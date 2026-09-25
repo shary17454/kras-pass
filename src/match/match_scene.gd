@@ -27,6 +27,7 @@ var arena: Arena
 var camera: ArenaCamera
 var hud: MatchHUD
 var touch: TouchSource
+var touch_sources: Array[TouchSource] = []
 var powerups: PowerUpSystem
 var mutators: MutatorSystem
 var machine: HoverMachine
@@ -202,9 +203,14 @@ func _build() -> void:
 	camera.name = "Camera"
 	add_child(camera)
 	camera.targets = _fighters
+	var local_slots := config.human_slots()
+	camera.shared_world = local_slots.size() > 1 and (config.minigame_id == "tank_arena" or arena.def.shape == "circuit")
+	for p in config.players:
+		if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
+			camera.shared_touch_count += 1
 	if config.minigame_id == "tank_arena":
-		var locals := config.human_slots()
-		camera.local_target = _fighters[locals[0] if not locals.is_empty() else 0]
+		if not camera.shared_world:
+			camera.local_target = _fighters[local_slots[0] if not local_slots.is_empty() else 0]
 	camera.configure(controller.camera_mode(), arena)
 	if arena.def.shape == "circuit" and config.human_slots().size() == 1:
 		camera.local_target = _fighters[config.human_slots()[0]]
@@ -221,6 +227,7 @@ func _build() -> void:
 	hud.name = "HUD"
 	add_child(hud)
 	hud.setup(ctx, controller)
+	camera.shared_hud_bottom = hud.occupied_top
 	hud.ready_requested.connect(func():
 		if phase == P.INSTRUCTIONS:
 			_set_phase(P.COUNTDOWN))
@@ -293,6 +300,8 @@ func _assign_inputs() -> void:
 			InputRouter.assign_virtual(p.slot)
 		elif p.device_type == 1:
 			InputRouter.assign_pad(p.slot, p.device_id)
+		elif p.device_type == 2:
+			InputRouter.assign_touch(p.slot)
 		else:
 			InputRouter.assign_keyboard(p.slot, p.device_id)
 
@@ -301,21 +310,26 @@ func _assign_inputs() -> void:
 ## Built from the mini-game's declared control profile, so no game knows it is
 ## being played with a thumb.
 func _create_touch_controls() -> void:
-	if playback != null or not TouchSource.should_show():
+	if playback != null:
 		return
-	var humans := config.human_slots()
+	var humans: Array[int] = []
+	for p in config.players:
+		if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
+			humans.append(p.slot)
 	if humans.is_empty():
 		return
-	var slot: int = humans[0]
-	InputRouter.assign_touch(slot)
 	var layer := CanvasLayer.new()
 	layer.layer = 8   # under the HUD, over the world
 	layer.name = "TouchLayer"
 	add_child(layer)
-	touch = TouchSource.new()
-	touch.name = "TouchControls"
-	layer.add_child(touch)
-	touch.setup(slot, ctx.definition)
+	for i in humans.size():
+		InputRouter.assign_touch(humans[i])
+		var source := TouchSource.new()
+		source.name = "TouchControls%d" % i
+		layer.add_child(source)
+		source.setup(humans[i], ctx.definition, i, humans.size())
+		touch_sources.append(source)
+	touch = touch_sources[0]
 
 
 func teardown() -> void:
@@ -360,9 +374,13 @@ func _enter_phase(p: int) -> void:
 			camera.begin_intro(_phase_timer)
 		P.INSTRUCTIONS:
 			hud.show_rules(true)
-			if touch != null:
-				touch.set_process_input(false)
-				touch.visible = false
+			if bool(config.rule("party_tiebreak", false)):
+				_announce_voice("announcer.tie")
+			elif bool(config.rule("party_final", false)):
+				_announce_voice("announcer.final")
+			for source in touch_sources:
+				source.set_process_input(false)
+				source.visible = false
 			var known := not UserSettings.should_show_tutorial(ctx.definition.id)
 			_phase_timer = float(_tuning.get("instructions_seconds_known", 3.5)) if known \
 				else float(_tuning.get("instructions_seconds", 7.0))
@@ -372,9 +390,11 @@ func _enter_phase(p: int) -> void:
 				_phase_timer = minf(_phase_timer, 1.0)
 		P.COUNTDOWN:
 			hud.show_rules(false)
-			if touch != null:
-				touch.set_process_input(true)
-				touch.visible = true
+			if controller.uses_round_clock():
+				hud.set_time(_round_duration(), -1.0)
+			for source in touch_sources:
+				source.set_process_input(true)
+				source.visible = true
 			hud.show_hints(true)
 			UserSettings.mark_tutorial_seen(ctx.definition.id)
 			_countdown_value = int(_tuning.get("countdown_seconds", 3))
@@ -394,6 +414,7 @@ func _enter_phase(p: int) -> void:
 			ctx.sudden_death = true
 			ctx.time_left = _phase_timer
 			hud.announce(Loc.t("hud.sudden_death"), UIKit.DANGER, 1.0)
+			_announce_voice("announcer.tie")
 			AudioManager.play_music("tension")
 			AudioManager.play_sfx("whistle")
 			controller.on_sudden_death()
@@ -401,6 +422,7 @@ func _enter_phase(p: int) -> void:
 		P.FINISH:
 			_phase_timer = float(_tuning.get("finish_seconds", 2.2))
 			hud.announce(Loc.t("hud.finish"), UIKit.ACCENT_2, 1.2)
+			_announce_voice("announcer.finish")
 			AudioManager.play_sfx("whistle")
 			_freeze_fighters()
 			controller.on_round_end()
@@ -419,6 +441,7 @@ func _begin_play() -> void:
 		f.control_enabled = true
 	hud.announce(Loc.t("hud.go"), UIKit.OK, 0.4)
 	AudioManager.play_sfx("go")
+	_announce_voice("announcer.go")
 	_warn_second = -1
 	_splashed.clear()
 	controller.on_round_start()
@@ -428,6 +451,11 @@ func _begin_play() -> void:
 		if b != null:
 			b.on_round_start()
 	EventBus.round_started.emit(_round_index)
+
+
+func _announce_voice(key: String) -> void:
+	if playback == null and not config.human_slots().is_empty():
+		AudioManager.announce(key)
 
 
 func _round_duration() -> float:
@@ -593,6 +621,8 @@ func _tick_time_warning() -> void:
 	if second == _warn_second:
 		return
 	var first := _warn_second == -1
+	if first:
+		_announce_voice("announcer.ten_seconds")
 	_warn_second = second
 	AudioManager.play_sfx("tick", Vector3.ZERO, 1.0 + float(int(warn) - second) * 0.055)
 	if first and not ctx.sudden_death and AudioManager.current_track() != "tension":
@@ -736,6 +766,14 @@ func _evaluate_end(_delta: float) -> void:
 		return
 	if controller.is_round_over():
 		_phase_locked = true
+		_set_phase(P.FINISH)
+		return
+	# Training is deliberately untimed. All other modes have a generous
+	# watchdog independent of their visible clock, including lap-based races.
+	var safety := clampf(float(config.rule("maximum_duration", 1800.0)), 20.0, 1800.0)
+	if config.context != MatchConfig.Context.TRAINING and _round_elapsed >= safety:
+		_phase_locked = true
+		Log.w("round watchdog: %s seed=%d" % [config.minigame_id, config.seed], "Match")
 		_set_phase(P.FINISH)
 		return
 	if not controller.uses_round_clock() or ctx.time_left > 0.0:
@@ -1007,6 +1045,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _toggle_pause() -> void:
 	_paused = not _paused
+	for source in touch_sources:
+		source.set_process_input(not _paused)
+		source._fit_to_viewport()
 	if _paused:
 		_show_pause_menu()
 		AudioManager.play_ui("ui_back")
@@ -1017,6 +1058,9 @@ func _toggle_pause() -> void:
 
 
 func _show_pause_menu(message: String = "") -> void:
+	for source in touch_sources:
+		source.set_process_input(false)
+		source._fit_to_viewport()
 	var layer := CanvasLayer.new()
 	layer.layer = 40
 	add_child(layer)
@@ -1029,7 +1073,7 @@ func _show_pause_menu(message: String = "") -> void:
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(centre)
 	var card := UIKit.panel(UIKit.PANEL, 22)
-	card.custom_minimum_size = Vector2(640, 0)
+	card.custom_minimum_size = Vector2(minf(640, get_viewport().get_visible_rect().size.x - 64), 0)
 	centre.add_child(card)
 	var v := UIKit.vbox(12)
 	card.add_child(v)
@@ -1037,18 +1081,31 @@ func _show_pause_menu(message: String = "") -> void:
 	if message != "":
 		var m := UIKit.centered(message, UIKit.SIZE_SMALL, UIKit.DANGER)
 		m.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		m.custom_minimum_size = Vector2(570, 0)
+		m.custom_minimum_size = Vector2(minf(570, card.custom_minimum_size.x - 64), 0)
 		v.add_child(m)
 	var resume := UIKit.button(Loc.t("pause.resume"))
 	resume.pressed.connect(_toggle_pause)
 	v.add_child(resume)
 	var restart := UIKit.button(Loc.t("pause.restart"))
 	restart.pressed.connect(func():
-		_toggle_pause()
-		debug_restart_round())
+		var dialog := ConfirmationDialog.new()
+		dialog.dialog_text = Loc.t("party.restart_confirm")
+		dialog.ok_button_text = Loc.t("pause.restart")
+		dialog.cancel_button_text = Loc.t("common.cancel")
+		layer.add_child(dialog)
+		dialog.confirmed.connect(func():
+			_toggle_pause()
+			debug_restart_round())
+		dialog.popup_centered())
 	v.add_child(restart)
 	var settings := UIKit.button(Loc.t("pause.settings"))
-	settings.pressed.connect(func(): SceneRouter.go_to("settings"))
+	settings.pressed.connect(func():
+		var sheet := CanvasLayer.new()
+		sheet.layer = 50
+		add_child(sheet)
+		var screen := load("res://src/ui/screens/settings_screen.gd").new() as Screen
+		sheet.add_child(screen)
+		screen.setup({"close_callback": func(): sheet.queue_free(), "in_match": true}))
 	v.add_child(settings)
 	var quit := UIKit.button(Loc.t("pause.quit_match"))
 	quit.pressed.connect(func():
@@ -1115,13 +1172,19 @@ func _on_device_lost(slot: int) -> void:
 
 # --- replay ----------------------------------------------------------------
 
-## Records one input frame per player per tick. At 5 bytes per player that is
-## ~1.2 KB per second for four players — cheap enough to keep on by default and
-## enough to replay a round deterministically once playback is wired up.
+## Capture is bounded. Long matches remain playable but must not advertise an
+## incomplete recording as a full replay, or keep accumulating other channels.
 func _record_replay_tick() -> void:
 	if not _replay_enabled:
 		return
-	if _replay.size() > 60 * 60 * 4:  # hard cap: four minutes
+	if _replay.size() >= 60 * 60 * 4:
+		_replay_enabled = false
+		_replay.clear()
+		_checkpoints.clear()
+		_keyframes.clear()
+		_world_events.clear()
+		_timeline.clear()
+		Log.w("capture budget exceeded; this match will not be saved as a partial replay", "Replay")
 		return
 	var packet := PackedByteArray()
 	for f in _fighters:

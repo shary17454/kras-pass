@@ -90,12 +90,28 @@ func progress(id: String) -> float:
 
 
 func evaluate_all() -> void:
+	evaluate_profile(SaveSystem.active_profile_id())
+
+
+func evaluate_profile(profile_id: String) -> bool:
+	if not SaveSystem.profile_ids().has(profile_id):
+		return false
+	var earned := SaveSystem.profile_branch(profile_id, BRANCH)
+	var changed := false
 	for d in definitions():
 		var id := String(d.get("id", ""))
-		if is_unlocked(id):
+		if earned.has(id):
 			continue
-		if _evaluate(d.get("condition", {})):
-			unlock(id)
+		if ProfileMetrics.rule_met(d.get("condition", {}), profile_id):
+			if profile_id == SaveSystem.active_profile_id():
+				_earned = earned
+				unlock(id)
+			else:
+				earned[id] = Time.get_unix_time_from_system()
+			changed = true
+	if changed:
+		SaveSystem.set_profile_branch(profile_id, BRANCH, earned)
+	return changed
 
 
 func rows() -> Array:
@@ -121,27 +137,7 @@ func reset() -> void:
 
 ## Numeric measurement behind a condition, shared by `progress` and `_evaluate`.
 func _measure(cond: Dictionary) -> float:
-	match String(cond.get("type", "")):
-		"wins": return float(Stats.total_wins())
-		"matches": return float(Stats.total_matches())
-		"knockouts": return float(Stats.knockouts())
-		"trophies": return float(Progression.trophies())
-		"gems": return float(Progression.gems())
-		"tournaments": return float(Progression.tournaments_won())
-		"expert_wins": return float(Stats.expert_wins())
-		"flawless_wins": return float(Stats.flawless_wins())
-		"win_streak": return float(Stats.longest_streak())
-		"characters_unlocked": return float(Progression.unlocked_characters().size())
-		"games_unlocked": return float(Progression.unlocked_games().size())
-		"completion": return Progression.completion_percent()
-		"play_hours": return Stats.play_seconds() / 3600.0
-		"all_minigames_won": return 1.0 if Stats.won_every_minigame() else 0.0
-		"adventure_complete": return 1.0 if Progression.adventure_complete() else 0.0
-		"game_wins":
-			return float(Stats.game_entry(String(cond.get("game", ""))).get("wins", 0))
-		"game_best":
-			return float(Stats.game_entry(String(cond.get("game", ""))).get("best", 0))
-	return 0.0
+	return ProfileMetrics.measure(cond, SaveSystem.active_profile_id())
 
 
 func _evaluate(cond: Dictionary) -> bool:

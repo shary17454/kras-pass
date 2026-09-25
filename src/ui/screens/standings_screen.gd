@@ -25,9 +25,23 @@ func build() -> void:
 	title(Loc.t("tournament.standings"))
 	if session.is_complete():
 		var champ := session.champion()
-		body.add_child(UIKit.centered(
-			Loc.t("tournament.champion", {"name": session.players[champ].display_name()}),
-			UIKit.SIZE_TITLE, UIKit.ACCENT, true))
+		var headline := UIKit.centered(
+			Loc.t("tournament.champion", {"name": session.players[champ].display_name()}) if champ >= 0 else Loc.t("party.shared_cup"),
+			UIKit.SIZE_HEADING, UIKit.ACCENT, true)
+		headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(headline)
+		var podium := TournamentPodium.new()
+		body.add_child(podium)
+		podium.setup(session)
+		for award in session.fun_awards():
+			var names: Array[String] = []
+			for slot in award["slots"]:
+				names.append(session.players[slot].display_name())
+			var label := UIKit.centered(Loc.t(award["key"]) + ": " + " · ".join(names), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			body.add_child(label)
+	elif not session.tiebreak_slots.is_empty():
+		body.add_child(UIKit.centered(Loc.t("party.tiebreak"), UIKit.SIZE_HEADING, UIKit.ACCENT))
 	else:
 		body.add_child(UIKit.centered(
 			Loc.t("tournament.game_of", {"n": session.index + 1, "total": session.total_games()}),
@@ -45,28 +59,37 @@ func build() -> void:
 		UIKit.animate_in(card, 0.05 * int(row["rank"]))
 
 	if last != null:
-		var awarded := session.award_for(last)
+		var awarded := session.last_awards
 		var line: Array[String] = []
 		for slot in awarded.size():
 			if awarded[slot] > 0:
 				line.append("%s +%d" % [session.players[slot].display_name(), awarded[slot]])
 		body.add_child(UIKit.centered("   ·   ".join(line), UIKit.SIZE_SMALL, UIKit.ACCENT_2))
 
-	body.add_child(_schedule_strip())
+	if not session.is_complete():
+		body.add_child(_schedule_strip())
+	if not session.is_complete():
+		var next_game := session.current_game()
+		body.add_child(UIKit.centered(next_game.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT_2))
+		if session.double_final and session.index == session.total_games() - 1:
+			body.add_child(UIKit.centered(Loc.t("party.double_final"), UIKit.SIZE_BODY, UIKit.ACCENT))
 	_add_actions()
 
 
 func _schedule_strip() -> Control:
-	var h := UIKit.hbox(8)
-	h.alignment = BoxContainer.ALIGNMENT_CENTER
+	var h := GridContainer.new()
+	h.columns = 1 if get_viewport_rect().size.x < get_viewport_rect().size.y else 3
+	var fit := func(): h.columns = 1 if get_viewport_rect().size.x < get_viewport_rect().size.y else 3
+	get_viewport().size_changed.connect(fit)
+	h.tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit))
 	for i in session.game_ids.size():
 		var m := Registry.minigame(session.game_ids[i])
 		var played := i < session.index
-		var chip := UIKit.panel(UIKit.PANEL_HI if i == session.index else UIKit.PANEL, 10)
 		var l := UIKit.label("%s %s" % [m.icon_glyph if m != null else "◆", m.display_name() if m != null else "?"],
 			UIKit.SIZE_TINY, UIKit.OK if played else UIKit.dim_color())
-		chip.add_child(l)
-		h.add_child(chip)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l)
 	return h
 
 
@@ -76,7 +99,10 @@ func _add_actions() -> void:
 	if session.is_complete():
 		var again := UIKit.button(Loc.t("results.rematch"), UIKit.SIZE_BODY)
 		again.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		again.pressed.connect(func(): SceneRouter.go_to("tournament", {}, false))
+		again.pressed.connect(func():
+			var fresh := session.rematch()
+			fresh.checkpoint()
+			SceneRouter.start_match(fresh.next_config(), Callable(fresh, "on_match_finished")))
 		row.add_child(again)
 		first_focus = again
 	else:
@@ -97,6 +123,7 @@ func _play_next() -> void:
 	if cfg == null:
 		SceneRouter.go_to("main_menu", {}, false)
 		return
+	session.checkpoint()
 	# The Callable holds the session, which is what keeps it alive across the
 	# match; nothing global is involved.
 	SceneRouter.start_match(cfg, Callable(session, "on_match_finished"))

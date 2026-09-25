@@ -42,7 +42,7 @@ func _corruption(t: TestHarness) -> void:
 	SaveSystem.mark_dirty(SLOT)
 	SaveSystem.flush()   # generation 1 is now the .bak
 
-	var path := "user://%s.json" % SLOT
+	var path := SaveSystem._path(SLOT)
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string("{\"checksum\": \"deadbeef\", \"body\": \"{\\\"generation\\\": 99}\"}")
 	f.close()
@@ -72,7 +72,7 @@ func _corruption(t: TestHarness) -> void:
 ## someone's progress on an update is the one save bug that is never forgiven.
 func _failed_write(t: TestHarness) -> void:
 	t.test("failed write stays dirty and can be retried")
-	var path := "user://%s.json.tmp" % SLOT
+	var path := SaveSystem._path(SLOT) + ".tmp"
 	SaveSystem.erase(SLOT)
 	DirAccess.remove_absolute(path)
 	DirAccess.make_dir_absolute(path)
@@ -86,7 +86,7 @@ func _failed_write(t: TestHarness) -> void:
 	t.equal(int(SaveSystem.load_slot(SLOT).get("retry", 0)), 42, "retry preserves data")
 	SaveSystem.erase(SLOT)
 	t.test("wrong envelope types recover without a runtime error")
-	var f := FileAccess.open("user://%s.json" % SLOT, FileAccess.WRITE)
+	var f := FileAccess.open(SaveSystem._path(SLOT), FileAccess.WRITE)
 	f.store_string('{"body":123,"checksum":[]}')
 	f.close()
 	t.equal(SaveSystem.load_slot(SLOT).get("retry", null), null, "invalid envelope is rejected")

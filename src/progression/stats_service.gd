@@ -10,17 +10,21 @@ signal updated()
 const BRANCH := "stats"
 
 var _s := {}
-var _session_start := 0.0
+var _recording_profile := ""
 
 
 func _ready() -> void:
-	_session_start = Time.get_ticks_msec() / 1000.0
 	_load()
 	SaveSystem.profile_loaded.connect(func(_d): _load())
 
 
 func _load() -> void:
 	_s = SaveSystem.player_branch(BRANCH)
+	_fill_defaults()
+	_commit()
+
+
+func _fill_defaults() -> void:
 	var defaults := {
 		"matches": 0, "wins": 0, "losses": 0, "draws": 0,
 		"rounds": 0, "play_seconds": 0.0,
@@ -32,28 +36,65 @@ func _load() -> void:
 		"expert_wins": 0,
 		"longest_win_streak": 0,
 		"current_win_streak": 0,
+		"top_three": 0, "goals": 0, "race_wins": 0,
+		"party_tournaments": 0, "party_cups": 0, "rivals": {},
+		"no_fall_wins": 0, "comeback_cups": 0,
 	}
 	for k in defaults:
 		if not _s.has(k):
 			_s[k] = defaults[k]
-	_commit()
 
 
 func _commit() -> void:
-	SaveSystem.set_player_branch(BRANCH, _s)
+	if not _recording_profile.is_empty():
+		SaveSystem.set_profile_branch(_recording_profile, BRANCH, _s)
+	else:
+		SaveSystem.set_player_branch(BRANCH, _s)
 
 
 # --- reporting -------------------------------------------------------------
 
 ## Called once per finished match by `MatchScene`.
 func record_match(config: MatchConfig, result: MatchResult) -> void:
+	if not result.finished_naturally or config.context == MatchConfig.Context.TRAINING or bool(config.rule("party_tiebreak", false)) or result.has_meta("stats_recorded"):
+		return
+	result.set_meta("stats_recorded", true)
+	SaveSystem.begin_batch()
+	var seen := {}
+	var humans := config.human_slots()
+	for slot in humans:
+		var player := config.player_at(slot)
+		var id := player.local_profile_id
+		# Legacy single-player modes implicitly use the active profile. Lobby
+		# guests deliberately have no persistent identity.
+		if id.is_empty() and player.display_name_override.is_empty() and slot == humans[0]:
+			id = SaveSystem.active_profile_id()
+		if id.is_empty() or seen.has(id) or not SaveSystem.profile_ids().has(id):
+			continue
+		seen[id] = true
+		if not _claim_event(id, String(config.rule("party_progress_token", ""))):
+			continue
+		_recording_profile = id
+		_s = SaveSystem.profile_branch(id, BRANCH)
+		_fill_defaults()
+		_record_for_slot(config, result, slot)
+		var won := result.place_of(slot) == 1 and not result.is_draw()
+		var gems := Balance.inum("tuning", "scoring.gems_per_win" if won else "scoring.gems_per_participation", 1)
+		# Adventure owns its stage reward. It still evaluates each named
+		# participant's earned statistics and achievement unlocks here.
+		Progression.reward_profile(id, 0 if config.context == MatchConfig.Context.ADVENTURE else gems)
+	_recording_profile = ""
+	_load()
+	SaveSystem.end_batch()
+	updated.emit()
+
+
+func _record_for_slot(config: MatchConfig, result: MatchResult, me: int) -> void:
 	_s["matches"] = total_matches() + 1
 	_s["rounds"] = int(_s.get("rounds", 0)) + maxi(1, result.rounds.size())
 	_s["play_seconds"] = float(_s.get("play_seconds", 0.0)) + result.duration
 
-	var human := config.human_slots()
-	var me := human[0] if human.size() > 0 else -1
-	var won := me >= 0 and result.place_of(me) == 1
+	var won := me >= 0 and result.place_of(me) == 1 and not result.is_draw()
 	var drew := me >= 0 and result.is_draw() and result.place_of(me) == 1
 	if me >= 0:
 		if drew:
@@ -114,10 +155,66 @@ func record_match(config: MatchConfig, result: MatchResult) -> void:
 	if me >= 0:
 		_s["knockouts"] = int(_s.get("knockouts", 0)) + int(result.detail(me, "knockouts", 0))
 		_s["falls"] = int(_s.get("falls", 0)) + int(result.detail(me, "falls", 0))
+		_s["goals"] = int(_s.get("goals", 0)) + int(result.detail(me, "goals", 0))
+		_s["powerups"] = int(_s.get("powerups", 0)) + int(result.detail(me, "powerups", 0))
+		if won and not drew and result.duration > 0 and config.definition() != null and config.definition().category == MiniGameDef.Category.PUSH_OUT and int(result.detail(me, "falls", 0)) == 0:
+			_s["no_fall_wins"] = int(_s.get("no_fall_wins", 0)) + 1
+		if result.place_of(me) in [1, 2, 3]:
+			_s["top_three"] = int(_s.get("top_three", 0)) + 1
+		if won and not drew and config.definition() != null and config.definition().category == MiniGameDef.Category.RACE:
+			_s["race_wins"] = int(_s.get("race_wins", 0)) + 1
 
 	_commit()
-	SaveSystem.flush()
+
+
+func record_tournament(players: Array[PlayerConfig], champion_slot: int, shared: Array[int] = [], comeback_slots: Array[int] = [], token := "") -> void:
+	SaveSystem.begin_batch()
+	var seen := {}
+	for p in players:
+		var id := p.local_profile_id
+		if id.is_empty() and p.is_human and p.display_name_override.is_empty() and seen.is_empty():
+			id = SaveSystem.active_profile_id()
+		if not p.is_human or id.is_empty() or seen.has(id) or not SaveSystem.profile_ids().has(id):
+			continue
+		seen[id] = true
+		if not _claim_event(id, token):
+			continue
+		var data := SaveSystem.profile_branch(id, BRANCH)
+		var cup := p.slot == champion_slot or shared.has(p.slot)
+		data["party_tournaments"] = int(data.get("party_tournaments", 0)) + 1
+		if cup:
+			data["party_cups"] = int(data.get("party_cups", 0)) + 1
+			if comeback_slots.has(p.slot):
+				data["comeback_cups"] = int(data.get("comeback_cups", 0)) + 1
+		var rivals: Dictionary = data.get("rivals", {})
+		for other in players:
+			if not other.is_human or other.slot == p.slot or other.local_profile_id.is_empty() or other.local_profile_id == p.local_profile_id:
+				continue
+			var entry: Dictionary = rivals.get(other.local_profile_id, {"played": 0, "wins": 0, "losses": 0})
+			entry["played"] = int(entry["played"]) + 1
+			entry["wins"] = int(entry["wins"]) + int(champion_slot == p.slot)
+			entry["losses"] = int(entry["losses"]) + int(champion_slot == other.slot)
+			rivals[other.local_profile_id] = entry
+		data["rivals"] = rivals
+		SaveSystem.set_profile_branch(id, BRANCH, data)
+		Progression.reward_profile(id, Balance.inum("tuning", "scoring.gems_per_win", 3) * 3 if cup else 0, cup)
+	_load()
+	SaveSystem.end_batch()
 	updated.emit()
+
+
+func _claim_event(profile_id: String, token: String) -> bool:
+	if token.is_empty():
+		return true
+	var receipts := SaveSystem.profile_branch(profile_id, "party_receipts")
+	var recent: Array = receipts.get("recent", [])
+	if recent.has(token):
+		return false
+	recent.append(token)
+	while recent.size() > 128:
+		recent.pop_front()
+	SaveSystem.set_profile_branch(profile_id, "party_receipts", {"recent": recent})
+	return true
 
 
 func record_powerup() -> void:
@@ -145,7 +242,7 @@ func win_rate() -> float:
 
 
 func play_seconds() -> float:
-	return float(_s.get("play_seconds", 0.0)) + (Time.get_ticks_msec() / 1000.0 - _session_start)
+	return float(_s.get("play_seconds", 0.0))
 
 
 func expert_wins() -> int:
@@ -214,11 +311,26 @@ func summary_rows() -> Array:
 		{"key": "stats.streak", "value": str(longest_streak())},
 		{"key": "stats.tournaments", "value": str(Progression.tournaments_won())},
 		{"key": "stats.knockouts", "value": str(_s.get("knockouts", 0))},
+		{"key": "party.stats.top_three", "value": str(_s.get("top_three", 0))},
+		{"key": "party.stats.goals", "value": str(_s.get("goals", 0))},
+		{"key": "party.stats.race_wins", "value": str(_s.get("race_wins", 0))},
+		{"key": "party.stats.cups", "value": str(_s.get("party_cups", 0))},
 		{"key": "stats.powerups", "value": str(_s.get("powerups", 0))},
 		{"key": "stats.playtime", "value": _format_time(play_seconds())},
 		{"key": "stats.favourite_game", "value": _game_name(most_played_game())},
 		{"key": "stats.favourite_character", "value": _char_name(most_played_character())},
 	]
+
+
+func rivalry_rows() -> Array:
+	var rows: Array = []
+	for id in _s.get("rivals", {}):
+		if not SaveSystem.profile_ids().has(id):
+			continue
+		var entry: Dictionary = _s["rivals"][id].duplicate(true)
+		entry["name"] = SaveSystem.profile_meta(id).get("name", "")
+		rows.append(entry)
+	return rows
 
 
 func reset() -> void:

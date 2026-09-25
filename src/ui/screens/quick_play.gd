@@ -23,6 +23,8 @@ var _game_option: OptionButton
 var _laps := 3
 var _laps_row: Control
 var _laps_option: OptionButton
+var _tank_variant := "normal"
+var _tank_row: Control
 
 
 func build() -> void:
@@ -91,6 +93,14 @@ func build() -> void:
 	_laps_option.item_selected.connect(func(i): _laps = i + 3)
 	_laps_row = UIKit.row(Loc.t("race.laps"), _laps_option)
 	right.add_child(_laps_row)
+	var variants := ["normal", "ricochet", "one_shot", "infinite"]
+	var names: Array = []
+	for id in variants:
+		names.append(Loc.t("tank.variant." + id))
+	var variant := UIKit.option(names, 0)
+	variant.item_selected.connect(func(i): _tank_variant = variants[i])
+	_tank_row = UIKit.row(Loc.t("party.variant"), variant)
+	right.add_child(_tank_row)
 
 	var pu := UIKit.checkbox("", _powerups)
 	pu.toggled.connect(func(v): _powerups = v)
@@ -152,9 +162,14 @@ func _refresh_game() -> void:
 	if def.arena_ids.size() > 1:
 		_arena_option.add_item(Loc.t("common.random"))
 	_arena_option.selected = 0
+	if bool(args.get("random_arena", false)):
+		_arena_index = randi_range(0, def.arena_ids.size() - 1)
+		_arena_option.select(_arena_index)
+		args.erase("random_arena")
 	_rounds_option.selected = [1, 2, 3, 5].find(def.default_rounds) if [1, 2, 3, 5].has(def.default_rounds) else 0
 	_rounds = def.default_rounds
 	_laps_row.visible = def.id in ["kart_sprint", "sabaq_sawarikh"]
+	_tank_row.visible = def.id == "tank_arena"
 
 
 func _refresh_character() -> void:
@@ -180,6 +195,7 @@ func _start() -> void:
 	cfg.context = MatchConfig.Context.QUICK
 	cfg.rounds = _rounds
 	cfg.rules["race_laps"] = _laps
+	cfg.rules["tank_variant"] = _tank_variant
 	cfg.allow_powerups = _powerups
 	cfg.sudden_death = def.supports_sudden_death
 	cfg.seed = randi() & 0x7FFFFFFF

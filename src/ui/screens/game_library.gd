@@ -3,6 +3,13 @@ extends Screen
 
 func build() -> void:
 	title(Loc.t("library.title"))
+	var random := UIKit.button(Loc.t("party.anything"), UIKit.SIZE_HEADING)
+	random.pressed.connect(func():
+		var games := Progression.playable_games()
+		if not games.is_empty():
+			var game := games[randi_range(0, games.size() - 1)]
+			SceneRouter.go_to("quick_play", {"game_id": game.id, "random_arena": true}))
+	body.add_child(random)
 	var parts := Widgets.scroll_grid(3)
 	var scroll: ScrollContainer = parts[0]
 	var grid: GridContainer = parts[1]
@@ -18,6 +25,13 @@ func build() -> void:
 			SceneRouter.go_to("quick_play", {"game_id": game.id}))
 		button.disabled = not unlocked
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(button)
+		var entry := UIKit.vbox(8)
+		entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		entry.add_child(button)
+		var favorite := UIKit.checkbox(Loc.t("party.favorite"), PartyLibrary.favorites().has(game.id))
+		favorite.disabled = not unlocked
+		favorite.toggled.connect(func(_on): PartyLibrary.toggle_favorite(game.id))
+		entry.add_child(favorite)
+		grid.add_child(entry)
 		if first_focus == null and unlocked:
 			first_focus = button

@@ -43,3 +43,12 @@ func build() -> void:
 		h.add_child(UIKit.label("%s %d" % [Loc.t("stats.wins"), wins], UIKit.SIZE_TINY, UIKit.OK if wins > 0 else UIKit.dim_color()))
 		h.add_child(UIKit.label("%s %d" % [Loc.t("stats.best"), int(entry.get("best", 0))], UIKit.SIZE_TINY, UIKit.ACCENT_2))
 		grid.add_child(card)
+	var rivals := Stats.rivalry_rows()
+	if not rivals.is_empty():
+		body.add_child(UIKit.heading(Loc.t("party.stats.rivals")))
+		for entry in rivals:
+			var name := String(entry["name"])
+			entry["name"] = Loc.t(name) if Loc.has(name) else name
+			var line := UIKit.label(Loc.t("party.stats.versus", entry), UIKit.SIZE_SMALL)
+			line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			body.add_child(line)

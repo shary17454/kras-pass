@@ -99,9 +99,12 @@ static func validate(def: MiniGameDef, check_localization: bool = true) -> Packe
 ## True when the controller (or one of its ancestors below the base class)
 ## actually implements one of these, rather than inheriting the default.
 static func _overrides_any(controller: Object, methods: Array) -> bool:
-	for m in methods:
-		if controller.has_method(m):
-			return true
+	var script: Script = controller.get_script()
+	while script != null and script.resource_path != "res://src/minigames/minigame_controller.gd":
+		for method in script.get_script_method_list():
+			if methods.has(String(method.get("name", ""))):
+				return true
+		script = script.get_base_script()
 	return false
 
 

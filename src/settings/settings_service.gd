@@ -17,6 +17,8 @@ const DEFAULTS := {
 	"music_enabled": true,
 	"volume_sfx": 1.0,
 	"volume_ui": 0.8,
+	"volume_announcer": 0.8,
+	"announcer_enabled": true,
 	"vibration": true,
 	"camera_sensitivity": 1.0,
 	## How far back the shared camera sits, as a multiplier. The spec wants the
@@ -25,8 +27,9 @@ const DEFAULTS := {
 	## on — a phone held at arm's length is not a television across a room.
 	"camera_distance": 1.0,
 	"camera_shake": 1.0,
-	"graphics_quality": 3,  # 0 low, 1 medium, 2 high, 3 ultra
-	"fps_limit": 120,  # Preferred ceiling; presentation remains display-limited.
+	"graphics_quality": 2,  # 0 low, 1 medium, 2 high, 3 ultra
+	"fps_limit": 60,  # Preferred ceiling; presentation remains display-limited.
+	"battery_saver": false,
 	"language": "",  # "" = no explicit choice yet -> Arabic, the primary
 	"text_scale": 1.0,
 	"high_contrast": false,
@@ -39,6 +42,8 @@ const DEFAULTS := {
 	"replay_capture": true,
 	"touch_controls": "auto",   # auto | on | off
 	"touch_scale": 1.0,
+	"touch_dead_zone": 0.14,
+	"touch_positions": {},
 	"touch_opacity": 0.5,
 	"touch_left_handed": false,
 	# Goal Guard has three independent touch zones. Keeping these separate lets
@@ -64,6 +69,13 @@ func _ready() -> void:
 
 
 func get_value(key: String):
+	if bool(_values.get("battery_saver", false)):
+		if key == "fps_limit":
+			return 30
+		if key == "graphics_quality":
+			return 0
+		if key == "reduce_effects":
+			return true
 	return _values.get(key, DEFAULTS.get(key))
 
 
@@ -77,13 +89,26 @@ func set_value(key: String, value) -> void:
 	_persist()
 	if key == "language":
 		Loc.set_locale(String(value))
-	elif key in ["fps_limit", "graphics_quality"]:
+	elif key in ["fps_limit", "graphics_quality", "battery_saver"]:
 		_apply_engine_settings()
 	changed.emit(key, value)
 
 
 func toggle(key: String) -> void:
 	set_value(key, not bool(get_value(key)))
+
+
+func apply_touch_preset(id: String) -> void:
+	if id not in ["normal", "small", "large", "left"]:
+		return
+	_values["touch_scale"] = 0.8 if id == "small" else 1.3 if id == "large" else 1.0
+	_values["touch_left_handed"] = id == "left"
+	_values["touch_positions"] = {}
+	_values["touch_keeper_move_side"] = "right" if id == "left" else "left"
+	_values["touch_keeper_dash_side"] = "left" if id == "left" else "right"
+	_values["touch_keeper_return_side"] = "left" if id == "left" else "right"
+	_persist()
+	changed.emit("touch_positions", {})
 
 
 func volume_linear(bus: String) -> float:
@@ -95,6 +120,8 @@ func volume_linear(bus: String) -> float:
 			return master * float(get_value("volume_sfx"))
 		"ui":
 			return master * float(get_value("volume_ui"))
+		"announcer":
+			return master * float(get_value("volume_announcer")) if bool(get_value("announcer_enabled")) else 0.0
 	return master
 
 

@@ -25,15 +25,19 @@
 
   "_presets_comment": "Party presets. 'games' empty means the whole unlocked library; 'categories' filters it.",
   "presets": [
-    {"id": "quick",   "games_count": 5,  "mutators": [],                              "difficulty": 1, "powerups": true},
-    {"id": "normal",  "games_count": 10, "mutators": [],                              "difficulty": 1, "powerups": true},
-    {"id": "long",    "games_count": 20, "mutators": [],                              "difficulty": 2, "powerups": true},
+    {"id": "quick",   "games_count": 3, "mutators": [], "difficulty": 1, "powerups": true,
+      "rules": {"round_seconds": 60, "race_laps": 1, "maximum_duration": 180}},
+    {"id": "normal", "games_count": 5, "mutators": [], "difficulty": 1, "powerups": true,
+      "rules": {"round_seconds": 90, "race_laps": 3, "maximum_duration": 300}},
+    {"id": "long", "games_count": 10, "mutators": [], "difficulty": 2, "powerups": true,
+      "rules": {"round_seconds": 120, "race_laps": 3, "maximum_duration": 360}},
     {"id": "chaos",   "games_count": 10, "mutators": ["powerup_rush", "double_hazards"], "difficulty": 1, "powerups": true, "chaos": true},
     {"id": "skill",   "games_count": 10, "mutators": ["no_powerups"],                 "difficulty": 3, "powerups": false},
     {"id": "races",   "games_count": 5,  "categories": ["race"],                      "difficulty": 2, "powerups": true},
     {"id": "survival","games_count": 5,  "categories": ["survival", "push_out"],      "difficulty": 2, "powerups": true},
     {"id": "reflex",  "games_count": 5,  "categories": ["reaction"],                  "difficulty": 2, "powerups": false},
     {"id": "family",  "games_count": 8,  "categories": ["collect", "crates", "control", "reaction", "race"],
-      "difficulty": 0, "powerups": true, "family": true}
+      "difficulty": 0, "powerups": true, "family": true,
+      "rules": {"family": true, "round_seconds": 60, "race_laps": 1, "maximum_duration": 180}}
   ]
 }

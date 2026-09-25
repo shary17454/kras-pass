@@ -10,6 +10,9 @@ extends Camera3D
 
 enum Mode { ARENA, TOP_DOWN, ISOMETRIC, THIRD_PERSON, RACE, WORLD, CHASE, COURT }
 var local_target: Node3D
+var shared_world := false
+var shared_touch_count := 0
+var shared_hud_bottom: Callable
 
 var mode: Mode = Mode.ARENA
 var targets: Array = []
@@ -125,6 +128,9 @@ func _process(delta: float) -> void:
 	if _intro_left > 0.0:
 		_tick_intro(delta)
 		return
+	if shared_world:
+		_frame_shared_world(delta, view)
+		return
 	if mode == Mode.CHASE and is_instance_valid(local_target):
 		var heading: Vector3 = local_target.facing.normalized()
 		var subject: Vector3 = local_target.get_global_transform_interpolated().origin
@@ -145,6 +151,42 @@ func _process(delta: float) -> void:
 	_shake = maxf(0.0, _shake - _shake_decay * delta)
 	_noise_t += delta * 34.0
 	_apply(clampf(_follow_lerp * sensitivity * delta, 0.0, 1.0), delta)
+
+
+func _frame_shared_world(delta: float, view: Vector2) -> void:
+	var live := _live_targets()
+	if live.is_empty():
+		return
+	var minimum: Vector3 = live[0].global_position
+	var maximum := minimum
+	for player in live:
+		minimum = minimum.min(player.global_position)
+		maximum = maximum.max(player.global_position)
+	var centre := (minimum + maximum) * 0.5
+	var portrait := view.x < view.y
+	var aspect := view.x / maxf(view.y, 1.0)
+	var top := 0.29 if portrait else 0.20
+	if shared_hud_bottom.is_valid():
+		top = maxf(0.12, (float(shared_hud_bottom.call()) + 30.0) / view.y)
+	var bottom := 1.0
+	if shared_touch_count > 1:
+		bottom = TouchSource.party_region(view, 0, shared_touch_count).position.y / view.y
+	var safe_height := maxf(0.1, bottom - top - 0.08)
+	var width := maxf((maximum.x - minimum.x + 10.0) / 0.90,
+		(maximum.z - minimum.z + 10.0) * aspect / safe_height)
+	# A fixed, north-up shared view avoids privileging one driver's heading.
+	# Bound the zoom to the authored world, never an unbounded falling target.
+	var limit := maxf(80.0, arena.current_radius * 5.0) if arena != null else 400.0
+	width = clampf(width, 24.0, limit)
+	projection = Camera3D.PROJECTION_ORTHOGONAL
+	var target_size := width if portrait else width / aspect
+	var blend := 1.0 - exp(-5.0 * delta)
+	size = maxf(target_size, lerpf(size, target_size, blend))
+	var world_height := size / aspect if portrait else size
+	centre.z += (0.5 - (top + bottom) * 0.5) * world_height
+	focus = centre
+	global_position = centre + Vector3.UP * maxf(160.0, width)
+	look_at(centre, Vector3.FORWARD)
 
 
 ## A slow sweep around the ring at a low angle, close enough to the deck that

@@ -1,18 +1,20 @@
 # KRAS PASS — كراس باس
 
 **An original party game of competitive mini-games.**
-*كأس الألعاب الكبرى — لعبة حفلات ومنافسات مصغّرة.*
+*كراس باس: كل جولة سالفة.*
 
 Eight competitors from eight realms are pulled into the Whirl, a great vortex
-that hosts a tournament of short, chaotic contests. Twenty-one mini-games, five
+that hosts a tournament of short, chaotic contests. Thirty-nine definitions (35 standard challenges and four bosses), five
 realms of adventure, local multiplayer for up to four, and an AI that plays by
 the same rules you do.
 
-Built in **Godot 4** with **no imported assets** — every mesh, arena, sound
-effect and music loop is generated at runtime from parameters in `data/`.
-Nothing in this repository is derived from, extracted from, or modelled on any
-existing game. The name, world, characters, arenas, rules and audio are original
-to this project.
+Built in **Godot 4**, with procedural characters, arena construction, sound
+effects and music, alongside checked-in artwork and environment resources.
+The desktop renderer is Forward+; mobile uses the mobile renderer.
+
+The current local-party implementation and its release gates are tracked in
+[the product ledger](docs/party-product-2026-09-24.md). A passing structural
+validator does not certify all 39 games as release-ready.
 
 ---
 
@@ -45,11 +47,11 @@ brew install --cask godot
 # play
 godot --path .
 
-# run the automated suite (headless, ~2 minutes)
-godot --headless --fixed-fps 60 --path . tests/test_runner.tscn
+# compile and test with isolated saves, including runtime-error detection
+sh tools/check_party.sh
 
 # verify every script compiles (fast, run this after a refactor)
-godot --headless --path . tests/compile_check.tscn
+godot --headless --path . tests/compile_check.tscn -- --test-data-dir=/tmp/kras-compile
 ```
 
 **Controls**
@@ -80,15 +82,15 @@ sharyalhwaid@gmail.com.
 | | |
 |---|---|
 | Playable characters | 8, each with a distinct stat spread, silhouette, colour, victory animation and unlock condition |
-| Mini-games | 21, across 10 categories |
-| Arenas | 23, procedurally generated from 10 shape families |
+| Mini-games | 39 definitions: 35 standard challenges and 4 bosses |
+| Arenas | 34 arena definitions |
 | Adventure | 5 realms × 5 stages (4 qualifiers + 1 championship) = 25 stages |
-| Power-ups | 12, fully data-driven |
-| Achievements | 42 |
+| Power-ups | 22 definitions, data-driven |
+| Achievements | 45 |
 | Modes | Adventure, Quick Play, Tournament, Local Party, Training, Daily Challenge |
 | Languages | Arabic (RTL) and English, at full parity |
-| Input | Gamepad, two keyboard profiles, and on-screen touch with a per-game layout |
-| Replays | Every match recorded, watchable with scrub / speed / highlights |
+| Input | Gamepad, two keyboard profiles, per-game touch layouts and separate local touch regions |
+| Replays | Optional input and keyframe recording, with playback, scrub, speed and event markers; see the product ledger for limits |
 | Players | 1–4 local, human or AI in any mix |
 
 ### The mini-games
@@ -136,18 +138,17 @@ selected over Unity and Unreal because:
   of text files that any developer can clone and run.
 - **Headless CI is a first-class feature.** `godot --headless` runs the full
   game loop with no display, which is what makes the integration suite here
-  possible: every one of the 21 mini-games is actually *played* on every test
+  possible: every registered mini-game is actually *played* on every test
   run. Neither of the alternatives makes that as cheap.
 - **Native arm64 on this machine**, with export templates for macOS, Windows,
   Linux, iOS and Android from the same project.
-- **GDScript's iteration speed** suits a project that is 21 small rule-sets
+- **GDScript's iteration speed** suits a project of small rule-sets
   sharing one engine, rather than one large simulation.
 - Unreal would have been the better choice had this been a graphics-led
   product; it is not. Unity would have imposed a licence and an editor-bound
   workflow for no benefit here.
 
-Rendering uses the **mobile** renderer so the same project runs unchanged on
-desktop and on phones.
+Rendering uses **Forward+** on desktop and the **mobile** renderer on phones.
 
 ### Layout
 
@@ -172,7 +173,7 @@ src/
   camera/              ArenaCamera
   match/               MatchConfig, MatchContext, MatchPhase, MatchResult,
                        MatchScene, TournamentSession, AdventureSession
-  minigames/           MiniGameController + 21 games
+  minigames/           MiniGameController + registered game controllers
   ai/                  AIBrain + 19 specialised brains
   powerups/            PowerUpSystem, PowerUpPickup
   ui/                  UIKit, Widgets, Screen, MatchHUD, screens/
@@ -491,12 +492,13 @@ macOS, Windows, iOS and Android without shipping or licensing a font file.
 ## Tests
 
 ```bash
-godot --headless --path . tests/compile_check.tscn          # every script compiles
-godot --headless --fixed-fps 60 --path . tests/test_runner.tscn   # full suite
+sh tools/check_party.sh  # isolated saves, compilation, dependency inventory, tests, race regression
 ```
 
-The suite backs up your real profile before running and restores it afterwards.
-It exits non-zero on failure, so it can gate CI directly.
+Use the wrapper so the tests never read or overwrite the player's real files.
+It exits non-zero on test failure or GDScript errors, even when Godot exits zero.
+See [the stage-zero audit](docs/stage0-audit-2026-09-25.md) and
+[current architecture](docs/architecture.md) before starting another development stage.
 
 | Suite | Covers |
 |---|---|
@@ -504,7 +506,8 @@ It exits non-zero on failure, so it can gate CI directly.
 | `test_content` | Registry validation, content counts, character stat-budget parity, locale parity, every achievement condition type, phase-machine legality |
 | `test_save` | Atomic write/read, checksum rejection, backup recovery, garbage-file degradation, unlock rules, adventure records, completion maths, settings persistence |
 | `test_systems` | Input frame edges and replay encoding, AI profile ordering, object pooling, power-up stacking/refresh/expiry, and a walk of **every screen** asserting it builds and can reach the menu |
-| `test_matches` | **Plays all 21 mini-games to completion** with four AI competitors and asserts a valid result, a first place, no logged errors and that the bots actually moved. Plus multi-round aggregation, pause/restart/quit, controller loss and Expert-vs-Easy separation |
+| `test_matches` | Exercises registered games with four AI competitors, multi-round aggregation, pause/restart/quit, controller loss and Expert-vs-Easy separation. Some smoke runs use shortened rounds; these do not certify balance. |
+| `test_party` | Tournament scoring, optional double final, bounded tie-breaks, resume, per-profile stats, guests, four independent touch sources, control geometry, ammo variants and embedded pause settings |
 
 The QA scenarios that are checked on every run are listed in
 `docs/qa-scenarios.md`, along with the manual ones that are not.
@@ -535,15 +538,14 @@ exactly its starting value after every teardown — no leaks between matches.
 
 ## Platforms
 
-Developed and verified on **macOS (arm64)**. The project is not tied to it:
-rendering is the mobile renderer, input is device-agnostic, and there is no
-platform-specific code.
+Developed on **macOS (arm64)**. The repository also contains native Apple
+integration. Desktop checks do not establish iPhone frame times or thermals.
 
 | Target | Status |
 |---|---|
 | macOS | Verified — developed here |
 | Windows / Linux | Should build unchanged; export templates required. Not verified in this environment |
-| iOS / iPadOS | Architecture supports it (mobile renderer, touch-free UI is gamepad-navigable). Requires an Apple developer account and a touch control layer, neither of which exists here |
+| iOS / iPadOS | Touch, native Apple integration and export tooling exist. The current party changes still require a signed device build and portrait/landscape, thermal and multi-touch playtesting. |
 | Apple TV / consoles | Not claimed. Console SDKs and licences are not available in this environment |
 
 Only macOS is verified. Everything else is a supported-by-architecture claim, not
@@ -566,13 +568,15 @@ Stated plainly, because a list of caveats is more useful than an optimistic one:
    playback snaps to. Drift is bounded to a tenth of a second and the outcome
    reproduces exactly; the cost is ~2.2 KB per second (26 KB for a 12-second
    four-player round).
-3. **Art is procedural placeholder-quality by design.** The look is deliberate
-   and consistent, but these are primitives with toon shading, not authored
-   models. `MeshFactory` is the single swap point.
+3. **Art needs a per-game quality review.** Procedural characters and environments
+   are not a claim of photorealism or final art quality. `MeshFactory` is a shared
+   construction point.
 4. **Audio is synthesized.** Six music loops and ~25 effects, generated at
    runtime. They fit the game; they are not a composed soundtrack.
-5. **Touch controls do not exist.** Required before a phone release.
-6. **No cloud save**, no analytics backend, no store integration.
+5. **Four-player touch ergonomics need real-device testing.** Automated region
+   separation and desktop rendering cannot verify four people's hands on a phone.
+6. **No cloud save or online play is shipped by this party update.** Existing
+   optional Apple sign-in and purchase integrations are separate from local play.
 7. **The Daily Challenge date is local**, so a device with a wrong clock gets a
    different challenge.
 8. **Balance is first-pass.** The stat budgets are equal and the AI tiers are

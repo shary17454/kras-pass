@@ -7,6 +7,7 @@ extends Node
 ## under stingers.
 
 const SFX_VOICES := 16
+const SFX_ALIASES := {"shoot": "cannon_fire", "victory": "win"}
 const W := Synth.Wave
 
 var _sfx_players: Array[AudioStreamPlayer] = []
@@ -27,6 +28,10 @@ var _next_voice := 0
 var _fade_tween: Tween
 var enabled := true
 var _suspended := false
+var _duck_gain := 1.0
+var _duck_tween: Tween
+var _last_announcement := ""
+var _announcement_at := -10.0
 
 ## Minimum gap between two triggers of the same sfx, in seconds. Stops a
 ## four-way pile-up from producing a wall of identical hit sounds.
@@ -75,6 +80,8 @@ func _ensure_buses() -> void:
 func _on_setting_changed(key: String, _value) -> void:
 	if key.begins_with("volume") or key in ["music_enabled", "*"]:
 		_apply_volumes()
+	if key in ["volume_master", "volume_announcer", "announcer_enabled", "language", "*"]:
+		stop_announcer()
 
 
 ## Silence everything while backgrounded without touching the player's
@@ -85,6 +92,7 @@ func set_suspended(value: bool) -> void:
 	_suspended = value
 	_apply_volumes()
 	if value:
+		stop_announcer()
 		for p in _sfx_players:
 			p.stop()
 		if is_instance_valid(_ui_player):
@@ -101,7 +109,7 @@ func _apply_volumes() -> void:
 			_set_bus_db(name, 0.0)
 		return
 	_set_bus_db("Master", 1.0)
-	_set_bus_db("Music", UserSettings.volume_linear("music"))
+	_set_bus_db("Music", UserSettings.volume_linear("music") * _duck_gain)
 	_set_bus_db("SFX", UserSettings.volume_linear("sfx"))
 	_set_bus_db("UI", UserSettings.volume_linear("ui"))
 
@@ -217,6 +225,7 @@ func _render_ambience(id: String):
 
 
 func stop_music(fade := 0.8) -> void:
+	stop_announcer()
 	_current_track = ""
 	if not enabled:
 		return
@@ -235,16 +244,49 @@ func current_track() -> String:
 func duck(amount_db := -10.0, duration := 1.5) -> void:
 	if not enabled:
 		return
-	var idx := AudioServer.get_bus_index("Music")
-	var base := AudioServer.get_bus_volume_db(idx)
-	AudioServer.set_bus_volume_db(idx, base + amount_db)
-	await get_tree().create_timer(duration).timeout
-	AudioServer.set_bus_volume_db(idx, base)
+	if _duck_tween != null and _duck_tween.is_valid():
+		_duck_tween.kill()
+	_duck_gain = db_to_linear(clampf(amount_db, -40.0, 0.0))
+	_apply_volumes()
+	_duck_tween = create_tween()
+	_duck_tween.tween_interval(maxf(0.0, duration))
+	_duck_tween.tween_method(func(value: float):
+		_duck_gain = value
+		_apply_volumes(), _duck_gain, 1.0, 0.2)
+
+
+func announcement_request(key: String, language: String, voices: PackedStringArray) -> Dictionary:
+	var volume := clampi(roundi(UserSettings.volume_linear("announcer") * 100), 0, 100)
+	if volume == 0 or voices.is_empty() or not Loc.has(key) or not language in ["ar", "en"]:
+		return {}
+	return {"text": Loc.t(key), "voice": voices[0], "volume": volume}
+
+
+func announce(key: String) -> void:
+	if not enabled or _suspended or not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	if key == _last_announcement and now - _announcement_at < 2.0:
+		return
+	var language := String(UserSettings.get_value("language"))
+	var request := announcement_request(key, language, DisplayServer.tts_get_voices_for_language(language))
+	if request.is_empty():
+		return
+	_last_announcement = key
+	_announcement_at = now
+	DisplayServer.tts_speak(request["text"], request["voice"], request["volume"], 1.0, 1.05, 0, true)
+	duck(-8.0, 1.8)
+
+
+func stop_announcer() -> void:
+	if enabled and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		DisplayServer.tts_stop()
 
 
 # --- banks -----------------------------------------------------------------
 
 func _sound(id: String) -> AudioStreamWAV:
+	id = SFX_ALIASES.get(id, id)
 	if _bank.has(id):
 		return _bank[id]
 	var buf = _render_sfx(id)
@@ -501,3 +543,6 @@ func warm_match_bank() -> void:
 			"rumble", "gust", "cannon_fire"]:
 		_sound(id)
 	_ambience_stream("atv_engine")
+	# Synthesize before gameplay, not on the first final-seconds frame.
+	_track("tension")
+	_track("victory")

@@ -19,6 +19,9 @@ var _host: Node
 func run(t: TestHarness, host: Node) -> void:
 	_host = host
 	t.suite("matches (integration)")
+	if "--difficulty-only" in OS.get_cmdline_user_args():
+		await _difficulty_separation(t)
+		return
 	t.test("high refresh presentation does not accelerate physics")
 	t.equal(UserSettings.frame_limit_for_display(120, 120.0), 120, "120 Hz screens can request 120 frames")
 	t.equal(UserSettings.frame_limit_for_display(120, 60.0), 60, "60 Hz screens are not forced to render 120 frames")
@@ -552,10 +555,12 @@ func _difficulty_separation(t: TestHarness) -> void:
 		t.test("expert AI out-scores easy AI in %s" % game)
 		var expert_total := 0
 		var easy_total := 0
-		for i in 4:
+		# Collection scores over 12 seconds are dominated by the first pickup
+		# cluster. Use eight mirrored samples with time to make real decisions.
+		for i in 8:
 			var expert_first := i % 2 == 0
 			var cfg := MatchConfig.build(game, same, 0, PlayerConfig.Difficulty.EASY, 100 + i * 37)
-			cfg.duration_override = 12.0
+			cfg.duration_override = 30.0
 			cfg.rounds = 1
 			cfg.allow_powerups = false   # remove the biggest source of variance
 			for slot in 4:
@@ -573,7 +578,7 @@ func _difficulty_separation(t: TestHarness) -> void:
 				else:
 					easy_total += result.score_of(slot)
 		t.greater(expert_total, easy_total,
-			"%s: expert competitors out-score easy ones across four mirrored seeds" % game)
+			"%s: expert competitors out-score easy ones across eight mirrored seeds" % game)
 
 
 ## Three rules of Rocket Rally that a "the match completed" test cannot see.

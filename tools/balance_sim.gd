@@ -16,7 +16,7 @@ extends Node
 ## Characters are rotated through slots between runs, so a character advantage
 ## and a slot advantage cannot be mistaken for each other.
 
-const OUT_DIR := "build/balance"
+var out_dir := "build/balance"
 const ROUND_SECONDS := 14.0
 const MAX_TICKS := 60 * 120
 ## A deliberately combined, over-stuffed set — heavier than any real preset —
@@ -41,7 +41,7 @@ var _log: FileAccess
 
 func _ready() -> void:
 	_parse_args()
-	_log = FileAccess.open("user://balance_progress.txt", FileAccess.WRITE)
+	_log = FileAccess.open(SaveSystem.storage_root.path_join("balance_progress.txt"), FileAccess.WRITE)
 	_say("start runs=%d only=%s" % [runs, only])
 	_started = Time.get_ticks_msec()
 	# Shorter pre-round cards: this is a simulation, not a demo.
@@ -67,7 +67,7 @@ func _ready() -> void:
 			def.id, "ok" if mrow["mutated_ok"] else "FAIL", "ok" if mrow["chaos_ok"] else "FAIL",
 			"   ⚠ " + ", ".join(mrow["flags"]) if not mrow["flags"].is_empty() else ""])
 	_write_reports()
-	print("\nfinished in %.1fs — %s/report.html" % [(Time.get_ticks_msec() - _started) / 1000.0, OUT_DIR])
+	print("\nfinished in %.1fs — %s/report.html" % [(Time.get_ticks_msec() - _started) / 1000.0, out_dir])
 	get_tree().quit(0 if _worst_severity() < 2 else 1)
 
 
@@ -83,6 +83,8 @@ func _parse_args() -> void:
 			runs = maxi(2, int(arg.split("=")[1]))
 		elif arg.begins_with("--only="):
 			only = arg.split("=")[1]
+		elif arg.begins_with("--out-dir="):
+			out_dir = arg.trim_prefix("--out-dir=")
 
 
 func _games() -> Array[MiniGameDef]:
@@ -294,7 +296,10 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	scene.setup({"config": cfg, "on_finished": func(r): captured.append(r)})
 	var tree := get_tree()
 	var guard := 0
-	while captured.is_empty() and guard < MAX_TICKS:
+	# Finish-line races deliberately ignore the ordinary round timer. Give a
+	# three-lap race its real window instead of marking every long race stuck.
+	var max_ticks := 60 * 600 if cfg.definition().category == MiniGameDef.Category.RACE else MAX_TICKS
+	while captured.is_empty() and guard < max_ticks:
 		await tree.physics_frame
 		guard += 1
 	scene.teardown()
@@ -392,7 +397,7 @@ func _flags(def: MiniGameDef, row: Dictionary) -> Array:
 		flags.append("character advantage")
 	if int(row["zero_score_runs"]) > 0 and def.scoring == MiniGameDef.Scoring.POINTS:
 		flags.append("%d run(s) scored nothing" % int(row["zero_score_runs"]))
-	if float(row["avg_duration"]) < 3.0:
+	if int(row["runs"]) > 0 and float(row["avg_duration"]) < 3.0:
 		flags.append("ends almost immediately")
 	if float(row["expert_edge"]) < 0.52:
 		flags.append("expert bots no better than easy")
@@ -421,8 +426,8 @@ func _worst_severity() -> int:
 # --- output ----------------------------------------------------------------
 
 func _write_reports() -> void:
-	DirAccess.make_dir_recursive_absolute(OUT_DIR)
-	var json := FileAccess.open("%s/report.json" % OUT_DIR, FileAccess.WRITE)
+	DirAccess.make_dir_recursive_absolute(out_dir)
+	var json := FileAccess.open("%s/report.json" % out_dir, FileAccess.WRITE)
 	if json != null:
 		json.store_string(JSON.stringify({
 			"generated": Time.get_datetime_string_from_system(),
@@ -432,7 +437,7 @@ func _write_reports() -> void:
 			"mutator_smoke": _mutator_report,
 		}, "  "))
 		json.close()
-	var html := FileAccess.open("%s/report.html" % OUT_DIR, FileAccess.WRITE)
+	var html := FileAccess.open("%s/report.html" % out_dir, FileAccess.WRITE)
 	if html != null:
 		html.store_string(_html())
 		html.close()

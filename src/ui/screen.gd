@@ -62,6 +62,9 @@ func title(text: String, show_back := true) -> void:
 
 func go_back() -> void:
 	AudioManager.play_ui("ui_back")
+	if args.get("close_callback") is Callable:
+		args["close_callback"].call()
+		return
 	SceneRouter.back(back_target)
 
 

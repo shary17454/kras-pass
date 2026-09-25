@@ -193,6 +193,11 @@ func _apply_character() -> void:
 	knock_power = float(t.get("power_base", 0.72)) + float(t.get("power_range", 0.7)) * d.power
 	turn_rate = float(t.get("turn_base", 7.0)) + float(t.get("turn_range", 10.0)) * d.control
 	air_control = float(t.get("air_base", 0.28)) + float(t.get("air_range", 0.4)) * d.control
+	acceleration *= d.perk_factor("acceleration")
+	jump_velocity *= d.perk_factor("jump")
+	turn_rate *= d.perk_factor("turn")
+	air_control *= d.perk_factor("air_control")
+	knock_resist *= d.perk_factor("resistance")
 	if locomotion == Locomotion.DRIVE:
 		top_speed *= float(t.get("drive_speed_mult", 1.5))
 		acceleration *= float(t.get("drive_accel_mult", 0.55))
@@ -383,6 +388,8 @@ func _do_dash(frame: InputFrame) -> void:
 	_impulse += dir * float(t.get("dash_impulse", 15.0)) * float(mods["speed"])
 	_dash_cd = float(t.get("dash_cooldown", 0.85)) / maxf(0.2, float(mods["dash"]))
 	_dash_time = float(t.get("dash_duration", 0.22))
+	if data != null:
+		_dash_time *= data.perk_factor("boost")
 	_invuln = maxf(_invuln, float(t.get("dash_invuln", 0.1)))
 	facing = dir
 	# Stretch along the launch, the other half of squash-and-stretch: the body
@@ -439,8 +446,8 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	_impulse.y += push * float(_tuning.get("knock_lift", 0.22))
 	damage_percent += damage
 	health -= damage
-	_stun = maxf(_stun, float(_tuning.get("hit_stun", 0.16)))
-	_invuln = maxf(_invuln, float(_tuning.get("hit_invuln", 0.12)))
+	_stun = maxf(_stun, float(_tuning.get("hit_stun", 0.16)) * (data.perk_factor("recovery") if data != null else 1.0))
+	_invuln = maxf(_invuln, float(_tuning.get("hit_invuln", 0.12)) * (data.perk_factor("invulnerability") if data != null else 1.0))
 	_hitstop = float(_tuning.get("hitstop", 0.05))
 	# An environmental knock — bumper, sweeper, blast — has no owner, and
 	# claiming the victim for nobody erases the shove that put them there. In

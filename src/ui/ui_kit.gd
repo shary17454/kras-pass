@@ -241,17 +241,20 @@ static func checkbox(text: String, pressed: bool) -> CheckButton:
 
 
 ## Labelled row that mirrors correctly in Arabic.
-static func row(label_text: String, control: Control) -> HBoxContainer:
-	var h := HBoxContainer.new()
+static func row(label_text: String, control: Control) -> BoxContainer:
+	var h := BoxContainer.new()
 	h.add_theme_constant_override("separation", 18)
 	var l := label(label_text)
-	l.custom_minimum_size = Vector2(390 * scale(), 0)
+	l.custom_minimum_size = Vector2(180 * scale(), 0)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.size_flags_horizontal = Control.SIZE_SHRINK_END
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var fit := func():
 		var portrait := h.get_viewport_rect().size.x < h.get_viewport_rect().size.y
-		l.custom_minimum_size.x = (200 if portrait else 390) * scale()
+		h.vertical = portrait
+		l.custom_minimum_size.x = 0 if portrait else 180 * scale()
+		control.size_flags_horizontal = Control.SIZE_EXPAND_FILL if portrait else Control.SIZE_SHRINK_END
+		h.move_child(l, 0 if portrait or not Loc.is_rtl() else 1)
 	h.tree_entered.connect(func():
 		h.get_viewport().size_changed.connect(fit)
 		fit.call())
@@ -267,14 +270,19 @@ static func row(label_text: String, control: Control) -> HBoxContainer:
 
 
 static func stat_bar(value: float, color: Color, width: float = 220.0) -> Control:
-	var back := PanelContainer.new()
-	back.add_theme_stylebox_override("panel", stylebox(Color(1, 1, 1, 0.10), 8))
-	back.custom_minimum_size = Vector2(width * scale(), 16)
-	var fill := PanelContainer.new()
-	fill.add_theme_stylebox_override("panel", stylebox(adapt(color), 8))
-	fill.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	fill.custom_minimum_size = Vector2(maxf(6.0, width * scale() * clampf(value, 0.0, 1.0)), 16)
-	back.add_child(fill)
+	var back := ProgressBar.new()
+	back.show_percentage = false
+	back.max_value = 1.0
+	back.value = clampf(value, 0.0, 1.0)
+	for entry in [["background", Color(1, 1, 1, 0.10)], ["fill", adapt(color)]]:
+		var style := stylebox(entry[1], 8)
+		style.content_margin_left = 0
+		style.content_margin_right = 0
+		style.content_margin_top = 0
+		style.content_margin_bottom = 0
+		back.add_theme_stylebox_override(entry[0], style)
+	back.custom_minimum_size = Vector2(width * scale() if width <= 300 else 0, 16)
+	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return back
 
 

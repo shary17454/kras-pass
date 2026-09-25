@@ -43,10 +43,17 @@ var _inset_left := 0.0
 var _inset_right := 0.0
 var _inset_bottom := 0.0
 var _font: Font
+var touch_index := 0
+var touch_count := 1
+var editing := false
+var _editing_id := ""
+var _edit_point := Vector2.ZERO
 
 
-func setup(player_slot: int, def: MiniGameDef) -> void:
+func setup(player_slot: int, def: MiniGameDef, index_in_group := 0, group_size := 1) -> void:
 	slot = player_slot
+	touch_index = index_in_group
+	touch_count = clampi(group_size, 1, 4)
 	profile = def.control_profile
 	buttons = ControlProfile.buttons_for(profile, def.control_hints)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -76,11 +83,30 @@ func _fit_to_viewport() -> void:
 	_inset_left = insets.x
 	_inset_right = insets.z
 	_inset_bottom = insets.w
+	if touch_count > 1:
+		var region := party_region(size, touch_index, touch_count)
+		position = region.position
+		size = region.size
+		_inset_left = 0.0
+		_inset_right = 0.0
+		_inset_bottom = 0.0
+		_scale = minf(float(UserSettings.get_value("touch_scale")), minf(size.x / 700.0, size.y / 550.0))
+	InputRouter.push_virtual(slot, Vector2.ZERO, Vector2.ZERO, 0)
 	queue_redraw()
+
+
+static func party_region(viewport_size: Vector2, index: int, count: int) -> Rect2:
+	var columns := mini(2, count) if viewport_size.x < viewport_size.y else count
+	var rows := ceili(float(count) / columns)
+	var height := viewport_size.y * (0.21 if rows > 1 else 0.30)
+	var width := viewport_size.x / columns
+	return Rect2(Vector2((index % columns) * width, viewport_size.y - rows * height + int(index / columns) * height), Vector2(width, height))
 
 
 func _read_settings() -> void:
 	_scale = float(UserSettings.get_value("touch_scale"))
+	if touch_count > 1 and size.x > 0 and size.y > 0:
+		_scale = minf(_scale, minf(size.x / 700.0, size.y / 550.0))
 	_opacity = float(UserSettings.get_value("touch_opacity"))
 	_left_handed = bool(UserSettings.get_value("touch_left_handed"))
 	_haptics = bool(UserSettings.get_value("vibration"))
@@ -106,15 +132,15 @@ static func should_show() -> bool:
 # --- geometry --------------------------------------------------------------
 
 func _left_edge() -> float:
-	return EDGE_MARGIN + _inset_left
+	return (EDGE_MARGIN if touch_count == 1 else 12.0) + _inset_left
 
 
 func _right_edge() -> float:
-	return size.x - EDGE_MARGIN - _inset_right
+	return size.x - (EDGE_MARGIN if touch_count == 1 else 12.0) - _inset_right
 
 
 func _bottom_edge() -> float:
-	return size.y - EDGE_MARGIN - _inset_bottom
+	return size.y - (EDGE_MARGIN if touch_count == 1 else 12.0) - _inset_bottom
 
 
 func _move_on_right() -> bool:
@@ -135,6 +161,10 @@ func _keeper_button_on_right(action: String) -> bool:
 
 
 func _stick_centre() -> Vector2:
+	return _layout_position("move", _default_stick_centre(), STICK_RADIUS * _scale * ControlProfile.stick_scale(profile))
+
+
+func _default_stick_centre() -> Vector2:
 	var r := STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)
 	var x := _left_edge() + r
 	if _move_on_right():
@@ -143,6 +173,10 @@ func _stick_centre() -> Vector2:
 
 
 func _aim_centre() -> Vector2:
+	return _layout_position("aim", _default_aim_centre(), STICK_RADIUS * _scale)
+
+
+func _default_aim_centre() -> Vector2:
 	var r := STICK_RADIUS * _scale
 	var x := _right_edge() - r
 	if _left_handed:
@@ -152,7 +186,19 @@ func _aim_centre() -> Vector2:
 
 ## Buttons fan out in an arc away from the stick hand.
 func _button_centre(index: int) -> Vector2:
+	return _layout_position("button_" + buttons[index], _default_button_centre(index), BUTTON_RADIUS * _scale)
+
+
+func _default_button_centre(index: int) -> Vector2:
 	var r := BUTTON_RADIUS * _scale
+	if touch_count > 1:
+		if ControlProfile.shows_aim_stick(profile) or ControlProfile.shows_steering(profile):
+			return Vector2(size.x * 0.5 + (index - (buttons.size() - 1) * 0.5) * r * 2.3, 40.0 + r)
+		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
+		if buttons.size() > 2:
+			x += (index % 2) * r * 2.2 * (1.0 if _move_on_right() else -1.0)
+			return Vector2(x, _bottom_edge() - r - int(index / 2) * r * 2.2)
+		return Vector2(x, _bottom_edge() - r - index * r * 2.2)
 	if profile == ControlProfile.Kind.ATV:
 		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
 		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
@@ -213,20 +259,26 @@ func _button_hit(pos: Vector2) -> int:
 # --- input -----------------------------------------------------------------
 
 func _input(event: InputEvent) -> void:
+	if editing:
+		_edit_input(event)
+		return
 	if event is InputEventScreenTouch:
-		_handle_press(event.index, event.position, event.pressed)
-		get_viewport().set_input_as_handled()
+		_handle_press(event.index, event.position - global_position, event.pressed)
+		if _owners.has(event.index):
+			get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag:
-		_handle_drag(event.index, event.position)
+		_handle_drag(event.index, event.position - global_position)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		_handle_press(-1, event.position, event.pressed)
+		_handle_press(-1, event.position - global_position, event.pressed)
 	elif event is InputEventMouseMotion and _owners.has(-1):
-		_handle_drag(-1, event.position)
+		_handle_drag(-1, event.position - global_position)
 
 
 func _handle_press(index: int, pos: Vector2, pressed: bool) -> void:
 	if not pressed:
 		_release(index)
+		return
+	if not Rect2(Vector2.ZERO, size).has_point(pos):
 		return
 	var full := ControlProfile.full_screen_tap(profile)
 	if full != 0:
@@ -256,6 +308,10 @@ func _handle_press(index: int, pos: Vector2, pressed: bool) -> void:
 	# thumb that lands slightly off should still grab the stick.
 	var mid := size.x * 0.5
 	var on_stick_side := (pos.x < mid) != _move_on_right()
+	var layouts: Dictionary = UserSettings.get_value("touch_positions")
+	if touch_count == 1 and layouts.has(layout_key()):
+		on_stick_side = not ControlProfile.shows_aim_stick(profile) or \
+			pos.distance_squared_to(_stick_centre()) <= pos.distance_squared_to(_aim_centre())
 	if ControlProfile.shows_move_stick(profile) and on_stick_side:
 		if _owners_has("move"):
 			return
@@ -317,7 +373,7 @@ func _release(index: int) -> void:
 func _stick_vector(origin: Vector2, pos: Vector2) -> Vector2:
 	var r := STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)
 	var v := (pos - origin) / r
-	if v.length() < STICK_DEAD:
+	if v.length() < clampf(float(UserSettings.get_value("touch_dead_zone")), 0.05, 0.4):
 		return Vector2.ZERO
 	return v.limit_length(1.0)
 
@@ -353,12 +409,99 @@ func _pulse() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if editing:
+		return
 	var move := _move
 	if ControlProfile.shows_steering(profile):
 		# Steering games read x as turn and y as throttle; forward is -y, the
 		# same convention a keyboard "up" produces.
 		move = Vector2(_steer, -_throttle)
 	InputRouter.push_virtual(slot, move, _aim, _bits)
+
+
+func layout_key() -> String:
+	return "%d:%s" % [profile, "portrait" if size.x < size.y else "landscape"]
+
+
+func _layout_position(id: String, fallback: Vector2, radius: float) -> Vector2:
+	if touch_count > 1:
+		return fallback
+	if editing and _editing_id == id:
+		return _edit_point
+	var layouts = UserSettings.get_value("touch_positions")
+	var layout = layouts.get(layout_key(), {}) if layouts is Dictionary else {}
+	var point = layout.get(id, []) if layout is Dictionary else []
+	if not point is Array or point.size() != 2:
+		return fallback
+	return _clamp_control(Vector2(float(point[0]), float(point[1])) * size, radius)
+
+
+func _clamp_control(point: Vector2, radius: float) -> Vector2:
+	return Vector2(clampf(point.x, radius + 16, maxf(radius + 16, size.x - radius - 16)),
+		clampf(point.y, maxf(radius + 16, size.y * 0.3), maxf(radius + 16, size.y - radius - 24)))
+
+
+func editable_controls() -> Dictionary:
+	var controls := {}
+	if ControlProfile.shows_move_stick(profile):
+		controls["move"] = {"point": _stick_centre(), "radius": STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)}
+	if ControlProfile.shows_aim_stick(profile):
+		controls["aim"] = {"point": _aim_centre(), "radius": STICK_RADIUS * _scale}
+	for i in buttons.size():
+		controls["button_" + buttons[i]] = {"point": _button_centre(i), "radius": BUTTON_RADIUS * _scale}
+	return controls
+
+
+func save_control_position(id: String, point: Vector2) -> bool:
+	var controls := editable_controls()
+	if not controls.has(id) or size.x <= 0 or size.y <= 0:
+		return false
+	var radius := float(controls[id]["radius"])
+	var clamped := _clamp_control(point, radius)
+	for other in controls:
+		if other != id and clamped.distance_to(controls[other]["point"]) < radius + float(controls[other]["radius"]) + 12.0:
+			return false
+	var layouts: Dictionary = UserSettings.get_value("touch_positions").duplicate(true)
+	var layout: Dictionary = layouts.get(layout_key(), {})
+	layout[id] = [clamped.x / size.x, clamped.y / size.y]
+	layouts[layout_key()] = layout
+	UserSettings.set_value("touch_positions", layouts)
+	return true
+
+
+func _edit_input(event: InputEvent) -> void:
+	var pressed := false
+	var released := false
+	var point := Vector2.ZERO
+	if event is InputEventScreenTouch:
+		pressed = event.pressed
+		released = not pressed
+		point = event.position - global_position
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		pressed = event.pressed
+		released = not pressed
+		point = event.position - global_position
+	elif event is InputEventScreenDrag or event is InputEventMouseMotion:
+		point = event.position - global_position
+	else:
+		return
+	if pressed:
+		for id in editable_controls():
+			var target: Dictionary = editable_controls()[id]
+			if point.distance_to(target["point"]) <= float(target["radius"]):
+				_editing_id = id
+				_edit_point = point
+				break
+	if _editing_id.is_empty():
+		return
+	var radius := float(editable_controls()[_editing_id]["radius"])
+	_edit_point = _clamp_control(point, radius)
+	if released:
+		var id := _editing_id
+		_editing_id = ""
+		save_control_position(id, _edit_point)
+	get_viewport().set_input_as_handled()
+	queue_redraw()
 
 
 # --- drawing ---------------------------------------------------------------
@@ -369,11 +512,14 @@ func _draw() -> void:
 	var a := clampf(_opacity, 0.05, 1.0)
 	var ink := Color(1, 1, 1, a)
 	var fill := Color(1, 1, 1, a * 0.14)
+	if touch_count > 1:
+		draw_line(Vector2.ZERO, Vector2(size.x, 0), ink, 2.0)
+		_label("P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[slot]], Vector2(size.x * 0.5, 24), Color.WHITE, 24)
 
 	if ControlProfile.full_screen_tap(profile) != 0:
 		var active := _bits != 0
 		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, a * (0.16 if active else 0.05)))
-		_label(Loc.t("touch.tap_anywhere"), size * 0.5, ink, 42)
+		_label(Loc.t("touch.tap_anywhere"), size * 0.5, ink, 42, size.x - 24)
 		return
 
 	if ControlProfile.shows_steering(profile):
@@ -384,7 +530,7 @@ func _draw() -> void:
 			var r: Rect2 = rects[i]
 			draw_rect(r, Color(1, 1, 1, a * (0.22 if states[i] else 0.10)), true)
 			draw_rect(r, ink, false, 3.0)
-			_label(glyphs[i], r.get_center(), ink, 52)
+			_label(glyphs[i], r.get_center(), ink, mini(52, int(r.size.y * 0.65)), r.size.x - 12)
 	elif ControlProfile.shows_move_stick(profile):
 		_draw_stick(_stick_centre() if not _owners_has("move") else _move_origin,
 			_move_knob if _owners_has("move") else _stick_centre(), ink, fill,
@@ -418,8 +564,8 @@ func _draw() -> void:
 		var edge := Color(1, 1, 1, a * 0.95)
 		draw_circle(c, br, body)
 		draw_arc(c, br, 0.0, TAU, 36, edge, 4.0, true)
-		_label(_glyph(buttons[i]), c - Vector2(0, br * 0.22), Color.WHITE, 40)
-		_label(_action_name(buttons[i]), c + Vector2(0, br * 0.43), Color.WHITE, 34)
+		_label(_glyph(buttons[i]), c - Vector2(0, br * 0.22), Color.WHITE, mini(40, int(br * 0.85)))
+		_label(_action_name(buttons[i]), c + Vector2(0, br * 0.43), Color.WHITE, mini(34, int(br * 0.65)), br * 1.65)
 		if down:
 			draw_arc(c, br - 6.0, 0.0, TAU, 36, tint, 5.0, true)
 
@@ -439,10 +585,13 @@ func _owners_has(kind: String) -> bool:
 	return false
 
 
-func _label(text: String, centre: Vector2, color: Color, size_px: int) -> void:
+func _label(text: String, centre: Vector2, color: Color, size_px: int, max_width := -1.0) -> void:
 	if _font == null:
 		return
 	var w := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x
+	while max_width > 0 and w > max_width and size_px > 8:
+		size_px -= 1
+		w = _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x
 	draw_string(_font, centre + Vector2(-w * 0.5, size_px * 0.36), text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, color)
 

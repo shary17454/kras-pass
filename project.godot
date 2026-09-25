@@ -14,7 +14,12 @@ config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://assets/app_store/icons/Icon-1024.png"
 boot_splash/show_image=false
 
+[audio]
+
+general/text_to_speech=true
+
 [autoload]
+
 
 Log="*res://src/core/logger.gd"
 Balance="*res://src/core/balance.gd"

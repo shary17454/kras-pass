@@ -11,6 +11,27 @@ func run(t: TestHarness) -> void:
 	_localization(t)
 	_achievement_conditions(t)
 	_state_machine(t)
+	_audio_references(t)
+
+
+func _audio_references(t: TestHarness) -> void:
+	t.test("literal gameplay sound references resolve to an audio stream")
+	var calls := RegEx.new()
+	calls.compile('AudioManager\\.play_sfx\\("([a-z_]+)"')
+	var sounds := {}
+	var folders: Array[String] = ["res://src"]
+	while not folders.is_empty():
+		var folder: String = folders.pop_back()
+		for child in DirAccess.get_directories_at(folder):
+			folders.append(folder.path_join(child))
+		for file in DirAccess.get_files_at(folder):
+			if not file.ends_with(".gd"):
+				continue
+			var path := folder.path_join(file)
+			for call in calls.search_all(FileAccess.get_file_as_string(path)):
+				sounds[call.get_string(1)] = path
+	for id in sounds:
+		t.not_null(AudioManager._sound(id), "%s used by %s exists" % [id, sounds[id]])
 
 
 func _registry(t: TestHarness) -> void:
@@ -127,6 +148,7 @@ func _known_type(type_name: String) -> bool:
 		"expert_wins", "flawless_wins", "win_streak", "characters_unlocked",
 		"games_unlocked", "completion", "play_hours", "all_minigames_won",
 		"adventure_complete", "game_wins", "game_best",
+		"comeback_cups", "no_fall_wins",
 	]
 
 
