@@ -10,10 +10,13 @@ func build() -> void:
 			var game := games[randi_range(0, games.size() - 1)]
 			SceneRouter.go_to("quick_play", {"game_id": game.id, "random_arena": true}))
 	body.add_child(random)
-	var parts := Widgets.scroll_grid(3)
-	var scroll: ScrollContainer = parts[0]
-	var grid: GridContainer = parts[1]
-	body.add_child(scroll)
+	# Screen.setup() already wraps body in a ScrollContainer. A second one here
+	# expands to the full list height and traps touch drags over the cards.
+	var grid := GridContainer.new()
+	grid.add_theme_constant_override("h_separation", 24)
+	grid.add_theme_constant_override("v_separation", 24)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(grid)
 	var fit := func(): grid.columns = 1 if get_viewport_rect().size.x < get_viewport_rect().size.y else 3
 	get_viewport().size_changed.connect(fit)
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit))
