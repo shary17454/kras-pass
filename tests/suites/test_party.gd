@@ -3,6 +3,7 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("local party core")
+	_network_boundary(t)
 	_tournaments(t)
 	_cup_tournaments(t)
 	_saves(t)
@@ -29,6 +30,27 @@ func _session(count := 3) -> TournamentSession:
 	var session := TournamentSession.new()
 	session.setup(_players(), games, 912)
 	return session
+
+
+func _network_boundary(t: TestHarness) -> void:
+	t.test("unavailable online transport cannot masquerade as a room")
+	Net.leave()
+	t.ok(not Net.online_available, "network transport remains explicitly unavailable")
+	t.ok(not Net.host_online(), "online host cannot start without a transport")
+	t.ok(not Net.join_online("ABCDE"), "online join cannot succeed without a transport")
+	t.equal(Net.state, Net.State.OFFLINE, "failed online calls leave no fake lobby")
+	t.equal(Net.room_code, "", "offline session does not issue a room code")
+	t.test("local lobby enforces capacity, readiness and match roster")
+	Net.host_local(2)
+	var second := Net.add_local_participant("local.player")
+	t.ok(second > 0, "a second local seat joins")
+	t.equal(Net.add_local_participant("local.extra"), -1, "lobby rejects a participant beyond capacity")
+	var cfg := MatchConfig.build("ring_rumble", ["nabta", "sakhra"], 2, 1, 22)
+	t.ok(not Net.request_start(cfg), "host cannot start while a seat is not ready")
+	Net.set_ready(second, true)
+	t.ok(Net.request_start(cfg), "ready local roster starts a valid match")
+	t.equal(Net.state, Net.State.IN_MATCH, "successful start advances the session")
+	Net.leave()
 
 
 func _tournaments(t: TestHarness) -> void:

@@ -1,16 +1,10 @@
 extends Node
 ## Online play abstraction. Autoload name: `Net`.
 ##
-## The online transport is deliberately *not* implemented in 1.0 — shipping a
-## half-working netcode would destabilise the local game, which is the product.
-## What is implemented is the seam: a session model, room codes, ready state,
-## lobby synchronisation and an input-frame transport contract, with a working
-## `LocalBackend` that satisfies the whole interface in single-machine play.
-##
-## Because every actor is driven by `InputFrame`s (see `InputRouter`), turning
-## this on means implementing `_send_inputs`/`_receive_inputs` against
-## ENetMultiplayerPeer or WebRTC and flipping `backend`. Nothing in the
-## mini-games, AI or match layer changes.
+## Lobby/session primitives for local development. There is no online transport
+## or room-code service in this build; never report this local state as a
+## networked room. Actors already consume InputFrames, but packet authority,
+## matchmaking, reconnect and relay service still require a real backend.
 
 signal session_state_changed(state: int)
 signal peer_joined(peer: Dictionary)
@@ -22,9 +16,6 @@ signal connection_lost(reason: String)
 
 enum State { OFFLINE, HOSTING, JOINING, LOBBY, IN_MATCH, DISCONNECTED }
 enum Mode { LOCAL, ONLINE_HOST, ONLINE_CLIENT }
-
-const ROOM_CODE_LENGTH := 5
-const ROOM_ALPHABET := "ACDEFGHJKLMNPQRTUVWXY3456789"  # no ambiguous glyphs
 
 var state: State = State.OFFLINE
 var mode: Mode = Mode.LOCAL
@@ -46,6 +37,7 @@ func reset() -> void:
 	state = State.OFFLINE
 	mode = Mode.LOCAL
 	room_code = ""
+	lobby_config.clear()
 	peers.clear()
 	is_host = true
 	local_peer_id = 1
@@ -61,8 +53,8 @@ func host_local(max_players: int = 4) -> void:
 	reset()
 	mode = Mode.LOCAL
 	is_host = true
-	room_code = _generate_code()
-	lobby_config = {"max_players": max_players, "game": "", "rounds": 1, "difficulty": 1}
+	var capacity := clampi(max_players, 1, 4)
+	lobby_config = {"max_players": capacity, "game": "", "rounds": 1, "difficulty": 1}
 	_add_peer(1, "player.you", true)
 	_set_state(State.LOBBY)
 
@@ -93,13 +85,23 @@ func _set_state(s: State) -> void:
 # --- lobby -----------------------------------------------------------------
 
 func add_local_participant(name_key: String) -> int:
-	var id := peers.size() + 1
+	if state != State.LOBBY or mode != Mode.LOCAL or peers.size() >= int(lobby_config.get("max_players", 4)):
+		return -1
+	var id := 1
+	while peers.has(id):
+		id += 1
 	_add_peer(id, name_key, false)
 	return id
 
 
 func _add_peer(id: int, name_key: String, ready: bool) -> void:
-	peers[id] = {"id": id, "name": name_key, "ready": ready, "character": "", "slot": peers.size()}
+	var used_slots := {}
+	for peer in peers.values():
+		used_slots[int(peer["slot"])] = true
+	var slot := 0
+	while used_slots.has(slot):
+		slot += 1
+	peers[id] = {"id": id, "name": name_key, "ready": ready, "character": "", "slot": slot}
 	peer_joined.emit(peers[id])
 
 
@@ -115,7 +117,7 @@ func remove_peer(id: int) -> void:
 
 
 func set_ready(id: int, ready: bool) -> void:
-	if not peers.has(id):
+	if state != State.LOBBY or not peers.has(id):
 		return
 	peers[id]["ready"] = ready
 	peer_ready_changed.emit(id, ready)
@@ -135,9 +137,25 @@ func set_lobby_config(cfg: Dictionary) -> void:
 	lobby_config_changed.emit(lobby_config)
 
 
-func request_start(config: MatchConfig) -> void:
+
+func request_start(config: MatchConfig) -> bool:
+	if state != State.LOBBY or mode != Mode.LOCAL or not is_host or not all_ready() or config == null:
+		return false
+	var def := config.definition()
+	if def == null or config.players.size() != peers.size() \
+			or config.players.size() > int(lobby_config.get("max_players", 4)) \
+			or config.players.size() < def.min_players or config.players.size() > def.max_players:
+		return false
+	var assigned_slots := {}
+	for player in config.players:
+		if player.slot < 0 or player.slot >= config.players.size() or assigned_slots.has(player.slot):
+			return false
+		if player.character() == null:
+			return false
+		assigned_slots[player.slot] = true
 	_set_state(State.IN_MATCH)
 	match_start_requested.emit(config)
+	return true
 
 
 func end_match() -> void:
@@ -158,12 +176,3 @@ func publish_input(_slot: int, _frame: InputFrame, _tick: int) -> void:
 ## the AI brain — exactly the behaviour wanted when a remote player drops.
 func consume_input(_slot: int, _frame: InputFrame, _tick: int) -> bool:
 	return false
-
-
-func _generate_code() -> String:
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
-	var s := ""
-	for i in ROOM_CODE_LENGTH:
-		s += ROOM_ALPHABET[rng.randi_range(0, ROOM_ALPHABET.length() - 1)]
-	return s
