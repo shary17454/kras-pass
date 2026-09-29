@@ -4,6 +4,7 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("local party core")
 	_tournaments(t)
+	_cup_tournaments(t)
 	_saves(t)
 	_settings(t)
 	_profiles(t)
@@ -88,6 +89,53 @@ func _tournaments(t: TestHarness) -> void:
 	race_config.rules.erase("party_short_race")
 	t.equal(race.laps(), 3, "ordinary races retain the minimum three laps")
 	race.free()
+
+
+func _cup_tournaments(t: TestHarness) -> void:
+	t.test("first-to-cups ends early and ranks by cups, not points")
+	var cup := _session(4)
+	cup.scoring_mode = TournamentSession.ScoringMode.CUPS
+	cup.target_cups = 2
+	var first := MatchResult.make("ring_rumble", "vortex_ring", [1, 9, 5, 2] as Array[int])
+	cup.record(first)
+	t.equal(cup.cups, [0, 1, 0, 0], "round winner receives one cup")
+	t.equal(cup.points, [0, 0, 0, 0], "cup mode does not also award points")
+	t.ok(not cup.is_complete(), "cup tournament continues before target")
+	var encoded: Dictionary = JSON.parse_string(JSON.stringify(cup.to_dict()))
+	var restored := TournamentSession.restore(encoded)
+	t.ok(restored != null, "cup tournament save restores")
+	if restored != null:
+		t.equal(restored.scoring_mode, TournamentSession.ScoringMode.CUPS, "score mode survives save")
+		t.equal(restored.target_cups, 2, "cup target survives save")
+		t.equal(restored.cups, [0, 1, 0, 0], "cup totals survive save")
+		restored.record(first)
+		t.ok(restored.is_complete(), "reaching target ends before scheduled cap")
+		t.equal(restored.champion(), 1, "cup leader wins")
+		t.equal(restored.total_games(), 2, "unused scheduled games are removed from final standings")
+		t.equal(restored.rows()[0]["points"], 2, "standings value is cup count")
+		var rematch := restored.rematch()
+		t.equal(rematch.scoring_mode, TournamentSession.ScoringMode.CUPS, "rematch retains cup mode")
+		t.equal(rematch.cups, [0, 0, 0, 0], "rematch clears cup totals")
+	t.test("simultaneous cup target launches a deciding round")
+	var tied := _session(3)
+	tied.scoring_mode = TournamentSession.ScoringMode.CUPS
+	tied.target_cups = 1
+	tied.record(MatchResult.make("ring_rumble", "vortex_ring", [8, 8, 2, 1] as Array[int]))
+	t.ok(not tied.is_complete(), "shared target is not resolved by slot order")
+	t.equal(tied.next_config().minigame_id, "quick_draw", "shared cup target schedules sudden death")
+	tied.record(MatchResult.make("quick_draw", "", [2, 1] as Array[int]))
+	t.equal(tied.champion(), 0, "sudden death selects the champion")
+	t.test("legacy tournament save restores as fixed-points mode")
+	var legacy: Dictionary = encoded.duplicate(true)
+	legacy["version"] = 1
+	legacy.erase("cups")
+	legacy.erase("scoring_mode")
+	legacy.erase("target_cups")
+	var old_session := TournamentSession.restore(legacy)
+	t.ok(old_session != null, "version-1 tournament remains resumable")
+	if old_session != null:
+		t.equal(old_session.scoring_mode, TournamentSession.ScoringMode.POINTS, "legacy score mode defaults to points")
+		t.equal(old_session.cups, [0, 0, 0, 0], "legacy save initializes empty cup totals")
 
 
 func _saves(t: TestHarness) -> void:
