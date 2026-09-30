@@ -1,163 +1,182 @@
 extends Screen
-## Online lobby.
-##
-## The transport is not shipped in 1.0. Rather than showing four dead buttons,
-## this screen runs the *real* lobby flow against `Net`'s local session backend:
-## a room is created, it has a working code, participants ready up, and the
-## start button builds a genuine MatchConfig. When a network transport is added,
-## the only change here is that `Net.online_available` becomes true.
-
-var _code_label: Label
-var _peer_box: VBoxContainer
+## Room UI consumes server state; no simulated peers or local pseudo-room codes.
 var _status: Label
-
-
-func setup(a: Dictionary) -> void:
-	super.setup(a)
-	Net.session_state_changed.connect(_on_state)
-	Net.peer_joined.connect(func(_p): _refresh_peers())
-	Net.peer_ready_changed.connect(func(_i, _r): _refresh_peers())
+var _rooms: Array = []
+var _name := "Player"
+var _refresh_pending := false
 
 
 func build() -> void:
 	title(Loc.t("online.title"))
-	var notice := UIKit.label(Loc.t("online.unavailable"), UIKit.SIZE_SMALL, UIKit.ACCENT)
-	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(notice)
+	Net.room_updated.connect(_schedule_refresh)
+	Net.rooms_received.connect(func(rooms):
+		_rooms = rooms
+		_schedule_refresh())
+	Net.online_error.connect(func(_code):
+		if is_instance_valid(_status):
+			_status.text = Loc.t("online.failed"))
+	Net.connection_lost.connect(func(_reason): _schedule_refresh())
+	Net.match_start_requested.connect(func(cfg):
+		if Net.mode != Net.Mode.LOCAL and cfg != null and cfg.context == MatchConfig.Context.ONLINE:
+			SceneRouter.start_match(cfg))
+	_refresh()
 
-	var columns := UIKit.adaptive_columns(28)
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_child(columns)
-	var left := UIKit.vbox(12)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var right := UIKit.vbox(12)
-	right.custom_minimum_size = Vector2(520, 0)
-	columns.add_child(left)
-	columns.add_child(right)
 
-	var create := UIKit.button(Loc.t("online.create"))
-	create.pressed.connect(_create_room)
-	left.add_child(create)
-	first_focus = create
+func _schedule_refresh() -> void:
+	if not _refresh_pending:
+		_refresh_pending = true
+		call_deferred("_refresh")
 
+
+func _refresh() -> void:
+	_refresh_pending = false
+	for child in body.get_children():
+		body.remove_child(child)
+		child.queue_free()
+	first_focus = null
+	_status = UIKit.label("", UIKit.SIZE_SMALL, UIKit.ACCENT)
+	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(_status)
+	if not Net.online_available:
+		_status.text = Loc.t("online.unavailable")
+		add_menu_button(Loc.t("online.play_local"), func(): SceneRouter.go_to("local_play"))
+		return
+	if Net.room_code.is_empty():
+		_browser()
+	else:
+		_lobby()
+
+
+func _browser() -> void:
+	var name_field := LineEdit.new()
+	name_field.text = _name
+	name_field.max_length = 24
+	name_field.placeholder_text = Loc.t("online.player_name")
+	name_field.custom_minimum_size.y = 56
+	name_field.text_changed.connect(func(value): _name = value)
+	body.add_child(name_field)
+	add_menu_button(Loc.t("online.create_public"), func(): Net.host_online(4, true, _name))
+	add_menu_button(Loc.t("online.create_private"), func(): Net.host_online(4, false, _name))
+	var row := UIKit.hbox(12)
+	var code := LineEdit.new()
+	code.max_length = 6
+	code.placeholder_text = Loc.t("online.room_code")
+	code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	code.text_direction = Control.TEXT_DIRECTION_LTR
+	row.add_child(code)
 	var join := UIKit.button(Loc.t("online.join"))
-	join.disabled = not Net.online_available
-	join.tooltip_text = Loc.t("common.soon")
-	join.pressed.connect(func(): Net.join_online(""))
-	left.add_child(join)
-
-	var quick := UIKit.button(Loc.t("online.quick_match"))
-	quick.disabled = not Net.online_available
-	quick.tooltip_text = Loc.t("common.soon")
-	left.add_child(quick)
-
-	var invite := UIKit.button(Loc.t("online.friends"))
-	invite.disabled = not Net.online_available
-	invite.tooltip_text = Loc.t("common.soon")
-	left.add_child(invite)
-
-	_status = UIKit.label("", UIKit.SIZE_SMALL, UIKit.dim_color())
-	left.add_child(_status)
-
-	right.add_child(UIKit.heading(Loc.t("online.code")))
-	_code_label = UIKit.label("—", UIKit.SIZE_TITLE, UIKit.ACCENT_2, true)
-	right.add_child(_code_label)
-	_peer_box = UIKit.vbox(8)
-	right.add_child(_peer_box)
-
-	var ready := UIKit.button(Loc.t("online.ready"))
-	ready.pressed.connect(func():
-		Net.set_ready(Net.local_peer_id, not bool(Net.peers.get(Net.local_peer_id, {}).get("ready", false))))
-	right.add_child(ready)
-
-	var start := UIKit.button(Loc.t("common.start"), UIKit.SIZE_HEADING)
-	start.pressed.connect(_start_local_session)
-	right.add_child(start)
-
-	_refresh_peers()
-	_on_state(int(Net.state))
+	join.pressed.connect(func():
+		if not Net.join_online(code.text.strip_edges(), _name):
+			_status.text = Loc.t("online.failed"))
+	row.add_child(join)
+	body.add_child(row)
+	add_menu_button(Loc.t("online.refresh"), Net.list_rooms)
+	for room in _rooms:
+		var captured: Dictionary = room
+		add_menu_button("%s  %d/%d" % [room.host, room.count, room.capacity],
+			func(): Net.join_online(String(captured.code), _name))
 
 
-func _create_room() -> void:
-	Net.host_local(4)
-	Net.add_local_participant("local.slot_ai")
-	Net.add_local_participant("local.slot_ai")
-	Net.add_local_participant("local.slot_ai")
-	for id in Net.peers.keys():
-		if id != Net.local_peer_id:
-			Net.set_ready(id, true)
-	_code_label.text = Net.room_code
-	_refresh_peers()
-	AudioManager.play_ui("ui_select")
+func _lobby() -> void:
+	_status.text = "%s: %s   %d ms" % [Loc.t("online.room_code"), Net.room_code, Net.ping_ms]
+	var variant := UIKit.label(Loc.t("online.push_variant"), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
+	variant.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(variant)
+	var device := UIKit.option([], 0)
+	var devices: Array = []
+	device.add_item(Loc.t("online.touch"))
+	devices.append({"type": 2, "id": 0})
+	for source in InputRouter.available_devices():
+		device.add_item(Loc.t(String(source.label)) if int(source.type) == InputRouter.Source.KEYBOARD else String(source.label))
+		devices.append({"type": 1 if int(source.type) == InputRouter.Source.PAD else 0, "id": int(source.id)})
+	for i in devices.size():
+		if devices[i].type == Net.local_device_type and devices[i].id == Net.local_device_id:
+			device.select(i)
+	device.item_selected.connect(func(index):
+		Net.local_device_type = devices[index].type
+		Net.local_device_id = devices[index].id)
+	body.add_child(device)
+	var characters := Registry.characters()
+	for peer in Net.peers.values():
+		var row := UIKit.hbox(8)
+		var name_label := UIKit.label("%s %s %s" % [
+			Loc.t("online.host") if int(peer.id) == 1 else "",
+			String(peer.name), Loc.t("online.ready_yes") if peer.ready else Loc.t("online.ready_no")], UIKit.SIZE_SMALL)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(name_label)
+		if not bool(peer.connected):
+			row.add_child(UIKit.label(Loc.t("online.reconnecting"), UIKit.SIZE_TINY, UIKit.DANGER))
+		if int(peer.id) == Net.local_peer_id:
+			var choice := UIKit.option([], 0)
+			for character in characters:
+				choice.add_item(character.display_name())
+			choice.select(int(peer.character))
+			choice.disabled = Net.room_state != "lobby"
+			choice.item_selected.connect(Net.select_character)
+			row.add_child(choice)
+		else:
+			row.add_child(UIKit.label(characters[int(peer.character)].display_name(), UIKit.SIZE_SMALL))
+		if Net.is_host and int(peer.id) != Net.local_peer_id:
+			var id := int(peer.id)
+			var kick := UIKit.button(Loc.t("online.kick"), UIKit.SIZE_SMALL)
+			kick.disabled = Net.room_state != "lobby"
+			kick.pressed.connect(func(): Net.remove_peer(id))
+			row.add_child(kick)
+		body.add_child(row)
+	if Net.is_host and Net.room_state == "lobby":
+		_host_settings()
+	if Net.room_state == "results":
+		add_menu_button(Loc.t("online.return_lobby"), Net.end_match, Net.is_host)
+	elif Net.room_state == "lobby":
+		var ready := bool(Net.peers.get(Net.local_peer_id, {}).get("ready", false))
+		add_menu_button(Loc.t("online.unready") if ready else Loc.t("online.ready"),
+			func(): Net.set_ready(Net.local_peer_id, not ready))
+		if Net.is_host:
+			add_menu_button(Loc.t("online.start"), func(): Net.request_start(null), Net.all_ready())
+	add_menu_button(Loc.t("online.leave"), func():
+		Net.leave()
+		_refresh())
 
 
-func _refresh_peers() -> void:
-	if _peer_box == null or not is_instance_valid(_peer_box):
-		return
-	for c in _peer_box.get_children():
-		c.queue_free()
-	if Net.peers.is_empty():
-		_peer_box.add_child(UIKit.label(Loc.t("common.none"), UIKit.SIZE_SMALL, UIKit.dim_color()))
-		return
-	for p in Net.peers.values():
-		var row := UIKit.panel(UIKit.PANEL, 10)
-		var h := UIKit.hbox(12)
-		row.add_child(h)
-		var name := UIKit.label(Loc.t(String(p["name"])), UIKit.SIZE_SMALL)
-		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		h.add_child(name)
-		h.add_child(UIKit.label(
-			Loc.t("online.ready") if bool(p["ready"]) else Loc.t("online.not_ready"),
-			UIKit.SIZE_SMALL, UIKit.OK if bool(p["ready"]) else UIKit.dim_color()))
-		_peer_box.add_child(row)
+func _host_settings() -> void:
+	var cfg := Net.lobby_config.duplicate(true)
+	var row := UIKit.hbox(12)
+	row.add_child(UIKit.label(Loc.t("online.rounds"), UIKit.SIZE_SMALL))
+	var rounds := SpinBox.new()
+	rounds.custom_minimum_size = Vector2(160, 64)
+	rounds.get_line_edit().add_theme_font_size_override("font_size", UIKit.SIZE_BODY)
+	rounds.min_value = 1
+	rounds.max_value = 10
+	rounds.value = int(cfg.get("rounds", 3))
+	rounds.value_changed.connect(func(value):
+		cfg["rounds"] = int(value)
+		Net.set_lobby_config(cfg))
+	row.add_child(rounds)
+	var bots := UIKit.checkbox(Loc.t("online.bots"), bool(cfg.get("bots", true)))
+	bots.toggled.connect(func(value):
+		cfg["bots"] = value
+		Net.set_lobby_config(cfg))
+	row.add_child(bots)
+	body.add_child(row)
+	var difficulty := UIKit.option([], 0)
+	for key in PlayerConfig.DIFFICULTY_KEYS:
+		difficulty.add_item(Loc.t(key))
+	difficulty.select(int(cfg.get("difficulty", 1)))
+	difficulty.item_selected.connect(func(index):
+		cfg["difficulty"] = index
+		Net.set_lobby_config(cfg))
+	body.add_child(difficulty)
+	var arenas := UIKit.option([], 0)
+	for id in ["vortex_ring", "storm_ring"]:
+		arenas.add_item(Registry.arena(id).display_name())
+	arenas.select(0 if cfg.get("arena") == "vortex_ring" else 1)
+	arenas.item_selected.connect(func(index):
+		cfg["arena"] = ["vortex_ring", "storm_ring"][index]
+		Net.set_lobby_config(cfg))
+	body.add_child(arenas)
 
 
-func _on_state(state: int) -> void:
-	if _status == null or not is_instance_valid(_status):
-		return
-	match state:
-		Net.State.LOBBY:
-			_status.text = "%s: %s" % [Loc.t("online.code"), Net.room_code]
-		Net.State.OFFLINE:
-			_status.text = Loc.t("common.none")
-		_:
-			_status.text = ""
-
-
-## Runs the lobby's chosen setup through the ordinary local match path — the
-## same code an online start would take once packets exist.
-func _start_local_session() -> void:
-	if Net.state != Net.State.LOBBY:
-		AudioManager.play_ui("ui_error")
-		EventBus.notify(Loc.t("online.create"))
-		return
-	var games := Progression.playable_games()
-	if games.is_empty():
-		return
-	var def: MiniGameDef = games[randi() % games.size()]
-	var cfg := MatchConfig.new()
-	cfg.minigame_id = def.id
-	cfg.arena_id = def.arena_ids[0] if def.arena_ids.size() > 0 else ""
-	cfg.context = MatchConfig.Context.ONLINE
-	cfg.rounds = def.default_rounds
-	cfg.seed = randi() & 0x7FFFFFFF
-	cfg.subtitle_key = "online.title"
-	var pool := Progression.playable_characters()
-	var i := 0
-	for p in Net.peers.values():
-		if i >= def.max_players:
-			break
-		var pc := PlayerConfig.new()
-		pc.slot = i
-		pc.character_id = pool[i % pool.size()].id
-		pc.is_human = int(p["id"]) == Net.local_peer_id
-		pc.ai_difficulty = PlayerConfig.Difficulty.MEDIUM
-		pc.peer_id = int(p["id"])
-		cfg.players.append(pc)
-		i += 1
-	Net.request_start(cfg)
-	SceneRouter.start_match(cfg)
-
-
-func teardown() -> void:
+func go_back() -> void:
 	Net.leave()
+	super.go_back()

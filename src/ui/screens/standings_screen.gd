@@ -53,7 +53,7 @@ func build() -> void:
 	for row in session.rows():
 		var card := Widgets.standings_row(
 			int(row["rank"]), String(row["name"]), row["color"],
-			"%d %s" % [int(row["points"]), Loc.t("tournament.points")],
+			"%d %s" % [int(row["points"]), Loc.t(session.score_label_key())],
 			bool(row["human"]))
 		grid.add_child(card)
 		UIKit.animate_in(card, 0.05 * int(row["rank"]))

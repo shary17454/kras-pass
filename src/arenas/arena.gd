@@ -1106,6 +1106,15 @@ func _on_radius_changed(r: float) -> void:
 	radius_changed.emit(r)
 
 
+func apply_network_radius(r: float) -> void:
+	_on_radius_changed(r)
+	if _shrink != null and is_instance_valid(_shrink):
+		_shrink.radius = r
+		if _shrink._ring != null:
+			var k := r / maxf(def.radius, 0.001)
+			_shrink._ring.scale = Vector3(k, 1.0, k)
+
+
 func _tick_arctic_water(delta: float) -> void:
 	if not _is_arctic():
 		return

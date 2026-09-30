@@ -3,6 +3,8 @@ extends Screen
 var _roster: PartyRoster
 var _preset := "normal"
 var _rounds := 5
+var _scoring_mode: TournamentSession.ScoringMode = TournamentSession.ScoringMode.POINTS
+var _target_cups := 3
 var _difficulty := 1
 var _double_final := false
 var _favorites_only := false
@@ -28,6 +30,8 @@ func build() -> void:
 		body.add_child(UIKit.centered(String(_playlist.get("name", "")), UIKit.SIZE_BODY, UIKit.ACCENT))
 	var row := UIKit.adaptive_columns(16)
 	body.add_child(row)
+	var scoring_mode := UIKit.option([Loc.t("tournament.mode_points"), Loc.t("tournament.mode_cups")], int(_scoring_mode))
+	_add_option(row, "tournament.mode", scoring_mode)
 	var ids := PlaylistGenerator.preset_ids()
 	var labels: Array = []
 	for id in ids:
@@ -39,6 +43,11 @@ func build() -> void:
 	rounds.disabled = not _playlist.is_empty()
 	rounds.item_selected.connect(func(i): _rounds = counts[i])
 	_add_option(row, "tournament.rounds", rounds)
+	var cup_targets := [3, 5, 7, 10]
+	var cup_target := UIKit.option(["3", "5", "7", "10"], maxi(0, cup_targets.find(_target_cups)))
+	cup_target.item_selected.connect(func(i): _target_cups = cup_targets[i])
+	cup_target.disabled = _scoring_mode != TournamentSession.ScoringMode.CUPS
+	_add_option(row, "tournament.cup_target", cup_target)
 	var difficulty_labels: Array = []
 	for key in PlayerConfig.DIFFICULTY_KEYS:
 		difficulty_labels.append(Loc.t(key))
@@ -57,8 +66,13 @@ func build() -> void:
 		difficulty.select(_difficulty)
 		difficulty.disabled = _preset in ["family", "skill"])
 	var final_toggle := UIKit.checkbox(Loc.t("party.double_final"), _double_final)
+	final_toggle.disabled = _scoring_mode == TournamentSession.ScoringMode.CUPS
 	final_toggle.toggled.connect(func(on): _double_final = on)
 	body.add_child(final_toggle)
+	scoring_mode.item_selected.connect(func(i):
+		_scoring_mode = i
+		cup_target.disabled = _scoring_mode != TournamentSession.ScoringMode.CUPS
+		final_toggle.disabled = _scoring_mode == TournamentSession.ScoringMode.CUPS)
 	var favorites := UIKit.checkbox(Loc.t("party.favorites_cup"), false)
 	favorites.toggled.connect(func(on): _favorites_only = on)
 	body.add_child(favorites)
@@ -106,6 +120,8 @@ func _start() -> void:
 			_error.text = Loc.t("playlist.invalid")
 			return
 		custom.double_final = _double_final
+		custom.scoring_mode = _scoring_mode
+		custom.target_cups = _target_cups
 		_confirm_launch(custom)
 		return
 	var session := TournamentSession.from_preset(_preset, roster, randi() & 0x7FFFFFFF, pool)
@@ -123,6 +139,8 @@ func _start() -> void:
 		for p in session.players:
 			p.ai_difficulty = _difficulty
 	session.double_final = _double_final
+	session.scoring_mode = _scoring_mode
+	session.target_cups = _target_cups
 	_confirm_launch(session)
 
 

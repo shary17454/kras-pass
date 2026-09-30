@@ -8,6 +8,8 @@ extends RefCounted
 
 signal completed(champion_slot: int)
 
+enum ScoringMode { POINTS, CUPS }
+
 var players: Array[PlayerConfig] = []
 var game_ids: Array[String] = []
 ## Parallel to `game_ids`. Empty entries (or a shorter array) fall back to a
@@ -21,6 +23,9 @@ var mutators: PackedStringArray = []
 var chaos := false
 var index := 0
 var points: Array[int] = []
+var cups: Array[int] = []
+var scoring_mode: ScoringMode = ScoringMode.POINTS
+var target_cups := 3
 var results: Array[MatchResult] = []
 var seed_value := 1
 var allow_powerups := true
@@ -39,7 +44,7 @@ var run_id := ""
 var performance: Array = []
 var trailed_last: Array[int] = []
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 const SAVE_BRANCH := "active_tournament"
 const MAX_TIEBREAKS := 3
 
@@ -65,6 +70,8 @@ func setup(player_list: Array[PlayerConfig], games: Array[String], rng_seed: int
 	seed_value = rng_seed if rng_seed != 0 else 1
 	points.resize(players.size())
 	points.fill(0)
+	cups.resize(players.size())
+	cups.fill(0)
 	var table := Balance.list("tuning", "scoring.tournament_points")
 	if table.size() >= 4:
 		_points_table = table
@@ -104,6 +111,16 @@ func total_games() -> int:
 
 func is_complete() -> bool:
 	return index >= game_ids.size() and tiebreak_slots.is_empty()
+
+
+func score_label_key() -> String:
+	return "tournament.cups" if scoring_mode == ScoringMode.CUPS else "tournament.points"
+
+
+func score_for(slot: int) -> int:
+	if slot < 0 or slot >= players.size():
+		return 0
+	return cups[slot] if scoring_mode == ScoringMode.CUPS else points[slot]
 
 
 func current_game() -> MiniGameDef:
@@ -206,23 +223,34 @@ func record(result: MatchResult) -> void:
 		for key in ["knockouts", "falls", "collected", "goals", "saves", "crates"]:
 			performance[slot][key] = int(performance[slot].get(key, 0)) + maxi(0, int(result.detail(slot, key, 0)))
 	var awarded := award_for(result)
-	if double_final and index == game_ids.size() - 1:
+	if scoring_mode == ScoringMode.CUPS:
+		awarded.fill(0)
+		for winner in result.winners():
+			if winner < cups.size():
+				cups[winner] += 1
+				awarded[winner] = 1
+	elif double_final and index == game_ids.size() - 1:
 		for i in awarded.size():
 			awarded[i] *= 2
 	last_awards = awarded
 	for i in mini(points.size(), awarded.size()):
-		points[i] += awarded[i]
+		if scoring_mode == ScoringMode.POINTS:
+			points[i] += awarded[i]
 	index += 1
-	if index < game_ids.size() and points.min() != points.max():
+	if index < game_ids.size() and not _scores_tied():
 		for slot in points.size():
-			if points[slot] == points.min() and not trailed_last.has(slot):
+			if score_for(slot) == _lowest_score() and not trailed_last.has(slot):
 				trailed_last.append(slot)
-	if index >= game_ids.size():
+	var target_reached: bool = scoring_mode == ScoringMode.CUPS and cups.max() >= target_cups
+	if target_reached or index >= game_ids.size():
 		var leaders := leading_slots()
 		if leaders.size() > 1:
 			tiebreak_slots = leaders
 		else:
 			resolved_champion = leaders[0] if not leaders.is_empty() else -1
+		if target_reached:
+			game_ids.resize(index)
+			arena_ids.resize(mini(arena_ids.size(), index))
 	_complete_or_save()
 
 
@@ -279,11 +307,25 @@ func leading_slots() -> Array[int]:
 	var leaders: Array[int] = []
 	if points.is_empty():
 		return leaders
-	var highest: int = points.max()
+	var highest := _highest_score()
 	for i in points.size():
-		if points[i] == highest:
+		if score_for(i) == highest:
 			leaders.append(i)
 	return leaders
+
+
+func _highest_score() -> int:
+	var values := cups if scoring_mode == ScoringMode.CUPS else points
+	return values.max() if not values.is_empty() else 0
+
+
+func _lowest_score() -> int:
+	var values := cups if scoring_mode == ScoringMode.CUPS else points
+	return values.min() if not values.is_empty() else 0
+
+
+func _scores_tied() -> bool:
+	return _highest_score() == _lowest_score()
 
 
 ## Slots ordered best-first, with the last game's placement as a tie-break.
@@ -294,8 +336,8 @@ func ranking() -> Array[int]:
 	order.sort_custom(func(a, b):
 		if a == resolved_champion or b == resolved_champion:
 			return a == resolved_champion
-		if points[a] != points[b]:
-			return points[a] > points[b]
+		if score_for(a) != score_for(b):
+			return score_for(a) > score_for(b)
 		return a < b)
 	return order
 
@@ -306,14 +348,14 @@ func rows() -> Array:
 	var place := 1
 	for rank in order.size():
 		var slot: int = order[rank]
-		if rank > 0 and (points[slot] != points[order[rank - 1]] or order[rank - 1] == resolved_champion):
+		if rank > 0 and (score_for(slot) != score_for(order[rank - 1]) or order[rank - 1] == resolved_champion):
 			place = rank + 1
 		out.append({
 			"rank": place,
 			"slot": slot,
 			"name": players[slot].display_name(),
 			"color": players[slot].color(),
-			"points": points[slot],
+			"points": score_for(slot),
 			"human": players[slot].is_human,
 		})
 	return out
@@ -354,6 +396,7 @@ func to_dict() -> Dictionary:
 		roster.append(player.to_dict())
 	return {"version": SAVE_VERSION, "players": roster, "games": game_ids,
 		"arenas": arena_ids, "seed": seed_value, "index": index, "points": points,
+		"cups": cups, "scoring_mode": scoring_mode, "target_cups": target_cups,
 		"mutators": Array(mutators), "chaos": chaos, "powerups": allow_powerups,
 		"preset": preset_id, "double_final": double_final, "rules": match_rules,
 		"tiebreak_slots": tiebreak_slots, "tiebreak_attempts": tiebreak_attempts,
@@ -361,7 +404,8 @@ func to_dict() -> Dictionary:
 
 
 static func restore(data: Dictionary) -> TournamentSession:
-	if int(data.get("version", 0)) != SAVE_VERSION:
+	var save_version := int(data.get("version", 0))
+	if save_version < 1 or save_version > SAVE_VERSION:
 		return null
 	for key in ["players", "games", "arenas", "points", "mutators", "tiebreak_slots"]:
 		if not data.get(key) is Array:
@@ -391,6 +435,16 @@ static func restore(data: Dictionary) -> TournamentSession:
 		return null
 	var session := TournamentSession.new()
 	session.setup(roster, games, int(data.get("seed", 1)))
+	if save_version >= 2:
+		if not data.get("cups") is Array or data["cups"].size() != roster.size():
+			return null
+		session.scoring_mode = clampi(int(data.get("scoring_mode", ScoringMode.POINTS)), ScoringMode.POINTS, ScoringMode.CUPS)
+		session.target_cups = clampi(int(data.get("target_cups", 3)), 2, 10)
+		for i in roster.size():
+			var cup_value := int(data["cups"][i])
+			if cup_value < 0 or cup_value > 10:
+				return null
+			session.cups[i] = cup_value
 	session.index = next
 	for i in roster.size():
 		var value := int(data["points"][i])
@@ -441,6 +495,8 @@ static func saved_session() -> TournamentSession:
 func rematch() -> TournamentSession:
 	var fresh := TournamentSession.new()
 	fresh.setup(players, game_ids, seed_value)
+	fresh.scoring_mode = scoring_mode
+	fresh.target_cups = target_cups
 	fresh.arena_ids = arena_ids.duplicate()
 	fresh.mutators = mutators.duplicate()
 	fresh.chaos = chaos

@@ -95,6 +95,11 @@ var _neutral_frame := InputFrame.new()
 ## Slots that have already broken the surface this round, so one fall makes one
 ## splash rather than one per frame.
 var _splashed := {}
+var _network_tick := 0
+var _network_frame := InputFrame.new()
+var _network_replica = preload("res://src/net/match_replica.gd").new()
+var _network_result_received := false
+var _network_previous_bits := {}
 
 
 # --- lifecycle -------------------------------------------------------------
@@ -113,9 +118,18 @@ func setup(args: Dictionary) -> void:
 	_total_rounds = maxi(1, config.rounds)
 	_replay_enabled = playback == null \
 		and bool(UserSettings.get_value("replay_capture")) \
-		and config.context != MatchConfig.Context.TRAINING
+		and config.context not in [MatchConfig.Context.TRAINING, MatchConfig.Context.ONLINE]
+	if _online():
+		if not Net.ONLINE_GAMES.has(config.minigame_id) or Net.match_data.is_empty():
+			_abort()
+			return
+		Net.snapshot_received.connect(_network_snapshot)
+		Net.online_result.connect(_network_result)
+		Net.connection_lost.connect(_network_closed)
 	DevTools.register_match(self)
 	_build()
+	if _online() and ctx != null:
+		Net.loaded()
 
 
 func _build() -> void:
@@ -229,7 +243,7 @@ func _build() -> void:
 	hud.setup(ctx, controller)
 	camera.shared_hud_bottom = hud.occupied_top
 	hud.ready_requested.connect(func():
-		if phase == P.INSTRUCTIONS:
+		if phase == P.INSTRUCTIONS and (not _online() or Net.is_host):
 			_set_phase(P.COUNTDOWN))
 	hud.set_round(_round_index, _total_rounds)
 
@@ -273,7 +287,7 @@ func _create_brains() -> void:
 			_brains.append(null)
 		return
 	for p in config.players:
-		if p.is_human:
+		if p.is_human or (_online() and (not Net.is_host or p.peer_id > 0)):
 			_brains.append(null)
 			continue
 		var difficulty := p.ai_difficulty
@@ -472,6 +486,22 @@ func _round_duration() -> float:
 func _physics_process(delta: float) -> void:
 	if ctx == null or _aborted:
 		return
+	if _online():
+		if not Net.match_running or Net.state == Net.State.DISCONNECTED:
+			return
+		_network_tick += 1
+		var local_slot := Net.local_slot()
+		if not Net.is_host:
+			if _network_tick % 2 == 0 and local_slot >= 0:
+				Net.publish_input(local_slot, InputRouter.frame(local_slot), _network_tick)
+			_network_replica.render(self, delta)
+			return
+		for p in config.players:
+			if p.peer_id > 0 and p.peer_id != Net.local_peer_id:
+				Net.consume_input(p.slot, _network_frame, _network_tick)
+				InputRouter.apply_playback_frame(p.slot, _network_frame)
+				InputRouter.frame(p.slot).prev_bits = int(_network_previous_bits.get(p.slot, 0))
+				_network_previous_bits[p.slot] = _network_frame.bits
 	if _paused:
 		return
 	match phase:
@@ -489,6 +519,8 @@ func _physics_process(delta: float) -> void:
 			_phase_timer -= delta
 			if _phase_timer <= 0.0:
 				_set_phase(P.RESULTS)
+	if _online() and Net.is_host and _network_tick % 3 == 0:
+		Net.publish_snapshot(_network_replica.capture(self), _network_tick)
 
 
 func _process(delta: float) -> void:
@@ -516,7 +548,7 @@ func _tick_playback(delta: float) -> void:
 
 func _advance_timed_phase(delta: float) -> void:
 	_phase_timer -= delta
-	if phase == P.INSTRUCTIONS and not config.human_slots().is_empty():
+	if phase == P.INSTRUCTIONS and not config.human_slots().is_empty() and not _online():
 		if _phase_timer < _phase_duration - 0.4 and _any_human_pressed():
 			_set_phase(P.COUNTDOWN)
 		return
@@ -923,6 +955,10 @@ func _complete_match() -> void:
 	var aggregate := MatchResult.aggregate(config.minigame_id, _round_results, ctx.definition.higher_is_better())
 	aggregate.arena_id = config.arena_id
 	aggregate.finished_naturally = not _aborted
+	if _online():
+		Net.publish_result(aggregate.scores)
+		_set_phase(P.DONE)
+		return
 	if playback == null:
 		Stats.record_match(config, aggregate)
 		Achievements.evaluate_all()
@@ -1044,6 +1080,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _toggle_pause() -> void:
+	if _online():
+		# Online authority keeps running; opening a local menu cannot stop peers.
+		if _pause_menu == null:
+			_show_pause_menu(Loc.t("online.no_pause"))
+		else:
+			_pause_menu.queue_free()
+			_pause_menu = null
+			for source in touch_sources:
+				source.set_process_input(true)
+		return
 	_paused = not _paused
 	for source in touch_sources:
 		source.set_process_input(not _paused)
@@ -1087,6 +1133,7 @@ func _show_pause_menu(message: String = "") -> void:
 	resume.pressed.connect(_toggle_pause)
 	v.add_child(resume)
 	var restart := UIKit.button(Loc.t("pause.restart"))
+	restart.disabled = _online()
 	restart.pressed.connect(func():
 		var dialog := ConfirmationDialog.new()
 		dialog.dialog_text = Loc.t("party.restart_confirm")
@@ -1111,10 +1158,45 @@ func _show_pause_menu(message: String = "") -> void:
 	quit.pressed.connect(func():
 		_paused = false
 		_aborted = true
+		if _online():
+			Net.leave()
 		SceneRouter.go_to("main_menu", {}, false))
 	v.add_child(quit)
 	resume.grab_focus()
 	UIKit.animate_in(card)
+
+
+func _online() -> bool:
+	return playback == null and config != null and config.context == MatchConfig.Context.ONLINE
+
+
+func _network_snapshot(data: Dictionary) -> void:
+	if ctx != null:
+		_network_replica.accept(data, config.player_count())
+
+
+func _network_result(values: Array) -> void:
+	if _network_result_received or values.size() != config.player_count():
+		return
+	_network_result_received = true
+	var scores: Array[int] = []
+	for value in values:
+		scores.append(int(value))
+	var result := MatchResult.make(config.minigame_id, config.arena_id, scores)
+	phase = P.DONE
+	ctx.phase = P.DONE
+	finished.emit(result)
+	if _on_finished.is_valid():
+		_on_finished.call(result)
+	else:
+		SceneRouter.go_to("results", {"result": result, "config": config}, false)
+
+
+func _network_closed(_reason: String) -> void:
+	if phase == P.DONE:
+		return
+	_aborted = true
+	SceneRouter.go_to("online", {}, false)
 
 
 func _ready() -> void:
@@ -1154,6 +1236,10 @@ func _on_score_noted(_slot: int, _value: int) -> void:
 ## iOS can take the app away at any moment. Pausing on the way out means the
 ## player comes back to the round they left, not to a result they never saw.
 func _on_app_backgrounded() -> void:
+	if _online():
+		if _pause_menu == null:
+			_toggle_pause()
+		return
 	if ctx == null or not MatchPhase.is_live(phase) or _paused:
 		return
 	_paused = true
@@ -1161,6 +1247,10 @@ func _on_app_backgrounded() -> void:
 
 
 func _on_device_lost(slot: int) -> void:
+	if _online():
+		if _pause_menu == null:
+			_toggle_pause()
+		return
 	if ctx == null or not MatchPhase.is_live(phase) or _paused:
 		return
 	var p := config.player_at(slot)

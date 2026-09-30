@@ -123,6 +123,10 @@ func _build_rewards(parent: VBoxContainer) -> void:
 
 
 func _add_actions() -> void:
+	if config != null and config.context == MatchConfig.Context.ONLINE:
+		add_menu_button(Loc.t("online.return_lobby"), func(): SceneRouter.go_to("online", {}, false))
+		add_menu_button(Loc.t("online.leave"), go_back)
+		return
 	var row := UIKit.adaptive_columns(14)
 	body.add_child(row)
 	if not adventure.is_empty():
@@ -182,4 +186,6 @@ func _player_won() -> bool:
 
 
 func go_back() -> void:
+	if config != null and config.context == MatchConfig.Context.ONLINE:
+		Net.leave()
 	SceneRouter.go_to("main_menu", {}, false)
