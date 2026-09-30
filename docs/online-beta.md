@@ -105,16 +105,27 @@ these changes. Use actual deployment evidence to update that status.
 - Subsequent runs were not reliably repeatable: connection expiry and process
   timeouts occurred while multiple Godot engines were running. The client now
   logs close codes, and the server heartbeat respects the scene-loading budget.
-  The latest multi-engine run (`kras-network-smoke-swdSvl`) timed out before the
-  two-player room started. Do not treat the earlier pass as final acceptance.
+  One later run (`kras-network-smoke-swdSvl`) timed out before the two-player
+  room started. These load-sensitive failures are retained as QA evidence.
+- The final isolated run on the current code (`kras-network-smoke-JRi1Of`)
+  passed both two-human/two-bot and four-human sessions. Every human moved,
+  results matched across devices, and peer 2 reconnected in both sessions.
+  Guests received 648-668 snapshots. This is loopback verification, not a
+  guarantee under network loss, device suspension or heavy resource pressure.
 - The full local regression run `kras-party-check.JYuHn9` passed compilation
   and content inventory but was stopped after prolonged integration execution;
   it has **no final passing result**. Re-run on an unloaded test host.
+- A subsequent standalone lifecycle run completed **39 matches, 0 failures**
+  with four AI players, shortened timed rounds and normal race laps. It checks
+  result validity, cleanup, retained objects, input and global signal ownership.
+  Evidence: `/tmp/kras-network-final-stability.log` and
+  `/tmp/kras-network-final-stability-save/stability.json`. One cycle does not
+  establish long-session memory stability or physical-device performance.
 - Arabic lobby fixture screenshots were inspected in landscape and portrait;
   these are presentation fixtures, not evidence of device/network performance.
 
-Release gate remains closed pending repeatable multi-engine tests, completed
-local regression, staging deployment and physical-device QA. General 39-game
+Release gate remains closed pending sustained multi-engine tests, completed
+full local regression, staging deployment and physical-device QA. General 39-game
 online support and networked tournament rotation are still future work.
 
 ## Expansion checklist per game
