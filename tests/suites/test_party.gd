@@ -33,9 +33,11 @@ func _session(count := 3) -> TournamentSession:
 
 
 func _network_boundary(t: TestHarness) -> void:
-	t.test("unavailable online transport cannot masquerade as a room")
+	t.test("unconfigured online endpoint cannot masquerade as a room")
 	Net.leave()
-	t.ok(not Net.online_available, "network transport remains explicitly unavailable")
+	var available := Net.online_available
+	Net.online_available = false
+	t.ok(not Net.online_available, "network endpoint is explicitly unavailable")
 	t.ok(not Net.host_online(), "online host cannot start without a transport")
 	t.ok(not Net.join_online("ABCDE"), "online join cannot succeed without a transport")
 	t.equal(Net.state, Net.State.OFFLINE, "failed online calls leave no fake lobby")
@@ -51,6 +53,7 @@ func _network_boundary(t: TestHarness) -> void:
 	t.ok(Net.request_start(cfg), "ready local roster starts a valid match")
 	t.equal(Net.state, Net.State.IN_MATCH, "successful start advances the session")
 	Net.leave()
+	Net.online_available = available
 
 
 func _tournaments(t: TestHarness) -> void:

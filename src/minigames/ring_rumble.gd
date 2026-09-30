@@ -31,6 +31,11 @@ var _ordnance_drop_timer := 2.4
 func configure() -> void:
 	eliminate_on_fall = true
 	lives_per_player = 1
+	arctic_ordnance_enabled = not bool(ctx.config.rule("online_push", false))
+
+
+func uses_machine() -> bool:
+	return not bool(ctx.config.rule("online_push", false)) and super.uses_machine()
 
 
 func build() -> void:
