@@ -2,6 +2,7 @@ import {createServer} from 'node:http';
 import {Accounts} from './accounts.js';
 import {verifyAppleToken} from './apple.js';
 import {revokeAppleAuthorization} from './apple-revocation.js';
+import {attachMultiplayer} from './multiplayer.js';
 
 const {APPLE_CLIENT_ID, OWNER_EMAIL, ACCOUNT_DB_PATH, PORT = '8080'} = process.env;
 if (!APPLE_CLIENT_ID || !OWNER_EMAIL || !ACCOUNT_DB_PATH) {
@@ -35,7 +36,9 @@ async function json(req) {
 }
 
 const server = createServer(async (req, res) => {
-  if (req.method === 'GET' && req.url === '/health') return send(res, 200, {ok: true, authentication_ready: ready});
+  if (req.method === 'GET' && req.url === '/health') return send(res, 200, {
+    ok: true, authentication_ready: ready, multiplayer_enabled: process.env.MULTIPLAYER_ENABLED === 'true',
+  });
   // Socket-based throttling is deliberately conservative behind a proxy.
   // Do not trust caller-supplied forwarding headers for an authentication limit.
   const key = req.socket.remoteAddress || 'unknown';
@@ -90,7 +93,14 @@ const server = createServer(async (req, res) => {
     return send(res, 401, {error: 'sign_in_failed'});
   }
 });
+const multiplayer = attachMultiplayer(server, {
+  enabled: process.env.MULTIPLAYER_ENABLED === 'true',
+  origins: (process.env.MULTIPLAYER_ORIGINS || '').split(',').filter(Boolean),
+});
 server.requestTimeout = 15000;
 server.headersTimeout = 10000;
 server.listen(Number(PORT), '0.0.0.0');
-process.on('SIGTERM', () => server.close(() => { accounts.close(); process.exit(0); }));
+process.on('SIGTERM', () => {
+  multiplayer.close();
+  server.close(() => { accounts.close(); process.exit(0); });
+});
