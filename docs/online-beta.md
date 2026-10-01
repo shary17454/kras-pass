@@ -124,9 +124,71 @@ these changes. Use actual deployment evidence to update that status.
 - Arabic lobby fixture screenshots were inspected in landscape and portrait;
   these are presentation fixtures, not evidence of device/network performance.
 
-Release gate remains closed pending sustained multi-engine tests, completed
-full local regression, staging deployment and physical-device QA. General 39-game
+The follow-up below completes full local regression and adds multi-engine
+checks. The release gate still requires staging deployment and physical-device
+and Internet QA. General 39-game
 online support and networked tournament rotation are still future work.
+
+## Release preparation follow-up (2026-10-02 session)
+
+Work is isolated on `feature/kras-online-release`, based on main commit
+`9135a741c474371c347db7a1c6759efc2f39d28e`. Untracked duplicate files ending in
+` 2` in the original checkout were not deleted or included.
+
+Implemented and regression-tested:
+
+- Reuse vacant lobby slots without assigning two participants the same slot.
+- Clear old results on lobby return; do not replay them on lobby reconnect.
+- Give a disconnected host the full reconnect grace independently of its last
+  snapshot's age, while retaining the connected-host authority watchdog.
+- Apply a result once per match epoch; clear remote input at match boundaries.
+- Retain a pending host result in memory until acknowledged, and retry only
+  after the server confirms that the same epoch is still playing.
+- Track generated Godot script UIDs. Ignore release screenshots/source artwork
+  and generated iOS resources during Godot import without removing those files.
+
+Verification:
+
+- Node: 14 passing tests. The three new server regressions failed before the
+  repair and passed afterwards. Dependency audit: zero reported vulnerabilities.
+- Full `tools/check_party.sh` passed on the slot/reconnect/idempotency changes:
+  222 scripts compile, inventory has zero issues, 12,423 assertions pass,
+  independent race regression passes, 39 lifecycle matches have zero failures.
+  Evidence: `kras-party-check.55Plas` under the host temporary directory.
+- Real two- and four-human Godot sessions passed with movement, equal results
+  and guest reconnect: `kras-network-smoke-NCgcT9`.
+- The subsequent pending-result delivery change passed the focused network
+  suite (27 assertions) and another 222-script compile check. Logs:
+  `/tmp/kras-reconnect-tests.log`, `/tmp/kras-resume-final-compile.log`.
+- A second real-engine run deliberately dropped the host's first result packet
+  by closing its transport. Both two- and four-human sessions completed with
+  identical results, host reconnect and guest reconnect. Evidence:
+  `kras-network-smoke-f35E6w`. This verifies the pending-result delivery path.
+- The native bridge build script now honors DEVELOPER_DIR and rejects a tools
+  directory without the full Xcode toolchain. Shell syntax was checked; this
+  is preparation only, not an archive or a native bridge build result.
+- Sandboxed Godot emitted a macOS CA lookup warning; initial editor import also
+  could not save global editor preferences. These are not successful device
+  signing or network-authentication tests.
+
+Live read-only release checks:
+
+- Apple app 6801506973 is `com.shary.kraspass`; version 1.1.10 is READY_FOR_SALE.
+  Build 107 is the most recently uploaded entry returned, while build 108 also
+  already exists. Do not reuse either number or infer archive source from them.
+- Existing distribution identity for team 4HM66AD594 is accessible in Keychain.
+  Xcode 27.0 (27A266a) and a connected physical iPhone were detected. No P12 was
+  imported and no certificate was changed.
+- Railway source is shary17454/kras-pass, production/main, but its observed
+  successful deployment is still c61005fd33e3821323379b56d9cfedd4a7407ce0.
+  Required Apple variables are present, client/team match, SQLite uses /data,
+  health is OK, and unauthenticated /account returns 401. Multiplayer is off.
+  The last-24-hours error-log query returned no error entries. These checks do
+  not prove a signed-device login, database migration, or a new deployment.
+
+No new Apple archive/upload/submission or Railway deploy is established by
+this follow-up. The 38 remaining online adapters, network tournament rotation,
+Internet/device QA and the production feature-enable gate remain outstanding.
 
 ## Expansion checklist per game
 

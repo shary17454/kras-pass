@@ -7,6 +7,7 @@ Build with the selected Xcode, SCons 4.11.1 and official godot-cpp pinned to
 `714c9e2c165db2dcb7e6ea57e62a04204d3cfbfa` (Godot 4.4 stable ABI).
 
 ```sh
+export DEVELOPER_DIR=/Applications/Xcode-27.app/Contents/Developer
 GODOT_CPP_PATH=/path/to/godot-cpp SCONS=/path/to/scons bash tools/build_apple_bridge.sh
 bash tools/export_ios.sh device
 ```

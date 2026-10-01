@@ -5,7 +5,12 @@ CPP="${GODOT_CPP_PATH:?Set GODOT_CPP_PATH to the godot-cpp checkout}"
 SCONS="${SCONS:-scons}"
 PIN="714c9e2c165db2dcb7e6ea57e62a04204d3cfbfa"
 test "$(git -C "$CPP" rev-parse HEAD)" = "$PIN" || { echo "Wrong godot-cpp revision" >&2; exit 1; }
-DEVELOPER="$(xcode-select -p)"
+DEVELOPER="${DEVELOPER_DIR:-$(xcode-select -p)}"
+test -d "$DEVELOPER/Toolchains/XcodeDefault.xctoolchain" || {
+  echo "Set DEVELOPER_DIR to a full Xcode installation's Contents/Developer directory" >&2
+  exit 1
+}
+export DEVELOPER_DIR="$DEVELOPER"
 cd "$ROOT/native/apple"
 for variant in device simulator; do
   ARCH=arm64
