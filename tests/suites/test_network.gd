@@ -47,3 +47,24 @@ func run(t: TestHarness) -> void:
 	t.equal(frame.bits, 0, "stale held buttons are released")
 	Net.leave()
 	t.ok(Net._inputs.is_empty() and Net.match_data.is_empty(), "session cleanup clears remote state")
+
+	t.suite("Network result replay protection")
+	var results: Array = []
+	var on_result := func(scores: Array): results.append(scores)
+	Net.online_result.connect(on_result)
+	Net.epoch = 3
+	Net.room_state = "playing"
+	Net._receive({"op": "result", "epoch": 2, "scores": [1, 0]})
+	t.equal(results.size(), 0, "ignore another match's result")
+	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3]})
+	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3]})
+	t.equal(results.size(), 1, "reconnect does not apply the same result twice")
+	Net.epoch = 4
+	Net.room_state = "lobby"
+	Net._receive({"op": "result", "epoch": 4, "scores": [5, 3]})
+	t.equal(results.size(), 1, "lobby cannot receive a stale match result")
+	Net.room_state = "playing"
+	Net._receive({"op": "result", "epoch": 4, "scores": [3, 5]})
+	t.equal(results.size(), 2, "next epoch can deliver its own result")
+	Net.online_result.disconnect(on_result)
+	Net.leave()

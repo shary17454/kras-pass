@@ -112,6 +112,50 @@ test('protocol/config validation and bounded room resources', () => {
   assert.throws(() => client().send({op: 'create', capacity: 4, public: true}), /unavailable/);
 });
 
+test('rejoining a lobby reuses only a vacant slot', () => {
+  const {host, client} = fixture();
+  const guests = Array.from({length: 3}, client);
+  guests.forEach(g => g.send({op: 'join', code: host.c.room.code}));
+  guests[0].send({op: 'leave'});
+  const replacement = client();
+  replacement.send({op: 'join', code: host.c.room.code});
+  const slots = host.last('room').players.map(p => p.slot);
+  assert.equal(new Set(slots).size, 4);
+  assert.equal(replacement.c.player.slot, 1);
+});
+
+test('resuming after returning to lobby cannot replay an old result', () => {
+  const {rooms, host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  host.send({op: 'loaded', epoch: 1}); guest.send({op: 'loaded', epoch: 1});
+  host.send({op: 'result', epoch: 1, scores: [5, 3, 2, 1]});
+  host.send({op: 'lobby'});
+  const token = guest.last('welcome').token;
+  rooms.disconnect(guest.c);
+  const resumed = client(); resumed.send({op: 'resume', token});
+  assert.equal(resumed.last('room').state, 'lobby');
+  assert.equal(resumed.last('result'), undefined);
+  assert.equal(resumed.last('start'), undefined);
+});
+
+test('disconnected host receives the full reconnect grace, not snapshot age', () => {
+  const {rooms, host, client, advance} = fixture();
+  host.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  host.send({op: 'loaded', epoch: 1});
+  advance(5000);
+  const token = host.last('welcome').token;
+  rooms.disconnect(host.c);
+  advance(26000);
+  const resumed = client(); resumed.send({op: 'resume', token});
+  assert.equal(resumed.last('room').state, 'playing');
+  advance(1000);
+  assert.equal(rooms.rooms.size, 1);
+  advance(30001);
+  assert.equal(resumed.last('closed').reason, 'authority_timeout');
+});
+
 test('loading and silent-authority watchdogs terminate without a result', () => {
   const {host, advance} = fixture();
   host.send({op: 'ready', ready: true}); host.send({op: 'start'});

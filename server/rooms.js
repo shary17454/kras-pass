@@ -135,7 +135,7 @@ export class Rooms {
     }
     if (m.op === 'lobby') {
       this.host(c); if (r.state !== 'results') fail('invalid_state');
-      r.state = 'lobby'; r.snapshot = null;
+      r.state = 'lobby'; r.snapshot = null; r.result = null;
       for (const peer of r.players.values()) peer.ready = false;
       this.broadcastRoom(r); return;
     }
@@ -145,7 +145,10 @@ export class Rooms {
   host(c) { if (c.player.id !== c.room.host) fail('host_only'); }
   match(r) { return {epoch: r.epoch, seed: r.seed, config: r.config, players: r.roster}; }
   join(c, r, name) {
-    const p = {id: r.next++, slot: r.players.size, name: cleanName(name) || 'Player', character: 0,
+    const usedSlots = new Set([...r.players.values()].map(p => p.slot));
+    let slot = 0;
+    while (usedSlots.has(slot)) slot++;
+    const p = {id: r.next++, slot, name: cleanName(name) || 'Player', character: 0,
       ready: false, loaded: false, sequence: -1, connection: c, token: randomBytes(32).toString('base64url'), expires: 0};
     c.room = r; c.player = p; r.players.set(p.id, p); this.sessions.set(p.token, {r, p});
     c.send({op: 'welcome', id: p.id, token: p.token}); this.broadcastRoom(r);
@@ -157,10 +160,11 @@ export class Rooms {
     if (session.p.connection) fail('session_active');
     if (session.p.expires <= this.now()) fail('session_expired');
     const {r, p} = session; p.connection = c; p.expires = 0; c.room = r; c.player = p;
+    if (p.id === r.host && r.state === 'playing') r.authoritySeen = this.now();
     c.send({op: 'welcome', id: p.id, token: p.token}); this.broadcastRoom(r);
     if (r.state !== 'lobby') c.send({op: 'start', ...this.match(r)});
-    if (r.snapshot) c.send(r.snapshot);
-    if (r.result) c.send(r.result);
+    if (r.state !== 'lobby' && r.snapshot) c.send(r.snapshot);
+    if (r.state === 'results' && r.result) c.send(r.result);
   }
   disconnect(c) {
     if (!c.room || c.player?.connection !== c) return;
@@ -189,7 +193,9 @@ export class Rooms {
     for (const r of this.rooms.values()) {
       if (this.now() - r.touched > 1800000) { this.close(r, 'room_expired'); continue; }
       if (r.state === 'loading' && this.now() - r.loadingAt > 60000) { this.close(r, 'load_timeout'); continue; }
-      if (r.state === 'playing' && this.now() - r.authoritySeen > this.grace) { this.close(r, 'authority_timeout'); continue; }
+      // A disconnected host has its own full grace period starting at disconnect.
+      if (r.state === 'playing' && r.players.get(r.host)?.connection
+        && this.now() - r.authoritySeen > this.grace) { this.close(r, 'authority_timeout'); continue; }
       for (const p of r.players.values()) if (!p.connection && p.expires <= this.now()) {
         this.remove(r, p, 'reconnect_timeout'); if (!this.rooms.has(r.code)) break;
       }

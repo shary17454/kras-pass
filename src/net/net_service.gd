@@ -35,6 +35,7 @@ var _ping_at := 0
 var _inputs := {}
 var _sequence := 0
 var _last_snapshot := -1
+var _result_epoch := -1
 
 enum State { OFFLINE, HOSTING, JOINING, LOBBY, IN_MATCH, DISCONNECTED }
 enum Mode { LOCAL, ONLINE_HOST, ONLINE_CLIENT }
@@ -75,6 +76,7 @@ func reset() -> void:
 	match_running = false
 	_sequence = 0
 	_last_snapshot = -1
+	_result_epoch = -1
 	state = State.OFFLINE
 	mode = Mode.LOCAL
 	room_code = ""
@@ -339,6 +341,9 @@ func _receive(m: Dictionary) -> void:
 		"room":
 			room_code = String(m.code)
 			room_state = String(m.state)
+			if room_state == "lobby":
+				match_running = false
+				_inputs.clear()
 			is_host = int(m.host) == local_peer_id
 			mode = Mode.ONLINE_HOST if is_host else Mode.ONLINE_CLIENT
 			peers.clear()
@@ -355,6 +360,7 @@ func _receive(m: Dictionary) -> void:
 			if fresh:
 				_sequence = 0
 				_last_snapshot = -1
+				_inputs.clear()
 				match_running = false
 				match_start_requested.emit(make_match_config())
 			elif room_state in ["loading", "playing"]:
@@ -371,7 +377,8 @@ func _receive(m: Dictionary) -> void:
 				_last_snapshot = int(m.tick)
 				snapshot_received.emit(m.data)
 		"result":
-			if int(m.epoch) == epoch:
+			if int(m.epoch) == epoch and room_state in ["loading", "playing", "results"] and _result_epoch != epoch:
+				_result_epoch = epoch
 				match_running = false
 				online_result.emit(m.scores)
 		"closed":
