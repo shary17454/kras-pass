@@ -32,7 +32,7 @@ try {
       const child = spawn(process.env.GODOT_BIN || 'godot', ['--headless', '--path', root,
         '--log-file', join(out, `${name}.log`), 'tests/network_peer.tscn', '--',
         `--test-data-dir=${join(out, `${name}-save`)}`, `--humans=${humans}`,
-        index === 0 ? '--host' : `--room=${code}`],
+        index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});
       children.push(child);
       let output = '', roomAnnounced = false;
@@ -62,6 +62,7 @@ try {
     for (const result of results) assert.deepEqual(result.scores, results[0].scores);
     assert.equal(new Set(results.map(r => r.id)).size, humans);
     assert.ok(results.some(r => r.reconnected));
+    assert.equal(results[0].reconnected, true, 'host result must survive transport loss');
     console.log(JSON.stringify({humans, status: 'PASS', results}));
   }
 } finally {

@@ -1,5 +1,11 @@
 extends RefCounted
 
+class RecordingTransport extends Node:
+	var sent: Array = []
+	func send(message: Dictionary) -> bool:
+		sent.append(message.duplicate(true))
+		return false
+
 
 func run(t: TestHarness) -> void:
 	t.suite("Network snapshot boundary")
@@ -67,4 +73,28 @@ func run(t: TestHarness) -> void:
 	Net._receive({"op": "result", "epoch": 4, "scores": [3, 5]})
 	t.equal(results.size(), 2, "next epoch can deliver its own result")
 	Net.online_result.disconnect(on_result)
+	Net.leave()
+
+	t.suite("Network host result delivery")
+	var transport := Net.transport
+	var recorder := RecordingTransport.new()
+	Net.transport = recorder
+	Net.is_host = true
+	Net.epoch = 8
+	Net.room_state = "playing"
+	var scores: Array[int] = [5, 3]
+	Net.publish_result(scores)
+	scores[0] = 99
+	t.equal(Net._pending_result.scores, [5, 3], "pending result owns an immutable copy")
+	t.equal(recorder.sent.size(), 1, "result attempts immediate delivery")
+	Net._receive({"op": "go", "epoch": 7})
+	t.equal(recorder.sent.size(), 1, "stale go cannot resend a result")
+	Net._receive({"op": "go", "epoch": 8})
+	t.equal(recorder.sent.size(), 2, "resume retries the pending result")
+	Net._receive({"op": "result", "epoch": 8, "scores": [5, 3]})
+	t.ok(Net._pending_result.is_empty(), "authoritative acknowledgement clears pending result")
+	Net._receive({"op": "go", "epoch": 8})
+	t.equal(recorder.sent.size(), 2, "acknowledged result is not sent again")
+	Net.transport = transport
+	recorder.free()
 	Net.leave()

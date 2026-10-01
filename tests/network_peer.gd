@@ -17,6 +17,23 @@ var failed := false
 var completed := false
 var initial_positions: Array[Vector3] = []
 var moved := false
+var result_drop: ResultDropTransport
+
+class ResultDropTransport extends Node:
+	var delegate: Node
+	var on_drop: Callable
+	var dropped := false
+	func send(message: Dictionary) -> bool:
+		if message.get("op") == "result" and not dropped:
+			dropped = true
+			on_drop.call()
+			delegate.socket.close()
+			return false
+		return delegate.send(message)
+	func close() -> void:
+		delegate.close()
+	func connect_room(url: String, first: Dictionary) -> Error:
+		return delegate.connect_room(url, first)
 
 
 func _ready() -> void:
@@ -26,6 +43,14 @@ func _ready() -> void:
 		if arg == "--host": host = true
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
+	if host and "--drop-host-result" in OS.get_cmdline_user_args():
+		result_drop = ResultDropTransport.new()
+		result_drop.delegate = Net.transport
+		result_drop.on_drop = func():
+			disconnected_once = true
+			before_id = Net.local_peer_id
+		Net.add_child(result_drop)
+		Net.transport = result_drop
 	Net.room_updated.connect(_room)
 	Net.match_start_requested.connect(_start)
 	Net.snapshot_received.connect(func(_data): snapshots += 1)
@@ -115,6 +140,9 @@ func _finish_cleanup() -> void:
 	game.queue_free()
 	game = null
 	Net.leave()
+	if result_drop != null:
+		Net.transport = result_drop.delegate
+		result_drop.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
 	get_tree().quit(0)

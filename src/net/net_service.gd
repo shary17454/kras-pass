@@ -36,6 +36,7 @@ var _inputs := {}
 var _sequence := 0
 var _last_snapshot := -1
 var _result_epoch := -1
+var _pending_result := {}
 
 enum State { OFFLINE, HOSTING, JOINING, LOBBY, IN_MATCH, DISCONNECTED }
 enum Mode { LOCAL, ONLINE_HOST, ONLINE_CLIENT }
@@ -77,6 +78,7 @@ func reset() -> void:
 	_sequence = 0
 	_last_snapshot = -1
 	_result_epoch = -1
+	_pending_result.clear()
 	state = State.OFFLINE
 	mode = Mode.LOCAL
 	room_code = ""
@@ -291,7 +293,8 @@ func publish_snapshot(data: Dictionary, tick: int) -> void:
 
 func publish_result(scores: Array[int]) -> void:
 	if is_host:
-		transport.send({"op": "result", "epoch": epoch, "scores": scores})
+		_pending_result = {"op": "result", "epoch": epoch, "scores": scores.duplicate()}
+		transport.send(_pending_result)
 
 
 func make_match_config() -> MatchConfig:
@@ -344,6 +347,7 @@ func _receive(m: Dictionary) -> void:
 			if room_state == "lobby":
 				match_running = false
 				_inputs.clear()
+				_pending_result.clear()
 			is_host = int(m.host) == local_peer_id
 			mode = Mode.ONLINE_HOST if is_host else Mode.ONLINE_CLIENT
 			peers.clear()
@@ -361,6 +365,7 @@ func _receive(m: Dictionary) -> void:
 				_sequence = 0
 				_last_snapshot = -1
 				_inputs.clear()
+				_pending_result.clear()
 				match_running = false
 				match_start_requested.emit(make_match_config())
 			elif room_state in ["loading", "playing"]:
@@ -368,6 +373,9 @@ func _receive(m: Dictionary) -> void:
 		"go":
 			if int(m.epoch) == epoch:
 				match_running = true
+				# Retry only after the server confirms this epoch is still playing.
+				if is_host and int(_pending_result.get("epoch", -1)) == epoch:
+					transport.send(_pending_result)
 		"input":
 			if int(m.epoch) == epoch and is_host:
 				m["time"] = Time.get_ticks_msec()
@@ -379,6 +387,7 @@ func _receive(m: Dictionary) -> void:
 		"result":
 			if int(m.epoch) == epoch and room_state in ["loading", "playing", "results"] and _result_epoch != epoch:
 				_result_epoch = epoch
+				_pending_result.clear()
 				match_running = false
 				online_result.emit(m.scores)
 		"closed":
