@@ -249,6 +249,22 @@ Internet/device QA and the production feature-enable gate remain outstanding.
   with host tick/transport timing on a responsive machine before merging or
   releasing. Earlier successful tournament results do not override this gate.
 
+## Timing diagnosis follow-up
+
+The next ordinary-match run, `kras-network-smoke-X5hkJc`, passed both two-human
+and four-human sessions, including guest reconnect and lost host result
+recovery. Scores matched on all peers. No production timeout was increased.
+The new diagnostics measured a maximum server event-loop delay of 11,778 ms;
+initial host scene loading also caused a roughly 10-second frame gap. This is
+evidence of scheduling/load sensitivity, not proof that the prior failures
+were exclusively environmental. Retain the failed-run evidence and require
+repeatable CI and device testing before clearing the release gate.
+
+The smoke harness now records bounded timing/state diagnostics without resume
+tokens or credentials. Godot logs report epoch, phase, maximum frame gap and
+snapshot count; the server reports loading/result transitions and event-loop
+delay. This distinguishes a paused host from a stalled service in future runs.
+
 ## Expansion checklist per game
 
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects

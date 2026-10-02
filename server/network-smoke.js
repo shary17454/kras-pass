@@ -7,15 +7,27 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
+import {monitorEventLoopDelay} from 'node:perf_hooks';
 import {attachMultiplayer} from './multiplayer.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
 const server = createServer();
 const service = attachMultiplayer(server, {enabled: true});
+const loopDelay = monitorEventLoopDelay({resolution: 20});
+loopDelay.enable();
 const handle = service.rooms.handle.bind(service.rooms);
 service.rooms.handle = (connection, message) => {
-  try { return handle(connection, message); }
+  try {
+    const result = handle(connection, message);
+    if (['start', 'next', 'loaded', 'resume', 'result'].includes(message.op)) {
+      console.log(JSON.stringify({event: 'transition', op: message.op,
+        state: connection.room?.state, epoch: connection.room?.epoch,
+        host: connection.player?.id === connection.room?.host,
+        serverLoopMaxMs: Math.round(loopDelay.max / 1e6)}));
+    }
+    return result;
+  }
   catch (error) {
     console.error(JSON.stringify({event: 'protocol_error', op: message.op,
       state: connection.room?.state, epoch: message.epoch, reason: error.message}));
@@ -84,6 +96,8 @@ try {
     console.log(JSON.stringify({humans, status: 'PASS', results}));
   }
 } finally {
+  loopDelay.disable();
+  console.log(JSON.stringify({event: 'server_timing', maxMs: Math.round(loopDelay.max / 1e6)}));
   for (const child of children) if (child.exitCode === null) child.kill('SIGTERM');
   service.close(); await new Promise(resolve => server.close(resolve));
 }

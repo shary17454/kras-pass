@@ -47,6 +47,21 @@ jobs:
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Error importing|ERROR:' "$RUNNER_TEMP/godot-import.stdout"; then
             exit 1
           fi
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Server and real multi-engine networking checks
+        working-directory: server
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm test 2>&1 | tee "$RUNNER_TEMP/kras-server-tests.stdout"
+          node network-smoke.js 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
+          node network-smoke.js --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
       - name: Compile, content, regression and cleanup checks
         env:
           TMPDIR: ${{ runner.temp }}
@@ -63,6 +78,10 @@ jobs:
           if-no-files-found: warn
           path: |
             ${{ runner.temp }}/godot-import.stdout
+            ${{ runner.temp }}/kras-server-tests.stdout
+            ${{ runner.temp }}/kras-network-*.stdout
+            ${{ runner.temp }}/kras-network-smoke-*/*.stdout
+            ${{ runner.temp }}/kras-network-smoke-*/*.log
             ${{ runner.temp }}/kras-party-check.*/*.stdout
             ${{ runner.temp }}/kras-party-check.*/saves-stability/stability.json
             build/stage0/inventory.json

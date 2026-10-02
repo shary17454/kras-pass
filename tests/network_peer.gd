@@ -20,6 +20,21 @@ var moved := false
 var tournament_mode := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
+var _last_frame_ms := 0
+var _max_frame_gap_ms := 0
+var _next_diagnostic_ms := 0
+
+
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec()
+	if _last_frame_ms > 0:
+		_max_frame_gap_ms = maxi(_max_frame_gap_ms, now - _last_frame_ms)
+	_last_frame_ms = now
+	if now >= _next_diagnostic_ms:
+		_next_diagnostic_ms = now + 10000
+		print("NETWORK_TIMING=" + JSON.stringify({"epoch": Net.epoch, "state": Net.room_state,
+			"phase": game.phase if is_instance_valid(game) else -1, "running": Net.match_running,
+			"max_frame_gap_ms": _max_frame_gap_ms, "snapshots": snapshots}))
 
 class ResultDropTransport extends Node:
 	var delegate: Node
