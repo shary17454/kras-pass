@@ -109,6 +109,13 @@ func run(t: TestHarness) -> void:
 	t.equal(Net.make_match_config().minigame_id, "base_siege", "siege uses shared online match configuration")
 	t.equal(Net.make_match_config().rule("online_contenders", []), [0, 2], "siege final preserves contender roster")
 	t.equal(Net.ONLINE_ARENAS.base_siege, ["iron_flats", "crate_yard"], "siege supports both original arenas")
+	Net.match_data.config.game = "boss_forge"
+	Net.match_data.config.arena = "crate_yard"
+	t.equal(Net.make_match_config().minigame_id, "boss_forge", "forge uses shared online match configuration")
+	t.equal(Net.make_match_config().rule("online_contenders", []), [0, 2], "forge final preserves contender roster")
+	t.equal(Net.ONLINE_ARENAS.boss_forge, ["crate_yard"], "forge retains its authored arena")
+	Net.match_data.erase("tournament")
+	t.equal(Net.make_match_config().duration_override, 0.0, "ordinary forge retains authored duration")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
 	var frame := InputFrame.new()
 	frame.bits = 4

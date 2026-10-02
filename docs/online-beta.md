@@ -2,6 +2,40 @@
 
 ## Implemented boundary
 
+### Forge development room contracts (pending driving qualification)
+
+Both room allowlists now include `boss_forge` on its authored `crate_yard`
+arena. The server applies `validForgeWorld` before relaying host snapshots.
+No product duration, boss damage, AI, production endpoint or availability
+setting changed. Ordinary matches keep the authored 150-second duration;
+the existing tournament final retains its 20-second override and 25-second
+safety deadline, which still needs actual gameplay qualification.
+
+Two new room-model tests verify invalid arena/state rejection, host-only
+snapshots and results, identity/world restoration after disconnect, and a
+three-round tournament with a final that does not award extra points or
+cups. These tests supply model snapshots/results; they are not actual
+fights. Focused Godot routing passed 71 assertions in
+`/tmp/kras-forge-room-routing-verified.log`. The first invocation used an
+incorrect suite filter and selected no tests; it is not counted as a pass.
+Node passed 105 tests with zero skips, then passed the same 105 with all
+three fresh actual captures from `kras-party-check.3bRCvc`; the latter server
+log is `/tmp/kras-forge-room-server-tests.log`. This full gate compiled 300
+scripts, audited 337 resources without inventory issues, passed 20,325
+assertions in 145.2 wall-clock seconds, completed the unchanged real
+three-lap race and passed 39 stability matches. Its save-error log is the
+intentional failed-write/retry fixture (`test_save.gd::_failed_write`), not
+an unexpected runtime failure. No script, parse or leak failure was found.
+
+There are now 36 development games, with Colossus, Dreadnought and Sovereign
+still excluded. Independent-process Forge matches, real crate/slag feeding
+in every internal round, four-human and human/Bot play, guest presentation,
+reconnect and actual tournament final remain unqualified. The CI network
+matrix still has 35 games plus the core job; Forge must not be counted as
+a qualified network scenario until its real-input smoke fixture passes.
+Production online remains disabled. This is not Railway deployment,
+physical-device QA, an archive, an upload or an Apple review submission.
+
 ### Forge boss adapter preparation
 
 `boss_forge` now captures the original furnace's health, phase, defeat,
@@ -39,10 +73,11 @@ Node passed 103 tests with zero skips using actual armed-race, Siege and
 Forge capture files. The Forge capture contains health 780, one damage and
 one strike generation, one warning, one remaining crate and one slag.
 CI requires and preserves all three captures after the core Godot gate;
-workflow YAML and embedded Bash syntax passed locally. Forge is not yet in
-room allowlists: host result/reconnect/tournament contracts and real
-independent-process matches remain required. All four boss games remain
-excluded from development rooms, and production online remains disabled.
+workflow YAML and embedded Bash syntax passed locally. At this adapter
+checkpoint Forge was not in room allowlists and all four boss games were
+excluded; the later room-contract section above records the current boundary.
+Real independent-process Forge matches remain required, and production
+online remains disabled.
 No Railway deployment, Internet/device test, archive or Apple review is
 implied by this adapter work.
 

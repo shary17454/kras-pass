@@ -11,6 +11,72 @@ const snapshot = () => ({phase: 4, round: 0, countdown: 0, radius: 10, time: 50,
   fighters: Array.from({length: 4}, () => ({position: [0, 0, 0], velocity: [0, 0, 0],
     facing: [0, 0, 1], health: 100, dash: 0, attack: 0, stun: 0, visible: true, alive: true}))});
 
+const forgeWorld = () => ({boss: {health: 780, phase: 0, defeated: false,
+  position: [0, 1, 0], rotation: [0, 0, 0], damage: 1, strike: 1,
+  strike_position: [3, 0, 2], strike_radius: 3.4}, intake: [Math.PI / 2, 0, .2],
+  warnings: [{id: '1', position: [3, 0, 2], radius: 3.4, left: .8, total: 1.3}],
+  crates: [{id: '2', position: [5, .7, 0]}],
+  slag: [{id: '3', position: [4, .6, 0], life: 5, by: 1}]});
+
+test('forge room validates host state and restores identity, world and result on resume', () => {
+  const {rooms, host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'boss_forge', arena: 'crate_yard', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'iron_flats'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = {...snapshot(), world: forgeWorld()};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  for (const world of [undefined, {}, {...data.world, extra: 1},
+    {...data.world, boss: {...data.world.boss, phase: 2}},
+    {...data.world, slag: [{...data.world.slag[0], by: 4}]},
+    {...data.world, crates: [{id: '3', position: [5, .7, 0]}]}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+    assert.equal(guest.last('snapshot').tick, 1);
+  }
+  const token = guest.last('welcome').token, id = guest.c.player.id;
+  rooms.disconnect(guest.c);
+  const resumed = client(); resumed.send({op: 'resume', token});
+  assert.equal(resumed.last('welcome').id, id);
+  assert.equal(resumed.last('start').config.game, 'boss_forge');
+  assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+  assert.throws(() => resumed.send({op: 'result', epoch, scores: [120, 0, 0, 0]}), /host_only/);
+  host.send({op: 'result', epoch, scores: [0, 120, 0, 0]});
+  assert.deepEqual(resumed.last('result').scores, [0, 120, 0, 0]);
+});
+
+test('forge tournament resolves final without changing ordinary points or cups', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'boss_forge', arena: 'crate_yard', rounds: 1, bots: true, difficulty: 1,
+    tournament: {mode: 'points', target: 3, rotation: 'random_no_repeat', points: [1, 1, 1, 1],
+      entries: [{game: 'boss_forge', arena: 'crate_yard'}]}}});
+  for (let round = 0; round < 3; round++) {
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+    host.send({op: round === 0 ? 'start' : 'next'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    host.send({op: 'result', epoch, scores: [120, 120, 120, 120]});
+  }
+  const cups = [...host.last('room').tournament.cups];
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'next'});
+  const start = host.last('start');
+  assert.equal(start.config.game, 'boss_forge');
+  assert.deepEqual(start.tournament.contenders, [0, 1, 2, 3]);
+  host.send({op: 'loaded', epoch: start.epoch}); guest.send({op: 'loaded', epoch: start.epoch});
+  host.send({op: 'snapshot', epoch: start.epoch, tick: 1, data: {...snapshot(), world: forgeWorld()}});
+  host.send({op: 'result', epoch: start.epoch, scores: [0, 120, 0, 0]});
+  const result = host.last('room').tournament;
+  assert.deepEqual(result.points, [3, 3, 3, 3]);
+  assert.deepEqual(result.cups, cups);
+  assert.deepEqual(result.awards, [0, 0, 0, 0]);
+  assert.deepEqual(result.champions, [1]);
+  assert.equal(result.complete, true);
+});
+
 test('siege rooms bind both arenas and preserve host crystal state on resume', () => {
   for (const arena of ['iron_flats', 'crate_yard']) {
     const {rooms, host, client} = fixture();
