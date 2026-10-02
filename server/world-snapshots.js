@@ -1,6 +1,15 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validSaboteurWorld(data, count) {
+  return validPaintWorld(data, count) && vector(data.drone)
+    && Number.isFinite(data.rotor) && data.rotor >= 0 && data.rotor <= Math.PI * 2
+    && Number.isInteger(data.target) && data.target >= -1 && data.target < 169
+    && Number.isFinite(data.mark) && data.mark >= 0 && data.mark <= 1.5
+    && Number.isFinite(data.cycle) && data.cycle >= 0 && data.cycle <= 3.4
+    && (data.target >= 0 || data.mark === 0);
+}
+
 export function validPaintWorld(data, count) {
   return Number.isInteger(count) && count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.owners) && data.owners.length === 169

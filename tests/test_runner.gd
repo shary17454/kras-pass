@@ -27,6 +27,7 @@ const SUITES := [
 	"res://tests/suites/test_tag_network.gd",
 	"res://tests/suites/test_paint_reset.gd",
 	"res://tests/suites/test_paint_network.gd",
+	"res://tests/suites/test_saboteur_network.gd",
 	"res://tests/suites/test_race_conditions.gd",
 	"res://tests/suites/test_lifecycle.gd",
 ]
@@ -67,6 +68,10 @@ func _ready() -> void:
 	var elapsed := (Time.get_ticks_msec() - started) / 1000.0
 	print("\nfinished in %.1fs" % elapsed)
 	_restore()
+	# Let audio playback references drain before the engine tears down its mixer.
+	AudioManager.shutdown()
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var code := _t.report()
 	get_tree().quit(code)
 

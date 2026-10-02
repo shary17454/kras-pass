@@ -507,8 +507,38 @@ sufficient to enable that game online.
   reach the tile materials. These synthetic ownership fixtures are not complete
   gameplay, portrait-layout or iPhone QA. The first capture attempt failed on
   a test variable's inferred type; an explicit String fixed it before this run.
-- Both games' tournament runs and real-device latency/performance checks are
-  still pending at this checkpoint.
+- `kras-network-smoke-e6T2ZW`: Paint Grid three-match tournaments passed with
+  two humans/two bots and four humans. Identity, tile ownership and final
+  standings agreed after reconnect; guests received 1661-1684 snapshots.
+  A tied ordinary round shared awards correctly, but neither final standing
+  required a sudden-death match. Server event-loop maximum was 1784 ms.
+- Mnatiq's tournament run and real-device latency/performance checks remain.
+
+## Prepared Saboteur world adapter
+
+`saboteur_replica.gd` combines fixed-grid ownership with bounded drone position,
+rotor angle, target tile and warning/cycle timers. The guest renders the host's
+warning cells without running target choice, scrub, damage or point logic.
+Repeated snapshots reuse warning meshes; clearing/changing targets removes the
+old warning. This game remains outside both room allowlists pending integration.
+
+- `/tmp/kras-saboteur-unit.log`: 211 assertions passed, covering JSON capture,
+  malformed/missing fields, last-valid-state retention, warning cells at centre
+  and corner, no guest timer advancement or scrub, and host-driven clear/reset.
+- All seven server world-validator tests passed.
+- `/tmp/kras-saboteur-compile.log`: all 236 scripts compiled.
+- `/tmp/kras-saboteur-visual-clean.log`: 212 graphical assertions passed.
+  `/tmp/kras-saboteur-warning.png` was inspected: the drone and nine white
+  warning tiles render above host-owned colors. This is a desktop fixture,
+  not a device performance or full-layout acceptance test.
+- The first graphical run leaked an AudioStreamWAV and its playback while
+  quitting during a music fade. The shared test runner now explicitly shuts
+  audio down and waits two frames before exit; the rerun has no leak warning.
+- Import generated the new script UIDs. The sandbox reported inability to save
+  the user's editor settings and read system CA certificates; these are not
+  treated as product errors or proof of successful release building.
+- Scrub burst/audio events, real multiplayer matches/tournaments and device QA
+  are still required before declaring it complete.
 
 ## Expansion checklist per game
 

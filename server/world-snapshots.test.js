@@ -1,6 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld} from './world-snapshots.js';
+
+test('saboteur requires bounded drone and warning state with tile ownership', () => {
+  const make = () => ({owners: Array(169).fill(-1), drone: [1, 3.2, -1], rotor: 2,
+    target: 168, mark: 1.5, cycle: 3.4});
+  assert.ok(validSaboteurWorld(make(), 4));
+  assert.ok(validSaboteurWorld({...make(), target: -1, mark: 0}, 2));
+  for (const [key, values] of Object.entries({drone: [[], [0, 0, Infinity], [0, '3', 0]],
+    rotor: [-1, 7, true], target: [-2, 169, 1.5, '1'], mark: [-1, 2, true], cycle: [-1, 4, null]})) {
+    for (const value of values) assert.equal(validSaboteurWorld({...make(), [key]: value}, 4), false, key);
+  }
+  for (const key of Object.keys(make())) {
+    const data = make(); delete data[key];
+    assert.equal(validSaboteurWorld(data, 4), false, key);
+  }
+  assert.equal(validSaboteurWorld({...make(), target: -1}, 4), false);
+  assert.equal(validSaboteurWorld({...make(), owners: Array(169).fill(4)}, 4), false);
+});
 
 test('paint grid requires complete bounded tile ownership', () => {
   const owners = Array(169).fill(-1);
