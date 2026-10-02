@@ -168,6 +168,8 @@ func _start(cfg: MatchConfig) -> void:
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
 	if game_id == "hurdle_dash":
 		cfg.duration_override = 35.0
+	if game_id == "rising_tide":
+		cfg.duration_override = 45.0
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -264,6 +266,12 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "rising_tide":
+			# Circle on the base platform so rising water, not running off, ends the round.
+			var fighter: Fighter = game.ctx.fighters[slot]
+			var angle := float(Time.get_ticks_msec() - started_at) * 0.001 + slot * PI * 0.5
+			var target: Vector3 = game.arena.global_position + Vector3(cos(angle) * 3.0, 0.0, sin(angle) * 3.0)
+			movement = Vector2(target.x - fighter.global_position.x, target.z - fighter.global_position.z).limit_length()
 		if game_id == "hurdle_dash":
 			var fighter: Fighter = game.ctx.fighters[slot]
 			movement = Vector2(clampf((game.arena.global_position.x + game.arena.lane_x(slot) - fighter.global_position.x) * 2.0, -1.0, 1.0), -1.0)
@@ -424,6 +432,18 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "rising_tide":
+		if game.arena.water_level() <= 0.0 or not game.ctx.alive.has(false):
+			_fail("tide did not rise and eliminate a runner")
+			return
+		if host and game.arena._water._hit.is_empty():
+			_fail("no authoritative submersion occurred")
+			return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world_snapshots < 5 or world.is_empty() or absf(game.arena.water_level() - float(world.level)) > 0.001:
+				_fail("tide level diverged from host")
+				return
 	if game_id == "hurdle_dash":
 		for slot in game.ctx.player_count():
 			if game.ctx.is_alive(slot) and game.controller.finish_times[slot] == game.controller.UNFINISHED:

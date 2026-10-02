@@ -2,6 +2,57 @@
 
 ## Implemented boundary
 
+### Rising Tide room integration
+
+Development rooms accept `rising_tide` only on `tide_spire` and require the
+host's bounded water snapshot. All 66 server tests passed, including wrong
+arena, guest publication and invalid-world rejection. The CI matrix includes
+Tide; that configuration alone is not passing CI evidence.
+
+The first local run `kras-network-smoke-LGQBAB` failed before entering a room:
+GDScript could not infer the scripted movement target's type. An explicit
+Vector3 declaration fixed the test fixture. No gameplay rules changed.
+
+Ordinary matches `kras-network-smoke-ptMv8f` passed with 2 humans plus 2 bots
+and 4 humans: aggregate scores `[4,8,13,20]` / `[4,9,13,16]`, 975-994 guest
+snapshots, guest reconnect and interrupted host result transport. The fixture
+circles the base platform and requires positive water height and an eliminated
+player; guests compare their water height to the received host snapshot.
+Maximum local server event-loop delay was 130 ms. The logs contain no script,
+parse, normalization, network-failure or leaked-object errors. This does not
+certify physical-device rendering, latency or production readiness.
+
+The first tournament run `kras-network-smoke-OGRCPl` also passed transport
+checks (three matches for both rosters, points `[3,6,9,15]`, champion slot 3,
+1,497-1,516 snapshots, maximum loop delay 83 ms), but exposed a scoring defect:
+players submerged on the same tick received different ranks by slot iteration
+order. Those results are not evidence of fair final scoring.
+
+`kras-tide-scoring-before-valid.log` reproduced both all-player and partial
+ties incorrectly ranked by slot. Tide now records the authoritative hazard
+age at elimination and ranks equal-age victims equally; earlier victims
+still score lower and surviving players retain their lead. Knockout rewards
+are preserved. `kras-tide-scoring-after.log`: all three assertions passed.
+The first fixture attempt used an illegal intro-to-playing transition and
+was corrected before the valid pre-fix reproduction. Full gate
+`kras-party-check.sIIPhC` started before this scoring repair and must not be
+treated as verification of the new scoring code.
+
+Post-fix tournament `kras-network-smoke-94sWVd` passed both rosters and
+required a nonempty host submersion ledger. Two humans plus bots completed
+three matches, points `[6,7,8,15]`, champion slot 3 and 1,496 guest snapshots.
+Four humans completed three regular matches plus three actual tied finals:
+points `[9,9,9,9]`, final scores `[2,2,2,2]`, and the existing bounded-tie
+policy returned shared champions `[0,1,2,3]` instead of awarding by slot.
+Guests received 2,943-2,962 snapshots. Maximum local server loop delay was
+52 ms. Host/guest reconnect and all tournament views matched. This run
+supersedes the earlier tournament scoring evidence, not its transport history.
+No runtime, parse, network-failure, axis-normalization or leaked-object errors
+were found in the post-fix logs. Final gate `kras-party-check.hehzco` compiled
+269 scripts, audited 306 resources with zero issues, passed 18,464 assertions
+and the race regression, and completed 39 stability matches without failures.
+Production online remains disabled; device and Internet qualification remain.
+
 ### Rising Tide snapshot adapter
 
 The shared snapshot path now supports host-owned water level and wave age.
@@ -13,9 +64,8 @@ outside +/-1,000 and ages outside 0-3,600 seconds.
 
 `/tmp/kras-tide-network.log`: 28 assertions passed, including serialized state,
 repeated rendering without simulation, and new-round water reset. All 65
-Node tests passed. This is adapter validation, not room support: Rising Tide
-remains excluded from the allowlist until independent-process matches,
-reconnect, elimination and tournament behavior have been verified.
+Node tests passed. This initial adapter validation preceded the room
+integration and independent-process evidence documented above.
 Full gate `kras-party-check.ZuzOJ5`: 268 scripts compiled, 305 resources
 audited with zero issues, 18,460 assertions passed, race regression passed
 and all 39 stability matches passed. This remains headless desktop evidence,
@@ -373,7 +423,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-two explicitly adapted rulesets; verification
+The development allowlist contains twenty-three explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard

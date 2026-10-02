@@ -45,7 +45,7 @@ const children = [];
 const tournament = process.argv.includes('--tournament');
 const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
-assert.ok(['ring_rumble', 'goal_guard', 'gem_grab', 'star_rush', 'zone_hold', 'relic_hold', 'tag_hunt', 'paint_grid', 'mnatiq', 'mukharrib', 'magnet_court', 'storm_heart', 'sky_court', 'crumble_court', 'blast_ball', 'color_stand', 'quick_draw', 'symbol_echo', 'crate_smash', 'lab_crates', 'crate_relay', 'hurdle_dash'].includes(game));
+assert.ok(['ring_rumble', 'goal_guard', 'gem_grab', 'star_rush', 'zone_hold', 'relic_hold', 'tag_hunt', 'paint_grid', 'mnatiq', 'mukharrib', 'magnet_court', 'storm_heart', 'sky_court', 'crumble_court', 'blast_ball', 'color_stand', 'quick_draw', 'symbol_echo', 'crate_smash', 'lab_crates', 'crate_relay', 'hurdle_dash', 'rising_tide'].includes(game));
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
