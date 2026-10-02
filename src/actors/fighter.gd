@@ -660,7 +660,9 @@ func _integrate_walk(wish: Vector3, delta: float) -> void:
 	elif velocity.y < 0.0:
 		velocity.y = -1.0
 	if wish.length_squared() > 0.02:
-		facing = facing.slerp(wish.normalized(), clampf(turn_rate * delta, 0.0, 1.0))
+		# Planar yaw avoids unstable slerp axes for nearly opposite directions.
+		var yaw := lerp_angle(atan2(facing.x, facing.z), atan2(wish.x, wish.z), clampf(turn_rate * delta, 0.0, 1.0))
+		facing = Vector3(sin(yaw), 0.0, cos(yaw))
 
 
 func _integrate_drive(wish: Vector3, delta: float) -> void:

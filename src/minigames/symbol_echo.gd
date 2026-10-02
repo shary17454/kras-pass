@@ -214,6 +214,27 @@ func is_showing() -> bool:
 	return _stage == Stage.SHOW
 
 
+func accepts_sequence_input() -> bool:
+	return _stage == Stage.INPUT
+
+
+func visible_symbol() -> int:
+	return _flash_index if is_showing() and _flash_remaining > 0.0 else -1
+
+
+func visible_step() -> int:
+	return _show_index - 1 if visible_symbol() >= 0 else -1
+
+
+func sequence_length() -> int:
+	return _sequence.size()
+
+
+func current_pad(slot: int) -> int:
+	var fighter := ctx.fighter(slot)
+	return _pad_under(fighter.global_position) if is_instance_valid(fighter) else -1
+
+
 ## Bumped every time a fresh sequence is dealt. A brain keys its recall on this
 ## so a step it fumbled is re-rolled for the next sequence instead of staying
 ## wrong for the whole round.

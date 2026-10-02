@@ -22,6 +22,7 @@ const SUITES := [
 	"res://tests/suites/test_matches.gd",
 	"res://tests/suites/test_quick_draw.gd",
 	"res://tests/suites/test_symbol_echo.gd",
+	"res://tests/suites/test_echo_perception.gd",
 	"res://tests/suites/test_draw_network.gd",
 	"res://tests/suites/test_goal_guard.gd",
 	"res://tests/suites/test_magnet_network.gd",

@@ -945,9 +945,41 @@ cannot award it again on another input scan.
   audited with zero issues, 17,625 assertions passed, race regression passed
   and 39 stability matches completed with zero failures.
 - Symbol Echo is still offline-only. Its future adapter must reveal only the
-  currently shown symbol, not the secret sequence. AI currently queries the
-  expected pad with injected recall errors; observation-based memory remains
-  required before claiming a restricted-perception implementation.
+  currently shown symbol, not the secret sequence. At this lifecycle commit
+  AI still queried the expected pad with recall errors. The subsequent observed
+  memory repair is recorded below.
+
+### Symbol Echo observed AI memory
+
+The controller exposes only the currently illuminated symbol and its displayed
+step, alongside visible phase/length and the player's own progress. Echo AI
+samples this cue once, stores a difficulty-dependent remembered value and waits
+its reaction delay before using it. It no longer calls `expected_pad` or receives
+the true answer during input. Missed observations produce seeded guesses that
+exclude disproven choices; repeated queries cannot reroll the same belief.
+
+Miss feedback now invalidates the attempted step rather than progress zero after
+a reset. Repeated-symbol movement leaves the pad fully before returning, avoiding
+oscillation at its boundary. A real four-AI fixture observes [0, 0, 1] and checks
+that a competitor can complete that repeated-symbol sequence.
+
+- Initial perception unit run: 21 assertions passed.
+- `/tmp/kras-echo-perception-movement.log`: real movement exposed non-normalized
+  slerp-axis errors and failed repeated-symbol completion.
+- `/tmp/kras-echo-movement-diagnostic.log`: planar yaw removed rotation errors;
+  progress still stalled at [1, 1, 1, 2], identifying boundary oscillation.
+- `/tmp/kras-echo-perception-final.log`: 38 assertions passed after explicit
+  pad-exit state. The suite also includes direct near-opposite walking-turn
+  checks in the subsequent full gate.
+- Walking facing now interpolates planar yaw and reconstructs a normalized
+  horizontal vector. This addresses the observed nearly opposite-direction
+  failure without changing vehicle steering or movement acceleration.
+- Full gate `kras-party-check.OojJ2s`: 255 scripts compiled, 292 resources
+  audited with zero issues, 17,674 assertions passed, race regression passed
+  and 39 stability matches completed with zero failures. No normalization,
+  script or parse errors were found in this gate's logs.
+- This is one AI category's perception repair, not a claim that every other
+  brain has been audited or that Symbol Echo is online-ready.
 
 ### Closed-room input drain
 
