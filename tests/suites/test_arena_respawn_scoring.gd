@@ -35,6 +35,16 @@ func run(t: TestHarness, host: Node) -> void:
 		game.on_fighter_fell(1)
 		t.equal(int(scene.ctx.details[0].get("knockouts", 0)), 2, "new life can earn a second legitimate knockout")
 		t.equal(int(scene.ctx.details[1].get("falls", 0)), 2, "new life records its own fall")
+		if id == "bumper_bowl":
+			var waiting_score: int = scene.ctx.scores[1]
+			var survivor_score: int = scene.ctx.scores[3]
+			game.on_fighter_fell(2)
+			t.equal(scene.ctx.scores[1], waiting_score, "absent fighter cannot collect survival points while awaiting respawn")
+			t.equal(scene.ctx.scores[3], survivor_score + 1, "fighter still in bowl receives survival point")
+			game.process_respawns(game.respawn_delay + 0.1)
+			t.ok(victim.alive and victim.visible, "waiting survivor returns to bowl")
+			game.on_fighter_fell(2)
+			t.equal(scene.ctx.scores[1], waiting_score + 1, "returned fighter can earn survival points again")
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame

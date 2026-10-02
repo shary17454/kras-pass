@@ -2,6 +2,25 @@
 
 ## Implemented boundary
 
+### Bumper Bowl survival-score correction
+
+Match-alive players waiting offstage for respawn were incorrectly receiving
+survival points when another fighter fell. The scoring loop now excludes
+pending respawns; returned players are eligible again. Attacker credit and
+active survivors' points are unchanged.
+
+`/tmp/kras-bumper-survivor-before.log` reproduced two failed assertions;
+`/tmp/kras-bumper-survivor-after.log` passed all 31 assertions, including
+absent-player exclusion, active-survivor credit and restored eligibility.
+This repair alone does not enable Bumper Bowl online.
+
+Full gate `kras-party-check.z1Ggug`: 274 scripts compiled, 311 resources
+audited with zero issues, 18,557 assertions passed, race regression passed
+and all 39 stability matches passed. All 70 Node tests passed after allowing
+the real WebSocket test to open its local listener; the sandbox-only attempt
+reported `listen EPERM`, not a gameplay assertion failure. These checks do
+not establish physical-device performance or production readiness.
+
 ### Duel Pit room integration
 
 Development rooms now allow `duel_pit` only on its authored `duel_pit` arena.

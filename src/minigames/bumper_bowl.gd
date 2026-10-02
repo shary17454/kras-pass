@@ -38,10 +38,10 @@ func _handle_out(slot: int) -> void:
 	_pay_survivors(slot)
 
 
-## Pay everyone who is not the one who just went out.
+## Respawning players remain match-alive, but are not currently surviving in the bowl.
 func _pay_survivors(fallen: int) -> void:
 	for i in ctx.fighters.size():
-		if i == fallen or not ctx.is_alive(i):
+		if i == fallen or not ctx.is_alive(i) or _respawn_timers.has(i):
 			continue
 		ctx.add_score(i, int(SURVIVOR_POINTS * ctx.powerups.point_multiplier(i)))
 
