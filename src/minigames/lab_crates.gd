@@ -42,7 +42,9 @@ func _break_crate(index: int, slot: int) -> void:
 	_crates.remove_at(index)
 	n.queue_free()
 	ctx.bump_detail(slot, "weapons")
-	match ctx.rng.randi_range(0, 2):
+	var weapon := ctx.rng.randi_range(0, 2)
+	_record_break(2 + weapon, pos)
+	match weapon:
 		0:
 			_shockwave(slot, pos)
 		1:

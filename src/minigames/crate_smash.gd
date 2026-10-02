@@ -13,6 +13,9 @@ const FIELD_TARGET := 14
 
 var _crates: Array = []
 var _spawn_timer := 0.0
+var break_sequence := 0
+var break_kind := 0
+var break_position := Vector3.ZERO
 
 
 func configure() -> void:
@@ -106,6 +109,7 @@ func _break_crate(index: int, slot: int) -> void:
 	var n: Node3D = entry["node"]
 	var is_bomb: bool = entry["bomb"]
 	var pos: Vector3 = n.global_position
+	_record_break(1 if is_bomb else 0, pos)
 	_crates.remove_at(index)
 	n.queue_free()
 	if is_bomb:
@@ -133,6 +137,12 @@ func _break_crate(index: int, slot: int) -> void:
 
 func is_round_over() -> bool:
 	return ctx.early_finish
+
+
+func _record_break(kind: int, position: Vector3) -> void:
+	break_sequence += 1
+	break_kind = kind
+	break_position = position
 
 
 func ai_script() -> Script:

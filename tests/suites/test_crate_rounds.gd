@@ -13,6 +13,8 @@ func run(t: TestHarness, host: Node) -> void:
 		game._crates[0].bomb = false
 		game._crates[0].erase("weapon")
 		game._break_crate(0, 0)
+		t.equal(game.break_sequence, 1, id + " break has a monotonic event")
+		t.equal(game.break_kind, 0, id + " ordinary break is identified")
 		game._spawn_timer = -9.0
 		var old: Array = []
 		for entry in game._crates:
@@ -23,6 +25,7 @@ func run(t: TestHarness, host: Node) -> void:
 			shots = game._shots.duplicate()
 		var scores := Array(scene.ctx.scores)
 		game.on_round_start()
+		t.equal(game.break_sequence, 1, id + " reset cannot replay an old event")
 		t.equal(game._crates.size(), game.FIELD_TARGET, id + " restores full field")
 		t.near(game._spawn_timer, 1.1, 0.00001, id + " resets spawn clock")
 		t.equal(Array(scene.ctx.scores), scores, id + " reset cannot award points")
@@ -39,6 +42,9 @@ func run(t: TestHarness, host: Node) -> void:
 		var position := Vector3(4, 0.75, -3)
 		game._crates[0].node.global_position = position
 		game._break_crate(0, 0)
+		t.equal(game.break_sequence, 2, id + " bomb increments event")
+		t.equal(game.break_kind, 1, id + " bomb identified separately")
+		t.ok(game.break_position.is_equal_approx(position), id + " event has host impact position")
 		var burst: Node3D = scene.ctx.world_root.get_child(scene.ctx.world_root.get_child_count() - 1)
 		t.ok(burst.global_position.is_equal_approx(position), id + " explosion appears at broken crate")
 		game.cleanup()

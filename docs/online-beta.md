@@ -2,6 +2,34 @@
 
 ## Implemented boundary
 
+### Crate and lab snapshot adapter preparation
+
+`crate_smash` and `lab_crates` now share a presentation adapter for normal,
+bomb and lab weapon crates. Lab volleys include stable projectile identities,
+position, direction and shooter slot. The guest discards its procedurally
+generated crates/projectiles and reconciles visual-only nodes. It never runs
+crate collision, damage, spawning or scoring. Crate views retain their node
+while their identity/style is unchanged; expired shots are removed.
+
+Strict matching Godot/Node validators bound the field to 14 crates and lab
+volleys to 128 active shots, reject duplicate/noncanonical IDs, nonfinite
+coordinates, unsupported kinds, invalid shooter slots and nonhorizontal or
+unnormalized directions. Non-lab snapshots cannot introduce lab weapons.
+Host break counters select feedback without replaying it on first snapshot,
+duplicate update or reconnect. Only the latest break feedback in a snapshot
+is presented; this is not lossless replay of every cosmetic event.
+
+- `/tmp/kras-crate-network-final.log`: 125 assertions passed, covering shared
+  dispatch, JSON, invalid packets, generated-body cleanup, noncolliding views,
+  identity reuse, unchanged score/spawn clock, removal and feedback freshness.
+- `npm test`: 55 tests passed including actual WebSocket transport tests and
+  the new crate-world validator tests.
+- Both games remain excluded from room allowlists. Real multiplayer matches,
+  tournaments, lab weapon observations and portrait/landscape QA remain.
+- Full gate `kras-party-check.VOxBTB`: 260 scripts compiled, 297 resources
+  audited with zero issues, 18,008 assertions passed, race regression passed
+  and 39 stability matches completed with zero failures.
+
 ### Crate-game lifecycle prerequisite
 
 Before adapting crate games to networking, `crate_smash` and `lab_crates`

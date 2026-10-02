@@ -1,6 +1,26 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validCrateWorld(data, count, lab = false) {
+  const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+  if (!integer(count, 2, 4) || !data || typeof data !== 'object' || Array.isArray(data)
+    || Object.keys(data).length !== 5 || !integer(data.break_sequence, 0, 1000000)
+    || !integer(data.break_kind, 0, lab ? 4 : 1) || !vector(data.break_position)
+    || !Array.isArray(data.crates) || data.crates.length > 14
+    || !Array.isArray(data.shots) || data.shots.length > (lab ? 128 : 0)) return false;
+  const ids = new Set();
+  const id = value => {
+    if (typeof value !== 'string' || !/^[1-9][0-9]{0,17}$/.test(value) || ids.has(value)) return false;
+    ids.add(value); return true;
+  };
+  if (!data.crates.every(row => row && typeof row === 'object' && !Array.isArray(row)
+    && Object.keys(row).length === 3 && id(row.id) && vector(row.position) && integer(row.kind, 0, lab ? 2 : 1))) return false;
+  return data.shots.every(row => row && typeof row === 'object' && !Array.isArray(row)
+    && Object.keys(row).length === 4 && id(row.id) && vector(row.position) && vector(row.direction)
+    && integer(row.shooter, 0, count - 1) && Math.abs(row.direction[1]) <= .001
+    && Math.abs(row.direction.reduce((sum, value) => sum + value * value, 0) - 1) <= .01);
+}
+
 export function validBlastWorld(data) {
   return data != null && typeof data === 'object' && !Array.isArray(data)
     && ['position', 'velocity', 'explosion_position'].every(key => vector(data[key]))
