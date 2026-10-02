@@ -89,6 +89,7 @@ func _process(_delta: float) -> void:
 	if now >= _next_diagnostic_ms:
 		_next_diagnostic_ms = now + 10000
 		print("NETWORK_TIMING=" + JSON.stringify({"epoch": Net.epoch, "state": Net.room_state,
+			"seed": game.config.seed if is_instance_valid(game) else 0,
 			"phase": game.phase if is_instance_valid(game) else -1, "running": Net.match_running,
 			"max_frame_gap_ms": _max_frame_gap_ms, "snapshots": snapshots}))
 		if game_id == "hurdle_dash" and is_instance_valid(game):

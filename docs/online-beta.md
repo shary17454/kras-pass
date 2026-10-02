@@ -53,12 +53,54 @@ Run `37001208281` on historical source
 scores `[21,3,12,15]`; the 4-human match reached results `[18,0,12,6]`,
 but peer 2 failed the fixture's per-local-player scoring assertion. The
 message says "without any scoring", although other players scored. This
-is an unresolved acceptance failure, not a passed room test. The remaining
-matrix jobs were still running when inspected; no full CI success is claimed.
+is an unresolved acceptance failure, not a passed room test. A fresh inspection
+confirmed the run is terminal: 27 jobs passed and this one failed. No full CI
+success is claimed.
 Preserved artifact `11226595746` contains the peer logs. Inspect the fixture's
 pickup/return routing and reproduce on Linux before changing either gameplay
 or the test requirement; do not convert this to a passing aggregate assertion
 or rerun blindly to erase the failure.
+
+The diagnostic fixture now reports each relay player's position, velocity,
+cargo and score. Its failure message identifies the local slot and actual
+result scores; the per-local-player delivery assertion remains unchanged.
+Periodic timing diagnostics additionally report the match seed for future
+failure investigation. These changes do not award points or move players.
+
+An isolated Linux ARM64 reproduction used the official Godot 4.7.1 binary
+with archive SHA-256
+`8f527179cd4ae58b402fa265fe817dc505e5b6b14574f309efe57113be562ac1`.
+Asset import completed without script/parse/leak errors and `npm ci
+--ignore-scripts` reported zero dependency vulnerabilities. This is a native
+ARM64 Linux container, not the historical GitHub runner's AMD64 environment.
+Source `10911cff4773e437ed5d1a584d33a75770880719` was exercised without the
+later seed-log addition. Independent-process evidence
+`/tmp/kras-relay-linux/evidence/kras-network-smoke-BObbQH` passed both rosters:
+scores `[9,6,21,18]` for two humans plus two bots and `[15,15,12,12]` for four
+humans. Every human observed their own cargo and scoring; guest snapshots
+numbered 1,088-1,107. Host interrupted-result delivery and guest identity
+recovery passed. Maximum server event-loop delay was 56 ms. No script,
+normalization or object-leak errors were found in the preserved peer logs.
+This passing reproduction does not explain or resolve the historical failure.
+
+Linux tournament evidence
+`/tmp/kras-relay-linux/evidence/kras-network-smoke-Y4MZ21` also passed both
+rosters, each completing three actual matches. The two-human/two-bot standings
+were points `[13,11,5,6]`, cups `[2,1,0,0]`, champion slot 0. Four-human
+standings were points `[7,11,8,8]`, cups `[1,2,1,1]`, champion slot 1. All
+peers agreed on final standings and retained their own cargo/scoring observations.
+Guests received 1,665-1,684 snapshots; host/guest recovery passed. No tiebreak
+was needed in these runs, so they are not sudden-death evidence. Maximum server
+event-loop delay was 107 ms; this is not a mobile performance qualification.
+No script/parse/normalization/leak errors were found in the preserved logs.
+
+The later seed-log edit passed the project's autoload-aware compile scene:
+`/tmp/kras-relay-diagnostics-compile.log` reports all 286 scripts compiling.
+A preliminary standalone `--check-only --script` invocation was not valid
+evidence: without an explicit writable log path it crashed in engine logging,
+and with that path it could not resolve the `Net` autoload in standalone mode.
+The proper compile scene passed, with the existing sandbox macOS system-CA
+lookup warning. No full integration gate was rerun for this logging-only edit.
 
 ### Turret Duel rooms and tournament acceptance
 
