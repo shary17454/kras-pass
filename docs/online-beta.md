@@ -2,6 +2,27 @@
 
 ## Implemented boundary
 
+### Arena respawn scoring prerequisite
+
+Duel Pit credited each knockout twice: the common out-handler incremented
+the statistic before the game incremented it again. Duplicate out callbacks
+while a fighter waited for respawn could also spend another life and count
+another fall. The shared handler now rejects slots already waiting for
+respawn, Duel Pit relies on the common single credit, and Bumper Bowl pays
+survivors only for the first accepted out event.
+
+`/tmp/kras-arena-credit-before.log` reproduced eight failed assertions.
+`/tmp/kras-arena-credit-after.log` passed the initial 21 assertions; expanded
+`/tmp/kras-arena-credit-final.log` passed 27, including a fresh legitimate
+knockout after respawn. The score snapshot assertion uses a duplicate array
+so subsequent mutations cannot change its expected value. Neither game is
+online-enabled by this scoring repair; world/HUD replication and real room
+verification remain required.
+Full gate `kras-party-check.2UPhDF`: 272 scripts compiled, 309 resources
+audited with zero issues, 18,515 assertions passed, race regression passed
+and 39 stability matches completed without failures. Device performance and
+production deployment are not established by this headless test run.
+
 ### Sweeper Storm room integration
 
 Development rooms now accept `sweeper_storm` only on `sweeper_ring` and

@@ -266,7 +266,7 @@ func safe_respawn_position(slot: int) -> Vector3:
 
 
 func _handle_out(slot: int) -> void:
-	if not ctx.is_alive(slot):
+	if not ctx.is_alive(slot) or _respawn_timers.has(slot):
 		return
 	if OS.get_environment("DEATH_DEBUG") != "":
 		var f := ctx.fighter(slot)

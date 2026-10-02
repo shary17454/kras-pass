@@ -31,13 +31,10 @@ func on_credited_knockout(attacker: int, _victim: int) -> void:
 	AudioManager.play_sfx("score")
 
 
-func on_fighter_fell(slot: int) -> void:
-	super.on_fighter_fell(slot)
-	_pay_survivors(slot)
-
-
-func on_fighter_knocked_out(slot: int, by_slot: int) -> void:
-	super.on_fighter_knocked_out(slot, by_slot)
+func _handle_out(slot: int) -> void:
+	if not ctx.is_alive(slot) or _respawn_timers.has(slot):
+		return
+	super._handle_out(slot)
 	_pay_survivors(slot)
 
 

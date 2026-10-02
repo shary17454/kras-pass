@@ -32,10 +32,6 @@ func tick(_delta: float) -> void:
 	pass
 
 
-func on_credited_knockout(attacker: int, _victim: int) -> void:
-	ctx.bump_detail(attacker, "knockouts")
-
-
 func _handle_out(slot: int) -> void:
 	# Reset damage on every life so a comeback is possible; keeping it would
 	# make the last life unplayable.
