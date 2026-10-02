@@ -16,6 +16,7 @@ var knockback := 9.0
 var range_left := 26.0
 var direction := Vector3.FORWARD
 var active := false
+var launch_serial := 0
 ## Optional guidance. Zero turn rate is a dumb shot and is the default, so the
 ## games that fire straight are unaffected by this existing at all.
 var homing_slot := -1
@@ -61,6 +62,7 @@ func configure(color: Color) -> void:
 
 
 func fire(from: Vector3, dir: Vector3, by_slot: int, shot_speed: float, shot_damage: float, max_range: float) -> void:
+	launch_serial += 1
 	global_position = from
 	direction = dir.normalized()
 	shooter = by_slot

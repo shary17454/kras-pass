@@ -1,6 +1,26 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validTurretWorld(data, count) {
+  if (!Number.isInteger(count) || count < 2 || count > 4 || !data || typeof data !== 'object' || Array.isArray(data)
+    || Object.keys(data).length !== 3 || !Array.isArray(data.shots) || data.shots.length > 128) return false;
+  for (const field of ['cooldowns', 'damage']) {
+    if (!Array.isArray(data[field]) || data[field].length !== count
+      || !data[field].every(value => Number.isFinite(value) && value >= 0 && value <= (field === 'cooldowns' ? 60 : 10000))) return false;
+  }
+  const ids = new Set();
+  return data.shots.every(row => {
+    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).length !== 5
+      || typeof row.id !== 'string' || !/^[1-9][0-9]{0,17}$/.test(row.id) || ids.has(row.id)
+      || !Number.isInteger(row.generation) || row.generation < 1 || row.generation > 1000000
+      || !Number.isInteger(row.shooter) || row.shooter < 0 || row.shooter >= count
+      || !vector(row.position) || !vector(row.direction)
+      || Math.abs(row.direction[1]) > .001
+      || Math.abs(row.direction.reduce((sum, value) => sum + value * value, 0) - 1) > .01) return false;
+    ids.add(row.id); return true;
+  });
+}
+
 export function validHurdleWorld(data, count) {
   return Number.isInteger(count) && count >= 2 && count <= 4
     && data != null && typeof data === 'object' && !Array.isArray(data)

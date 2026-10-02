@@ -2,6 +2,40 @@
 
 ## Implemented boundary
 
+### Turret Duel snapshot adapter
+
+Host world snapshots carry active shots (pooled-body identity plus launch
+generation, position, direction and shooter), per-player cooldowns and
+damage. `Projectile.fire` increments the body's launch serial; returning it
+to the pool does not reset that serial. This distinguishes a new trajectory
+from a previously visible launch without changing projectile damage rules.
+
+Both Godot and Node reject missing/extra fields, invalid counts, duplicate
+body identities, noncanonical IDs, invalid launch generations/shooters,
+non-finite values and non-horizontal/non-unit directions. The guest releases
+its independent physics shots, then displays collision-free meshes. Stable
+launches reuse their visual, recycled launches replace the old trajectory,
+and expired launches disappear. Host cooldowns and damage are copied, never
+simulated or used to award points on the guest.
+
+`/tmp/kras-turret-network.log` passed all 70 focused assertions, including
+real pool reuse, interpolation, no visual collision nodes, state rejection,
+and audio-pool advancement for a new launch only. Initial/new-round baselines,
+duplicates and stale/reconnect updates suppress old launch sounds. The first
+test iteration counted the shared HUD's legitimate `go` cue as launch audio;
+the fixture now isolates HUD transitions without suppressing them in the
+product. All 78 Node tests passed.
+
+Full gate `kras-party-check.Rcpn4a` compiled 284 scripts, audited 321 resources
+with zero issues, passed 18,976 assertions, passed the three-lap race
+regression and completed all 39 stability matches without failure.
+
+This is an adapter checkpoint, not room acceptance. `turret_duel` is not yet
+in the room allowlist. Independent-process matches/tournaments, reconnect
+and physical-device QA remain required. Launch audio is sampled presentation,
+not a lossless event stream; impact/score sound parity is not established.
+Production online remains disabled.
+
 ### Turret Duel round and projectile prerequisites
 
 Turret Duel previously retained active pooled shots and firing cooldowns into

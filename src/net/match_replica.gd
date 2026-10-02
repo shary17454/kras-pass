@@ -20,6 +20,7 @@ const DuelReplica = preload("res://src/net/duel_replica.gd")
 const BumperReplica = preload("res://src/net/bumper_replica.gd")
 const DuoReplica = preload("res://src/net/duo_replica.gd")
 const FloeReplica = preload("res://src/net/floe_replica.gd")
+const TurretReplica = preload("res://src/net/turret_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -42,6 +43,7 @@ var _crates: Node3D
 var _hurdle: RefCounted
 var _bumper: RefCounted
 var _duo: RefCounted
+var _turret: Node3D
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -75,6 +77,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = DuoReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "drift_floes":
 		packet["world"] = FloeReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "turret_duel":
+		packet["world"] = TurretReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -137,6 +141,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 			return false
 	elif game_id == "drift_floes":
 		if not FloeReplica.valid(data.get("world")):
+			return false
+	elif game_id == "turret_duel":
+		if not TurretReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "magnet_court":
 		if not MagnetReplica.valid(data.get("world"), count):
@@ -265,6 +272,13 @@ func render(scene: Node, delta: float) -> void:
 		SweeperReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "drift_floes":
 		FloeReplica.render(scene.controller, target.world, delta, snap)
+	elif scene.config.minigame_id == "turret_duel":
+		if not is_instance_valid(_turret):
+			_turret = TurretReplica.new()
+			scene.ctx.world_root.add_child(_turret)
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_turret.render(scene.controller, target.world, int(target.round), delta, snap, fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
 	elif scene.config.minigame_id == "duel_pit":
 		DuelReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "bumper_bowl":
