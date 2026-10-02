@@ -53,10 +53,13 @@ func build() -> void:
 
 func _build_table(parent: VBoxContainer) -> void:
 	var def := config.definition()
-	var scroll_and_grid := Widgets.scroll_grid(1)
-	var scroll: ScrollContainer = scroll_and_grid[0]
-	var grid: GridContainer = scroll_and_grid[1]
-	parent.add_child(scroll)
+	# Screen already scrolls; nested scrolling collapses this table in portrait.
+	var grid := GridContainer.new()
+	grid.name = "RoundStandings"
+	grid.columns = 1
+	grid.add_theme_constant_override("v_separation", 24)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(grid)
 	var order := result.ranking()
 	for rank_index in order.size():
 		var slot: int = order[rank_index]
@@ -89,6 +92,9 @@ func _detail_line(slot: int) -> String:
 
 
 func _build_rewards(parent: VBoxContainer) -> void:
+	if config.context == MatchConfig.Context.ONLINE:
+		_build_online_standings(parent)
+		return
 	var card := UIKit.panel(UIKit.PANEL, 20)
 	var v := UIKit.vbox(10)
 	card.add_child(v)
@@ -120,6 +126,32 @@ func _build_rewards(parent: VBoxContainer) -> void:
 			var name := config.player_at(winner[0]).display_name() if winner.size() > 0 else "—"
 			v.add_child(UIKit.label("%s %d — %s" % [Loc.t("hud.round", {"n": i + 1}), i + 1, name], UIKit.SIZE_TINY, UIKit.dim_color()))
 	parent.add_child(card)
+
+
+func _build_online_standings(parent: VBoxContainer) -> void:
+	if Net.tournament.is_empty():
+		return
+	var standings := Net.tournament
+	var cups: bool = standings.mode == "cups"
+	parent.add_child(UIKit.label(Loc.t("tournament.title"), UIKit.SIZE_HEADING))
+	var values: Array = standings.cups if cups else standings.points
+	var order := range(values.size())
+	order.sort_custom(func(a, b): return values[a] > values[b])
+	for slot in order:
+		var player := config.player_at(slot)
+		if player != null:
+			var row := UIKit.label("%s: %d %s" % [player.display_name(), values[slot],
+				Loc.t("tournament.cups" if cups else "tournament.points")], UIKit.SIZE_SMALL)
+			row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			parent.add_child(row)
+	if bool(standings.complete):
+		var names: Array[String] = []
+		for slot in standings.champions:
+			var player := config.player_at(int(slot))
+			if player != null: names.append(player.display_name())
+		var label := UIKit.label(Loc.t("online.champions", {"names": ", ".join(names)}), UIKit.SIZE_HEADING, UIKit.ACCENT)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		parent.add_child(label)
 
 
 func _add_actions() -> void:

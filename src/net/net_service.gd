@@ -48,6 +48,7 @@ var is_host := true
 var local_peer_id := 1
 var peers := {}          # peer_id -> {"id", "name", "ready", "character", "slot"}
 var lobby_config := {}
+var tournament := {}
 ## Endpoint configuration gate, not a claim that a deployment is healthy.
 var online_available := false
 
@@ -83,6 +84,7 @@ func reset() -> void:
 	mode = Mode.LOCAL
 	room_code = ""
 	lobby_config.clear()
+	tournament.clear()
 	peers.clear()
 	is_host = true
 	local_peer_id = 1
@@ -190,7 +192,7 @@ func all_ready() -> bool:
 	if peers.is_empty():
 		return false
 	for p in peers.values():
-		if not bool(p["ready"]):
+		if not bool(p["ready"]) or (mode != Mode.LOCAL and not bool(p.get("connected", false))):
 			return false
 	return true
 
@@ -233,6 +235,11 @@ func end_match() -> void:
 		return
 	if state == State.IN_MATCH:
 		_set_state(State.LOBBY)
+
+
+func next_tournament_round() -> void:
+	if mode != Mode.LOCAL and is_host and all_ready():
+		transport.send({"op": "next"})
 
 
 # --- input transport contract ----------------------------------------------
@@ -293,6 +300,7 @@ func publish_snapshot(data: Dictionary, tick: int) -> void:
 
 func publish_result(scores: Array[int]) -> void:
 	if is_host:
+		match_running = false
 		_pending_result = {"op": "result", "epoch": epoch, "scores": scores.duplicate()}
 		transport.send(_pending_result)
 
@@ -309,6 +317,15 @@ func make_match_config() -> MatchConfig:
 	# The initial online ruleset excludes unreplicated machine drops/power-ups.
 	cfg.allow_powerups = false
 	cfg.rules["online_push"] = true
+	var standings: Dictionary = match_data.get("tournament") if match_data.get("tournament") is Dictionary else {}
+	if not standings.get("contenders", []).is_empty():
+		var contenders: Array[int] = []
+		for slot in standings.contenders:
+			contenders.append(int(slot))
+		cfg.rules["online_contenders"] = contenders
+		cfg.duration_override = 20.0
+		cfg.rules["maximum_duration"] = 25.0
+		cfg.sudden_death = false
 	var characters := Registry.characters()
 	for row in match_data.players:
 		var p := PlayerConfig.new()
@@ -342,6 +359,7 @@ func _receive(m: Dictionary) -> void:
 				online_error.emit(code)
 		"pong": ping_ms = maxi(0, Time.get_ticks_msec() - int(m.get("stamp", 0)))
 		"room":
+			tournament = m.tournament.duplicate(true) if m.get("tournament") is Dictionary else {}
 			room_code = String(m.code)
 			room_state = String(m.state)
 			if room_state == "lobby":
@@ -371,11 +389,13 @@ func _receive(m: Dictionary) -> void:
 			elif room_state in ["loading", "playing"]:
 				loaded()
 		"go":
-			if int(m.epoch) == epoch:
-				match_running = true
+			if int(m.epoch) == epoch and _result_epoch != epoch:
 				# Retry only after the server confirms this epoch is still playing.
 				if is_host and int(_pending_result.get("epoch", -1)) == epoch:
+					match_running = false
 					transport.send(_pending_result)
+				else:
+					match_running = true
 		"input":
 			if int(m.epoch) == epoch and is_host:
 				m["time"] = Time.get_ticks_msec()
@@ -386,6 +406,7 @@ func _receive(m: Dictionary) -> void:
 				snapshot_received.emit(m.data)
 		"result":
 			if int(m.epoch) == epoch and room_state in ["loading", "playing", "results"] and _result_epoch != epoch:
+				tournament = m.tournament.duplicate(true) if m.get("tournament") is Dictionary else {}
 				_result_epoch = epoch
 				_pending_result.clear()
 				match_running = false

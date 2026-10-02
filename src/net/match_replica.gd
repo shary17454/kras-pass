@@ -87,7 +87,9 @@ func render(scene: Node, delta: float) -> void:
 		scene.hud.show_rules(scene.phase == P.INSTRUCTIONS)
 		scene.hud.show_hints(scene.phase not in [P.INTRO, P.INSTRUCTIONS])
 		for source in scene.touch_sources:
-			source.visible = scene.phase not in [P.INTRO, P.INSTRUCTIONS]
+			var contenders: Array = scene.config.rule("online_contenders", [])
+			var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
+			source.visible = not spectator and scene.phase not in [P.INTRO, P.INSTRUCTIONS]
 			source.set_process_input(source.visible)
 		if scene.phase == P.PLAYING:
 			scene.hud.announce(Loc.t("hud.go"), UIKit.OK, 0.4)

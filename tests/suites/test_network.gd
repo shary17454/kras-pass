@@ -46,6 +46,13 @@ func run(t: TestHarness) -> void:
 	t.equal(cfg.context, MatchConfig.Context.ONLINE, "network uses shared runtime")
 	t.ok(cfg.rule("online_push", false), "explicit online variant")
 	t.equal(cfg.seed, 2345, "same seed on every device")
+	Net.match_data["tournament"] = JSON.parse_string('{"contenders": [0, 2], "complete": false}')
+	var final_cfg := Net.make_match_config()
+	t.equal(final_cfg.rule("online_contenders", []), [0, 2], "tie-break retains only authoritative contenders")
+	t.equal(final_cfg.players.size(), 3, "spectators retain stable roster slots")
+	t.equal(final_cfg.duration_override, 20.0, "tie-break is short")
+	t.equal(final_cfg.rule("maximum_duration", 0), 25.0, "tie-break has a safety deadline")
+	t.ok(not final_cfg.sudden_death, "room authority owns tournament tie resolution")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
 	var frame := InputFrame.new()
 	frame.bits = 4
@@ -62,7 +69,8 @@ func run(t: TestHarness) -> void:
 	Net.room_state = "playing"
 	Net._receive({"op": "result", "epoch": 2, "scores": [1, 0]})
 	t.equal(results.size(), 0, "ignore another match's result")
-	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3]})
+	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3], "tournament": {"points": [5, 3], "complete": false}})
+	t.equal(Net.tournament.points, [5, 3], "standings arrive before the result UI")
 	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3]})
 	t.equal(results.size(), 1, "reconnect does not apply the same result twice")
 	Net.epoch = 4
@@ -83,7 +91,10 @@ func run(t: TestHarness) -> void:
 	Net.epoch = 8
 	Net.room_state = "playing"
 	var scores: Array[int] = [5, 3]
+	Net.match_running = true
 	Net.publish_result(scores)
+	Net.publish_snapshot({}, 100)
+	t.ok(not Net.match_running, "finishing stops snapshots before the server acknowledgement")
 	scores[0] = 99
 	t.equal(Net._pending_result.scores, [5, 3], "pending result owns an immutable copy")
 	t.equal(recorder.sent.size(), 1, "result attempts immediate delivery")
@@ -91,10 +102,12 @@ func run(t: TestHarness) -> void:
 	t.equal(recorder.sent.size(), 1, "stale go cannot resend a result")
 	Net._receive({"op": "go", "epoch": 8})
 	t.equal(recorder.sent.size(), 2, "resume retries the pending result")
+	t.ok(not Net.match_running, "pending-result recovery cannot restart snapshot publication")
 	Net._receive({"op": "result", "epoch": 8, "scores": [5, 3]})
 	t.ok(Net._pending_result.is_empty(), "authoritative acknowledgement clears pending result")
 	Net._receive({"op": "go", "epoch": 8})
 	t.equal(recorder.sent.size(), 2, "acknowledged result is not sent again")
+	t.ok(not Net.match_running, "late go cannot restart an acknowledged match")
 	Net.transport = transport
 	recorder.free()
 	Net.leave()

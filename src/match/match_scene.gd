@@ -407,8 +407,10 @@ func _enter_phase(p: int) -> void:
 			if controller.uses_round_clock():
 				hud.set_time(_round_duration(), -1.0)
 			for source in touch_sources:
-				source.set_process_input(true)
-				source.visible = true
+				var contenders: Array = config.rule("online_contenders", []) if _online() else []
+				var active := contenders.is_empty() or contenders.has(source.slot)
+				source.set_process_input(active)
+				source.visible = active
 			hud.show_hints(true)
 			UserSettings.mark_tutorial_seen(ctx.definition.id)
 			_countdown_value = int(_tuning.get("countdown_seconds", 3))
@@ -459,6 +461,15 @@ func _begin_play() -> void:
 	_warn_second = -1
 	_splashed.clear()
 	controller.on_round_start()
+	if _online():
+		var contenders: Array = config.rule("online_contenders", [])
+		if not contenders.is_empty():
+			for fighter in _fighters:
+				if not contenders.has(fighter.slot):
+					ctx.eliminate(fighter.slot)
+					fighter.collision_layer = 0
+					fighter.collision_mask = 0
+					fighter.hide()
 	if machine != null and is_instance_valid(machine):
 		machine.reset()
 	for b in _brains:

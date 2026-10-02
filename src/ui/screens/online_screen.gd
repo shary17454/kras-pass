@@ -82,6 +82,11 @@ func _lobby() -> void:
 	var variant := UIKit.label(Loc.t("online.push_variant"), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 	variant.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(variant)
+	if not Net.tournament.is_empty():
+		var summary := UIKit.label(Loc.t("online.tournament_progress", {"n": int(Net.tournament.round), "target": int(Net.tournament.target)}), UIKit.SIZE_SMALL)
+		body.add_child(summary)
+		if not Net.tournament.get("contenders", []).is_empty() and not bool(Net.tournament.complete):
+			body.add_child(UIKit.label(Loc.t("party.tiebreak"), UIKit.SIZE_SMALL, UIKit.ACCENT))
 	var device := UIKit.option([], 0)
 	var devices: Array = []
 	device.add_item(Loc.t("online.touch"))
@@ -127,7 +132,14 @@ func _lobby() -> void:
 	if Net.is_host and Net.room_state == "lobby":
 		_host_settings()
 	if Net.room_state == "results":
-		add_menu_button(Loc.t("online.return_lobby"), Net.end_match, Net.is_host)
+		if not Net.tournament.is_empty() and not bool(Net.tournament.complete):
+			var ready := bool(Net.peers.get(Net.local_peer_id, {}).get("ready", false))
+			add_menu_button(Loc.t("online.unready") if ready else Loc.t("online.ready"),
+				func(): Net.set_ready(Net.local_peer_id, not ready))
+			if Net.is_host:
+				add_menu_button(Loc.t("online.next_round"), Net.next_tournament_round, Net.all_ready())
+		else:
+			add_menu_button(Loc.t("online.return_lobby"), Net.end_match, Net.is_host)
 	elif Net.room_state == "lobby":
 		var ready := bool(Net.peers.get(Net.local_peer_id, {}).get("ready", false))
 		add_menu_button(Loc.t("online.unready") if ready else Loc.t("online.ready"),
@@ -141,16 +153,26 @@ func _lobby() -> void:
 
 func _host_settings() -> void:
 	var cfg := Net.lobby_config.duplicate(true)
+	var tournament: Dictionary = cfg.get("tournament") if cfg.get("tournament") is Dictionary else {}
+	var mode := UIKit.option([Loc.t("online.single"), Loc.t("tournament.points"), Loc.t("tournament.cups")],
+		0 if tournament.is_empty() else (1 if tournament.mode == "points" else 2))
+	mode.item_selected.connect(func(index):
+		cfg["tournament"] = null if index == 0 else {"mode": "points" if index == 1 else "cups", "target": 3,
+			"rotation": "random_no_repeat", "points": [5, 3, 2, 1], "entries": [
+				{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
+		Net.set_lobby_config(cfg))
+	body.add_child(mode)
 	var row := UIKit.hbox(12)
-	row.add_child(UIKit.label(Loc.t("online.rounds"), UIKit.SIZE_SMALL))
+	row.add_child(UIKit.label(Loc.t("tournament.cups") if tournament.get("mode") == "cups" else Loc.t("online.rounds"), UIKit.SIZE_SMALL))
 	var rounds := SpinBox.new()
 	rounds.custom_minimum_size = Vector2(160, 64)
 	rounds.get_line_edit().add_theme_font_size_override("font_size", UIKit.SIZE_BODY)
-	rounds.min_value = 1
+	rounds.min_value = 1 if tournament.is_empty() else 3
 	rounds.max_value = 10
-	rounds.value = int(cfg.get("rounds", 3))
+	rounds.value = int(cfg.get("rounds", 3)) if tournament.is_empty() else int(tournament.target)
 	rounds.value_changed.connect(func(value):
-		cfg["rounds"] = int(value)
+		if tournament.is_empty(): cfg["rounds"] = int(value)
+		else: cfg["tournament"]["target"] = int(value)
 		Net.set_lobby_config(cfg))
 	row.add_child(rounds)
 	var bots := UIKit.checkbox(Loc.t("online.bots"), bool(cfg.get("bots", true)))
@@ -173,8 +195,20 @@ func _host_settings() -> void:
 	arenas.select(0 if cfg.get("arena") == "vortex_ring" else 1)
 	arenas.item_selected.connect(func(index):
 		cfg["arena"] = ["vortex_ring", "storm_ring"][index]
+		if not tournament.is_empty() and tournament.rotation == "manual":
+			cfg["tournament"]["entries"] = [{"game": "ring_rumble", "arena": cfg.arena}]
 		Net.set_lobby_config(cfg))
 	body.add_child(arenas)
+	if not tournament.is_empty():
+		var rotate := UIKit.checkbox(Loc.t("online.rotate_arenas"), tournament.rotation == "random_no_repeat")
+		rotate.toggled.connect(func(value):
+			cfg["tournament"]["rotation"] = "random_no_repeat" if value else "manual"
+			cfg["tournament"]["entries"] = [
+				{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]
+			if not value:
+				cfg["tournament"]["entries"] = [{"game": "ring_rumble", "arena": cfg.arena}]
+			Net.set_lobby_config(cfg))
+		body.add_child(rotate)
 
 
 func go_back() -> void:
