@@ -45,6 +45,20 @@ func run(t: TestHarness, host: Node) -> void:
 		t.empty(game.attack_plan(fighter.global_position), "no attack plan for unexposed fist")
 	else:
 		t.ok(false, "visible attack approach exists")
+	# Respawn waiting slots stay alive in the match, not in the arena.
+	for body in scene.ctx.fighters:
+		body.global_position = Vector3(80, 20, 80)
+	var valid_target := Vector3(-6, 1, 0)
+	fighter.global_position = valid_target
+	scene.ctx.fighter(1).global_position = Vector3(-4, 1, 0)
+	scene.ctx.fighter(1).visible = false
+	scene.ctx.fighter(2).global_position = Vector3(-3, 1, 0)
+	scene.ctx.fighter(2).alive = false
+	scene.ctx.fighter(3).global_position = Vector3(4, 1, 0)
+	for sample in 32:
+		t.equal(game._pick_target(), valid_target, "slam targets only visible active players on actual ground")
+	fighter.global_position = Vector3(80, 20, 80)
+	t.equal(game._pick_target(), Vector3.INF, "no unreachable slam when every player is falling or waiting")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

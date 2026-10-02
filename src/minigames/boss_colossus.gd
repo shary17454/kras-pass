@@ -146,8 +146,13 @@ func _check_arm_hits() -> void:
 ## player, is the change this fight still wants.
 func _pick_target() -> Vector3:
 	var alive: Array[int] = []
+	var arena := ctx.arena as Arena
 	for i in ctx.fighters.size():
-		if ctx.is_alive(i):
+		var fighter := ctx.fighter(i)
+		# Match-alive slots can still be falling or waiting at the respawn pose.
+		# A fist outside real ground creates an opening nobody can reach.
+		if ctx.is_alive(i) and is_instance_valid(fighter) and fighter.alive and fighter.visible \
+			and arena != null and arena.is_inside(fighter.global_position, 0.5):
 			alive.append(i)
 	if alive.is_empty():
 		return Vector3.INF
