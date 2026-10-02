@@ -29,11 +29,15 @@ static func capture(game: Node) -> Dictionary:
 		if is_instance_valid(row.node):
 			slag.append({"id": str(row.node.get_instance_id()), "position": Fields._vec(row.node.global_position),
 				"life": row.life, "by": row.by})
-	return {"boss": {"health": game.boss_health, "phase": game.phase, "defeated": game.boss_defeated,
+	return {"boss": capture_boss(game),
+		"intake": _angles(game._intake.rotation), "warnings": warnings, "crates": crates, "slag": slag}
+
+
+static func capture_boss(game: Node) -> Dictionary:
+	return {"health": game.boss_health, "phase": game.phase, "defeated": game.boss_defeated,
 		"position": Fields._vec(game.boss_node.global_position), "rotation": _angles(game.boss_node.rotation),
 		"damage": game.damage_sequence, "strike": game.strike_sequence,
-		"strike_position": Fields._vec(game.strike_position), "strike_radius": game.strike_radius},
-		"intake": _angles(game._intake.rotation), "warnings": warnings, "crates": crates, "slag": slag}
+		"strike_position": Fields._vec(game.strike_position), "strike_radius": game.strike_radius}
 
 
 static func _angles(value: Vector3) -> Array:
@@ -44,19 +48,7 @@ static func valid(world: Variant, count: int) -> bool:
 	if count < 2 or count > 4 or not world is Dictionary or world.size() != 5 \
 		or not world.get("boss") is Dictionary or world.boss.size() != 9:
 		return false
-	var boss: Dictionary = world.boss
-	if not Fields.Number._number(boss.get("health")) or boss.health < 0.0 or boss.health > 900.0 \
-		or not Fields._integer(boss.get("phase"), 0, 2) or not boss.get("defeated") is bool \
-		or bool(boss.defeated) != (float(boss.health) == 0.0) \
-		or not Fields._vector(boss.get("position")) or not _valid_angles(boss.get("rotation")) \
-		or not _valid_angles(world.get("intake")) or not Fields._integer(boss.get("damage"), 0, 1000000) \
-		or not Fields._integer(boss.get("strike"), 0, 1000000) or not Fields._vector(boss.get("strike_position")) \
-		or not Fields.Number._number(boss.get("strike_radius")) or boss.strike_radius < 0.0 or boss.strike_radius > 100.0:
-		return false
-	var wanted := 0
-	for threshold in [0.66, 0.33]:
-		if float(boss.health) / 900.0 <= threshold: wanted += 1
-	if int(boss.phase) != wanted:
+	if not valid_boss(world.boss, 900.0, [0.66, 0.33]) or not _valid_angles(world.get("intake")):
 		return false
 	if not world.get("warnings") is Array or world.warnings.size() > 64 \
 		or not world.get("crates") is Array or world.crates.size() > 96 \
@@ -64,11 +56,7 @@ static func valid(world: Variant, count: int) -> bool:
 		return false
 	var ids := {}
 	for row in world.warnings:
-		if not _row(row, 5, ids) or not Fields.Number._number(row.get("radius")) \
-			or row.radius < 0.25 or row.radius > 100.0 or not Fields.Number._number(row.get("left")) \
-			or not Fields.Number._number(row.get("total")) or row.total <= 0.0 or row.total > 60.0 \
-			or row.left < 0.0 or row.left > row.total:
-			return false
+		if not valid_warning(row, ids): return false
 	for row in world.crates:
 		if not _row(row, 2, ids): return false
 	for row in world.slag:
@@ -76,6 +64,30 @@ static func valid(world: Variant, count: int) -> bool:
 			or row.life <= 0.0 or row.life > 6.0 or not Fields._integer(row.get("by"), 0, count - 1):
 			return false
 	return true
+
+
+static func valid_boss(boss: Variant, maximum: float, thresholds: Array) -> bool:
+	if not boss is Dictionary or boss.size() != 9:
+		return false
+	if not Fields.Number._number(boss.get("health")) or boss.health < 0.0 or boss.health > maximum \
+		or not Fields._integer(boss.get("phase"), 0, 2) or not boss.get("defeated") is bool \
+		or bool(boss.defeated) != (float(boss.health) == 0.0) \
+		or not Fields._vector(boss.get("position")) or not _valid_angles(boss.get("rotation")) \
+		or not Fields._integer(boss.get("damage"), 0, 1000000) \
+		or not Fields._integer(boss.get("strike"), 0, 1000000) or not Fields._vector(boss.get("strike_position")) \
+		or not Fields.Number._number(boss.get("strike_radius")) or boss.strike_radius < 0.0 or boss.strike_radius > 100.0:
+		return false
+	var wanted := 0
+	for threshold in thresholds:
+		if float(boss.health) / maximum <= float(threshold): wanted += 1
+	return int(boss.phase) == wanted
+
+
+static func valid_warning(row: Variant, ids: Dictionary) -> bool:
+	return _row(row, 5, ids) and Fields.Number._number(row.get("radius")) \
+		and row.radius >= 0.25 and row.radius <= 100.0 and Fields.Number._number(row.get("left")) \
+		and Fields.Number._number(row.get("total")) and row.total > 0.0 and row.total <= 60.0 \
+		and row.left >= 0.0 and row.left <= row.total
 
 
 static func _row(row: Variant, size: int, ids: Dictionary) -> bool:

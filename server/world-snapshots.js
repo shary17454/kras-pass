@@ -1,18 +1,43 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+function validBossState(b, maximum, thresholds) {
+  const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+  return b != null && typeof b === 'object' && !Array.isArray(b) && Object.keys(b).length === 9
+    && Number.isFinite(b.health) && b.health >= 0 && b.health <= maximum && integer(b.phase, 0, 2)
+    && typeof b.defeated === 'boolean' && b.defeated === (b.health === 0)
+    && b.phase === thresholds.filter(threshold => b.health / maximum <= threshold).length
+    && vector(b.position) && vector(b.rotation) && b.rotation.every(n => Math.abs(n) <= Math.PI)
+    && integer(b.damage, 0, 1000000) && integer(b.strike, 0, 1000000)
+    && vector(b.strike_position) && Number.isFinite(b.strike_radius) && b.strike_radius >= 0 && b.strike_radius <= 100;
+}
+
+export function validDreadnoughtWorld(data, count) {
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 4)
+    || !validBossState(data.boss, 1100, [.7, .35])
+    || !['warnings', 'mines', 'shots'].every(group => Array.isArray(data[group])
+      && data[group].length <= (group === 'mines' ? 96 : 64))) return false;
+  const ids = new Set();
+  const row = (v, size) => {
+    if (!object(v, size) || typeof v.id !== 'string' || !/^[1-9][0-9]{0,17}$/.test(v.id)
+      || ids.has(v.id) || !vector(v.position)) return false;
+    ids.add(v.id); return true;
+  };
+  return data.warnings.every(v => row(v, 5) && Number.isFinite(v.radius) && v.radius >= .25 && v.radius <= 100
+    && Number.isFinite(v.left) && Number.isFinite(v.total) && v.total > 0 && v.total <= 60 && v.left >= 0 && v.left <= v.total)
+    && data.mines.every(v => row(v, 3) && Number.isFinite(v.armed) && v.armed >= 0 && v.armed <= 1)
+    && data.shots.every(v => row(v, 3) && vector(v.direction)
+      && Math.abs(v.direction.reduce((sum, n) => sum + n * n, 0) - 1) <= .001);
+}
+
 export function validForgeWorld(data, count) {
   const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
   const angles = v => vector(v) && v.every(n => Math.abs(n) <= Math.PI);
   if (!integer(count, 2, 4) || !object(data, 5) || !object(data.boss, 9)) return false;
   const b = data.boss;
-  if (!Number.isFinite(b.health) || b.health < 0 || b.health > 900 || !integer(b.phase, 0, 2)
-    || typeof b.defeated !== 'boolean' || b.defeated !== (b.health === 0)
-    || b.phase !== [.66, .33].filter(threshold => b.health / 900 <= threshold).length
-    || !vector(b.position) || !angles(b.rotation) || !angles(data.intake)
-    || !integer(b.damage, 0, 1000000) || !integer(b.strike, 0, 1000000)
-    || !vector(b.strike_position) || !Number.isFinite(b.strike_radius) || b.strike_radius < 0 || b.strike_radius > 100
+  if (!validBossState(b, 900, [.66, .33]) || !angles(data.intake)
     || !Array.isArray(data.warnings) || data.warnings.length > 64
     || !Array.isArray(data.crates) || data.crates.length > 96
     || !Array.isArray(data.slag) || data.slag.length > 96) return false;

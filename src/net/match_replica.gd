@@ -28,6 +28,7 @@ const KartReplica = preload("res://src/net/kart_replica.gd")
 const ArmedRaceReplica = preload("res://src/net/armed_race_replica.gd")
 const SiegeReplica = preload("res://src/net/siege_replica.gd")
 const ForgeReplica = preload("res://src/net/forge_replica.gd")
+const DreadnoughtReplica = preload("res://src/net/dreadnought_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -58,6 +59,7 @@ var _kart: Node3D
 var _armed_race: Node3D
 var _siege: RefCounted
 var _forge: Node3D
+var _dreadnought: Node3D
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -107,6 +109,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = SiegeReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "boss_forge":
 		packet["world"] = ForgeReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "boss_dreadnought":
+		packet["world"] = DreadnoughtReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -160,6 +164,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 			return false
 	elif game_id == "boss_forge":
 		if not ForgeReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "boss_dreadnought":
+		if not DreadnoughtReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "hurdle_dash":
 		if not HurdleReplica.valid(data.get("world"), count):
@@ -383,6 +390,13 @@ func render(scene: Node, delta: float) -> void:
 			scene.ctx.world_root.add_child(_forge)
 		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
 		_forge.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH, P.FINISH])
+		_event_received_at = received_at
+	elif scene.config.minigame_id == "boss_dreadnought":
+		if not is_instance_valid(_dreadnought):
+			_dreadnought = DreadnoughtReplica.new()
+			scene.ctx.world_root.add_child(_dreadnought)
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_dreadnought.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH, P.FINISH])
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "duel_pit":
 		DuelReplica.render(scene.controller, target.world)

@@ -52,6 +52,7 @@ func boss_build() -> void:
 
 
 func boss_think(delta: float) -> void:
+	if presentation_only: return
 	_track(delta)
 	_check_vent_hits(delta)
 	match phase:
@@ -84,6 +85,7 @@ func boss_think(delta: float) -> void:
 ## It turns toward whoever last hurt it — so the player who just scored is the
 ## one who has to move, and the vent opens for somebody else.
 func _track(delta: float) -> void:
+	if presentation_only: return
 	# Whoever hurt it last. Before anyone has, it commits to one opponent and
 	# keeps facing them rather than re-picking the nearest every tick: chasing
 	# the closest body means the vent is always pointed away from everybody at
@@ -106,12 +108,14 @@ func _track(delta: float) -> void:
 
 
 func damage_boss(amount: float, by_slot: int) -> void:
+	if presentation_only: return
 	super.damage_boss(amount, by_slot)
 	if by_slot >= 0:
 		_aim_at = by_slot
 
 
 func _fire_shells(count: int) -> void:
+	if presentation_only: return
 	var target := _aim_at if _aim_at >= 0 and ctx.is_alive(_aim_at) else _nearest_alive()
 	if target < 0:
 		return
@@ -129,6 +133,7 @@ func _fire_shells(count: int) -> void:
 
 
 func _drop_mine() -> void:
+	if presentation_only: return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -142,6 +147,7 @@ func _drop_mine() -> void:
 
 
 func _tick_mines(delta: float) -> void:
+	if presentation_only: return
 	var i := _mines.size() - 1
 	while i >= 0:
 		var m = _mines[i]
@@ -169,6 +175,7 @@ func _tick_mines(delta: float) -> void:
 
 ## The one attack with no safe standing spot — you have to be moving.
 func _spin_up() -> void:
+	if presentation_only: return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -182,6 +189,7 @@ func _spin_up() -> void:
 
 
 func _check_vent_hits(delta: float) -> void:
+	if presentation_only: return
 	if _vent == null or not is_instance_valid(_vent):
 		return
 	for k in _vent_cd.keys():
@@ -225,6 +233,7 @@ func _nearest_alive() -> int:
 
 
 func on_phase_changed(_new_phase: int) -> void:
+	if presentation_only: return
 	_mine_timer = 0.6
 	_spin_timer = 1.2
 
@@ -242,6 +251,7 @@ func danger_zones() -> Array:
 
 
 func boss_reset_round() -> void:
+	if presentation_only: return
 	_clear_mines()
 	_facing = 0.0
 	_aim_at = -1
