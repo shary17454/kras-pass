@@ -2,6 +2,38 @@
 
 ## Implemented boundary
 
+### Sweeper Storm room integration
+
+Development rooms now accept `sweeper_storm` only on `sweeper_ring` and
+require all three host-owned arm angles. All 68 server tests passed, including
+wrong-arena, guest-publication and malformed-world rejection. The CI matrix
+includes Sweeper Storm; matrix configuration is not a successful CI run.
+
+Ordinary matches `kras-network-smoke-v4oI3D` passed with 2 humans plus 2 bots
+and 4 humans. Aggregate scores were `[6,6,15,15]` / `[4,8,12,16]`, guests
+received 646-959 snapshots, and host/guest reconnect succeeded. Guest arm
+angles matched the host world; all three host arms advanced. Maximum local
+server event-loop delay was 32 ms. No script, parse, network-failure,
+normalization or object-leak errors appeared. This is local headless transport
+and presentation evidence, not Internet or physical-device smoothness QA.
+
+Tournament run `kras-network-smoke-WrphJP` passed three matches per roster.
+Points were `[4,5,13,11]` / `[4,5,15,9]`, champion slot 2 in both cases,
+with 1,094-1,254 guest snapshots and maximum local server loop delay 38 ms.
+The host had to observe an actual environmental hit with positive force;
+guests had to observe replicated stun feedback. Both guest reconnect and
+interrupted host result transport passed. No final tournament tie occurred,
+and the logs contain no script, parse, network-failure, normalization or
+object-leak errors. Production online remains disabled.
+Final gate `kras-party-check.jAHEM5`: 271 scripts compiled, 308 resources
+audited with zero issues, 18,489 assertions passed, race regression passed
+and all 39 stability matches passed.
+
+External CI run `36986801070` completed successfully: all 22 jobs on commit
+`92ed5948f64825bd655115e2623196fe0a10c594` passed. That run covers the core
+and 21 room games through Crate Relay, not the subsequently added Hurdle,
+Tide or Sweeper integrations. Newer commits need their own CI result.
+
 ### Sweeper Storm snapshot adapter
 
 Snapshots now carry the three authored sweeper angles in stable arena order.
@@ -13,8 +45,8 @@ previous seeded orientations.
 
 `/tmp/kras-sweeper-network.log`: all 26 assertions passed, including unchanged
 scores/alive state and acceleration age during repeated rendering. All 67
-Node tests passed. Sweeper Storm remains outside room allowlists until
-independent-process play, reconnect and tournament checks are complete.
+Node tests passed. This adapter initially remained outside room allowlists;
+subsequent independent-process room and tournament evidence appears above.
 These tests do not establish smoothness or visual fidelity on a physical
 device; the current adapter applies authoritative angles without prediction.
 Full gate `kras-party-check.2OzdHE`: 271 scripts compiled, 308 resources
@@ -443,7 +475,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-three explicitly adapted rulesets; verification
+The development allowlist contains twenty-four explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard

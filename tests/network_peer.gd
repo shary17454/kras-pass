@@ -20,6 +20,7 @@ var moved := false
 var tournament_mode := false
 var game_id := "ring_rumble"
 var world_snapshots := 0
+var observed_sweeper_hit := false
 var observed_collection_score := false
 var observed_zone_score := false
 var observed_relic_holder := false
@@ -181,6 +182,8 @@ func _start(cfg: MatchConfig) -> void:
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
+	if host and game_id == "sweeper_storm" and not EventBus.player_hit.is_connected(_on_sweeper_hit):
+		EventBus.player_hit.connect(_on_sweeper_hit)
 	if game.machine != null or game.ctx.machine != null:
 		_fail("unreplicated hover machine created in online match")
 		return
@@ -190,9 +193,17 @@ func _start(cfg: MatchConfig) -> void:
 	started_at = Time.get_ticks_msec()
 
 
+func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
+	if attacker == -1 and strength > 0.0:
+		observed_sweeper_hit = true
+
+
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if not host and game_id == "sweeper_storm":
+		for fighter in game.ctx.fighters:
+			observed_sweeper_hit = observed_sweeper_hit or fighter._stun > 0.0
 	if game_id in ["gem_grab", "star_rush"]:
 		for score in game.ctx.scores:
 			observed_collection_score = observed_collection_score or score > 0
@@ -432,6 +443,26 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "sweeper_storm":
+		var angles: Array = []
+		for hazard in game.arena._hazards:
+			if hazard is ArenaHazards.Sweeper:
+				angles.append(hazard.rotation.y)
+				if host and hazard._age <= 0.0:
+					_fail("sweeper never advanced")
+					return
+		if angles.size() != 3:
+			_fail("missing sweeper arms")
+			return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world_snapshots < 5 or world.is_empty():
+				_fail("missing sweeper snapshots")
+				return
+			for i in angles.size():
+				if absf(angle_difference(float(angles[i]), float(world.angles[i]))) > 0.001:
+					_fail("sweeper angle diverged")
+					return
 	if game_id == "rising_tide":
 		if game.arena.water_level() <= 0.0 or not game.ctx.alive.has(false):
 			_fail("tide did not rise and eliminate a runner")
@@ -665,6 +696,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "zone_hold" and not observed_zone_score:
 		_fail("zone finished without capture scoring")
+		return
+	if game_id == "sweeper_storm" and not observed_sweeper_hit:
+		_fail("no sweeper collision feedback observed")
 		return
 	if game_id == "relic_hold" and (not observed_relic_holder or not observed_relic_score):
 		_fail("relic finished without observed ownership and scoring")
