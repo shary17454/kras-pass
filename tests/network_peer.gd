@@ -31,6 +31,11 @@ var observed_floe_fall := false
 var observed_turret_shot := false
 var observed_turret_damage := false
 var observed_turret_score := false
+var observed_tank_armor := false
+var observed_tank_inventory := false
+var tank_arenas_seen := {}
+var tank_route := PackedVector3Array()
+var tank_route_target := Vector3.INF
 var observed_duo_score := false
 var observed_duo_life_loss := false
 var observed_duo_damage := false
@@ -104,6 +109,12 @@ func _process(_delta: float) -> void:
 					"carrying": fighter.carrying, "score": game.ctx.scores[fighter.slot], "control": fighter.control_enabled})
 			print("NETWORK_RELAY=" + JSON.stringify({"slot": Net.local_slot(), "players": players,
 				"movement": str(_collection_movement(Net.local_slot())) if Net.local_slot() >= 0 else "none"}))
+		if game_id == "tank_arena" and is_instance_valid(game):
+			var positions: Array = []
+			for fighter in game.ctx.fighters:
+				positions.append(str(fighter.global_position))
+			print("NETWORK_ATV=" + JSON.stringify({"positions": positions, "armor": game.controller.armor,
+				"ammo": game.controller.ammo, "inventory_seen": observed_tank_inventory, "route": str(tank_route)}))
 
 class ResultDropTransport extends Node:
 	var delegate: Node
@@ -218,6 +229,14 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 35.0
 	if game_id == "turret_duel":
 		cfg.duration_override = 25.0
+	if game_id == "tank_arena":
+		cfg.duration_override = 30.0
+		tank_arenas_seen[cfg.arena_id] = true
+		tank_route.clear()
+		tank_route_target = Vector3.INF
+		observed_turret_shot = false
+		observed_tank_armor = false
+		observed_tank_inventory = false
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		cfg.duration_override = 20.0
 		observed_duo_final = true
@@ -260,13 +279,19 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
-	if game_id == "turret_duel":
-		var world: Dictionary = load("res://src/net/turret_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+	if game_id in ["turret_duel", "tank_arena"]:
+		var adapter = load("res://src/net/tank_replica.gd" if game_id == "tank_arena" else "res://src/net/turret_replica.gd")
+		var world: Dictionary = adapter.capture(game.controller) if host else game._network_replica.target.get("world", {})
 		observed_turret_shot = observed_turret_shot or not world.get("shots", []).is_empty()
 		for value in world.get("damage", []):
 			observed_turret_damage = observed_turret_damage or float(value) > 0.0
 		for score in game.ctx.scores:
 			observed_turret_score = observed_turret_score or score > 0
+		if game_id == "tank_arena":
+			for armor in world.get("armor", []):
+				observed_tank_armor = observed_tank_armor or int(armor) < 100
+			for ammo in world.get("ammo", []):
+				observed_tank_inventory = observed_tank_inventory or int(ammo) > 0
 	if game_id == "drift_floes":
 		if floe_start_positions.is_empty():
 			for floe in game.controller._floes:
@@ -372,7 +397,7 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
-		if game_id == "turret_duel":
+		if game_id in ["turret_duel", "tank_arena"]:
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var target: Vector3 = game.arena.global_position
 			var distance := INF
@@ -384,13 +409,25 @@ func _physics_process(_delta: float) -> void:
 						target = other.global_position
 			var to := target - fighter.global_position
 			to.y = 0.0
+			var combat_target := to
+			if game_id == "tank_arena":
+				if not observed_tank_inventory:
+					var nearest := INF
+					for crate in game.controller.crates:
+						var d: float = fighter.global_position.distance_squared_to(crate.pos)
+						if float(crate.cooldown) <= 0.0 and d < nearest:
+							nearest = d
+							target = crate.pos
+				target = _tank_waypoint(fighter.global_position, target)
+				to = target - fighter.global_position
+				to.y = 0.0
 			var desired := atan2(to.x, to.z)
 			var current := atan2(fighter.facing.x, fighter.facing.z)
 			var diff := wrapf(desired - current, -PI, PI)
 			movement = Vector2(-clampf(diff * 1.8, -1.0, 1.0), -maxf(0.25, 1.0 - absf(diff) / PI))
-			if to.length() < 8.0:
+			if to.length() < 8.0 and game_id == "turret_duel":
 				movement.y = -0.2
-			if fighter.facing.normalized().dot(to.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
+			if fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
 				buttons = InputFrame.Btn.ATTACK
 		if game_id == "drift_floes":
 			var fighter: Fighter = game.ctx.fighters[slot]
@@ -512,6 +549,15 @@ func _physics_process(_delta: float) -> void:
 		Net.transport.socket.close()
 
 
+func _tank_waypoint(origin: Vector3, target: Vector3) -> Vector3:
+	if tank_route.is_empty() or target.distance_to(tank_route_target) > 6.0:
+		tank_route = game.controller.world.route(origin, target)
+		tank_route_target = target
+	while not tank_route.is_empty() and origin.distance_to(tank_route[0]) < 3.0:
+		tank_route.remove_at(0)
+	return target if tank_route.is_empty() else tank_route[0]
+
+
 func _collection_movement(slot: int) -> Vector2:
 	var fighter: Fighter = game.ctx.fighters[slot]
 	var target: Vector3 = fighter.global_position
@@ -593,9 +639,9 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
-	if game_id == "turret_duel" and not host:
+	if game_id in ["turret_duel", "tank_arena"] and not host:
 		var world: Dictionary = game._network_replica.target.get("world", {})
-		var view = game._network_replica._turret
+		var view = game._network_replica._tank if game_id == "tank_arena" else game._network_replica._turret
 		if world_snapshots < 5 or world.is_empty() or not is_instance_valid(view) or not game.controller._shots.is_empty():
 			_fail("missing turret world or guest simulated its own shots")
 			return
@@ -614,6 +660,21 @@ func _finished(result: MatchResult) -> void:
 			if absf(game.controller._cooldowns[slot] - float(world.cooldowns[slot])) > 0.001 or absf(game.ctx.fighter(slot).damage_percent - float(world.damage[slot])) > 0.001:
 				_fail("turret cooldown or damage diverged")
 				return
+			if game_id == "tank_arena" and (game.controller.armor[slot] != int(world.armor[slot]) or game.controller.ammo[slot] != int(world.ammo[slot]) or game.controller.shell_types[slot] != int(world.shell_types[slot])):
+				_fail("ATV armor or inventory diverged")
+				return
+		if game_id == "tank_arena":
+			for index in game.controller.crates.size():
+				var crate: Dictionary = game.controller.crates[index]
+				var row: Dictionary = world.crates[index]
+				if absf(crate.cooldown - float(row.cooldown)) > 0.001 or crate.node.visible != (float(row.cooldown) <= 0.0) or absf(crate.node.rotation.y - float(row.rotation)) > 0.001:
+					_fail("ATV refill crate diverged")
+					return
+			for row in world.shots:
+				var key: String = row.id + ":" + str(int(row.generation))
+				if int(view.shots[key].get_meta("kind")) != int(row.kind) or absf(float(view.shots[key].get_meta("fuse")) - float(row.fuse)) > 0.001:
+					_fail("ATV shell type or fuse diverged")
+					return
 	if game_id == "drift_floes":
 		if not observed_floe_moved or not observed_floe_fall:
 			_fail("moving floe/fall evidence missing")
@@ -925,6 +986,9 @@ func _finished(result: MatchResult) -> void:
 	if host and Net._inputs.size() < count - 1:
 		_fail("missing remote inputs")
 		return
+	if game_id == "tank_arena" and (not observed_turret_shot or not observed_tank_armor or not observed_tank_inventory):
+		_fail("ATV shot/armor/inventory evidence missing: %s %s %s" % [observed_turret_shot, observed_tank_armor, observed_tank_inventory])
+		return
 	finished_matches += 1
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
@@ -943,6 +1007,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "turret_duel" and (not observed_turret_shot or not observed_turret_damage or not observed_turret_score):
 		_fail("turret shot/damage/score evidence missing: %s %s %s" % [observed_turret_shot, observed_turret_damage, observed_turret_score])
+		return
+	if requested_game_id == "tank_arena" and tournament_mode and tank_arenas_seen.size() != 3:
+		_fail("ATV tournament did not visit all three authored arenas")
 		return
 	if game_id == "sweeper_storm" and not observed_sweeper_hit:
 		_fail("no sweeper collision feedback observed")

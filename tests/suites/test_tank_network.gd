@@ -13,6 +13,18 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	var peer: Node = load("res://tests/network_peer.gd").new()
+	peer.game = scene
+	var origin: Vector3 = game.world.roads.get_point_position(0)
+	var destination: Vector3 = game.world.roads.get_point_position(24)
+	var waypoint: Vector3 = peer._tank_waypoint(origin, destination)
+	t.ok(waypoint.distance_to(origin) > 3.0, "ATV fixture advances beyond its starting road node")
+	var between := origin.lerp(waypoint, 0.35)
+	var recalculated: PackedVector3Array = game.world.route(between, destination)
+	t.equal(recalculated[0], origin, "per-frame nearest-node routing reproduces the backward waypoint")
+	t.equal(peer._tank_waypoint(between, destination), waypoint, "ATV route does not steer back when nearest-node lookup still selects origin")
+	t.ok(peer._tank_waypoint(waypoint, destination).distance_to(waypoint) > 3.0, "ATV fixture advances after reaching each waypoint")
+	peer.free()
 	t.not_null(game._engine, "audio-enabled test creates an actual engine player")
 	for kind in 7:
 		game._spawn_shell(0, kind, Vector3(100, 4, 100), Vector3.FORWARD)

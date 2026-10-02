@@ -39,11 +39,11 @@ three-lap race regression and completed 39 stability matches without failure.
 The earlier `kras-party-check.f7j1dk` gate failed the two audio-fixture
 assertions described above and was not accepted as passing evidence.
 
-This is adapter preparation, not independent room acceptance. `tank_arena`
-is still excluded from the Godot client's online room allowlist. Real-process matches, tournament
-and reconnect tests across its authored maps are required next. Physical-device
-and Internet qualification, sampled-event limitations and impact/collection
-sound parity remain unresolved. Production online remains disabled.
+Development rooms now accept `tank_arena` on its three authored maps in both
+the server and Godot client. Independent-process acceptance is recorded below.
+Physical-device and Internet qualification, sampled-event limitations and
+impact/collection sound parity remain unresolved. Production online remains
+disabled.
 
 The development server now recognizes only the three authored ATV arenas:
 `tank_foundry`, `tank_oasis` and `tank_frost`. Its snapshot dispatch uses the
@@ -54,10 +54,60 @@ crates, zero launch generations and a non-sticky shell with a sticky fuse.
 Guests cannot publish snapshots or results. A real Rooms disconnect/resume
 restores the same identity, arena and authoritative inventory baseline without
 directly modifying room internals. All 81 Node tests passed; their full output
-is preserved in `/tmp/kras-tank-room-contract.log`. This server-side
-preparation does not enable ATV selection in the Godot client or qualify it for
-production; the client allowlist and CI scenario remain intentionally unchanged
-until independent-process gameplay tests are added and exercised.
+is preserved in `/tmp/kras-tank-room-contract.log`. This initial server-side
+preparation alone was not treated as client or production qualification.
+
+### Armed ATV independent-process acceptance
+
+The client now uses the same three-map allowlist as the server. The real-input
+fixture drives, steers, fires and pursues available refill crates through the
+authored road graph, without injecting contacts, inventory or scores. Each
+match must observe actual launches, armor damage and nonzero ammunition.
+Guests require converged launch generations/positions, shell kinds/fuses,
+cooldowns, damage, armor, ammo and held types, plus all five crates' cooldowns,
+rotation and availability. Their controller must not simulate local shots.
+Tournament checks reset those observations for every match and require visits
+to all three maps; one successful map cannot mask an untested later map.
+
+Initial run `kras-network-smoke-EqZmO7` passed two humans plus two bots but
+failed four humans because no ammunition was observed (shots and armor damage
+were observed). That failed run is retained. The driver's per-frame AStar
+nearest-node recalculation could direct it back toward the starting node before
+crossing a road segment's midpoint. The fixture now retains and consumes its
+waypoints, replanning only when its destination moves significantly or its
+path is exhausted. It selects available crates explicitly rather than treating
+a proximity-limited "no crate" return as a destination. This is a fixture change,
+not a modification of product AI, vehicle speed, map collision or loot rules.
+The focused regression reproduces the old backward waypoint and verifies forward
+progress before/after each node. An initial test parse error from untyped dynamic
+node creation was corrected with `Node` typing. The final focused run passed
+143 assertions (`/tmp/kras-tank-routing-regression.log`).
+
+Ordinary run `kras-network-smoke-CUsOJK` passed both rosters on `tank_foundry`:
+scores `[600,972,935,918]` / `[950,897,960,600]`, with 1,689-1,708 guest
+snapshots. These runs observed real elimination, weapon pickups and armor damage.
+Host interrupted-result recovery and guest identity recovery passed. Maximum
+local server event-loop delay was 47 ms.
+
+Tournament run `kras-network-smoke-Skds8n` passed both rosters and all three
+maps. Two humans plus bots completed three matches: points `[7,12,8,9]`, cups
+`[1,2,1,1]`, champion slot 1. Four humans completed three matches: points
+`[9,7,13,5]`, cups `[1,0,2,0]`, champion slot 2. Final standings agreed across
+all peers. Guests received 2,568-2,587 snapshots; identity and interrupted-result
+recovery passed. Each map independently satisfied shot/armor/inventory checks.
+No final tiebreak was needed, so this is not ATV sudden-death acceptance.
+Maximum local server event-loop delay was 96 ms, not an iPhone FPS measurement.
+No script/parse/normalization/object-leak errors were found in either accepted
+run's preserved logs. CI now includes the ATV ordinary and tournament scenario;
+adding that scenario is not evidence that hosted CI has passed it.
+
+Final integration gate `kras-party-check.Q6D3RC` compiled 286 scripts, audited
+323 resources with zero issues, passed 19,118 assertions, passed the real
+three-lap race regression and completed 39 stability matches without failure.
+The existing macOS sandbox system-CA lookup warning remains; this gate is not
+proof of iOS certificate trust, thermal behavior, frame rate or device audio.
+No production deployment, iOS archive, upload or review submission was performed
+for this development-room acceptance.
 
 ### Outstanding CI collection acceptance
 
