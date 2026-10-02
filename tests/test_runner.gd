@@ -21,6 +21,7 @@ const SUITES := [
 	"res://tests/suites/test_mutators.gd",
 	"res://tests/suites/test_matches.gd",
 	"res://tests/suites/test_goal_guard.gd",
+	"res://tests/suites/test_collection_network.gd",
 	"res://tests/suites/test_race_conditions.gd",
 	"res://tests/suites/test_lifecycle.gd",
 ]

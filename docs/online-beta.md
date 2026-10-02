@@ -14,11 +14,15 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-Online supports two explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
+Online supports four explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
 replicates normal/heavy balls, launch generations and keeper charges; the guest
-does not tick ball physics or evaluate goals. The other 37 games are not
+does not tick ball physics or evaluate goals. `gem_grab` uses `gem_hollow` /
+`glass_terrace`, and `star_rush` uses `star_meadow`. Both share the bounded,
+stable-ID collectible presenter; carried star counts come from the host too.
+Optional random power-ups remain disabled in online beta configurations.
+The other 35 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -27,7 +31,7 @@ advance the tournament. The configured points table is validated server-side.
 Final ties run short contender-only matches. Other players retain their slots
 as spectators. At most three tie-breaks are allowed; persistent ties produce
 shared champions, not an arbitrary slot-based winner. Cup tournaments also
-have a bounded regular-round limit. These are two-game beta tournaments, not
+have a bounded regular-round limit. These are four-game beta tournaments, not
 39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
@@ -314,9 +318,38 @@ That run predates the Goal Guard adapter below.
   fixtures, not iPhone performance tests.
 
 The CI workflow now repeats both ordinary and tournament Goal Guard scenarios.
-Production deployment, real-device latency/audio QA and the remaining 37 world
+Production deployment, real-device latency/audio QA and the remaining world
 adapters are still outstanding. Guest collision/goal sound events are not yet
 replicated; phase/countdown cues are shared by the existing match adapter.
+
+## Collection adapters and resource cleanup verification
+
+Gem Grab and Star Rush now share a visual-only collectible replica. The host
+owns pickup, deposit and scoring; guests reconcile bounded stable item IDs and
+carried-item counts. Unknown kinds, duplicate IDs, non-finite transforms and
+oversized payloads are rejected before updating visible state.
+
+- `/tmp/kras-collection-replica-limit.log`: 64 assertions passed, including
+  worst-case snapshot size, JSON round trips, pool reuse and no guest physics.
+- Server tests: 27 passed.
+- `kras-network-smoke-YGtgxV`: Gem Grab three-match tournaments passed with
+  two humans/two bots and four humans, reconnect and lost-result recovery.
+- `kras-network-smoke-YmbjnX`: the same Star Rush configurations passed;
+  every peer observed carrying and positive collection scores. Neither run
+  needed a tie-break. These are localhost tests, not production latency tests.
+- `/tmp/kras-collection-online-ui-clean.log`: portrait and landscape Arabic
+  lobby fixtures rendered and were visually inspected. Audio shutdown now
+  stops voices/tweens and releases cached streams; no exit leak was reported.
+- `/tmp/kras-audio-shutdown-clean.log`: 248 system assertions passed without
+  leak warnings after draining the isolated power-up fixture pool.
+- The preceding source `c49505b57c325facd4eed9b897e207e8f26520de` passed
+  [CI 36957648373](https://github.com/shary17454/kras-pass/actions/runs/36957648373).
+  This is not evidence for the later collection changes. The new CI matrix
+  separately checks core quality and each of the four online adapters.
+
+Production remains disabled. Another 35 minigames need world adapters, and
+guest pickup/deposit sound events and physical-device QA remain outstanding.
+No iOS archive, upload or App Review submission is represented by these tests.
 
 ## Expansion checklist per game
 
@@ -350,6 +383,7 @@ src/net/
   room_client.gd       # Godot WebSocket transport
   match_replica.gd     # shared player/phase state and world adapter dispatch
   goal_guard_replica.gd # bounded ball/charge presentation, no guest simulation
+  collectible_replica.gd # shared gem/star visual reconciliation without physics
 tests/
   network_peer.gd      # actual match client used by the smoke test
   suites/test_network.gd

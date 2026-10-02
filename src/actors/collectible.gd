@@ -12,6 +12,8 @@ var value := 1
 var available := true
 var owner_slot := -1
 var lifetime := 0.0        ## 0 = permanent
+var visual_color := Color.WHITE
+var visual_size := 0.42
 
 var _mesh: Node3D
 var _bob := 0.0
@@ -35,20 +37,27 @@ func _init() -> void:
 func configure(item_kind: String, color: Color, item_value: int = 1, size: float = 0.42) -> void:
 	kind = item_kind
 	value = item_value
+	visual_color = color
+	visual_size = size
 	if _mesh != null and is_instance_valid(_mesh):
 		_mesh.queue_free()
-	match kind:
+	_mesh = make_visual(item_kind, color, size)
+	add_child(_mesh)
+
+
+static func make_visual(item_kind: String, color: Color, size: float) -> Node3D:
+	match item_kind:
 		"star":
-			_mesh = Node3D.new()
+			var visual := Node3D.new()
 			for i in 2:
 				var b := MeshFactory.box(Vector3(size * 2.0, size * 0.5, size * 0.5), color, 1.3)
 				b.rotation.y = PI * 0.25 + PI * 0.5 * i
-				_mesh.add_child(b)
+				visual.add_child(b)
+			return visual
 		"crate":
-			_mesh = MeshFactory.crate(size * 2.2, color, color.lightened(0.35))
+			return MeshFactory.crate(size * 2.2, color, color.lightened(0.35))
 		_:
-			_mesh = MeshFactory.gem(size, color)
-	add_child(_mesh)
+			return MeshFactory.gem(size, color)
 
 
 func place(p: Vector3) -> void:

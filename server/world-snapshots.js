@@ -11,3 +11,21 @@ export function validGoalGuardWorld(data, count) {
       && ball.generation >= 0 && ball.generation <= 1000000
       && vector(ball.position) && vector(ball.velocity));
 }
+
+export function validCollectionWorld(data, count, kind) {
+  if (count < 2 || count > 4 || !data || typeof data !== 'object' || Array.isArray(data)
+    || !Array.isArray(data.carrying) || data.carrying.length !== count
+    || !data.carrying.every(v => Number.isInteger(v) && v >= 0 && v <= 8)
+    || !Array.isArray(data.items) || data.items.length > 256) return false;
+  const ids = new Set();
+  return data.items.every(row => {
+    if (!row || typeof row !== 'object' || typeof row.id !== 'string'
+      || !/^[1-9][0-9]{0,18}$/.test(row.id) || BigInt(row.id) > 9223372036854775807n || ids.has(row.id)) return false;
+    ids.add(row.id);
+    return row.kind === kind && vector(row.position)
+      && Number.isFinite(row.rotation) && Math.abs(row.rotation) <= 3.142
+      && typeof row.color === 'string' && /^[0-9a-fA-F]{8}$/.test(row.color)
+      && Number.isFinite(row.size) && row.size >= .05 && row.size <= 3
+      && Number.isInteger(row.value) && row.value >= 1 && row.value <= 1000000;
+  });
+}

@@ -20,6 +20,8 @@ var moved := false
 var tournament_mode := false
 var game_id := "ring_rumble"
 var world_snapshots := 0
+var observed_collection_score := false
+var observed_carrying := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -102,14 +104,15 @@ func _room() -> void:
 		configured = true
 		var cfg := Net.lobby_config.duplicate(true)
 		cfg["rounds"] = 2
-		if game_id == "goal_guard":
+		if game_id != "ring_rumble":
 			cfg["game"] = game_id
-			cfg["arena"] = "quad_court"
+			cfg["arena"] = Net.ONLINE_ARENAS[game_id][0]
 		if tournament_mode:
 			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat", "points": [5, 3, 2, 1],
 				"entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
-			if game_id == "goal_guard":
-				cfg["tournament"]["entries"] = [{"game": game_id, "arena": "quad_court"}]
+			cfg["tournament"]["entries"] = []
+			for arena_id in Net.ONLINE_ARENAS[game_id]:
+				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
 		Net.set_lobby_config(cfg)
 		return
 	if host and int(Net.lobby_config.get("rounds", 0)) != 2:
@@ -127,7 +130,7 @@ func _start(cfg: MatchConfig) -> void:
 	if game != null:
 		_fail("duplicate match")
 		return
-	cfg.duration_override = 15.0 if game_id == "goal_guard" else 4.0
+	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -143,9 +146,20 @@ func _start(cfg: MatchConfig) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id in ["gem_grab", "star_rush"]:
+		for score in game.ctx.scores:
+			observed_collection_score = observed_collection_score or score > 0
+		for fighter in game.ctx.fighters:
+			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
 	if slot >= 0:
-		InputRouter.push_virtual(slot, Vector2(0.2, -0.2), Vector2.ZERO, 0)
+		var movement := Vector2(0.2, -0.2)
+		var buttons := 0
+		if game_id in ["gem_grab", "star_rush"]:
+			movement = _collection_movement(slot)
+			if game_id == "gem_grab" and (Time.get_ticks_msec() / 500) % 2 == 0:
+				buttons = InputFrame.Btn.JUMP
+		InputRouter.push_virtual(slot, movement, Vector2.ZERO, buttons)
 		moved = moved or game.ctx.fighters[slot].global_position.distance_to(initial_positions[slot]) > 0.3
 	if not host and Net.local_peer_id == 2 and snapshots >= 8 and not disconnected_once:
 		disconnected_once = true
@@ -153,10 +167,34 @@ func _physics_process(_delta: float) -> void:
 		Net.transport.socket.close()
 
 
+func _collection_movement(slot: int) -> Vector2:
+	var fighter: Fighter = game.ctx.fighters[slot]
+	var target: Vector3 = fighter.global_position
+	if game_id == "star_rush" and fighter.carrying > 0:
+		target = game.controller.base_position(slot)
+	else:
+		var candidates: Array = []
+		if host:
+			for item in game.controller._items:
+				if item.available: candidates.append(item.global_position)
+		elif is_instance_valid(game._network_replica._collectibles):
+			for view in game._network_replica._collectibles.views.values():
+				candidates.append(view.global_position)
+		var nearest := INF
+		for position: Vector3 in candidates:
+			var distance := fighter.global_position.distance_squared_to(position)
+			if distance < nearest:
+				nearest = distance
+				target = position
+	var direction := target - fighter.global_position
+	return Vector2(direction.x, direction.z).limit_length()
+
+
 func _finished(result: MatchResult) -> void:
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
-	print("NETWORK_ROUND=" + JSON.stringify({"epoch": Net.epoch, "scores": result.scores, "spectator": spectator, "moved": moved}))
+	print("NETWORK_ROUND=" + JSON.stringify({"epoch": Net.epoch, "game": game.config.minigame_id,
+		"arena": game.config.arena_id, "scores": result.scores, "spectator": spectator, "moved": moved}))
 	if spectator and game.ctx.is_alive(Net.local_slot()):
 		_fail("spectator remained active")
 		return
@@ -181,6 +219,19 @@ func _finished(result: MatchResult) -> void:
 			if ball.global_position.distance_to(position) > 1.0 or ball.heavy != bool(row.heavy):
 				_fail("replica ball presentation diverged")
 				return
+	if not host and game_id in ["gem_grab", "star_rush"]:
+		var view = game._network_replica._collectibles
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or not is_instance_valid(view) or view.views.size() != world.get("items", []).size():
+			_fail("missing collection world")
+			return
+		for row in world.items:
+			if not view.views.has(row.id) or view.views[row.id].global_position.distance_to(Vector3(row.position[0], row.position[1], row.position[2])) > 0.1:
+				_fail("collection presentation diverged")
+				return
+		if game.ctx.fighters[Net.local_slot()].carrying != int(world.carrying[Net.local_slot()]):
+			_fail("carrying state diverged")
+			return
 	if disconnected_once and not restored:
 		_fail("identity not restored")
 		return
@@ -191,10 +242,17 @@ func _finished(result: MatchResult) -> void:
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
 		return
+	if game_id in ["gem_grab", "star_rush"] and not observed_collection_score:
+		_fail("collection finished without any scoring")
+		return
+	if game_id == "star_rush" and not observed_carrying:
+		_fail("star carrying was never observed")
+		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
-		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots}))
+		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
+		"collection_scored": observed_collection_score, "carrying_seen": observed_carrying}))
 	call_deferred("_finish_cleanup")
 
 

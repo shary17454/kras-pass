@@ -15,8 +15,14 @@ concurrency:
 
 jobs:
   godot:
+    name: ${{ matrix.scenario == 'core' && 'godot' || format('network-{0}', matrix.scenario) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush]
     env:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
@@ -52,19 +58,26 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: server/package-lock.json
-      - name: Server and real multi-engine networking checks
+      - name: Server tests
+        if: matrix.scenario == 'core'
         working-directory: server
-        env:
-          TMPDIR: ${{ runner.temp }}
         run: |
           set -euo pipefail
           npm ci --ignore-scripts
           npm test 2>&1 | tee "$RUNNER_TEMP/kras-server-tests.stdout"
-          node network-smoke.js 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
-          node network-smoke.js --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
-          node network-smoke.js --goal-guard 2>&1 | tee "$RUNNER_TEMP/kras-network-goal-match.stdout"
-          node network-smoke.js --goal-guard --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-goal-tournament.stdout"
+      - name: Real multi-engine networking checks
+        if: matrix.scenario != 'core'
+        working-directory: server
+        env:
+          TMPDIR: ${{ runner.temp }}
+          GAME_ID: ${{ matrix.scenario }}
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          node network-smoke.js --game="$GAME_ID" 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
+          node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
       - name: Compile, content, regression and cleanup checks
+        if: matrix.scenario == 'core'
         env:
           TMPDIR: ${{ runner.temp }}
           KRAS_STABILITY_CYCLES: '3'
@@ -75,7 +88,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: game-quality-${{ github.sha }}
+          name: game-quality-${{ github.sha }}-${{ matrix.scenario }}
           retention-days: 14
           if-no-files-found: warn
           path: |

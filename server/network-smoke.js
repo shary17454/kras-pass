@@ -23,6 +23,7 @@ service.rooms.handle = (connection, message) => {
     if (['start', 'next', 'loaded', 'resume', 'result'].includes(message.op)) {
       console.log(JSON.stringify({event: 'transition', op: message.op,
         state: connection.room?.state, epoch: connection.room?.epoch,
+        game: connection.room?.matchConfig?.game, arena: connection.room?.matchConfig?.arena,
         host: connection.player?.id === connection.room?.host,
         serverLoopMaxMs: Math.round(loopDelay.max / 1e6)}));
     }
@@ -42,7 +43,9 @@ service.rooms.close = (room, reason) => {
 };
 const children = [];
 const tournament = process.argv.includes('--tournament');
-const game = process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble';
+const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
+  ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
+assert.ok(['ring_rumble', 'goal_guard', 'gem_grab', 'star_rush'].includes(game));
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);

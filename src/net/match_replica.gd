@@ -4,6 +4,9 @@ extends RefCounted
 ## game needs a world-state adapter before it enters Net.ONLINE_GAMES.
 const P := MatchPhase.P
 const GoalGuardReplica = preload("res://src/net/goal_guard_replica.gd")
+const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
+const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star"}
+var _collectibles: Node3D
 var target: Dictionary = {}
 var received_at := 0
 var _last_phase := -1
@@ -22,6 +25,11 @@ func capture(scene: Node) -> Dictionary:
 		"countdown": scene._countdown_value, "radius": scene.arena.current_radius}
 	if scene.config.minigame_id == "goal_guard":
 		packet["world"] = GoalGuardReplica.capture(scene.controller)
+	elif COLLECTION_GAMES.has(scene.config.minigame_id):
+		var carrying: Array = []
+		for fighter in scene.ctx.fighters:
+			carrying.append(fighter.carrying)
+		packet["world"] = {"items": CollectibleReplica.capture(scene.controller._items), "carrying": carrying}
 	return packet
 
 
@@ -31,6 +39,15 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 	if game_id == "goal_guard":
 		if not GoalGuardReplica.valid(data.get("world"), count):
 			return false
+	elif COLLECTION_GAMES.has(game_id):
+		var world: Variant = data.get("world")
+		if not world is Dictionary or not CollectibleReplica.valid(world.get("items"), COLLECTION_GAMES[game_id]):
+			return false
+		if not world.get("carrying") is Array or world.carrying.size() != count:
+			return false
+		for carried in world.carrying:
+			if not _integer(carried, 0, 8):
+				return false
 	elif game_id != "ring_rumble":
 		return false
 	for key in ["fighters", "scores", "alive"]:
@@ -89,6 +106,14 @@ func render(scene: Node, delta: float) -> void:
 		scene.ctx.alive[i] = bool(target.alive[i])
 	if scene.config.minigame_id == "goal_guard":
 		GoalGuardReplica.render(scene.controller, target.world, delta, snap)
+	elif COLLECTION_GAMES.has(scene.config.minigame_id):
+		if not is_instance_valid(_collectibles):
+			scene.controller.cleanup()
+			_collectibles = CollectibleReplica.new()
+			scene.ctx.world_root.add_child(_collectibles)
+		_collectibles.apply(target.world.items)
+		for slot in scene.ctx.player_count():
+			scene.ctx.fighters[slot].carrying = int(target.world.carrying[slot])
 	scene.arena.apply_network_radius(float(target.radius))
 	scene.arena._tick_arctic_water(delta)
 	scene.ctx.time_left = float(target.time)

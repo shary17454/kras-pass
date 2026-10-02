@@ -18,8 +18,9 @@ signal snapshot_received(data: Dictionary)
 signal online_result(scores: Array)
 
 const RoomClient = preload("res://src/net/room_client.gd")
-const ONLINE_GAMES := ["ring_rumble", "goal_guard"]
-const ONLINE_ARENAS := {"ring_rumble": ["vortex_ring", "storm_ring"], "goal_guard": ["quad_court"]}
+const ONLINE_GAMES := ["ring_rumble", "goal_guard", "gem_grab", "star_rush"]
+const ONLINE_ARENAS := {"ring_rumble": ["vortex_ring", "storm_ring"], "goal_guard": ["quad_court"],
+	"gem_grab": ["gem_hollow", "glass_terrace"], "star_rush": ["star_meadow"]}
 var transport: Node
 var endpoint := ""
 var room_state := ""
