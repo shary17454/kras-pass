@@ -13,6 +13,15 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
 const server = createServer();
 const service = attachMultiplayer(server, {enabled: true});
+const handle = service.rooms.handle.bind(service.rooms);
+service.rooms.handle = (connection, message) => {
+  try { return handle(connection, message); }
+  catch (error) {
+    console.error(JSON.stringify({event: 'protocol_error', op: message.op,
+      state: connection.room?.state, epoch: message.epoch, reason: error.message}));
+    throw error;
+  }
+};
 const closeRoom = service.rooms.close.bind(service.rooms);
 service.rooms.close = (room, reason) => {
   console.log(JSON.stringify({event: 'room_closed', state: room.state, reason,
@@ -20,6 +29,7 @@ service.rooms.close = (room, reason) => {
   closeRoom(room, reason);
 };
 const children = [];
+const tournament = process.argv.includes('--tournament');
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
@@ -32,7 +42,8 @@ try {
       const child = spawn(process.env.GODOT_BIN || 'godot', ['--headless', '--path', root,
         '--log-file', join(out, `${name}.log`), 'tests/network_peer.tscn', '--',
         `--test-data-dir=${join(out, `${name}-save`)}`, `--humans=${humans}`,
-        index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : [])],
+        index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
+        ...(tournament ? ['--tournament'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});
       children.push(child);
       let output = '', roomAnnounced = false;
@@ -43,7 +54,7 @@ try {
       };
       child.stdout.on('data', collect); child.stderr.on('data', collect);
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, 180000);
+        const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, tournament ? 360000 : 180000);
         child.on('error', reject);
         child.on('exit', async code => {
           clearTimeout(timer); await writeFile(join(out, `${name}.stdout`), output);
@@ -63,6 +74,13 @@ try {
     assert.equal(new Set(results.map(r => r.id)).size, humans);
     assert.ok(results.some(r => r.reconnected));
     assert.equal(results[0].reconnected, true, 'host result must survive transport loss');
+    if (tournament) {
+      for (const result of results) {
+        assert.ok(result.matches >= 3);
+        assert.equal(result.tournament.complete, true);
+        assert.deepEqual(result.tournament, results[0].tournament);
+      }
+    }
     console.log(JSON.stringify({humans, status: 'PASS', results}));
   }
 } finally {

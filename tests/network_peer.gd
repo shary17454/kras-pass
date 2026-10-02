@@ -17,6 +17,8 @@ var failed := false
 var completed := false
 var initial_positions: Array[Vector3] = []
 var moved := false
+var tournament_mode := false
+var finished_matches := 0
 var result_drop: ResultDropTransport
 
 class ResultDropTransport extends Node:
@@ -41,6 +43,7 @@ func _ready() -> void:
 	UserSettings.set_value("fps_limit", 60)
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
+		if arg == "--tournament": tournament_mode = true
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
 	if host and "--drop-host-result" in OS.get_cmdline_user_args():
@@ -57,7 +60,7 @@ func _ready() -> void:
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
-	get_tree().create_timer(150).timeout.connect(func(): _fail("timeout"))
+	get_tree().create_timer(300 if tournament_mode else 150).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
 	else:
@@ -70,12 +73,18 @@ func _room() -> void:
 		print("NETWORK_ROOM=" + Net.room_code)
 	if disconnected_once and Net.state != Net.State.DISCONNECTED and Net.local_peer_id == before_id:
 		restored = true
-	if Net.room_state != "lobby":
+	var between_rounds := Net.room_state == "results" and not Net.tournament.is_empty() and not bool(Net.tournament.complete)
+	if Net.room_state != "lobby" and not between_rounds:
+		return
+	if between_rounds and game != null:
 		return
 	if host and not configured:
 		configured = true
 		var cfg := Net.lobby_config.duplicate(true)
 		cfg["rounds"] = 2
+		if tournament_mode:
+			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat", "points": [5, 3, 2, 1],
+				"entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
 		Net.set_lobby_config(cfg)
 		return
 	if host and int(Net.lobby_config.get("rounds", 0)) != 2:
@@ -85,7 +94,8 @@ func _room() -> void:
 		Net.set_ready(Net.local_peer_id, true)
 	if host and not started and Net.peers.size() == count and Net.all_ready():
 		started = true
-		Net.request_start(null)
+		if between_rounds: Net.next_tournament_round()
+		else: Net.request_start(null)
 
 
 func _start(cfg: MatchConfig) -> void:
@@ -94,6 +104,8 @@ func _start(cfg: MatchConfig) -> void:
 		return
 	cfg.duration_override = 4.0
 	cfg.sudden_death = false
+	initial_positions.clear()
+	moved = false
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
@@ -117,7 +129,13 @@ func _physics_process(_delta: float) -> void:
 
 
 func _finished(result: MatchResult) -> void:
-	if not moved:
+	var contenders: Array = game.config.rule("online_contenders", [])
+	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
+	print("NETWORK_ROUND=" + JSON.stringify({"epoch": Net.epoch, "scores": result.scores, "spectator": spectator, "moved": moved}))
+	if spectator and game.ctx.is_alive(Net.local_slot()):
+		_fail("spectator remained active")
+		return
+	if not moved and not spectator:
 		_fail("player did not move")
 		return
 	if not host and snapshots < 5:
@@ -129,10 +147,26 @@ func _finished(result: MatchResult) -> void:
 	if host and Net._inputs.size() < count - 1:
 		_fail("missing remote inputs")
 		return
+	finished_matches += 1
+	if tournament_mode and not bool(Net.tournament.get("complete", false)):
+		call_deferred("_continue_tournament")
+		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
-		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved}))
+		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
+		"matches": finished_matches, "tournament": Net.tournament}))
 	call_deferred("_finish_cleanup")
+
+
+func _continue_tournament() -> void:
+	game.teardown()
+	game.queue_free()
+	game = null
+	requested_ready = false
+	started = false
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_room()
 
 
 func _finish_cleanup() -> void:

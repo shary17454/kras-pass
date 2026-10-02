@@ -20,6 +20,7 @@ func suite(name: String) -> void:
 
 func test(name: String) -> void:
 	current = name
+	print("TEST_START: %s / %s" % [_suite, name])
 
 
 func ok(condition: bool, message: String) -> void:

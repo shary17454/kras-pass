@@ -18,7 +18,16 @@ Online currently exposes **only the explicit push-arena beta ruleset**:
 `ring_rumble`, `vortex_ring` / `storm_ring`, without machine drops, random
 power-ups or bombs. Offline Ring Rumble is unchanged. This avoids presenting
 unreplicated hazards/items as if they worked remotely. The other 38 games are
-not online-enabled. Cup/points tournament rotation remains local, not online.
+not online-enabled. The room service now supports points/cups tournaments for
+these two arenas, with stable rosters, readiness between matches, seeded
+no-repeat rotation, and server-owned cumulative accounting. Only the host can
+advance the tournament. The configured points table is validated server-side.
+
+Final ties run short contender-only matches. Other players retain their slots
+as spectators. At most three tie-breaks are allowed; persistent ties produce
+shared champions, not an arbitrary slot-based winner. Cup tournaments also
+have a bounded regular-round limit. These are push-arena tournaments, not
+39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
 30 Hz. The host simulates at the engine physics frequency. Remote clients do
@@ -54,6 +63,7 @@ cd server
 npm ci --ignore-scripts
 npm test
 node network-smoke.js
+node network-smoke.js --tournament
 cd ..
 sh tools/check_party.sh
 ```
@@ -62,6 +72,8 @@ sh tools/check_party.sh
 processes: two humans plus two bots, then four humans. Each runs two shortened
 rounds, disconnects/reconnects one client, checks host receipt of remote input,
 snapshot reception and identical results. It prints its evidence directory.
+The tournament option also exercises repeated scene cleanup/loading, arena
+rotation, next-round readiness and identical final standings on all peers.
 This is a networking smoke test, not proof of Internet latency, phone thermal
 behavior, game balance or visual/audio parity.
 
@@ -187,8 +199,55 @@ Live read-only release checks:
   not prove a signed-device login, database migration, or a new deployment.
 
 No new Apple archive/upload/submission or Railway deploy is established by
-this follow-up. The 38 remaining online adapters, network tournament rotation,
+this follow-up. The 38 remaining online adapters,
 Internet/device QA and the production feature-enable gate remain outstanding.
+
+## Tournament follow-up verification
+
+- Server tests: 21 passed, including cup targets, shared ties, contender-only
+  scoring, reconnect standings, invalid configuration and duplicate results.
+- Focused Godot network tests: 36 assertions passed. Contender IDs are tested
+  through JSON decoding, not only integer-valued local fixtures.
+- Actual Godot tournaments passed with two humans plus two bots and with four
+  humans: six matches each (three regular plus three tied finals), matching
+  standings on every peer, movement every active round, and both host-result
+  loss and guest reconnect. Evidence: `kras-network-smoke-GycbbH` under the
+  macOS temporary directory. Initial failed runs exposed late input/snapshot
+  publication and JSON numeric-type contender matching; those were fixed.
+- The successful tournament run still logged duplicate `leave/not_joined`
+  during simultaneous cleanup. Leave is now idempotent; server regression
+  tests cover that final adjustment. This did not change tournament scoring.
+- Renderer QA captured lobby and final standings in portrait and landscape.
+  It caught a nested-scroll collapse hiding the portrait round table. The
+  inner scroll is removed, and the fixture now checks four visible-sized rows.
+  Log: `/tmp/kras-tournament-ui-final.log`; screenshots:
+  `/tmp/kras-online-results-1080x1920.png` and
+  `/tmp/kras-online-results-1920x1080.png` (plus lobby equivalents).
+- These tests use loopback on macOS, not Internet matchmaking or an iPhone.
+  No claim of 39 online-ready games, phone performance, or release readiness
+  follows from them. No production enablement or Apple submission was made.
+- Full regression attempt `kras-party-check.0CNKEb`: compile (222 scripts)
+  and inventory passed, but the integration suite became abnormally slow and
+  was stopped after more than 25 minutes without recent log progress. It is
+  **incomplete, not passed**. No assertion failure had been reported before
+  termination; that does not establish correctness. The process sample is
+  `/tmp/kras-party-stall.sample` (about 886 MB footprint, stripped native
+  symbols, insufficient to identify a root cause). TestHarness now prints
+  each test start to make the next isolated reproduction attributable.
+- The separate stability run completed all 39 default-arena matches with zero
+  failures after that interrupted full-suite attempt. Evidence:
+  `/tmp/kras-tournament-stability.log` and
+  `/tmp/kras-tournament-stability-save/stability.json`. This is one cycle with
+  four AI and shortened timed rounds, not comprehensive multiplayer/device QA
+  or a long-duration memory-leak certification.
+- Final ordinary-match compatibility retests did **not** pass:
+  `kras-network-smoke-bWHju8` closed on authority timeout, and
+  `kras-network-smoke-p4gbw1` expired the session during transport recovery.
+  Neither run reached a completed result. They coincided with unusually slow
+  local command execution, but the cause is not established. Do not dismiss
+  them as environmental or widen watchdogs to turn the test green. Reproduce
+  with host tick/transport timing on a responsive machine before merging or
+  releasing. Earlier successful tournament results do not override this gate.
 
 ## Expansion checklist per game
 
@@ -199,8 +258,8 @@ Internet/device QA and the production feature-enable gate remain outstanding.
 3. Add malformed snapshot, reconnect, round reset and result tests.
 4. Run real multiple-engine tests and device visual/audio QA.
 5. Add the game to both server and client allowlists only after those pass.
-6. Add online tournament state on the room authority with idempotent per-round
-   results and tests for ties, cups, playlists and host loss.
+6. Verify score direction and tournament placement for the new game, including
+   contender-only tie-breaks, reconnect and host loss.
 
 WebSocket is used here because the existing HTTP deployment can relay it;
 its TCP latency tradeoff still requires real-network testing. References:
@@ -212,6 +271,8 @@ its TCP latency tradeoff still requires real-network testing. References:
 ```text
 server/
   rooms.js             # protocol/state/ownership, independent of transport
+  tournament.js        # points/cups, seeded rotation, bounded tie-breaks
+  tournament.test.js   # accounting, ties, rotation and immutable views
   multiplayer.js       # bounded WebSocket transport, heartbeat, shutdown
   rooms.test.js        # state and actual four-socket integration tests
   network-smoke.js     # real multi-process Godot integration
