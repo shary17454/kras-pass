@@ -1,6 +1,18 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validScrapWorld(data, count) {
+  const serial = value => Number.isInteger(value) && value >= 0 && value <= 1000000;
+  return Number.isInteger(count) && count >= 2 && count <= 4
+    && data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 5 && Number.isFinite(data.maximum)
+    && data.maximum >= 1 && data.maximum <= 1000 && serial(data.ram) && vector(data.position)
+    && Array.isArray(data.health) && data.health.length === count
+    && data.health.every(value => Number.isFinite(value) && value >= 0 && value <= data.maximum)
+    && Array.isArray(data.wrecks) && data.wrecks.length === count
+    && data.wrecks.every((value, slot) => serial(value) && value <= 1 && (value === 0 || data.health[slot] === 0));
+}
+
 export function validTurretWorld(data, count, horizontal = true) {
   if (!Number.isInteger(count) || count < 2 || count > 4 || !data || typeof data !== 'object' || Array.isArray(data)
     || Object.keys(data).length !== 3 || !Array.isArray(data.shots) || data.shots.length > 128) return false;

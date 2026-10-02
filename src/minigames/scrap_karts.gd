@@ -15,6 +15,9 @@ const FLANK_BONUS := 2.2
 var _hit_cooldown := {}
 var _backwash := 0.2
 var _bars: Array = []
+var ram_serial := 0
+var ram_position := Vector3.ZERO
+var wrecks: Array[int] = []
 
 
 func configure() -> void:
@@ -32,6 +35,8 @@ func configure() -> void:
 func build() -> void:
 	health.resize(ctx.player_count())
 	health.fill(_max_health)
+	wrecks.resize(ctx.player_count())
+	wrecks.fill(0)
 	for i in ctx.player_count():
 		_bars.append(_make_bar(i))
 
@@ -61,6 +66,10 @@ func camera_mode() -> int:
 
 func on_round_start() -> void:
 	health.fill(_max_health)
+	_hit_cooldown.clear()
+	ram_serial = 0
+	ram_position = Vector3.ZERO
+	wrecks.fill(0)
 
 
 func tick(delta: float) -> void:
@@ -116,6 +125,8 @@ func _resolve_rams() -> void:
 			else:
 				_damage(i, j, _ram_damage * scale * 0.6 * flank_b, -dir)
 				_damage(j, i, _ram_damage * scale * _backwash, dir)
+			ram_serial += 1
+			ram_position = a.global_position
 			EventBus.shake(0.35, 0.2)
 			AudioManager.play_sfx("hit", a.global_position)
 
@@ -144,6 +155,7 @@ func _damage(victim: int, attacker: int, amount: float, dir: Vector3) -> void:
 	if f != null and is_instance_valid(f):
 		f.take_hit(attacker, dir, amount * 0.5, 0.0, true)
 	if health[victim] <= 0.0:
+		wrecks[victim] += 1
 		ctx.bump_detail(attacker, "knockouts")
 		ctx.bump_detail(victim, "falls")
 		ctx.eliminate(victim)
