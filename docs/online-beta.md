@@ -2,6 +2,23 @@
 
 ## Implemented boundary
 
+### Survival hazard lifecycle prerequisite
+
+Rising Tide retained the sudden-death water speed in later rounds; Sweeper
+Storm also retained acceleration age and multiplied spin speed. Arena reset
+now restores authored speeds with the selected hazard mutator multiplier,
+clears sweeper age, and resets the water's visual wave offset along with its
+level, age and submerged-player history.
+
+`/tmp/kras-survival-before.log` reproduced 16 failures across three rounds.
+`/tmp/kras-survival-after.log` passed all 31 assertions, including preservation
+of double-speed configuration. Neither game is online-enabled by this fix:
+authoritative hazard replication and independent-process checks remain.
+Full gate `kras-party-check.PutZyC`: 266 scripts compiled, 303 resources
+audited with zero issues, 18,433 assertions passed, race regression passed
+and 39 stability matches completed with zero failures. The sandbox CA lookup
+diagnostic remains an environment limitation, not proof of working TLS.
+
 ### Hurdle Dash room integration
 
 Development rooms now allow `hurdle_dash` only on `hurdle_track`. The server

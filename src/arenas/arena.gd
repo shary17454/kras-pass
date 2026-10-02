@@ -37,6 +37,7 @@ var _hazards: Array = []
 var _shrink: ArenaHazards.ShrinkRing
 ## Original speeds, so a hazard multiplier is idempotent rather than cumulative.
 var _base_hazard_speed := {}
+var _hazard_speed_scale := 1.0
 var _water: ArenaHazards.RisingWater
 var _static_root: Node3D
 var _light: DirectionalLight3D
@@ -302,6 +303,7 @@ func water_level() -> float:
 ## Multiplies every moving hazard's speed. Used by the double_hazards mutator;
 ## arenas without moving parts simply ignore it.
 func set_hazard_speed(scale: float) -> void:
+	_hazard_speed_scale = scale
 	for h in _hazards:
 		if not is_instance_valid(h):
 			continue
@@ -312,6 +314,8 @@ func set_hazard_speed(scale: float) -> void:
 
 
 func reset_hazards() -> void:
+	# Sudden-death speed changes must not escape their round; retain mutators.
+	set_hazard_speed(_hazard_speed_scale)
 	if _shrink != null and is_instance_valid(_shrink):
 		_shrink.reset()
 		current_radius = def.radius
@@ -325,6 +329,8 @@ func reset_hazards() -> void:
 	for h in _hazards:
 		if not is_instance_valid(h):
 			continue
+		if h is ArenaHazards.Sweeper:
+			h._age = 0.0
 		if h is ArenaHazards.BreakableIceBarrier or h is ArenaHazards.Snowball \
 				or h is ArenaHazards.Gust:
 			h.reset()

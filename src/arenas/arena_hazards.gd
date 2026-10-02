@@ -513,6 +513,8 @@ class RisingWater extends Node3D:
 		_age = 0.0
 		_hit.clear()
 		position.y = level
+		if is_instance_valid(_mesh):
+			_mesh.position.y = 0.0
 
 
 class ShrinkRing extends Node3D:
