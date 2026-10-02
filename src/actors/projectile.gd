@@ -168,9 +168,11 @@ func tick(delta: float) -> void:
 			if sticky_delay > 0.0:
 				_attach(body.slot)
 				return
+			var accepted := notify_only
 			if not notify_only:
-				body.take_hit(shooter, direction, knockback, damage)
-			hit_fighter.emit(self, shooter, body.slot)
+				accepted = body.take_hit(shooter, direction, knockback, damage)
+			if accepted:
+				hit_fighter.emit(self, shooter, body.slot)
 			_expire()
 			return
 

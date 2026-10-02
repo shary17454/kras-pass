@@ -38,6 +38,11 @@ func allows_attack() -> bool:
 	return true
 
 
+func on_round_start() -> void:
+	cleanup()
+	_cooldowns.fill(0.0)
+
+
 func tick(delta: float) -> void:
 	for i in _cooldowns.size():
 		_cooldowns[i] = maxf(0.0, _cooldowns[i] - delta)

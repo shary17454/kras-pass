@@ -2,6 +2,31 @@
 
 ## Implemented boundary
 
+### Turret Duel round and projectile prerequisites
+
+Turret Duel previously retained active pooled shots and firing cooldowns into
+the next round. Its round-start hook now releases old shots and clears all
+cooldowns. The shared Projectile previously emitted `hit_fighter` even when
+`Fighter.take_hit` refused the hit due to invulnerability, shield or a
+teammate. This incorrectly awarded Turret Duel hit points without damage.
+Generic shots now emit the scoring event only after an accepted hit; a
+blocked collision still consumes the shot. `notify_only` weapons retain their
+delegated reaction path and do not apply generic damage.
+
+`/tmp/kras-turret-rounds-before.log` showed 18 failures across three round
+resets and actual physics-overlap contacts. After the fix,
+`/tmp/kras-turret-rounds-after.log` passed all 58 executed assertions,
+covering invulnerability, shields, teammates, ordinary hits and delegated
+hits. The assertion count differs because rejected hits no longer invoke
+the callback's shooter/victim checks; those blocked callbacks are explicitly
+asserted absent. This does not enable Turret Duel online: projectile world
+presentation and independent-process acceptance remain to be implemented.
+
+Full gate `kras-party-check.7f32qe` compiled 282 scripts, audited 319 resources
+with zero issues, passed 18,907 assertions, passed the three-lap race
+regression and completed all 39 stability matches without failure. This
+covers the shared projectile change locally, not online or device acceptance.
+
 ### Drift Floes rooms
 
 Development rooms now accept `drift_floes` only on `vortex_ring` and
