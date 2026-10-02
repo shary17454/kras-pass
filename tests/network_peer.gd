@@ -21,6 +21,9 @@ var tournament_mode := false
 var game_id := "ring_rumble"
 var requested_game_id := ""
 var duo_tiebreak := false
+var race_tiebreak := false
+var observed_kart_final := false
+var kart_final_cups: Array = []
 var observed_duo_final := false
 var duo_final_cups: Array = []
 var duo_arenas_seen := {}
@@ -154,6 +157,7 @@ func _ready() -> void:
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
+		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
@@ -206,7 +210,7 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
-			if duo_tiebreak:
+			if duo_tiebreak or race_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
 		return
@@ -263,6 +267,9 @@ func _start(cfg: MatchConfig) -> void:
 	if game_id == "kart_sprint":
 		observed_kart_boost = false
 		observed_kart_rescue = false
+		if not cfg.rule("online_contenders", []).is_empty():
+			observed_kart_final = true
+			if kart_final_cups.is_empty(): kart_final_cups = Net.tournament.get("cups", []).duplicate()
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		cfg.duration_override = 20.0
 		observed_duo_final = true
@@ -721,7 +728,7 @@ func _finished(result: MatchResult) -> void:
 		_fail("no snapshots")
 		return
 	if game_id == "kart_sprint":
-		if not observed_kart_boost or not observed_kart_rescue:
+		if contenders.is_empty() and (not observed_kart_boost or not observed_kart_rescue):
 			_fail("physical race boost/rescue evidence missing: %s %s" % [observed_kart_boost, observed_kart_rescue])
 			return
 		for slot in count:
@@ -1156,6 +1163,13 @@ func _finished(result: MatchResult) -> void:
 	if requested_game_id == "fawda" and tournament_mode and fawda_arenas_seen.size() != 2:
 		_fail("fawda tournament did not visit both authored arenas")
 		return
+	if race_tiebreak:
+		var totals_unchanged := observed_kart_final and kart_final_cups.size() == 4
+		for slot in 4:
+			totals_unchanged = totals_unchanged and int(Net.tournament.points[slot]) == 3 and int(Net.tournament.cups[slot]) == int(kart_final_cups[slot])
+		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
+			_fail("race final did not run or changed ordinary tournament awards")
+			return
 	if game_id == "sweeper_storm" and not observed_sweeper_hit:
 		_fail("no sweeper collision feedback observed")
 		return

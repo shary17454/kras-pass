@@ -9,12 +9,16 @@ import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {monitorEventLoopDelay} from 'node:perf_hooks';
 import {attachMultiplayer} from './multiplayer.js';
-import {ONLINE_GAMES} from './rooms.js';
+import {ONLINE_GAMES, Rooms} from './rooms.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
 const server = createServer();
-const service = attachMultiplayer(server, {enabled: true});
+const seedText = process.argv.find(arg => arg.startsWith('--seed='))?.slice(7);
+assert.ok(seedText === undefined || (/^[0-9]+$/.test(seedText)
+  && Number.isSafeInteger(Number(seedText)) && Number(seedText) >= 1 && Number(seedText) <= 2147483646));
+const service = attachMultiplayer(server, {enabled: true,
+  rooms: seedText === undefined ? new Rooms() : new Rooms({seed: () => Number(seedText)})});
 const loopDelay = monitorEventLoopDelay({resolution: 20});
 loopDelay.enable();
 const handle = service.rooms.handle.bind(service.rooms);
@@ -45,18 +49,21 @@ service.rooms.close = (room, reason) => {
 const children = [];
 const tournament = process.argv.includes('--tournament');
 const duoTiebreak = process.argv.includes('--duo-tiebreak');
+const raceTiebreak = process.argv.includes('--race-tiebreak');
 const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
 assert.ok(ONLINE_GAMES.includes(game));
 assert.ok(!duoTiebreak || (tournament && game === 'duo_clash'));
+assert.ok(!raceTiebreak || (tournament && game === 'kart_sprint'));
 const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
+assert.ok(!raceTiebreak || selectedHumans === undefined || selectedHumans === '4');
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
 try {
-  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak ? [4] : [2, 4])) {
+  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak || raceTiebreak ? [4] : [2, 4])) {
     let resolveRoom;
     const roomCode = new Promise(resolve => { resolveRoom = resolve; });
     function peer(index, code = '') {
@@ -66,7 +73,8 @@ try {
         `--test-data-dir=${join(out, `${name}-save`)}`, `--humans=${humans}`,
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
-        ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : [])],
+        ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : []),
+        ...(raceTiebreak ? ['--race-tiebreak'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});
       children.push(child);
       let output = '', roomAnnounced = false;
@@ -106,6 +114,12 @@ try {
     }
     if (duoTiebreak) {
       assert.ok(results[0].matches > 3, 'an individual tiebreak must actually run');
+      assert.deepEqual(results[0].tournament.points, [3, 3, 3, 3]);
+      assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
+      assert.ok(results[0].tournament.tie_attempts > 0);
+    }
+    if (raceTiebreak) {
+      assert.ok(results[0].matches > 3, 'a one-lap race final must actually run');
       assert.deepEqual(results[0].tournament.points, [3, 3, 3, 3]);
       assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
       assert.ok(results[0].tournament.tie_attempts > 0);

@@ -28,9 +28,9 @@ test('wall clock adjustments cannot expire a live room', () => {
   } finally { Date.now = original; }
 });
 
-function fixture() {
+function fixture(options = {}) {
   let now = 1000;
-  const rooms = new Rooms({now: () => now});
+  const rooms = new Rooms({now: () => now, ...options});
   const client = () => {
     const messages = [];
     const c = rooms.connect(m => messages.push(structuredClone(m)));
@@ -39,6 +39,20 @@ function fixture() {
   const host = client(); host.send({op: 'create', capacity: 4, public: true, name: 'Host'});
   return {rooms, host, client, advance: ms => { now += ms; rooms.sweep(); }};
 }
+
+test('diagnostic seeds are server-injected and clients cannot override them', () => {
+  const {host, client} = fixture({seed: () => 443020368});
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {...host.c.room.config, seed: 1}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start', seed: 2});
+  assert.equal(host.last('start').seed, 443020368);
+  assert.equal(guest.last('start').seed, 443020368);
+  assert.equal(host.last('start').config.seed, undefined);
+  for (const value of [0, -1, 2147483647, 1.5, true, '1', NaN, Infinity]) {
+    assert.throws(() => new Rooms({seed: () => value}).nextSeed(), /invalid_seed/);
+  }
+});
 
 test('closed-room inputs drain briefly without granting authority to detached clients', () => {
   const {rooms, host, client, advance} = fixture();

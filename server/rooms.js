@@ -81,9 +81,17 @@ function validSnapshot(data, count, game, arena, raceLaps = 3) {
 // Room identity and permission checks live here, independently of WebSocket.
 // No Apple identity, email or long-lived credential is needed for guest play.
 export class Rooms {
-  constructor({now = () => performance.now(), grace = 30000, maxRooms = 200} = {}) {
+  constructor({now = () => performance.now(), grace = 30000, maxRooms = 200,
+    seed = () => randomInt(1, 2147483647)} = {}) {
     this.now = now; this.grace = grace; this.maxRooms = maxRooms;
+    this.seed = seed;
     this.rooms = new Map(); this.sessions = new Map();
+  }
+
+  nextSeed() {
+    const value = this.seed();
+    if (!integer(value, 1, 2147483646)) fail('invalid_seed');
+    return value;
   }
 
   connect(send) { return {send, room: null, player: null, retiredMatch: null}; }
@@ -163,7 +171,7 @@ export class Rooms {
       r.roster = [...r.players.values()].map(p => ({id: p.id, slot: p.slot, name: p.name, character: p.character}));
       const count = r.config.bots ? r.capacity : r.roster.length;
       while (r.roster.length < count) r.roster.push({id: 0, slot: r.roster.length, name: '', character: r.roster.length % 8});
-      r.tournament = r.config.tournament ? new Tournament(count, r.config.tournament, randomInt(1, 2147483647)) : null;
+      r.tournament = r.config.tournament ? new Tournament(count, r.config.tournament, this.nextSeed()) : null;
       this.beginRound(r); return;
     }
     if (m.op === 'next') {
@@ -224,7 +232,8 @@ export class Rooms {
 
   host(c) { if (c.player.id !== c.room.host) fail('host_only'); }
   beginRound(r) {
-    r.state = 'loading'; r.loadingAt = this.now(); r.epoch++; r.seed = randomInt(1, 2147483647);
+    const seed = this.nextSeed();
+    r.state = 'loading'; r.loadingAt = this.now(); r.epoch++; r.seed = seed;
     r.snapshot = null; r.result = null;
     r.matchConfig = {...r.config};
     if (r.tournament) r.matchConfig = {...r.config, ...r.tournament.next(), rounds: 1};
