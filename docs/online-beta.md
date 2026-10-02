@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains sixteen explicitly adapted rulesets; verification
+The development allowlist contains seventeen explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -46,8 +46,11 @@ physics or emit gameplay collapse signals; sound events are freshness-gated.
 and sequenced explosion feedback. Elimination and rearming stay on the host.
 `color_stand` on `color_floor` adds the 121-tile palette, called color, floor
 states, phase timers and call/drop cues. Guests never choose a new color.
+`quick_draw` on `draw_stage` adds visible prompt state and accepted responses,
+without exposing the hidden wait countdown. Reaction latency is not compensated;
+the local scripted test exhibits host advantage and is not a balance approval.
 Optional random power-ups remain disabled in online beta configurations.
-The other 23 games are not
+The other 22 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -892,7 +895,39 @@ the host's rules, timer, palette or results.
 - Production is not enabled by this room allowlist change; physical-device
   and Internet conditions remain unverified.
 
-### Quick Draw snapshot adapter
+### Quick Draw room integration
+
+Client/server development allowlists accept `quick_draw` only on `draw_stage`.
+The server requires the validated draw-world payload and host ownership. The
+multi-engine fixture reacts only after the visible signal, checks accepted
+responses for each local participant and verifies replicated prompt, ordering
+and false-start locks. It does not assert movement for this stationary game.
+
+- `npm test`: 50 tests passed, including arena selection, missing state,
+  forbidden hidden timing and non-host publication checks.
+- Initial ordinary run `kras-network-smoke-e46C0x` failed on the test's array
+  equality: decoded JSON slots were floats while the presenter stores ints.
+  `/tmp/kras-draw-json.log` reproduced `[2, 0]` versus `[2.0, 0.0]` in isolation.
+  Comparison now normalizes already-validated integer slot values, retaining
+  order/count checks. No game score or state rule was weakened.
+- Ordinary run `kras-network-smoke-qKIudT`: two humans/two bots and four humans
+  passed, with results [18, 12, 3, 5] and [18, 8, 7, 8]. Guest reconnect and
+  host result-transport loss recovered. Guests received 1087-1107 world
+  snapshots; local server loop maximum was 43 ms.
+- Tournament run `kras-network-smoke-NCUpwO`: both cases completed three matches
+  and agreed on final points [15, 9, 4, 5] and [15, 8, 6, 5], champion slot 0.
+  Guests received 1665-1684 world snapshots; loop maximum was 45 ms. Two
+  in-flight inputs were rejected as `not_joined` after the four-human room
+  closed; clients completed successfully, but close-time protocol noise
+  remains to be addressed. This run did not exercise a final tie-break.
+- Full gate `kras-party-check.OM0eAT`: 253 scripts compiled, 290 resources
+  audited with zero issues, 17,590 assertions passed, race regression passed
+  and 39 stability matches completed with zero failures.
+- The scripted immediate-response results show host transport advantage.
+  Same-tick tie scoring does not solve Internet latency; this remains a
+  development-only ruleset, not production or ranked-play approval.
+
+### Quick Draw adapter verification
 
 `draw_replica.gd` publishes the host's prompt phase, prompt number, accepted
 response order, false-start locks and monotonic feedback counters. It excludes
@@ -910,9 +945,9 @@ and reconnect gaps suppress historical sounds.
 - Full gate `kras-party-check.DFgBMB`: 253 scripts compiled, 290 resources
   audited with zero issues, 17,552 assertions passed, race regression passed
   and 39 stability matches completed with zero failures.
-- This is an adapter-only change. Room allowlists still exclude Quick Draw.
-  Multi-process rooms/tournaments, actual mobile presentation and latency
-  fairness remain pending. Response order is an ordered list of participants,
+- At the adapter-only commit room allowlists excluded Quick Draw; subsequent
+  room work is recorded above. Actual mobile presentation and latency fairness
+  remain pending. Response order is an ordered list of participants,
   not a unique placement: same-tick participants can share a scoring rank.
 
 ### Quick Draw simultaneous-response fairness
@@ -945,8 +980,9 @@ spectators from affecting reaction ranking and penalties.
 - Full gate `kras-party-check.gxPb9f`: 251 scripts compiled, 288 resources
   audited with zero issues, 17,470 assertions passed, three-lap race regression
   passed and 39 stability matches completed with zero failures.
-- Quick Draw remains excluded from online rooms; no snapshot adapter or
-  network latency fairness claim is implied by this lifecycle repair.
+- At this lifecycle-repair commit Quick Draw remained excluded from online
+  rooms. Subsequent adapter and room evidence is recorded above; the lifecycle
+  repair alone was not evidence of network readiness.
 
 ### Color Stand snapshot adapter
 

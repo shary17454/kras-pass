@@ -41,6 +41,8 @@ var observed_crumble_fall := false
 var observed_blast_fuse := false
 var observed_blast_explosion := false
 var observed_color_drop := false
+var observed_draw_signal := false
+var observed_draw_response := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -176,6 +178,9 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "quick_draw":
+		observed_draw_signal = observed_draw_signal or game.controller.is_signalled()
+		observed_draw_response = observed_draw_response or game.controller._order.has(slot)
 	if game_id == "color_stand":
 		observed_color_drop = observed_color_drop or game.controller.is_dropping()
 	if game_id == "blast_ball":
@@ -218,6 +223,10 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "quick_draw":
+			movement = Vector2.ZERO
+			if game.controller.is_signalled() and not game.controller.is_locked(slot) and not game.controller._order.has(slot):
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "color_stand":
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var safe: ArenaTile = game.controller.safe_tile_near(fighter.global_position)
@@ -310,12 +319,28 @@ func _finished(result: MatchResult) -> void:
 	if spectator and game.ctx.is_alive(Net.local_slot()):
 		_fail("spectator remained active")
 		return
-	if not moved and not spectator:
+	if not moved and not spectator and game_id != "quick_draw":
 		_fail("player did not move")
 		return
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id == "quick_draw":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty() or world.has("timer") or world.has("signal_age"):
+			_fail("missing draw world or hidden timing published")
+			return
+		var host_order: Array[int] = []
+		for player_slot in world.order:
+			host_order.append(int(player_slot))
+		if game.controller._stage != int(world.stage) or game.controller._round_no != int(world.prompt) \
+				or game.controller._order != host_order:
+			_fail("draw prompt or response order diverged: local=%s/%s/%s host=%s/%s/%s" % [game.controller._stage, game.controller._round_no, game.controller._order, world.stage, world.prompt, world.order])
+			return
+		for player_slot in world.locked.size():
+			if game.controller.is_locked(player_slot) != bool(world.locked[player_slot]):
+				_fail("draw false-start state diverged")
+				return
 	if not host and game_id == "color_stand":
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty():
@@ -499,6 +524,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "color_stand" and not observed_color_drop:
 		_fail("color floor never dropped")
+		return
+	if game_id == "quick_draw" and (not observed_draw_signal or not observed_draw_response):
+		_fail("draw never signalled or accepted this player's response")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

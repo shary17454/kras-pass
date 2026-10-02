@@ -81,6 +81,27 @@ test('blast room rejects missing fuse, invalid arena and non-host snapshots', ()
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('draw room relays host decisions and rejects hidden timing or client authority', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'quick_draw', arena: 'draw_stage', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'quad_court'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  data.world = {stage: 1, prompt: 2, order: [0], locked: [false, false, false, false],
+    signal_sequence: 2, correct_sequence: 1, wrong_sequence: 0, resolve_sequence: 1};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}));
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.timer = 2;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('color room requires host-owned palette and called color', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

@@ -59,6 +59,13 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(replica.accept(packet, 4, "quick_draw"), "accept response order and false start")
 	replica.render(scene, 0.1)
 	t.equal(Array(game._order), [2, 0], "guest displays host ranking")
+	var decoded: Dictionary = JSON.parse_string(JSON.stringify(packet))
+	t.ok(replica.accept(decoded, 4, "quick_draw"), "accept JSON response order")
+	replica.render(scene, 0.1)
+	var decoded_order: Array[int] = []
+	for slot in decoded.world.order:
+		decoded_order.append(int(slot))
+	t.equal(game._order, decoded_order, "rendered order equals decoded host slots")
 	t.ok(game.is_locked(1), "guest displays host false start")
 	packet.world.stage = 2
 	packet.world.resolve_sequence += 1
