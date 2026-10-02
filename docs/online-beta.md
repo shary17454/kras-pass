@@ -927,6 +927,28 @@ and false-start locks. It does not assert movement for this stationary game.
   Same-tick tie scoring does not solve Internet latency; this remains a
   development-only ruleset, not production or ranked-play approval.
 
+### Symbol Echo lifecycle prerequisite
+
+Each new match round resets sequence length, progress, pad-entry tracking,
+mistakes, finish order, illumination and display cursor, then deals a fresh
+sequence with a new serial for AI memory invalidation. Pad illumination now
+advances only with controller simulation time, not an independent scene tween.
+Same-tick sequence finishers share the placement bonus; completed sequences
+cannot award it again on another input scan.
+
+- `/tmp/kras-echo-before.log`: 22 assertions failed on stale round state and
+  flash expiration while controller simulation was stopped.
+- `/tmp/kras-echo-ties-before.log`: three failures reproduced slot-based bonus
+  differences when all four participants finished in the same tick.
+- `/tmp/kras-echo-final.log`: 36 assertions passed after both repairs.
+- Full gate `kras-party-check.UJkgBy`: 254 scripts compiled, 291 resources
+  audited with zero issues, 17,625 assertions passed, race regression passed
+  and 39 stability matches completed with zero failures.
+- Symbol Echo is still offline-only. Its future adapter must reveal only the
+  currently shown symbol, not the secret sequence. AI currently queries the
+  expected pad with injected recall errors; observation-based memory remains
+  required before claiming a restricted-perception implementation.
+
 ### Closed-room input drain
 
 Closing a played room now records a one-second, connection-local retired epoch.

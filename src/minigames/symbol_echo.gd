@@ -31,6 +31,8 @@ var _last_pad: Array[int] = []
 var _mistakes: Array[int] = []
 var _serial := 0
 var _finished: Array[int] = []
+var _flash_index := -1
+var _flash_remaining := 0.0
 
 
 func configure() -> void:
@@ -70,7 +72,14 @@ func build() -> void:
 	_new_sequence()
 
 
+func on_round_start() -> void:
+	_length = int(Balance.num("tuning", "reaction.sequence_start_length", 3))
+	_mistakes.fill(0)
+	_new_sequence()
+
+
 func _new_sequence() -> void:
+	_reset_pad_colors()
 	_sequence.clear()
 	for i in _length:
 		_sequence.append(ctx.rng.randi_range(0, PAD_COUNT - 1))
@@ -84,6 +93,10 @@ func _new_sequence() -> void:
 
 
 func tick(delta: float) -> void:
+	if _flash_remaining > 0.0:
+		_flash_remaining = maxf(0.0, _flash_remaining - delta)
+		if _flash_remaining <= 0.0:
+			_reset_pad_colors()
 	_timer -= delta
 	match _stage:
 		Stage.SHOW:
@@ -110,18 +123,18 @@ func tick(delta: float) -> void:
 
 
 func _flash(index: int) -> void:
+	_reset_pad_colors()
+	_flash_index = index
+	_flash_remaining = _step_time * 0.6
 	var pad = _pads[index]
 	var mesh: MeshInstance3D = pad["mesh"]
 	mesh.material_override = MeshFactory.toon(UIKit.ACCENT, 1.6)
 	AudioManager.play_sfx("tick", pad["pos"], 0.8 + index * 0.12)
-	var tw := mesh.create_tween()
-	tw.tween_interval(_step_time * 0.6)
-	tw.tween_callback(func():
-		if is_instance_valid(mesh):
-			mesh.material_override = MeshFactory.toon(UIKit.PANEL_HI))
 
 
 func _reset_pad_colors() -> void:
+	_flash_index = -1
+	_flash_remaining = 0.0
 	for pad in _pads:
 		var mesh: MeshInstance3D = pad["mesh"]
 		if is_instance_valid(mesh):
@@ -129,6 +142,8 @@ func _reset_pad_colors() -> void:
 
 
 func _read_inputs() -> void:
+	# Players finishing in one simulation tick share the same placement bonus.
+	var rank := _finished.size()
 	for i in ctx.fighters.size():
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f) or not ctx.is_alive(i):
@@ -147,7 +162,6 @@ func _read_inputs() -> void:
 			ctx.add_score(i, int(STEP_POINTS * ctx.powerups.point_multiplier(i)))
 			AudioManager.play_sfx("correct", f.global_position)
 			if _progress[i] >= _sequence.size():
-				var rank := _finished.size()
 				_finished.append(i)
 				var base := SEQUENCE_POINTS * _sequence.size()
 				var bonus: int = ORDER_BONUS[rank] if rank < ORDER_BONUS.size() else 0
