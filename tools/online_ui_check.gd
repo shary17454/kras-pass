@@ -22,6 +22,15 @@ func _ready() -> void:
 		Net.lobby_config.game = "goal_guard"
 		Net.lobby_config.arena = "quad_court"
 		Net.lobby_config.tournament.entries = [{"game": "goal_guard", "arena": "quad_court"}]
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--game="):
+			var game_id := arg.trim_prefix("--game=")
+			if not Net.ONLINE_GAMES.has(game_id):
+				get_tree().quit(1)
+				return
+			Net.lobby_config.game = game_id
+			Net.lobby_config.arena = Net.ONLINE_ARENAS[game_id][0]
+			Net.lobby_config.tournament.entries = [{"game": game_id, "arena": Net.lobby_config.arena}]
 	for i in 4:
 		Net.peers[i + 1] = {"id": i + 1, "slot": i, "name": "P%d" % (i + 1), "ready": true, "connected": true, "character": i}
 	for dimensions in [Vector2i(1920, 1080), Vector2i(1080, 1920)]:
@@ -79,4 +88,7 @@ func _ready() -> void:
 		results.queue_free()
 		await get_tree().process_frame
 	Net.leave()
+	AudioManager.shutdown()
+	await get_tree().process_frame
+	await get_tree().process_frame
 	get_tree().quit()

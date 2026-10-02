@@ -68,6 +68,32 @@ func _make_music_player() -> AudioStreamPlayer:
 	return p
 
 
+## Release playback references before engine shutdown, including an unfinished
+## cross-fade. Safe to call more than once and after child nodes have exited.
+func shutdown() -> void:
+	stop_announcer()
+	enabled = false
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
+	if _duck_tween != null and _duck_tween.is_valid():
+		_duck_tween.kill()
+	_fade_tween = null
+	_duck_tween = null
+	for player in _sfx_players + [_ui_player, _ambience, _music_a, _music_b]:
+		if is_instance_valid(player):
+			player.stop()
+			player.stream = null
+	_bank.clear()
+	_tracks.clear()
+	_ambience_bank.clear()
+	_current_track = ""
+	_current_ambience = ""
+
+
+func _exit_tree() -> void:
+	shutdown()
+
+
 func _ensure_buses() -> void:
 	for name in ["Music", "SFX", "UI"]:
 		if AudioServer.get_bus_index(name) == -1:

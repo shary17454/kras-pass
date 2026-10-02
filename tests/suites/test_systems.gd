@@ -7,12 +7,41 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("systems")
 	_input_frames(t)
 	_music_toggle(t)
+	await _audio_shutdown(t, host)
 	_platform(t)
 	_ai_profiles(t)
 	_pooling(t)
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _audio_shutdown(t: TestHarness, host: Node) -> void:
+	t.test("audio shutdown releases streams and cancels pending fades")
+	var manager: Node = load("res://src/audio/audio_manager.gd").new()
+	host.add_child(manager)
+	var stream := AudioStreamWAV.new()
+	var reference := weakref(stream)
+	manager._bank["probe"] = stream
+	manager._tracks["probe"] = stream
+	manager._ambience_bank["probe"] = stream
+	var players: Array = manager._sfx_players + [manager._ui_player, manager._music_a, manager._music_b, manager._ambience]
+	for player in players:
+		player.stream = stream
+	manager._fade_tween = manager.create_tween()
+	manager._fade_tween.tween_property(manager._music_a, "volume_db", -20.0, 10.0)
+	manager._duck_tween = manager.create_tween()
+	manager._duck_tween.tween_property(manager, "_duck_gain", 0.5, 10.0)
+	stream = null
+	manager.shutdown()
+	manager.shutdown()
+	t.ok(not manager.enabled, "shutdown prevents new sounds")
+	t.ok(manager._fade_tween == null and manager._duck_tween == null, "pending fades released")
+	for player in players:
+		t.ok(player.stream == null and not player.playing, "voice releases playback")
+	t.ok(reference.get_ref() == null, "banks and players release stream ownership")
+	manager.queue_free()
+	await host.get_tree().process_frame
 
 
 func _music_toggle(t: TestHarness) -> void:
@@ -259,9 +288,11 @@ func _powerups(t: TestHarness, host: Node) -> void:
 	t.near(float(fighter.mods["points"]), 1.0, 0.001, "point multiplier reset")
 	t.equal(system.active_effects_for(0).size(), 0, "no effects remain")
 
+	Pool.drain(PowerUpSystem.POOL_KEY)
 	system.queue_free()
 	fighter.queue_free()
 	await host.get_tree().process_frame
+	t.ok(not Pool.stats().has(PowerUpSystem.POOL_KEY), "standalone power-up fixture releases its prewarmed pool")
 
 
 func _has_effect(system: PowerUpSystem, slot: int, id: String) -> bool:
