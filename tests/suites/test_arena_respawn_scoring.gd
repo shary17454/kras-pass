@@ -3,7 +3,7 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("arena respawn scoring")
-	for id in ["duel_pit", "bumper_bowl"]:
+	for id in ["duel_pit", "bumper_bowl", "duo_clash"]:
 		var cfg := MatchConfig.build(id, ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 117)
 		var scene: Node = load("res://src/match/match_scene.gd").new()
 		host.add_child(scene)
@@ -16,6 +16,13 @@ func run(t: TestHarness, host: Node) -> void:
 		t.ok(victim.take_hit(0, Vector3.FORWARD, 1.0, 10.0), "fixture establishes legitimate attacker")
 		game.on_fighter_fell(1)
 		t.equal(int(scene.ctx.details[0].get("knockouts", 0)), 1, "one ring-out credits one knockout")
+		if id == "duo_clash":
+			t.equal(game.team_score(0), 2, "legitimate enemy ring-out pays the team once")
+			t.equal(scene.ctx.scores[0], 2, "attacker receives shared team score")
+			t.equal(scene.ctx.scores[2], 2, "partner receives the same team score")
+			var partner: Fighter = scene.ctx.fighter(2)
+			partner._invuln = 0.0
+			t.ok(not partner.take_hit(0, Vector3.FORWARD, 1.0, 10.0), "partner cannot damage or push a teammate")
 		t.equal(int(scene.ctx.details[1].get("falls", 0)), 1, "one fall recorded")
 		var lives: int = game.lives(1)
 		var scores: Array = Array(scene.ctx.scores).duplicate()
@@ -35,6 +42,9 @@ func run(t: TestHarness, host: Node) -> void:
 		game.on_fighter_fell(1)
 		t.equal(int(scene.ctx.details[0].get("knockouts", 0)), 2, "new life can earn a second legitimate knockout")
 		t.equal(int(scene.ctx.details[1].get("falls", 0)), 2, "new life records its own fall")
+		if id == "duo_clash":
+			t.equal(game.team_score(0), 4, "second legitimate enemy ring-out pays the team once")
+			t.equal(game.compute_scores()[0], 42, "team result includes exactly two personal knockouts")
 		if id == "bumper_bowl":
 			var waiting_score: int = scene.ctx.scores[1]
 			var survivor_score: int = scene.ctx.scores[3]

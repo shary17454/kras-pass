@@ -2,6 +2,17 @@
 
 ## Implemented boundary
 
+### Duo Clash scoring prerequisite
+
+The common arena out-handler already credits personal knockouts. Duo Clash
+credited them again, doubling the statistic and its personal result tiebreak.
+The team hook now only pays the team and publishes its shared score.
+`/tmp/kras-duo-credit-before.log` reproduced three failed assertions;
+`/tmp/kras-duo-credit-after.log` passed 112 assertions, including two
+legitimate enemy knockouts, unchanged team points, partner score sharing,
+friendly-fire rejection, duplicate out callbacks and result score 42 rather
+than 44. This targeted repair does not enable Duo Clash online.
+
 ### Bumper Bowl room integration
 
 Development rooms accept `bumper_bowl` only on its authored `bumper_bowl`

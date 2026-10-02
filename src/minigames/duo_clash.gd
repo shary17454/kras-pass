@@ -85,7 +85,6 @@ func team_alive(team: int) -> int:
 func on_credited_knockout(attacker: int, _victim: int) -> void:
 	var team := team_of(attacker)
 	_team_score[team] += RING_OUT_POINTS
-	ctx.bump_detail(attacker, "knockouts")
 	_publish()
 
 
