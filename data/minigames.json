@@ -147,7 +147,7 @@
         "dash",
         "ability"
       ],
-      "control_profile": "aim_and_move",
+      "control_profile": "keeper",
       "glyph": "⌾",
       "tags": [
         "defence",

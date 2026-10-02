@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld} from './world-snapshots.js';
+
+test('magnet world maps every ball to a bounded owner and every player to a meter', () => {
+  const make = () => ({balls: [{position: [0, .9, 0], velocity: [1, 0, 0], generation: 1, heavy: false}],
+    charges: [1, 1], magnet_charge: [0, 1], magnet_active: [1.1, 0], held: [0]});
+  assert.ok(validMagnetWorld(make(), 2));
+  assert.ok(validMagnetWorld({...make(), held: [-1]}, 2));
+  for (const key of ['held', 'magnet_charge', 'magnet_active']) {
+    const data = make(); delete data[key];
+    assert.equal(validMagnetWorld(data, 2), false);
+    assert.equal(validMagnetWorld({...make(), [key]: []}, 2), false);
+  }
+  for (const owner of [-2, 2, .5, true, '0']) assert.equal(validMagnetWorld({...make(), held: [owner]}, 2), false);
+  for (const field of ['magnet_charge', 'magnet_active']) {
+    for (const value of [-1, 1.2, Infinity, '1', true]) assert.equal(validMagnetWorld({...make(), [field]: [value, 0]}, 2), false);
+  }
+  assert.equal(validMagnetWorld({...make(), held: [0, 1]}, 2), false);
+  assert.equal(validMagnetWorld({...make(), balls: []}, 2), false);
+});
 
 test('saboteur requires bounded drone and warning state with tile ownership', () => {
   const make = () => ({owners: Array(169).fill(-1), drone: [1, 3.2, -1], rotor: 2,

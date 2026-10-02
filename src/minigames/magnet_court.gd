@@ -13,6 +13,7 @@ const MAGNET_TIME := 1.1
 const MAGNET_PULL := 34.0
 const RECHARGE_TIME := 7.0
 const RELEASE_SPEED := 17.0
+const CATCH_RADIUS := 2.3
 
 var _magnet_until: Array[float] = []
 var _charge: Array[float] = []
@@ -37,6 +38,10 @@ func on_round_start() -> void:
 func tick(delta: float) -> void:
 	super.tick(delta)
 	for i in ctx.player_count():
+		if not ctx.is_alive(i):
+			_release(i)
+			_magnet_until[i] = 0.0
+			continue
 		if _charge[i] < 1.0:
 			_charge[i] = minf(1.0, _charge[i] + delta / RECHARGE_TIME)
 		if _magnet_until[i] > 0.0:
@@ -58,6 +63,39 @@ func _activate(slot: int) -> void:
 		AudioManager.play_sfx("powerup", f.global_position)
 
 
+func _tick_ball(ball: GameBall, delta: float) -> void:
+	var holder := int(_held.get(ball.get_instance_id(), -1))
+	if holder >= 0:
+		if ctx.is_alive(holder) and _magnet_until[holder] > 0:
+			_park_ball(ball, holder)
+			return
+		_release(holder)
+	# Catch before paddle interception, including a fast ball's swept path.
+	var start := Vector3(ball.global_position.x, 0, ball.global_position.z)
+	var finish := start + Vector3(ball.velocity.x, 0, ball.velocity.z) * delta
+	for slot in ctx.player_count():
+		if not ctx.is_alive(slot) or _magnet_until[slot] <= 0:
+			continue
+		var f := ctx.fighter(slot)
+		var point := Vector3(f.global_position.x, 0, f.global_position.z)
+		if Geometry3D.get_closest_point_to_segment(point, start, finish).distance_to(point) <= CATCH_RADIUS:
+			_held[ball.get_instance_id()] = slot
+			ball.last_toucher = slot
+			_park_ball(ball, slot)
+			return
+	super._tick_ball(ball, delta)
+
+
+func _park_ball(ball: GameBall, slot: int) -> void:
+	var normal: Vector3 = NORMALS[side_for(slot)]
+	var tangent := Vector3(-normal.z, 0, normal.x)
+	var offset := (float(balls.find(ball)) - float(balls.size() - 1) * 0.5) * 0.5
+	ball.global_position = ctx.fighter(slot).global_position + normal * 1.25 + tangent * offset
+	ball.global_position.y = ball._height
+	ball.velocity = Vector3.ZERO
+	ball.speed = 0.0
+
+
 func _attract(slot: int, delta: float) -> void:
 	var f := ctx.fighter(slot)
 	if f == null or not is_instance_valid(f):
@@ -68,19 +106,23 @@ func _attract(slot: int, delta: float) -> void:
 		var holder := int(_held.get(b.get_instance_id(), -1))
 		if holder >= 0 and holder != slot:
 			continue
+		if holder == slot:
+			_park_ball(b, slot)
+			continue
 		var to: Vector3 = f.global_position - b.global_position
 		to.y = 0.0
 		var d := to.length()
 		if d > MAGNET_RADIUS:
 			continue
-		if d < 1.5:
+		if d < CATCH_RADIUS:
 			# Caught: park it in orbit and remember whose it is. The catch also
 			# claims the touch, so a goal off the release credits the thrower.
 			_held[b.get_instance_id()] = slot
 			b.last_toucher = slot
-			b.velocity = b.velocity.limit_length(2.0)
+			_park_ball(b, slot)
 		else:
-			b.velocity = b.velocity.move_toward(to.normalized() * MAGNET_PULL, MAGNET_PULL * 2.0 * delta)
+			b.velocity = b.velocity.move_toward(to.normalized() * MAGNET_PULL, MAGNET_PULL * 2.0 * delta).limit_length(b.max_speed)
+			b.speed = b.velocity.length()
 
 
 func _release(slot: int) -> void:

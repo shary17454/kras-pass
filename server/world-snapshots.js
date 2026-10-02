@@ -1,6 +1,16 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validMagnetWorld(data, count) {
+  return validGoalGuardWorld(data, count)
+    && Array.isArray(data.magnet_charge) && data.magnet_charge.length === count
+    && data.magnet_charge.every(value => Number.isFinite(value) && value >= 0 && value <= 1)
+    && Array.isArray(data.magnet_active) && data.magnet_active.length === count
+    && data.magnet_active.every(value => Number.isFinite(value) && value >= 0 && value <= 1.1)
+    && Array.isArray(data.held) && data.held.length === data.balls.length
+    && data.held.every(owner => Number.isInteger(owner) && owner >= -1 && owner < count);
+}
+
 export function validSaboteurWorld(data, count) {
   return validPaintWorld(data, count) && vector(data.drone)
     && vector(data.scrub_position)

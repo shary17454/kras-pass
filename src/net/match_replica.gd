@@ -4,6 +4,7 @@ extends RefCounted
 ## game needs a world-state adapter before it enters Net.ONLINE_GAMES.
 const P := MatchPhase.P
 const GoalGuardReplica = preload("res://src/net/goal_guard_replica.gd")
+const MagnetReplica = preload("res://src/net/magnet_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -34,6 +35,8 @@ func capture(scene: Node) -> Dictionary:
 		"countdown": scene._countdown_value, "radius": scene.arena.current_radius}
 	if scene.config.minigame_id == "goal_guard":
 		packet["world"] = GoalGuardReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "magnet_court":
+		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "zone_hold":
 		packet["world"] = ZoneReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "relic_hold":
@@ -57,6 +60,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 		return false
 	if game_id == "goal_guard":
 		if not GoalGuardReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "magnet_court":
+		if not MagnetReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "zone_hold":
 		if not ZoneReplica.valid(data.get("world")):
@@ -140,6 +146,8 @@ func render(scene: Node, delta: float) -> void:
 		scene.ctx.alive[i] = bool(target.alive[i])
 	if scene.config.minigame_id == "goal_guard":
 		GoalGuardReplica.render(scene.controller, target.world, delta, snap)
+	elif scene.config.minigame_id == "magnet_court":
+		MagnetReplica.render(scene.controller, target.world, delta, snap)
 	elif scene.config.minigame_id == "zone_hold":
 		ZoneReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "tag_hunt":

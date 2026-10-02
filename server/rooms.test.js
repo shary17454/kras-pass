@@ -60,6 +60,23 @@ test('goal guard enforces its arena and complete world snapshots', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('magnet rooms require both ball state and bounded magnet ownership', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'magnet_court', arena: 'quad_court', rounds: 2, bots: true, difficulty: 1}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot(); data.world = {charges: [1, 1, 1, 1], balls: [{position: [0, .9, 0], velocity: [0, 0, 0], heavy: false, generation: 1}]};
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  Object.assign(data.world, {magnet_charge: [0, 1, 1, 1], magnet_active: [1.1, 0, 0, 0], held: [0]});
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.held[0] = 4;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('zone hold requires host capture state and rejects malformed updates', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains ten explicitly adapted rulesets; verification
+The development allowlist contains eleven explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -32,8 +32,11 @@ grace; guests do not perform contact detection or free-time scoring.
 `paint_grid` and `mnatiq` replicate all 169 tile owners on `paint_grid`;
 capture, enclosed-region rewards and recounting remain host-only.
 `mukharrib` adds the drone, warnings and sequenced scrub feedback on `paint_grid`.
+`magnet_court` on `quad_court` adds charge, active timers and held-ball ownership
+by ball slot, never by engine instance ID. Guests do not simulate attraction,
+release, recharge or goals.
 Optional random power-ups remain disabled in online beta configurations.
-The other 29 games are not
+The other 28 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -571,6 +574,59 @@ successfully. Its core job `110698736499` compiled 231 scripts, passed 12,673
 assertions, and completed 117 stability matches with zero failures. The other
 jobs cover ordinary/tournament networking for the seven rulesets through Tag
 Hunt. This is not evidence for the later paint or Saboteur commits or a release.
+
+The newer run `36965027879`, source
+`b80576dc01db01c380ddb3a105434d342eba6e7b`, has a successful core job
+`110706801891`: 236 scripts, 13,662 assertions, and 117 stability matches with
+zero failures. Its networking matrix is still in progress at this checkpoint.
+This core result covers paint and Saboteur, but predates the Magnet changes.
+
+## Magnet Court adapter and capture physics
+
+The shared Goal Guard ball presenter is extended with bounded per-player magnet
+meters and one owner per ball slot. Both room admission and guest validation
+require the complete ball and magnet state. Reset/release reconstruct ownership
+using guest-local ball IDs, without transferring engine identities.
+
+Local gameplay also needed correction: the ordinary shield intercepted frontal
+shots before magnet capture, and ball tick normalization restored speed while
+the ball was held. The overridable shared ball-tick hook now catches swept paths
+before shield interception and parks captured balls until release. Elimination
+releases held balls and disables the magnet. Tests cover 30/60/120 Hz steps;
+these are simulation tests, not measured device frame rates.
+
+Magnet Court uses keeper controls instead of an unused second aiming stick.
+Its dash and ability hit regions are tested at portrait and landscape sizes.
+
+- `/tmp/kras-magnet-physics-release.log`: 175 assertions passed before the
+  additional control-layout checks; Goal Guard regression passed 120 assertions
+  in `/tmp/kras-magnet-goal-regression.log`.
+- `/tmp/kras-magnet-visual-drawn.log`: 191 assertions passed, including capture
+  to `/tmp/kras-magnet-held.png`. Earlier graphical fixtures produced six GL
+  texture warnings on exit. Clearing the shared texture cache did not fix them
+  and was reverted. Waiting for a rendered frame before disposing each fixture
+  removed those warnings in the rerun. This is not a long-session memory test.
+- `/tmp/kras-magnet-room-compile.log`: 238 scripts compiled. All 38 Node tests
+  passed with loopback access; the sandbox-only attempt failed specifically
+  with `listen EPERM` and is not counted as a successful integration run.
+- Final compilation passed all 238 scripts in
+  `/tmp/kras-magnet-final-compile-local.log`. The full local suite passed 13,779
+  assertions in `/tmp/kras-magnet-full-tests.log`, with isolated save data.
+  The quality wrapper now rejects GL texture-leak messages even on exit code
+  zero; `tests/check_party_wrapper.sh` passed its success path and eleven
+  failure cases (`kras-wrapper-test.TU6gfe`).
+- `kras-network-smoke-wwrRq4`: ordinary matches passed with two humans/two bots
+  and four humans, observed actual capture, verified reconnect/results and
+  compared held-ball ownership and meters on guests. Guests received 1088-1107
+  snapshots. The maximum server event-loop delay was 55 ms in that run, not an
+  iPhone or Internet performance certification.
+- `kras-network-smoke-LwbxqJ`: three-match points tournaments passed for both
+  two humans/two bots and four humans. All peers agreed on standings and the
+  champion after host/guest reconnect. Final points were `[9,13,6,6]` and
+  `[7,10,9,9]`; no final sudden death was needed in these runs. Guests received
+  1665-1684 snapshots, and the server event-loop maximum was 40 ms.
+- Device QA and guest ability sound-event parity remain pending. Production
+  online play is still disabled.
 
 ## Expansion checklist per game
 

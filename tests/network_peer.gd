@@ -30,6 +30,8 @@ var hunter_round := -1
 var observed_carrying := false
 var observed_scrub := false
 var observed_warning := false
+var observed_magnet := false
+var observed_magnet_hold := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -162,6 +164,10 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "magnet_court":
+		observed_magnet_hold = observed_magnet_hold or not game.controller._held.is_empty()
+		for active in game.controller._magnet_until:
+			observed_magnet = observed_magnet or active > 0
 	if game_id == "mukharrib":
 		observed_warning = observed_warning or game.controller._target != null
 		var sequence: int = game.controller._scrub_sequence if host else int(game._network_replica.target.get("world", {}).get("scrub_sequence", 0))
@@ -182,6 +188,16 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "magnet_court":
+			var position: Vector3 = game.ctx.fighters[slot].global_position
+			var nearest: GameBall = null
+			for ball: GameBall in game.controller.balls:
+				if nearest == null or position.distance_squared_to(ball.global_position) < position.distance_squared_to(nearest.global_position):
+					nearest = ball
+			if nearest != null:
+				movement = Vector2(nearest.global_position.x - position.x, nearest.global_position.z - position.z).limit_length()
+				if position.distance_to(nearest.global_position) <= game.controller.MAGNET_RADIUS and game.controller.magnet_ready(slot):
+					buttons = InputFrame.Btn.ABILITY
 		if game_id in ["paint_grid", "mnatiq", "mukharrib"]:
 			var angle := float(Time.get_ticks_msec() - started_at) / 1800.0 + slot * PI / 2.0
 			var target: Vector3 = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * 7.0
@@ -259,10 +275,10 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
-	if not host and game_id == "goal_guard" and (world_snapshots < 5 or game.controller.balls.is_empty()):
+	if not host and game_id in ["goal_guard", "magnet_court"] and (world_snapshots < 5 or game.controller.balls.is_empty()):
 		_fail("missing goal world")
 		return
-	if not host and game_id == "goal_guard":
+	if not host and game_id in ["goal_guard", "magnet_court"]:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if game.controller.balls.size() != world.get("balls", []).size():
 			_fail("replica ball count diverged")
@@ -274,6 +290,16 @@ func _finished(result: MatchResult) -> void:
 			if ball.global_position.distance_to(position) > 1.0 or ball.heavy != bool(row.heavy):
 				_fail("replica ball presentation diverged")
 				return
+		if game_id == "magnet_court":
+			for slot in game.ctx.player_count():
+				if absf(game.controller._charge[slot] - float(world.magnet_charge[slot])) > 0.001 \
+						or absf(game.controller._magnet_until[slot] - float(world.magnet_active[slot])) > 0.001:
+					_fail("magnet meter diverged")
+					return
+			for i in game.controller.balls.size():
+				if int(game.controller._held.get(game.controller.balls[i].get_instance_id(), -1)) != int(world.held[i]):
+					_fail("magnet ball ownership diverged")
+					return
 	if not host and game_id in ["gem_grab", "star_rush"]:
 		var view = game._network_replica._collectibles
 		var world: Dictionary = game._network_replica.target.get("world", {})
@@ -367,6 +393,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "mukharrib" and (not observed_scrub or not observed_warning):
 		_fail("drone never warned and scrubbed during match")
+		return
+	if game_id == "magnet_court" and (not observed_magnet or not observed_magnet_hold):
+		_fail("match never activated and caught a ball with a magnet")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

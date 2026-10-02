@@ -153,14 +153,18 @@ func tick(delta: float) -> void:
 		paddles[slot].scale.x = 1.25 if f.is_attacking() else 1.0
 	for b in balls:
 		if is_instance_valid(b):
-			_defend_ball(b, delta)
-			b.tick(delta)
+			_tick_ball(b, delta)
 	# A new ball every few seconds, up to one per player: the court fills up and
 	# the last thirty seconds become genuinely frantic.
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0 and balls.size() < ctx.player_count():
 		_spawn_timer = 9.0
 		_spawn_ball(balls.size() >= 2)
+
+
+func _tick_ball(ball: GameBall, delta: float) -> void:
+	_defend_ball(ball, delta)
+	ball.tick(delta)
 
 
 func _defend_ball(ball: GameBall, delta: float) -> void:
