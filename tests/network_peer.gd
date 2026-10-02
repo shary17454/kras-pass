@@ -850,9 +850,16 @@ func _finished(result: MatchResult) -> void:
 		if tournament_mode and duo_arenas_seen.size() != 2:
 			_fail("duo tournament did not visit both authored arenas")
 			return
-		if duo_tiebreak and (not observed_duo_final or Net.tournament.get("cups", []) != duo_final_cups or Net.tournament.get("points", []) != [3, 3, 3, 3]):
-			_fail("duo final did not run or changed points/cups")
-			return
+		if duo_tiebreak:
+			var final_points: Array = Net.tournament.get("points", [])
+			var final_cups: Array = Net.tournament.get("cups", [])
+			var totals_unchanged := final_points.size() == 4 and final_cups.size() == 4 and duo_final_cups.size() == 4
+			if totals_unchanged:
+				for slot in range(4):
+					totals_unchanged = totals_unchanged and float(final_points[slot]) == 3.0 and float(final_cups[slot]) == float(duo_final_cups[slot])
+			if not observed_duo_final or not totals_unchanged:
+				_fail("duo final did not run or changed points/cups: observed=%s points=%s cups=%s baseline=%s" % [observed_duo_final, final_points, final_cups, duo_final_cups])
+				return
 	if game_id == "relic_hold" and (not observed_relic_holder or not observed_relic_score):
 		_fail("relic finished without observed ownership and scoring")
 		return

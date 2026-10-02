@@ -2,7 +2,7 @@
 
 ## Implemented boundary
 
-### Duo Clash integration (verification in progress)
+### Duo Clash integration
 
 Development rooms accept both authored team arenas: `sweeper_ring` and
 `bumper_bowl`. World snapshots include two team totals, per-slot lives/damage
@@ -19,7 +19,26 @@ maximum local server loop delay 34 ms. Every peer observed team scoring,
 life loss and damage. Guest HUD, lives/damage and hazard transforms matched
 the host; guest identity recovery and interrupted host result transport
 passed. Logs contained no script, parse, network-failure, normalization or
-object-leak errors. Tournament and second-arena verification remain pending.
+object-leak errors.
+
+Tournament run `kras-network-smoke-QF6WlG` passed for both rosters, visiting
+both authored arenas. Each completed three matches. Points were
+`[9,10,5,9]` / `[7,8,8,11]`, cups `[1,1,0,1]` / `[1,1,1,2]`, champions
+slots 1 / 3. Guests received 1,407-1,737 snapshots; maximum local server
+loop delay was 96 ms. Host and guest reconnection passed.
+
+The forced equal-points final first failed in `kras-network-smoke-SGI0HM`:
+Godot array equality distinguishes JSON floating-point numbers from integer
+literals, even when their numeric values match. An isolated probe confirmed
+`JSON.parse_string("[3,3,3,3]") == [3,3,3,3]` is false. The fixture now checks
+all four numeric values and retains the original cup baseline, with actual
+values in its failure diagnostic; no production scoring rule was weakened.
+Rerun `kras-network-smoke-fiUGn3` passed with four human processes: three
+team rounds plus one individual `duel_pit` final, champion slot 1, points
+`[3,3,3,3]`, unchanged cups `[2,0,1,0]`, and final awards `[0,0,0,0]`.
+Guests received 2,341-2,360 snapshots; maximum local server loop delay was
+74 ms. Host/guest reconnect and final-state agreement passed. Logs contained
+no script, parse, network-failure, normalization or object-leak errors.
 
 Team-tournament finalists cannot duel under friendly-fire protection.
 The server therefore selects `duel_pit` for tied Duo Clash finalists,
@@ -29,6 +48,16 @@ afterward, including a tie between slots 0 and 2 and spectator exclusion.
 Local tournaments already use their existing individual Quick Draw final.
 Production online remains disabled; local headless transport tests do not
 establish physical-device performance or Internet qualification.
+
+Full gate `kras-party-check.nfMBku` compiled 278 scripts, audited 315 resources
+with zero issues, passed 18,789 assertions, passed the three-lap race
+regression and completed all 39 stability matches without failure. A fresh
+`npm test` run passed all 75 server tests. These are local headless checks,
+not evidence of iPhone frame rate, battery use or thermal behavior.
+
+External CI run `36993022044` completed successfully with all 25 jobs for
+`6197bf466043b6ca86cc3e95d187d2d9efa825d1`. It predates the Duel, Bumper
+and Duo integrations and must not be treated as validation of this source.
 
 ### Duo Clash scoring prerequisite
 
@@ -663,7 +692,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-six explicitly adapted rulesets; verification
+The development allowlist contains twenty-seven explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
