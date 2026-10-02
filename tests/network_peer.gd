@@ -24,6 +24,9 @@ var observed_sweeper_hit := false
 var observed_duel_damage := false
 var observed_duel_life_loss := false
 var observed_duel_respawn := false
+var observed_bumper_hit := false
+var observed_bumper_respawn := false
+var bumper_waiting := {}
 var observed_collection_score := false
 var observed_zone_score := false
 var observed_relic_holder := false
@@ -176,6 +179,8 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 45.0
 	if game_id == "duel_pit":
 		cfg.duration_override = 35.0
+	if game_id == "bumper_bowl":
+		cfg.duration_override = 35.0
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -184,6 +189,7 @@ func _start(cfg: MatchConfig) -> void:
 	echo_serial = -1
 	echo_cues.clear()
 	echo_leaving = false
+	bumper_waiting.clear()
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
@@ -206,6 +212,16 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "bumper_bowl":
+		var world: Dictionary = load("res://src/net/bumper_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+		for serial in world.get("hits", []):
+			observed_bumper_hit = observed_bumper_hit or int(serial) > 0
+		if game.phase in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
+			for fighter in game.ctx.fighters:
+				if not fighter.visible and not fighter.alive and game.ctx.is_alive(fighter.slot):
+					bumper_waiting[fighter.slot] = true
+				elif fighter.visible and fighter.alive and bumper_waiting.has(fighter.slot):
+					observed_bumper_respawn = true
 	if game_id == "duel_pit":
 		for fighter in game.ctx.fighters:
 			var lives: int = game.controller.lives(fighter.slot)
@@ -288,6 +304,19 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "bumper_bowl":
+			var fighter: Fighter = game.ctx.fighters[slot]
+			var bumpers: Array = []
+			for hazard in game.arena._hazards:
+				if hazard is ArenaHazards.Bumper:
+					bumpers.append(hazard)
+			var target: Vector3 = bumpers[slot % bumpers.size()].global_position
+			if (Time.get_ticks_msec() - started_at) % 20000 >= 12000:
+				var angle := slot * TAU / 4.0
+				target = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * 20.0
+			movement = Vector2(target.x - fighter.global_position.x, target.z - fighter.global_position.z).limit_length()
+			if (Time.get_ticks_msec() - started_at) % 1400 < 180:
+				buttons = InputFrame.Btn.DASH
 		if game_id == "duel_pit":
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var target: Vector3 = game.arena.global_position
@@ -467,6 +496,22 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "bumper_bowl" and not host:
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty():
+			_fail("missing bumper world")
+			return
+		var index := 0
+		for hazard in game.arena._hazards:
+			if hazard is ArenaHazards.Bumper:
+				var s: Array = world.scales[index]
+				if not hazard._mesh.scale.is_equal_approx(Vector3(float(s[0]), float(s[1]), float(s[2]))):
+					_fail("bumper deformation diverged")
+					return
+				index += 1
+		if index != 5:
+			_fail("missing authored bumpers")
+			return
 	if game_id == "duel_pit" and not host:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty():
@@ -732,6 +777,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "sweeper_storm" and not observed_sweeper_hit:
 		_fail("no sweeper collision feedback observed")
+		return
+	if game_id == "bumper_bowl" and (not observed_bumper_hit or not observed_bumper_respawn):
+		_fail("bumper collision/respawn evidence missing: %s %s" % [observed_bumper_hit, observed_bumper_respawn])
 		return
 	if game_id == "duel_pit" and (not observed_duel_damage or not observed_duel_life_loss or not observed_duel_respawn):
 		_fail("duel combat/life/respawn evidence missing: %s %s %s" % [observed_duel_damage, observed_duel_life_loss, observed_duel_respawn])

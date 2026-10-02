@@ -2,6 +2,39 @@
 
 ## Implemented boundary
 
+### Bumper Bowl room integration
+
+Development rooms accept `bumper_bowl` only on its authored `bumper_bowl`
+arena. The server rejects guest world publication, missing/invalid bumper
+state and mismatched arenas. All 72 Node tests passed. CI configuration now
+includes the game; this is not a passing external CI result.
+
+Ordinary independent-process run `kras-network-smoke-b8EQNO` passed with
+2 humans plus 2 bots and 4 humans. Aggregate two-round scores were
+`[11,13,19,18]` / `[15,21,31,22]`, guests received 1,700-1,720 snapshots,
+and maximum local server event-loop delay was 102 ms. Every peer had to
+observe a bumper hit and a player returning after a fall; guest bumper scales
+matched the host world. Guest identity recovery and interrupted host result
+transport passed. Logs contained no script, parse, network-failure,
+normalization or object-leak errors.
+These checks are local headless evidence, not Internet or mobile performance
+qualification. Production online remains disabled.
+
+Tournament run `kras-network-smoke-ZbAho7` passed for both rosters. The
+2-human roster completed three regular rounds and two actual tiebreaks:
+points `[5,4,12,12]`, cups `[0,0,2,2]`, champion slot 2. Tiebreak awards were
+all zero, preserving the original standings. The 4-human roster completed
+three rounds with points `[3,6,15,9]`, cups `[0,0,3,0]`, champion slot 2.
+Guests received 2,641-4,016 snapshots; maximum local server loop delay was
+41 ms. Guest identity recovery and interrupted host result transport passed,
+and logs contained no script, parse, network-failure, normalization or
+object-leak errors. Device smoothness and Internet latency remain unverified.
+
+Full gate `kras-party-check.H3tHak`: 276 scripts compiled, 313 resources
+audited with zero issues, 18,671 assertions passed, race regression passed
+and all 39 stability matches passed. The development allowlist now contains
+26 games; production online remains disabled.
+
 ### Bumper Bowl snapshot adapter
 
 Host snapshots now carry the five authored bumper mesh scales and bounded
@@ -14,8 +47,8 @@ This is sampled presentation, not lossless collision-event delivery.
 
 `/tmp/kras-bumper-network.log`: all 52 assertions passed, including actual
 audio-pool voice advancement and duplicate suppression with audio debounce
-cleared. All 71 Node tests passed. Bumper Bowl remains outside the room
-allowlist pending independent-process matches, reconnect and tournaments.
+cleared. All 71 Node tests passed. This adapter-only checkpoint preceded
+the room integration and independent-process verification documented above.
 
 Full gate `kras-party-check.XsFti5`: 276 scripts compiled, 313 resources
 audited with zero issues, 18,671 assertions passed, race regression passed
@@ -591,7 +624,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-five explicitly adapted rulesets; verification
+The development allowlist contains twenty-six explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
