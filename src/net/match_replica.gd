@@ -16,6 +16,7 @@ const CrateReplica = preload("res://src/net/crate_replica.gd")
 const HurdleReplica = preload("res://src/net/hurdle_replica.gd")
 const TideReplica = preload("res://src/net/tide_replica.gd")
 const SweeperReplica = preload("res://src/net/sweeper_replica.gd")
+const DuelReplica = preload("res://src/net/duel_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -61,6 +62,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = TideReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "sweeper_storm":
 		packet["world"] = SweeperReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "duel_pit":
+		packet["world"] = DuelReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -111,6 +114,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "sweeper_storm":
 		if not SweeperReplica.valid(data.get("world")):
+			return false
+	elif game_id == "duel_pit":
+		if not DuelReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "magnet_court":
 		if not MagnetReplica.valid(data.get("world"), count):
@@ -237,6 +243,8 @@ func render(scene: Node, delta: float) -> void:
 		TideReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "sweeper_storm":
 		SweeperReplica.render(scene.controller, target.world)
+	elif scene.config.minigame_id == "duel_pit":
+		DuelReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "hurdle_dash":
 		if _hurdle == null:
 			_hurdle = HurdleReplica.new()

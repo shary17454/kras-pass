@@ -2,6 +2,24 @@
 
 ## Implemented boundary
 
+### Duel Pit snapshot adapter
+
+Duel snapshots now include per-slot lives and accumulated damage for the
+guest HUD. Godot and Node require both arrays to match the roster, lives to
+be integers in 0-3, and damage to be finite in 0-10,000. Missing/extra fields,
+coercible values and mismatched rosters are rejected. Guest presentation
+updates only these fields; it does not spend lives, award points or schedule
+respawns. New-round snapshots restore lives and clear damage.
+
+`/tmp/kras-duel-network.log`: all 39 assertions passed, including the visible
+damage text and idempotent repeated rendering. All 69 Node tests passed.
+Duel Pit is not yet room-enabled: independent-process combat, respawn,
+reconnect and tournament validation remain required.
+Full gate `kras-party-check.CnwV0b`: 274 scripts compiled, 311 resources
+audited with zero issues, 18,553 assertions passed, race regression passed
+and all 39 stability matches passed. This is desktop headless evidence, not
+physical-device performance, Internet connectivity or App Store readiness.
+
 ### Arena respawn scoring prerequisite
 
 Duel Pit credited each knockout twice: the common out-handler incremented
