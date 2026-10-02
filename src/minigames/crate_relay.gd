@@ -21,9 +21,18 @@ func configure() -> void:
 
 func build() -> void:
 	Pool.define(POOL_KEY, func(): return Collectible.new(), 10)
+	if not EventBus.player_hit.is_connected(_on_player_hit):
+		EventBus.player_hit.connect(_on_player_hit)
 	var arena := ctx.arena as Arena
 	for i in ctx.player_count():
 		_docks.append(_make_dock(arena, i))
+	for i in 4:
+		_spawn_crate()
+
+
+func on_round_start() -> void:
+	_reset_cargo()
+	_spawn_timer = 2.2
 	for i in 4:
 		_spawn_crate()
 
@@ -82,7 +91,7 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	if f == null or not is_instance_valid(f) or f.carrying > 0:
 		# Already carrying: leave the crate where it is.
 		item.available = true
-		item.monitoring = true
+		item.set_deferred("monitoring", true)
 		return
 	Pool.release(POOL_KEY, item)
 	_items.erase(item)
@@ -103,7 +112,7 @@ func _check_deliveries() -> void:
 		if to.length() > float(dock["radius"]):
 			continue
 		f.carrying = 0
-		f.can_attack = true
+		f.can_attack = allows_attack()
 		var gain := int(DELIVER_POINTS * ctx.powerups.point_multiplier(slot))
 		ctx.add_score(slot, gain)
 		ctx.bump_detail(slot, "deposits")
@@ -124,12 +133,19 @@ func _update_carry_visuals() -> void:
 		elif f.carrying <= 0 and has_mark:
 			var mark = _carry_marks[i]
 			if is_instance_valid(mark):
+				mark.hide()
 				mark.queue_free()
 			_carry_marks.erase(i)
 
 
 func on_fighter_knocked_out(slot: int, by_slot: int) -> void:
 	_drop(slot, by_slot)
+
+
+func _on_player_hit(attacker: int, victim: int, strength: float) -> void:
+	if attacker != victim and strength > 0.0 and ctx.is_alive(victim):
+		# A normal hit spills cargo but is not a knockout statistic.
+		_drop(victim, -1)
 
 
 func on_credited_knockout(attacker: int, victim: int) -> void:
@@ -141,7 +157,7 @@ func _drop(slot: int, by_slot: int) -> void:
 	if f == null or not is_instance_valid(f) or f.carrying <= 0:
 		return
 	f.carrying = 0
-	f.can_attack = true
+	f.can_attack = allows_attack()
 	if by_slot >= 0 and by_slot != slot:
 		ctx.bump_detail(by_slot, "knockouts")
 	var item: Collectible = Pool.acquire(POOL_KEY)
@@ -196,7 +212,22 @@ func detail_rows() -> Array:
 
 
 func cleanup() -> void:
+	if EventBus.player_hit.is_connected(_on_player_hit):
+		EventBus.player_hit.disconnect(_on_player_hit)
+	_reset_cargo()
+
+
+func _reset_cargo() -> void:
 	for item in _items:
 		if is_instance_valid(item):
 			Pool.release(POOL_KEY, item)
 	_items.clear()
+	for mark in _carry_marks.values():
+		if is_instance_valid(mark):
+			mark.hide()
+			mark.queue_free()
+	_carry_marks.clear()
+	for fighter in ctx.fighters:
+		if is_instance_valid(fighter):
+			fighter.carrying = 0
+			fighter.can_attack = allows_attack()

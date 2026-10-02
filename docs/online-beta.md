@@ -2,6 +2,34 @@
 
 ## Implemented boundary
 
+### Crate Relay lifecycle and input prerequisite
+
+Crate Relay now restores four center crates and the spawn clock between
+rounds, clears carried visuals/cargo without duplicating docks, and restores
+the controller's allowed attack state. Rejected second pickups re-enable
+monitoring with a deferred write after Collectible's deferred disable; the
+previous immediate write left the available crate permanently unmonitored.
+
+The control declaration now exposes `attack` rather than unused `action`.
+Ordinary hit events spill carried cargo without falsely recording a knockout;
+cleanup disconnects that observer and is repeatable. Actual knockouts retain
+their existing callbacks and cannot duplicate an already-spilled crate.
+
+`/tmp/kras-relay-regression-before.log`: 8 lifecycle/pickup failures before
+the fix. `/tmp/kras-relay-after.log`: all 34 assertions passed, including
+deferred pickup ordering, restart, unique pool entries, once-only delivery,
+ordinary-hit drops and observer cleanup. An earlier fixture compile error
+in `/tmp/kras-relay-before.log` was corrected before measuring regressions.
+Full gate `kras-party-check.ZwR2Xu`: 261 scripts compiled, 298 resources
+audited with zero issues, 18,041 assertions passed, race regression passed
+and 39 stability matches completed with zero failures.
+
+Before online integration, review cross-arena floor queries and dropped
+cargo recovery: `Arena.is_inside()` currently falls back to circular bounds
+for the authored cross-shaped floor, and a scattered crate can land beyond
+an arm. This is not yet a completed geometry/recovery fix. Crate Relay remains
+excluded from room allowlists until its world adapter and engine tests pass.
+
 ### Crate and lab room integration
 
 The development room/client allowlists now include `crate_smash` and

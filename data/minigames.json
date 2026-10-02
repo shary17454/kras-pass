@@ -479,7 +479,7 @@
       "rounds": 1,
       "controls": [
         "move",
-        "action",
+        "attack",
         "dash"
       ],
       "control_profile": "movement_action",
