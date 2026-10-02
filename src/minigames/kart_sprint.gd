@@ -277,6 +277,12 @@ func on_round_end() -> void:
 func is_round_over() -> bool:
 	if ctx.early_finish or _finished >= ctx.player_count():
 		return true
+	var contenders: Array = ctx.config.rule("online_contenders", [])
+	if not contenders.is_empty():
+		for slot in contenders:
+			if finish_times[int(slot)] == UNFINISHED:
+				return false
+		return true
 	var humans := ctx.config.human_competitor_slots()
 	if humans.is_empty():
 		return false

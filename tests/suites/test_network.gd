@@ -80,6 +80,19 @@ func run(t: TestHarness) -> void:
 	t.equal(final_cfg.duration_override, 20.0, "tie-break is short")
 	t.equal(final_cfg.rule("maximum_duration", 0), 25.0, "tie-break has a safety deadline")
 	t.ok(not final_cfg.sudden_death, "room authority owns tournament tie resolution")
+	Net.match_data.config.game = "kart_sprint"
+	Net.match_data.config.arena = "circuit_loop"
+	Net.match_data.config.race_laps = 7
+	var race_final := Net.make_match_config()
+	t.equal(race_final.rule("race_laps", 0), 1, "race tiebreak uses one authoritative lap")
+	t.ok(race_final.rule("party_short_race", false), "race tiebreak permits short lap count")
+	t.equal(race_final.rule("maximum_duration", 0), 120.0, "race tiebreak has a driving safety deadline")
+	Net.match_data.erase("tournament")
+	var race_cfg := Net.make_match_config()
+	t.equal(race_cfg.rule("race_laps", 0), 7, "ordinary race restores chosen host lap count")
+	t.equal(race_cfg.rounds, 3, "match rounds and race laps remain independent")
+	Net.match_data.config.erase("race_laps")
+	t.equal(Net.make_match_config().rule("race_laps", 0), 3, "older race configuration defaults to three laps")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
 	var frame := InputFrame.new()
 	frame.bits = 4

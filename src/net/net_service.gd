@@ -18,8 +18,8 @@ signal snapshot_received(data: Dictionary)
 signal online_result(scores: Array)
 
 const RoomClient = preload("res://src/net/room_client.gd")
-const ONLINE_GAMES := ["ring_rumble", "goal_guard", "gem_grab", "star_rush", "zone_hold", "relic_hold", "tag_hunt", "paint_grid", "mnatiq", "mukharrib", "magnet_court", "storm_heart", "sky_court", "crumble_court", "blast_ball", "color_stand", "quick_draw", "symbol_echo", "crate_smash", "lab_crates", "crate_relay", "hurdle_dash", "rising_tide", "sweeper_storm", "duel_pit", "bumper_bowl", "duo_clash", "drift_floes", "turret_duel", "tank_arena", "scrap_karts", "fawda"]
-const ONLINE_ARENAS := {"fawda": ["vortex_ring", "storm_ring"], "scrap_karts": ["scrap_yard"], "tank_arena": ["tank_foundry", "tank_oasis", "tank_frost"], "ring_rumble": ["vortex_ring", "storm_ring"], "goal_guard": ["quad_court"],
+const ONLINE_GAMES := ["ring_rumble", "goal_guard", "gem_grab", "star_rush", "zone_hold", "relic_hold", "tag_hunt", "paint_grid", "mnatiq", "mukharrib", "magnet_court", "storm_heart", "sky_court", "crumble_court", "blast_ball", "color_stand", "quick_draw", "symbol_echo", "crate_smash", "lab_crates", "crate_relay", "hurdle_dash", "rising_tide", "sweeper_storm", "duel_pit", "bumper_bowl", "duo_clash", "drift_floes", "turret_duel", "tank_arena", "scrap_karts", "fawda", "kart_sprint"]
+const ONLINE_ARENAS := {"kart_sprint": ["circuit_loop"], "fawda": ["vortex_ring", "storm_ring"], "scrap_karts": ["scrap_yard"], "tank_arena": ["tank_foundry", "tank_oasis", "tank_frost"], "ring_rumble": ["vortex_ring", "storm_ring"], "goal_guard": ["quad_court"],
 	"gem_grab": ["gem_hollow", "glass_terrace"], "star_rush": ["star_meadow"], "zone_hold": ["dune_ring"],
 	"relic_hold": ["star_meadow", "gem_hollow"], "tag_hunt": ["star_meadow", "paint_grid"],
 	"paint_grid": ["paint_grid"], "mnatiq": ["paint_grid"], "mukharrib": ["paint_grid"], "magnet_court": ["quad_court"], "storm_heart": ["quad_court"], "sky_court": ["quad_court"], "crumble_court": ["crumble_court"], "blast_ball": ["ember_pit"], "color_stand": ["color_floor"], "quick_draw": ["draw_stage"], "symbol_echo": ["echo_hall"],
@@ -321,6 +321,8 @@ func make_match_config() -> MatchConfig:
 	cfg.seed = int(match_data.seed)
 	# The initial online ruleset excludes unreplicated machine drops/power-ups.
 	cfg.allow_powerups = false
+	if cfg.minigame_id == "kart_sprint":
+		cfg.rules["race_laps"] = clampi(int(match_data.config.get("race_laps", 3)), 3, 10)
 	cfg.rules["online_push"] = cfg.minigame_id == "ring_rumble"
 	var standings: Dictionary = match_data.get("tournament") if match_data.get("tournament") is Dictionary else {}
 	if not standings.get("contenders", []).is_empty():
@@ -330,6 +332,10 @@ func make_match_config() -> MatchConfig:
 		cfg.rules["online_contenders"] = contenders
 		cfg.duration_override = 20.0
 		cfg.rules["maximum_duration"] = 25.0
+		if cfg.minigame_id == "kart_sprint":
+			cfg.rules["party_short_race"] = true
+			cfg.rules["race_laps"] = 1
+			cfg.rules["maximum_duration"] = 120.0
 		cfg.sudden_death = false
 	var characters := Registry.characters()
 	for row in match_data.players:

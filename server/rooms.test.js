@@ -418,6 +418,74 @@ test('bumper rooms require five bounded host-owned barriers', () => {
   }
 });
 
+test('kart rooms bind host laps and course geometry and preserve race state on resume', () => {
+  for (const laps of [3, 7, 10]) {
+    const {rooms, host, client} = fixture();
+    const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+    const config = {game: 'kart_sprint', arena: 'circuit_loop', rounds: 2, bots: true, difficulty: 1, race_laps: laps};
+    assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'dune_circuit'}}), /invalid_config/);
+    for (const race_laps of [1, 2, 11, 3.5, true, '3', null]) {
+      assert.throws(() => host.send({op: 'configure', config: {...config, race_laps}}), /invalid_config/);
+    }
+    host.send({op: 'configure', config});
+    assert.equal(host.last('room').config.race_laps, laps);
+    assert.equal(guest.last('room').config.race_laps, laps);
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    const data = snapshot();
+    data.world = {elapsed: 20, times: [1234, 1000000000, 1000000000, 1000000000],
+      lap: [laps, 0, 0, 0], next: [1, 1, 0, 0], started: [true, true, false, false],
+      laps, checkpoints: 8, recovery: [-1, .25, -1, -1],
+      boost: {serial: [1, 0, 0, 0], pads: Array.from({length: 4}, () => [1, 0, 0, 0])}};
+    assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+    host.send({op: 'snapshot', epoch, tick: 1, data});
+    assert.deepEqual(guest.last('snapshot').data.world, data.world);
+    for (const world of [undefined, {...data.world, checkpoints: 9},
+      {...data.world, lap: [laps - 1, 0, 0, 0]}, {...data.world, recovery: [0, .25, -1, -1]},
+      {...data.world, laps: laps === 10 ? 9 : laps + 1, times: Array(4).fill(1000000000), lap: [0, 0, 0, 0]}]) {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+      assert.equal(guest.last('snapshot').tick, 1);
+    }
+    const token = guest.last('welcome').token;
+    const id = guest.c.player.id;
+    rooms.disconnect(guest.c);
+    const resumed = client(); resumed.send({op: 'resume', token});
+    assert.equal(resumed.last('welcome').id, id);
+    assert.equal(resumed.last('start').config.race_laps, laps);
+    assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+    assert.throws(() => resumed.send({op: 'result', epoch, scores: [1, 2, 3, 4]}), /host_only/);
+    host.send({op: 'result', epoch, scores: [2468, 1999999800, 2000000000, 1999999900]});
+    assert.deepEqual(resumed.last('result').scores, [2468, 1999999800, 2000000000, 1999999900]);
+  }
+});
+
+test('kart tournament final snapshots use one lap instead of the lobby lap limit', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'kart_sprint', arena: 'circuit_loop', rounds: 1,
+    race_laps: 7, bots: true, difficulty: 1, tournament: {mode: 'points', target: 3, rotation: 'manual',
+      points: [5, 3, 2, 1], entries: [{game: 'kart_sprint', arena: 'circuit_loop'}]}}});
+  for (let round = 0; round < 3; round++) {
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+    host.send({op: round === 0 ? 'start' : 'next'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    host.send({op: 'result', epoch, scores: [1000, 1000, 1000, 1000]});
+  }
+  assert.deepEqual(host.last('room').tournament.contenders, [0, 1, 2, 3]);
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'next'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  data.world = {elapsed: 10, times: Array(4).fill(1000000000), lap: [0, 0, 0, 0],
+    next: [1, 1, 1, 1], started: [true, true, true, true], laps: 1, checkpoints: 8,
+    recovery: [-1, -1, -1, -1], boost: {serial: [0, 0, 0, 0], pads: Array.from({length: 4}, () => [0, 0, 0, 0])}};
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: {...data, world: {...data.world, laps: 7}}}), /invalid_snapshot/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.equal(guest.last('snapshot').data.world.laps, 1);
+});
+
 test('fawda rooms require bounded host bomb state on both maps and preserve it on resume', () => {
   for (const arena of ['vortex_ring', 'storm_ring']) {
     const {rooms, host, client} = fixture();

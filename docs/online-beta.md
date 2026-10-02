@@ -2,6 +2,59 @@
 
 ## Implemented boundary
 
+### Kart development-room integration (experimental)
+
+The development allowlists now accept Kart Sprint on `circuit_loop` only.
+Node snapshot dispatch binds its eight authored checkpoints and effective lap
+limit to the current room rules. The host can select 3-to-10 laps independently
+of match rounds; the server rejects fractional, boolean, string, null and
+out-of-range selections. Older configurations default to three laps. Ready
+invalidation, host-only configuration/results and reconnect identity/state
+remain governed by Rooms. Guests restore the selected lap count through the
+shared MatchConfig and existing HUD.
+
+Tournament race finals use one lap and a 120-second maximum-duration safety
+deadline, rather than the arena final's 25-second deadline. Kart completion
+checks authoritative contenders, including bot finalists, without waiting for
+spectators or letting a spectator's finish settle the final. The focused
+`/tmp/kras-kart-final-rules.log` passed 20 assertions and
+`/tmp/kras-kart-room-routing.log` passed 58. All 90 Node tests passed in
+`/tmp/kras-kart-room-contract.log`, including a complete Rooms-model sequence
+into a tied race final, rejection of lobby-length final snapshots, and
+reconnection with 3-, 7- and 10-lap configuration/state. That Rooms-model
+sequence is not independent physical tournament evidence.
+
+The real smoke fixture drives each human through virtual input, aiming at
+the host's next checkpoint. Slot zero deliberately steers off the road during
+normal driving so the original controller performs rescue; no position,
+checkpoint, score or result is fabricated. The ordinary match runs two rounds
+of three laps each, requires all humans to finish, observes real pad/rescue
+state and verifies guest lap/time presentation without guest rescue rules.
+
+`kras-network-smoke-Tm8Bb4` passed the two-human/two-bot case with scores
+`[6075,3996,1999998324,1999998326]` and 1,703 guest snapshots, including guest
+resume and host-result transport recovery. Its four-human case timed out in
+the second round; that failed evidence is retained. Detailed periodic Kart
+diagnostics were then added. `kras-network-smoke-EMNRYG`, an explicit four-human
+rerun, passed with scores `[5265,4472,4040,4072]`, 1,541-to-1,560 guest snapshots,
+identity-preserving reconnects and maximum sampled server loop delay 55 ms.
+Every process agreed on results and completed the required human laps.
+
+The failed run's root cause is not established: the diagnostic rerun's success
+does not prove the earlier timeout was fixed. Consequently this is an
+experimental development-room integration, not a stable online release.
+Repeated seeded four-human races, actual tournaments/finals, Internet/mobile
+transport, controller/device QA and performance qualification remain required.
+The runner's optional `--humans=2|4` selects a diagnostic roster; its default
+still tests both. Production online remains disabled, and no Railway or App
+Store deployment/submission occurred here.
+
+Full gate `kras-party-check.NGqCjS` on this integration compiled 293 scripts,
+audited 330 resources with zero issues, passed 19,466 assertions, passed the
+existing real three-lap offline race and completed all 39 stability matches
+with zero failures. It does not negate the independent four-human timeout
+above or establish Internet/device stability.
+
 ### Kart world presentation and source verification
 
 Commit `ba6d5dd80cf173d25f760580f9b3da9e506addd9` was verified on
@@ -39,7 +92,7 @@ focused suite, not as part of that full-gate count. Godot emitted a macOS
 `get_system_ca_certificates` warning; the commands exited successfully, but
 this gate does not qualify production TLS or Keychain access.
 
-Kart remains excluded from development room allowlists. Its server geometry
+At this adapter-preparation commit Kart remained excluded from development room allowlists. Its server geometry
 dispatch, selectable 3-to-10 network laps, real driving across independent
 peers, recovery/reconnect and tournament results must be qualified next.
 Production online is still disabled. No Railway deployment, signed iOS archive,

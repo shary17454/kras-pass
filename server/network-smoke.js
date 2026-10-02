@@ -49,11 +49,14 @@ const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
 assert.ok(ONLINE_GAMES.includes(game));
 assert.ok(!duoTiebreak || (tournament && game === 'duo_clash'));
+const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
+assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
+assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
 try {
-  for (const humans of duoTiebreak ? [4] : [2, 4]) {
+  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak ? [4] : [2, 4])) {
     let resolveRoom;
     const roomCode = new Promise(resolve => { resolveRoom = resolve; });
     function peer(index, code = '') {

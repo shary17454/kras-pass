@@ -39,6 +39,19 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(game.finish_times[1] != game.UNFINISHED, "ordered checkpoint ticks finish the remote human")
 	t.ok(game.is_round_over(), "all human competitors finishing can end the race")
 	t.equal(game.finish_times[2], game.UNFINISHED, "unfinished bot does not block human completion")
+	cfg.rules["online_contenders"] = [1, 2]
+	cfg.rules["party_short_race"] = true
+	cfg.rules["race_laps"] = 1
+	game.on_round_start()
+	for slot in 4: scene.ctx.fighter(slot).global_position = Vector3(100 + slot * 10, 1, 100)
+	_finish_checkpoints(game, scene.ctx.fighter(0))
+	t.ok(not game.is_round_over(), "noncontender finish cannot settle a race final")
+	_finish_checkpoints(game, scene.ctx.fighter(1))
+	t.ok(not game.is_round_over(), "human finalist still waits for the bot finalist")
+	_finish_checkpoints(game, scene.ctx.fighter(2))
+	t.ok(game.is_round_over(), "only authoritative finalists must finish the tiebreak")
+	t.equal(game.finish_times[3], game.UNFINISHED, "unfinished spectator cannot block final completion")
+	cfg.rules.erase("online_contenders")
 	cfg.context = original_context
 	t.equal(cfg.human_competitor_slots(), [0], "offline rules ignore stale remote peer metadata")
 	scene.teardown()

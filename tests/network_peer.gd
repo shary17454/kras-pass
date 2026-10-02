@@ -36,6 +36,8 @@ var observed_tank_inventory := false
 var observed_scrap_ram := false
 var observed_scrap_damage := false
 var observed_fawda_events := {}
+var observed_kart_boost := false
+var observed_kart_rescue := false
 var fawda_arenas_seen := {}
 var tank_arenas_seen := {}
 var tank_route := PackedVector3Array()
@@ -106,6 +108,14 @@ func _process(_delta: float) -> void:
 			for fighter in game.ctx.fighters:
 				runners.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity), "can_jump": fighter.can_jump, "control": fighter.control_enabled, "finish": game.controller.finish_times[fighter.slot]})
 			print("NETWORK_HURDLES=" + JSON.stringify(runners))
+		if game_id == "kart_sprint" and is_instance_valid(game):
+			var racers: Array = []
+			for fighter in game.ctx.fighters:
+				racers.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity),
+					"control": fighter.control_enabled, "alive": fighter.alive, "recovering": game.controller.is_recovering(fighter.slot),
+					"lap": game.controller.lap[fighter.slot], "next": game.controller._next_cp[fighter.slot],
+					"finish": game.controller.finish_times[fighter.slot]})
+			print("NETWORK_KART=" + JSON.stringify({"round": game._round_index, "elapsed": game.controller._elapsed, "racers": racers}))
 		if game_id == "crate_relay" and is_instance_valid(game):
 			var players: Array = []
 			for fighter in game.ctx.fighters:
@@ -186,6 +196,7 @@ func _room() -> void:
 		configured = true
 		var cfg := Net.lobby_config.duplicate(true)
 		cfg["rounds"] = 2
+		if game_id == "kart_sprint": cfg["race_laps"] = 3
 		if game_id != "ring_rumble":
 			cfg["game"] = game_id
 			cfg["arena"] = Net.ONLINE_ARENAS[game_id][0]
@@ -249,6 +260,9 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
 		fawda_arenas_seen[cfg.arena_id] = true
+	if game_id == "kart_sprint":
+		observed_kart_boost = false
+		observed_kart_rescue = false
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		cfg.duration_override = 20.0
 		observed_duo_final = true
@@ -291,6 +305,12 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "kart_sprint":
+		var world: Dictionary = load("res://src/net/kart_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+		for serial in world.get("boost", {}).get("serial", []):
+			observed_kart_boost = observed_kart_boost or int(serial) > 0
+		for progress in world.get("recovery", []):
+			observed_kart_rescue = observed_kart_rescue or float(progress) >= 0.0
 	if game_id == "fawda":
 		var world: Dictionary = _fawda_world()
 		for kind in world.get("events", {}):
@@ -417,6 +437,17 @@ func _physics_process(_delta: float) -> void:
 		hunter_round = game._round_index
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
+		if game_id == "kart_sprint":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			var target: Vector3 = game.controller.next_checkpoint(slot)
+			# Drive off the edge through normal input, then use the real rescue.
+			if slot == 0 and game.controller._elapsed >= 2.0 and game.controller._elapsed < 5.0:
+				target = fighter.global_position.normalized() * 40.0
+			var direction := target - fighter.global_position
+			var diff := wrapf(atan2(direction.x, direction.z) - atan2(fighter.facing.x, fighter.facing.z), -PI, PI)
+			movement = Vector2(-clampf(diff * 1.8, -1.0, 1.0), -maxf(0.25, 1.0 - absf(diff) / PI * 1.1))
+			if absf(diff) > 2.3 and fighter.speed_ratio() < 0.15:
+				movement = Vector2(clampf(diff * 1.8, -1.0, 1.0), 0.85)
 		var buttons := 0
 		if game_id == "fawda":
 			var fighter: Fighter = game.ctx.fighter(slot)
@@ -689,6 +720,24 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "kart_sprint":
+		if not observed_kart_boost or not observed_kart_rescue:
+			_fail("physical race boost/rescue evidence missing: %s %s" % [observed_kart_boost, observed_kart_rescue])
+			return
+		for slot in count:
+			if not contenders.is_empty() and not contenders.has(slot): continue
+			if game.controller.lap[slot] != game.controller.laps():
+				_fail("human race ended before required laps: slot=%s lap=%s target=%s" % [slot, game.controller.lap[slot], game.controller.laps()])
+				return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world.is_empty() or not game.controller._recoveries.is_empty():
+				_fail("race world missing or guest ran live rescue rules")
+				return
+			for slot in game.ctx.player_count():
+				if game.controller.lap[slot] != int(world.lap[slot]) or game.controller.finish_times[slot] != int(world.times[slot]):
+					_fail("race host lap/time presentation diverged")
+					return
 	if game_id == "fawda":
 		for kind in ["drop", "pickup", "throw", "explode"]:
 			if not observed_fawda_events.has(kind):

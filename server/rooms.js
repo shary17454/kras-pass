@@ -2,11 +2,11 @@ import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
 import {validResultScore} from './game-scoring.js';
-import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld} from './world-snapshots.js';
+import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld, validKartWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
-export const ONLINE_ARENAS = Object.freeze({fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
+export const ONLINE_ARENAS = Object.freeze({kart_sprint: ['circuit_loop'], fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
   gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],
   paint_grid: ['paint_grid'], mnatiq: ['paint_grid'], mukharrib: ['paint_grid'], magnet_court: ['quad_court'], storm_heart: ['quad_court'], sky_court: ['quad_court'], crumble_court: ['crumble_court'], blast_ball: ['ember_pit'], color_stand: ['color_floor'], quick_draw: ['draw_stage'], symbol_echo: ['echo_hall'],
@@ -35,8 +35,9 @@ function tournamentSettings(value) {
   return {mode: value.mode, target: value.target, rotation: value.rotation, entries, points: [...value.points]};
 }
 
-function validSnapshot(data, count, game, arena) {
+function validSnapshot(data, count, game, arena, raceLaps = 3) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  if (game === 'kart_sprint' && (!validKartWorld(data.world, count, 8) || data.world.laps !== raceLaps)) return false;
   if (game === 'goal_guard' && !validGoalGuardWorld(data.world, count)) return false;
   if (game === 'magnet_court' && !validMagnetWorld(data.world, count)) return false;
   if (game === 'storm_heart' && !validStormWorld(data.world, count)) return false;
@@ -140,9 +141,11 @@ export class Rooms {
       this.host(c); if (r.state !== 'lobby') fail('invalid_state');
       const cfg = m.config;
       if (!cfg || !ONLINE_GAMES.includes(cfg.game) || !ONLINE_ARENAS[cfg.game].includes(cfg.arena)
-        || !integer(cfg.rounds, 1, 10) || typeof cfg.bots !== 'boolean' || !integer(cfg.difficulty, 0, 3)) fail('invalid_config');
+        || !integer(cfg.rounds, 1, 10) || typeof cfg.bots !== 'boolean' || !integer(cfg.difficulty, 0, 3)
+        || (cfg.race_laps !== undefined && !integer(cfg.race_laps, 3, 10))) fail('invalid_config');
       const tournament = tournamentSettings(cfg.tournament);
       r.config = {game: cfg.game, arena: cfg.arena, rounds: cfg.rounds, bots: cfg.bots, difficulty: cfg.difficulty, tournament};
+      if (cfg.game === 'kart_sprint' || cfg.race_laps !== undefined) r.config.race_laps = cfg.race_laps ?? 3;
       for (const peer of r.players.values()) peer.ready = false;
       this.broadcastRoom(r); return;
     }
@@ -194,7 +197,8 @@ export class Rooms {
       if (integer(m.epoch, 1, r.epoch)
         && (m.epoch < r.epoch || r.state === 'results')) return;
       if (r.state !== 'playing' || m.epoch !== r.epoch) fail('invalid_state');
-      if (!validSnapshot(m.data, r.roster.length, r.matchConfig.game, r.matchConfig.arena) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
+      const raceLaps = r.tournament?.contenders.length ? 1 : (r.matchConfig.race_laps ?? 3);
+      if (!validSnapshot(m.data, r.roster.length, r.matchConfig.game, r.matchConfig.arena, raceLaps) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
         || Buffer.byteLength(JSON.stringify(m.data)) > 48000) fail('invalid_snapshot');
       r.snapshot = {op: 'snapshot', epoch: r.epoch, tick: m.tick, data: m.data};
       r.authoritySeen = this.now();
