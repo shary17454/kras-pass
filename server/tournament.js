@@ -1,4 +1,6 @@
 // Server-owned tournament accounting. The host supplies match scores only.
+import {higherIsBetter} from './game-scoring.js';
+
 export class Tournament {
   constructor(count, settings, seed) {
     this.mode = settings.mode;
@@ -39,21 +41,23 @@ export class Tournament {
   }
 
   record(epoch, scores) {
-    if (this.complete || epoch <= this.lastEpoch) throw new Error('invalid_tournament_result');
+    if (!this.current || this.complete || epoch <= this.lastEpoch) throw new Error('invalid_tournament_result');
     if (!Array.isArray(scores) || scores.length !== this.points.length
       || scores.some(s => !Number.isInteger(s) || Math.abs(s) > 1000000)) throw new Error('invalid_tournament_result');
+    const higher = higherIsBetter(this.current.game);
+    const bestOf = values => higher ? Math.max(...values) : Math.min(...values);
     this.lastEpoch = epoch;
     this.lastAwards.fill(0);
     if (this.contenders.length) {
       this.tieAttempts++;
-      const best = Math.max(...this.contenders.map(i => scores[i]));
+      const best = bestOf(this.contenders.map(i => scores[i]));
       this.contenders = this.contenders.filter(i => scores[i] === best);
       if (this.contenders.length === 1 || this.tieAttempts >= 3) this.finish(this.contenders);
       return;
     }
-    const best = Math.max(...scores);
+    const best = bestOf(scores);
     scores.forEach((score, slot) => {
-      const before = scores.filter(s => s > score).length;
+      const before = scores.filter(s => higher ? s > score : s < score).length;
       const tied = scores.filter(s => s === score).length;
       const award = Math.ceil(this.table.slice(before, before + tied).reduce((a, b) => a + b, 0) / tied);
       this.points[slot] += award;

@@ -2,6 +2,35 @@
 
 ## Implemented boundary
 
+### Race result ordering
+
+Server tournament ranking now reads each game's scoring mode from the shared
+`data/minigames.json` catalogue. Race times rank ascending for points, cups
+and final tiebreaks; other game scores still rank descending. Client-supplied
+ranking flags are ignored. Unknown game IDs and results before selecting a
+round are rejected without changing accounting. Godot's network result path
+also passes the game's scoring direction into MatchResult.
+
+Two new server regressions failed before the fix. The Godot regression in
+`/tmp/kras-race-result-before.log` incorrectly selected unfinished slot 3;
+`/tmp/kras-race-result-after.log` passes all 26 assertions including winner
+slot 0 and duplicate-result protection. All 62 Node tests passed locally
+and inside the built Linux container, covering mixed playlists, cups,
+unknown games, and faster spectators excluded from a race tiebreak.
+
+Docker now copies the catalogue to `/app/data/minigames.json`. Local image
+`kras-pass-scoring-check` built successfully (config ID
+`6eeebef8aabb8421e627688684729bdd1e2042a678a290df9e873e9bfcb1c5d7`).
+A network-isolated container started the real server with a temporary SQLite
+database and test owner address: `/health` returned HTTP 200 with `ok=true`,
+`authentication_ready=false`, `multiplayer_enabled=false`. This is packaging
+evidence, not Railway deployment or Apple authentication verification.
+
+Full gate `kras-party-check.ZAQbsp`: 263 scripts compiled, 300 resources
+audited with zero issues, 18,366 assertions passed, race regression passed
+and all 39 stability matches passed. Hurdle world replication and real
+race-room tests remain required before enabling races in the allowlist.
+
 ### Hurdle Dash lifecycle prerequisite
 
 Straight-track queries now use the authored half-width (already stored in
@@ -19,9 +48,8 @@ active-contender completion. Hurdle Dash is not online-enabled yet; its
 world adapter and independent-process tests remain required.
 Full gate `kras-party-check.KPjNfF`: 263 scripts compiled, 300 resources
 audited with zero issues, 18,363 assertions passed, race regression passed
-and all 39 stability matches passed. Before enabling race rooms, server
-tournament ranking must support lower-is-better results; its current
-comparison always favors larger scores.
+and all 39 stability matches passed. The subsequent lower-is-better
+tournament/result repair is documented above.
 
 ### Crate Relay room integration
 

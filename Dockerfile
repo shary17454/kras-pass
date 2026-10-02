@@ -11,6 +11,7 @@ COPY server/package*.json ./
 RUN npm ci --omit=dev
 
 COPY server/ ./
+COPY data/minigames.json /app/data/minigames.json
 
 EXPOSE 8080
 

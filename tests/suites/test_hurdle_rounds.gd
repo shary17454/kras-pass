@@ -52,6 +52,13 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(game.is_round_over(), "inactive spectators do not stall final contenders")
 	game.finish_times[1] = game.UNFINISHED
 	t.ok(not game.is_round_over(), "active unfinished runner keeps race open")
+	var observed: Array = []
+	scene._on_finished = func(result): observed.append(result)
+	scene._network_result([100, 200, 300, 99999])
+	t.equal(observed.size(), 1, "network result delivered once")
+	t.equal(Array(observed[0].winners()), [0], "network results rank fastest runner first")
+	scene._network_result([400, 300, 200, 100])
+	t.equal(observed.size(), 1, "duplicate network result cannot replace winner")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

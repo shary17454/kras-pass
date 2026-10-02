@@ -1193,7 +1193,7 @@ func _network_result(values: Array) -> void:
 	var scores: Array[int] = []
 	for value in values:
 		scores.append(int(value))
-	var result := MatchResult.make(config.minigame_id, config.arena_id, scores)
+	var result := MatchResult.make(config.minigame_id, config.arena_id, scores, ctx.definition.higher_is_better())
 	phase = P.DONE
 	ctx.phase = P.DONE
 	finished.emit(result)
