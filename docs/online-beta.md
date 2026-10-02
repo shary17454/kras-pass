@@ -854,6 +854,34 @@ to preserve the original 60 Hz blend.
 
 ## Expansion checklist per game
 
+### Blast Ball adapter in development
+
+`src/net/blast_replica.gd` now captures and presents host-owned position,
+velocity, launch generation, fuse, terminal detonation and a monotonic
+explosion sequence/location. The shared match snapshot dispatcher validates
+this world before acceptance. Presentation does not tick physics or fuse and
+cannot eliminate players or award points. Launch identity forces a snap;
+ordinary movement interpolates. Exploded balls hide until the next launch.
+
+Explosion feedback is separated from authoritative damage. First snapshots,
+round changes and reconnect gaps suppress old feedback; repeated snapshots
+cannot replay an already consumed event. `validBlastWorld` supplies the same
+numeric/type bounds on the server, but is not yet wired into room acceptance.
+
+- `/tmp/kras-blast-replica-tests.log`: 94 assertions passed, including shared
+  snapshot dispatch, malformed data rejection, unchanged scores/alive state,
+  stopped fuse, teleport, visibility and feedback replay suppression.
+- `npm test`: 45 tests passed after allowing the local WebSocket listener.
+  The initial sandbox run failed only at `listen EPERM 127.0.0.1`; it was not
+  counted as a passing transport test.
+- Full gate `kras-party-check.Q4Nmkc`: 248 scripts compiled, 285 resources
+  audited with zero issues, 17,013 assertions passed, real three-lap race
+  regression passed and 39 stability matches completed with zero failures.
+- Blast Ball remains excluded from room allowlists. Remaining acceptance:
+  room-level validation, ordinary and tournament multi-engine tests with
+  actual fuse/launch/explosion observations, and portrait/landscape captures.
+  This work is not production activation or App Store readiness.
+
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects
    (balls, projectiles, crates, hazards, ownership, effects), not just players.
 2. Keep the host as the sole rules/score authority. Never simulate a second

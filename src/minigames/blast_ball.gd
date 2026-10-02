@@ -8,6 +8,8 @@ extends MiniGameController
 var ball: GameBall
 var _fuse_max := 5.0
 var _blast_radius := 5.0
+var explosion_sequence := 0
+var explosion_position := Vector3.ZERO
 
 
 func configure() -> void:
@@ -82,8 +84,9 @@ func _nearest_alive_to(p: Vector3) -> int:
 
 
 func _on_exploded(_b: GameBall, position: Vector3) -> void:
-	AudioManager.play_sfx("explode", position)
-	EventBus.shake(0.8, 0.5)
+	explosion_sequence += 1
+	explosion_position = position
+	present_explosion(position)
 	var victim := _nearest_alive_to(position)
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
@@ -106,6 +109,11 @@ func _on_exploded(_b: GameBall, position: Vector3) -> void:
 			f.take_hit(-1, to.normalized(), 14.0, 0.0)
 	if ctx.alive_count() > 1:
 		_arm()
+
+
+func present_explosion(position: Vector3) -> void:
+	AudioManager.play_sfx("explode", position)
+	EventBus.shake(0.8, 0.5)
 
 
 func on_sudden_death() -> void:

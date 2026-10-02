@@ -69,6 +69,89 @@ func run(t: TestHarness, host: Node) -> void:
 		headings.append(game.ball.velocity.normalized())
 	t.ok(headings[0].angle_to(headings[1]) < 0.03, "homing strength remains comparable at 30 and 60 Hz")
 	t.ok(headings[2].angle_to(headings[1]) < 0.03, "homing strength remains comparable at 60 and 120 Hz")
+	var adapter = load("res://src/net/blast_replica.gd").new()
+	var world: Dictionary = JSON.parse_string(JSON.stringify(adapter.capture(game)))
+	t.ok(adapter.valid(world), "blast world survives JSON")
+	for field in world:
+		var missing := world.duplicate(true)
+		missing.erase(field)
+		t.ok(not adapter.valid(missing), "blast world requires " + field)
+	for field in ["position", "velocity", "explosion_position"]:
+		for value in [null, [], [0, 0], [0, 0, 0, 0], [NAN, 0, 0], [true, 0, 0], [10001, 0, 0]]:
+			var bad := world.duplicate(true)
+			bad[field] = value
+			t.ok(not adapter.valid(bad), "reject malformed blast vector")
+	for field in ["generation", "explosion_sequence", "fuse", "fuse_max"]:
+		for value in [null, true, "1", NAN, INF, -1, 1000001]:
+			var bad := world.duplicate(true)
+			bad[field] = value
+			t.ok(not adapter.valid(bad), "reject malformed blast scalar")
+	var scores := Array(scene.ctx.scores)
+	var living: Variant = scene.ctx.alive.duplicate()
+	world.explosion_sequence = 5
+	world.fuse = 1.2
+	world.position = [2, 0.9, 3]
+	AudioManager._last_played.erase("explode")
+	adapter.render(game, world, 0.1, true, true)
+	t.ok(not AudioManager._last_played.has("explode"), "first snapshot does not play historical explosion")
+	for repeat in 10:
+		adapter.render(game, world, 1.0, false, true)
+	t.near(game.ball.fuse, 1.2, 0.0001, "presentation never advances fuse")
+	t.equal(game.ball._label.text, "1.2", "replica displays host fuse")
+	t.equal(game.ball.collision_mask, 0, "replica cannot detect gameplay contacts")
+	t.equal(Array(scene.ctx.scores), scores, "replica cannot score")
+	t.equal(scene.ctx.alive, living, "replica cannot eliminate")
+	world.explosion_sequence += 1
+	adapter.render(game, world, 0.1, false, true)
+	if AudioManager.enabled:
+		t.ok(AudioManager._last_played.has("explode"), "fresh explosion plays feedback")
+	AudioManager._last_played.erase("explode")
+	adapter.render(game, world, 0.1, false, true)
+	t.ok(not AudioManager._last_played.has("explode"), "duplicate does not replay explosion")
+	world.explosion_sequence += 1
+	adapter.render(game, world, 0.1, true, false)
+	adapter.render(game, world, 0.1, false, true)
+	t.ok(not AudioManager._last_played.has("explode"), "suppressed reconnect event stays consumed")
+	world.detonated = true
+	world.fuse = 0
+	t.ok(adapter.valid(world), "terminal detonation is valid")
+	adapter.render(game, world, 0.1, false, true)
+	t.ok(not game.ball.visible, "terminal detonated ball is hidden")
+	world.detonated = false
+	world.fuse = 2.0
+	world.generation += 1
+	world.position = [-2, 0.9, -3]
+	adapter.render(game, world, 0.001, false, false)
+	t.ok(game.ball.visible, "new launch restores visibility")
+	t.ok(game.ball.global_position.is_equal_approx(Vector3(-2, 0.9, -3)), "new launch snaps without interpolating across arena")
+	var replica = load("res://src/net/match_replica.gd").new()
+	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	packet.phase = MatchPhase.P.PLAYING
+	packet.time = 30
+	t.ok(replica.accept(packet, 4, "blast_ball"), "shared match accepts blast world")
+	var invalid := packet.duplicate(true)
+	invalid.world.erase("fuse")
+	t.ok(not replica.accept(invalid, 4, "blast_ball"), "shared match rejects incomplete blast world")
+	t.equal(replica.target, packet, "invalid blast packet preserves last state")
+	AudioManager._last_played.erase("explode")
+	replica.render(scene, 0.1)
+	t.ok(not AudioManager._last_played.has("explode"), "shared first snapshot is silent")
+	packet.world.explosion_sequence += 1
+	t.ok(replica.accept(packet, 4, "blast_ball"), "shared match accepts fresh explosion")
+	replica.render(scene, 0.1)
+	if AudioManager.enabled:
+		t.ok(AudioManager._last_played.has("explode"), "shared fresh explosion plays sound")
+	AudioManager._last_played.erase("explode")
+	packet.world.explosion_sequence += 1
+	t.ok(replica.accept(packet, 4, "blast_ball"), "shared match accepts reconnect snapshot")
+	replica._event_received_at = replica.received_at - 1501
+	replica.render(scene, 0.1)
+	t.ok(not AudioManager._last_played.has("explode"), "shared reconnect skips historical explosion")
+	packet.round += 1
+	packet.world.explosion_sequence += 1
+	t.ok(replica.accept(packet, 4, "blast_ball"), "shared match accepts next round")
+	replica.render(scene, 0.1)
+	t.ok(not AudioManager._last_played.has("explode"), "round transition does not replay explosion")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

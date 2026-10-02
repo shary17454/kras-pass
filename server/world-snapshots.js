@@ -1,6 +1,16 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validBlastWorld(data) {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && ['position', 'velocity', 'explosion_position'].every(key => vector(data[key]))
+    && ['generation', 'explosion_sequence'].every(key => Number.isInteger(data[key]) && data[key] >= 0 && data[key] <= 1000000)
+    && typeof data.detonated === 'boolean'
+    && Number.isFinite(data.fuse_max) && data.fuse_max > 0 && data.fuse_max <= 60
+    && Number.isFinite(data.fuse) && data.fuse >= 0 && data.fuse <= data.fuse_max
+    && (!data.detonated || data.fuse === 0);
+}
+
 export function validCrumbleWorld(data) {
   return !!data && Array.isArray(data.tiles) && data.tiles.length === 113
     && data.tiles.every(row => Array.isArray(row) && row.length === 4 && row.every(Number.isFinite)
