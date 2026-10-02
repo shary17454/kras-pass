@@ -1,6 +1,16 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validHurdleWorld(data, count) {
+  return Number.isInteger(count) && count >= 2 && count <= 4
+    && data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 2 && Number.isFinite(data.elapsed)
+    && data.elapsed >= 0 && data.elapsed <= 3600
+    && Array.isArray(data.times) && data.times.length === count
+    && data.times.every(time => Number.isInteger(time) && time >= 0 && time <= 360000
+      && (time === 99999 || time <= Math.round(data.elapsed * 100)));
+}
+
 export function validCrateWorld(data, count, lab = false) {
   const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
   if (!integer(count, 2, 4) || !data || typeof data !== 'object' || Array.isArray(data)

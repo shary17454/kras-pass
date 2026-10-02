@@ -2,6 +2,28 @@
 
 ## Implemented boundary
 
+### Hurdle Dash snapshot adapter
+
+Hurdle snapshots now carry only the host elapsed clock and per-slot finish
+times. The fixed authored obstacles need no dynamic world payload. Godot
+and Node reject extra/missing fields, roster mismatches, non-finite values,
+out-of-range times and finishes later than the elapsed clock. The existing
+unfinished sentinel is preserved. Guests restore the timer/banner, finish
+count and HUD values without ticking race logic or awarding points.
+Finish feedback tracks previous times per round, with silent first/reconnect
+snapshots and no repeated cue for an unchanged finish.
+
+The initial fixture compared JSON float arrays against integer game arrays
+and failed despite equal values (`/tmp/kras-hurdle-network.log`); changing
+the assertions to compare each integer time fixed that test-only mismatch.
+`/tmp/kras-hurdle-network-after.log`: all 38 assertions passed. Server tests:
+63 passed. These tests cover state validation and round reset, not audible
+device QA. Hurdle Dash remains outside the room allowlists pending actual
+multi-process matches, race finish and tournament/reconnect verification.
+Full gate `kras-party-check.YurKl9`: 265 scripts compiled, 302 resources
+audited with zero issues, 18,403 assertions passed, race regression passed
+and all 39 stability matches passed.
+
 ### Race result ordering
 
 Server tournament ranking now reads each game's scoring mode from the shared

@@ -13,6 +13,7 @@ const ColorReplica = preload("res://src/net/color_replica.gd")
 const DrawReplica = preload("res://src/net/draw_replica.gd")
 const EchoReplica = preload("res://src/net/echo_replica.gd")
 const CrateReplica = preload("res://src/net/crate_replica.gd")
+const HurdleReplica = preload("res://src/net/hurdle_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -32,6 +33,7 @@ var _color: RefCounted
 var _draw: RefCounted
 var _echo: RefCounted
 var _crates: Node3D
+var _hurdle: RefCounted
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -51,6 +53,8 @@ func capture(scene: Node) -> Dictionary:
 		"countdown": scene._countdown_value, "radius": scene.arena.current_radius}
 	if scene.config.minigame_id == "goal_guard":
 		packet["world"] = GoalGuardReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "hurdle_dash":
+		packet["world"] = HurdleReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -92,6 +96,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 		return false
 	if game_id == "goal_guard":
 		if not GoalGuardReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "hurdle_dash":
+		if not HurdleReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "magnet_court":
 		if not MagnetReplica.valid(data.get("world"), count):
@@ -214,6 +221,12 @@ func render(scene: Node, delta: float) -> void:
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "zone_hold":
 		ZoneReplica.render(scene.controller, target.world)
+	elif scene.config.minigame_id == "hurdle_dash":
+		if _hurdle == null:
+			_hurdle = HurdleReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_hurdle.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
 	elif scene.config.minigame_id == "color_stand":
 		if _color == null:
 			_color = ColorReplica.new()
