@@ -1,7 +1,7 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
-export function validTurretWorld(data, count) {
+export function validTurretWorld(data, count, horizontal = true) {
   if (!Number.isInteger(count) || count < 2 || count > 4 || !data || typeof data !== 'object' || Array.isArray(data)
     || Object.keys(data).length !== 3 || !Array.isArray(data.shots) || data.shots.length > 128) return false;
   for (const field of ['cooldowns', 'damage']) {
@@ -15,10 +15,37 @@ export function validTurretWorld(data, count) {
       || !Number.isInteger(row.generation) || row.generation < 1 || row.generation > 1000000
       || !Number.isInteger(row.shooter) || row.shooter < 0 || row.shooter >= count
       || !vector(row.position) || !vector(row.direction)
-      || Math.abs(row.direction[1]) > .001
+      || (horizontal && Math.abs(row.direction[1]) > .001)
       || Math.abs(row.direction.reduce((sum, value) => sum + value * value, 0) - 1) > .01) return false;
     ids.add(row.id); return true;
   });
+}
+
+export function validTankWorld(data, count) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)
+    || Object.keys(data).length !== 7 || !Array.isArray(data.shots) || data.shots.length > 128) return false;
+  const baseShots = [];
+  for (const row of data.shots) {
+    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).length !== 7
+      || !Number.isInteger(row.kind) || row.kind < 0 || row.kind > 6
+      || !Number.isFinite(row.fuse) || row.fuse < -1 || row.fuse > 2
+      || (row.fuse < 0 && row.fuse !== -1) || (row.kind !== 6 && row.fuse !== -1)) return false;
+    const {kind, fuse, ...base} = row;
+    baseShots.push(base);
+  }
+  if (!validTurretWorld({shots: baseShots, cooldowns: data.cooldowns, damage: data.damage}, count, false)) return false;
+  for (const field of ['armor', 'ammo', 'shell_types']) {
+    if (!Array.isArray(data[field]) || data[field].length !== count
+      || !data[field].every(value => Number.isInteger(value) && value >= 0 && value <= (field === 'armor' ? 100 : 6))) return false;
+  }
+  for (let slot = 0; slot < count; slot++) {
+    const ammo = data.ammo[slot], kind = data.shell_types[slot];
+    if ((ammo === 0) !== (kind === 0) || ammo > (kind === 1 ? 6 : 3)) return false;
+  }
+  return Array.isArray(data.crates) && data.crates.length === 5 && data.crates.every(row =>
+    row && typeof row === 'object' && !Array.isArray(row) && Object.keys(row).length === 2
+    && Number.isFinite(row.cooldown) && row.cooldown >= 0 && row.cooldown <= 9
+    && Number.isFinite(row.rotation) && Math.abs(row.rotation) <= Math.PI);
 }
 
 export function validHurdleWorld(data, count) {

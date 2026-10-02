@@ -38,6 +38,7 @@ const SUITES := [
 	"res://tests/suites/test_floe_network.gd",
 	"res://tests/suites/test_turret_rounds.gd",
 	"res://tests/suites/test_turret_network.gd",
+	"res://tests/suites/test_tank_network.gd",
 	"res://tests/suites/test_bumper_network.gd",
 	"res://tests/suites/test_crate_network.gd",
 	"res://tests/suites/test_echo_perception.gd",
@@ -103,6 +104,8 @@ func _ready() -> void:
 	AudioManager.shutdown()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# Fixed-FPS headless frames may finish before one real audio mixer buffer.
+	OS.delay_msec(100)
 	var code := _t.report()
 	get_tree().quit(code)
 

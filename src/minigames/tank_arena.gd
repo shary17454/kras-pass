@@ -175,6 +175,7 @@ func _spawn_shell(slot: int, kind: int, origin: Vector3, dir: Vector3) -> void:
 		damage = MAX_ARMOR
 	shot.fire(origin + dir * 1.6, dir, slot, SHELL_SPEED[kind],
 		damage * (_shot_damage / 25.0), 52.0)
+	shot.shell_kind = kind
 	shot.notify_only = true
 	shot.impact_sound = "explode"
 	if kind == 4:

@@ -19,7 +19,7 @@ static func capture(game: Node) -> Dictionary:
 	return {"shots": projectiles, "cooldowns": game._cooldowns.duplicate(), "damage": damage}
 
 
-static func valid(world: Variant, count: int) -> bool:
+static func valid(world: Variant, count: int, horizontal := true) -> bool:
 	if count < 2 or count > 4 or not world is Dictionary or world.size() != 3:
 		return false
 	for field in ["cooldowns", "damage"]:
@@ -36,7 +36,7 @@ static func valid(world: Variant, count: int) -> bool:
 			or not Fields._integer(row.get("shooter"), 0, count - 1) or not Fields._vector(row.get("position")) or not Fields._vector(row.get("direction")):
 			return false
 		var direction := Vector3(row.direction[0], row.direction[1], row.direction[2])
-		if absf(direction.length_squared() - 1.0) > 0.01 or absf(direction.y) > 0.001:
+		if absf(direction.length_squared() - 1.0) > 0.01 or (horizontal and absf(direction.y) > 0.001):
 			return false
 	return true
 
@@ -62,7 +62,7 @@ func render(game: Node, world: Dictionary, round_index: int, delta: float, snap:
 		var created := not shots.has(key)
 		if created:
 			var view := Node3D.new()
-			var color: Color = UIKit.adapt(game.ctx.config.players[int(row.shooter)].color())
+			var color: Color = _shot_color(game, row)
 			view.add_child(MeshFactory.sphere(0.26, color, 2.0))
 			var tail := MeshFactory.box(Vector3(0.16, 0.16, 0.9), color, 1.4)
 			tail.position.z = 0.5
@@ -73,12 +73,21 @@ func render(game: Node, world: Dictionary, round_index: int, delta: float, snap:
 		var view: Node3D = shots[key]
 		var position := Vector3(row.position[0], row.position[1], row.position[2])
 		view.global_position = position if created or snap else view.global_position.lerp(position, clampf(delta * 22.0, 0.0, 1.0))
-		view.look_at(view.global_position + Vector3(row.direction[0], row.direction[1], row.direction[2]), Vector3.UP)
+		var direction := Vector3(row.direction[0], row.direction[1], row.direction[2])
+		view.look_at(view.global_position + direction, Vector3.RIGHT if absf(direction.y) > 0.99 else Vector3.UP)
 		if created and play_events and not new_round:
-			AudioManager.play_sfx("swing", position, 0.7)
+			_launch_sound(row, position)
 	for key in shots.keys():
 		if not present.has(key):
 			_remove(key)
+
+
+func _shot_color(game: Node, row: Dictionary) -> Color:
+	return UIKit.adapt(game.ctx.config.players[int(row.shooter)].color())
+
+
+func _launch_sound(_row: Dictionary, position: Vector3) -> void:
+	AudioManager.play_sfx("swing", position, 0.7)
 
 
 func _remove(key: String) -> void:

@@ -1,0 +1,154 @@
+extends RefCounted
+
+const Replica = preload("res://src/net/match_replica.gd")
+
+
+func run(t: TestHarness, host: Node) -> void:
+	t.suite("tank network presentation")
+	var enabled: bool = AudioManager.enabled
+	AudioManager.enabled = true
+	var cfg := MatchConfig.build("tank_arena", ["fanoos", "mowja", "ramla", "nabta"], 1, 2, 117)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	t.not_null(game._engine, "audio-enabled test creates an actual engine player")
+	for kind in 7:
+		game._spawn_shell(0, kind, Vector3(100, 4, 100), Vector3.FORWARD)
+		t.equal(game._shots.back().shell_kind, kind, "real shell keeps its presentation kind")
+	var guided: Projectile = game._shots[3]
+	guided.direction = Vector3(0, 0.6, 0.8)
+	game._shots[6]._sticky_left = 0.5
+	game.armor[1] = 75
+	game.ammo[1] = 6
+	game.shell_types[1] = 1
+	game.crates[0].cooldown = 8.0
+	game.crates[1].node.rotation.y = 20.0
+	var replica = Replica.new()
+	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	packet.phase = MatchPhase.P.PLAYING
+	t.ok(replica.accept(packet, 4, "tank_arena"), "all seven real shell types accepted after JSON serialization")
+	for field in packet.world.keys():
+		var bad := packet.duplicate(true)
+		bad.world.erase(field)
+		t.ok(not replica.accept(bad, 4, "tank_arena"), "missing world field rejected")
+	for field in ["armor", "ammo", "shell_types"]:
+		for value in [-1, 101, INF, NAN, "1", true, 1.5]:
+			var bad := packet.duplicate(true)
+			bad.world[field][0] = value
+			t.ok(not replica.accept(bad, 4, "tank_arena"), "invalid inventory value rejected")
+		var bad := packet.duplicate(true)
+		bad.world[field].pop_back()
+		t.ok(not replica.accept(bad, 4, "tank_arena"), "wrong roster rejected")
+	for pair in [[1, 0], [0, 1], [4, 2], [7, 1]]:
+		var bad := packet.duplicate(true)
+		bad.world.ammo[0] = pair[0]
+		bad.world.shell_types[0] = pair[1]
+		t.ok(not replica.accept(bad, 4, "tank_arena"), "inconsistent ammunition rejected")
+	for change in [{"kind": 7}, {"kind": "1"}, {"kind": true}, {"kind": 1.5}, {"fuse": -0.5}, {"fuse": 2.01},
+		{"fuse": INF}, {"fuse": NAN}, {"fuse": "1"}, {"kind": 0, "fuse": 0}, {"generation": 0},
+		{"id": "01"}, {"direction": [0, 0, 0]}, {"shooter": 4}, {"extra": 1}]:
+		var bad := packet.duplicate(true)
+		bad.world.shots[0].merge(change, true)
+		t.ok(not replica.accept(bad, 4, "tank_arena"), "invalid shell rejected")
+	for change in [{"cooldown": -1}, {"cooldown": 9.01}, {"cooldown": "0"}, {"rotation": PI + 0.001}, {"rotation": NAN}, {"extra": 1}]:
+		var bad := packet.duplicate(true)
+		bad.world.crates[0].merge(change, true)
+		t.ok(not replica.accept(bad, 4, "tank_arena"), "invalid crate rejected")
+	for field in ["shots", "crates"]:
+		var bad := packet.duplicate(true)
+		bad.world[field].append(bad.world[field][0].duplicate(true))
+		t.ok(not replica.accept(bad, 4, "tank_arena"), "duplicate shot or wrong crate count rejected")
+	t.equal(replica.target, packet, "invalid data never replaces accepted state")
+	replica._last_phase = MatchPhase.P.PLAYING
+	replica._last_round = int(packet.round)
+	var voice: int = AudioManager._next_voice
+	replica.render(scene, 0.016)
+	t.equal(AudioManager._next_voice, voice, "baseline cannot replay prior cannon launches")
+	t.ok(game._shots.is_empty(), "guest has no independently simulated projectiles")
+	t.equal(Pool.stats()[game.POOL_KEY].live, 0, "guest returns all shots to pool")
+	t.equal(replica._tank.shots.size(), 7, "seven shell visuals retained")
+	t.ok(not _has_collision(replica._tank), "visual projectiles cannot damage or collide")
+	t.equal(game.armor[1], 75, "host armor restored")
+	t.equal(game.ammo[1], 6, "host ammo restored")
+	t.equal(game.shell_types[1], 1, "host weapon restored")
+	t.ok(not game.crates[0].node.visible, "collected crate stays hidden")
+	t.ok(game.crates[1].node.visible, "ready crate visible")
+	t.near(game.crates[1].node.rotation.y, wrapf(20.0, -PI, PI), 0.001, "host crate rotation wraps and restores")
+	var scores: Array = Array(scene.ctx.scores).duplicate()
+	for repeat in 10:
+		replica.render(scene, 0.016)
+	t.equal(game.ammo[1], 6, "presentation does not spend ammunition")
+	t.near(game.crates[0].cooldown, 8.0, 0.001, "presentation does not respawn crates")
+	t.equal(Array(scene.ctx.scores), scores, "presentation cannot award eliminations")
+	for row in packet.world.shots:
+		var key: String = row.id + ":" + str(int(row.generation))
+		var view: Node3D = replica._tank.shots[key]
+		t.equal(view.get_meta("kind"), int(row.kind), "host shell kind restored")
+		t.near(view.get_meta("fuse"), float(row.fuse), 0.001, "host fuse copied without ticking")
+		t.ok(view.global_position.is_equal_approx(Vector3(row.position[0], row.position[1], row.position[2])), "host shot position restored")
+		var core: MeshInstance3D = view.get_child(0)
+		t.ok(core.material_override.albedo_color.is_equal_approx(game.SHELL_COLORS[int(row.kind)]), "shell uses its real weapon color")
+	packet.world.shots[3].direction = [0, 1, 0]
+	t.ok(replica.accept(packet, 4, "tank_arena"), "vertical guided trajectory accepted")
+	replica.render(scene, 0.016)
+	var guided_key: String = packet.world.shots[3].id + ":" + str(int(packet.world.shots[3].generation))
+	t.ok((-replica._tank.shots[guided_key].global_basis.z).is_equal_approx(Vector3.UP), "vertical trajectory has a valid visual orientation")
+	t.ok(game._engine.playing, "engine runs during active guest play")
+	packet.phase = MatchPhase.P.RESULTS
+	t.ok(replica.accept(packet, 4, "tank_arena"), "results state accepted")
+	replica.render(scene, 0.016)
+	t.ok(not game._engine.playing, "engine stops in results instead of restarting")
+	game._spawn_shell(0, 2, Vector3(100, 4, 100), Vector3.FORWARD)
+	packet = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	game.cleanup()
+	packet.phase = MatchPhase.P.PLAYING
+	AudioManager._last_played.erase("cannon_fire")
+	voice = AudioManager._next_voice
+	t.ok(replica.accept(packet, 4, "tank_arena"), "new heavy shell accepted")
+	# Isolate the cannon from the HUD's separate go cue on results -> playing.
+	replica._last_phase = MatchPhase.P.PLAYING
+	replica.render(scene, 0.016)
+	t.equal(AudioManager._next_voice, (voice + 1) % AudioManager.SFX_VOICES, "fresh heavy shell plays cannon audio once")
+	voice = AudioManager._next_voice
+	AudioManager._last_played.erase("cannon_fire")
+	replica.render(scene, 0.016)
+	t.equal(AudioManager._next_voice, voice, "duplicate launch stays silent without debounce")
+	packet.world.shots[0].generation += 1
+	t.ok(replica.accept(packet, 4, "tank_arena"), "stale shell accepted for presentation")
+	replica._event_received_at = replica.received_at - 1501
+	replica.render(scene, 0.016)
+	t.equal(AudioManager._next_voice, voice, "stale or reconnect launch stays silent")
+	var reused: Projectile = Pool.acquire(game.POOL_KEY)
+	t.equal(reused.shell_kind, 0, "recycled projectile has no stale weapon kind")
+	var serial := reused.launch_serial
+	reused.fire(Vector3(100, 4, 100), Vector3.FORWARD, 0, 22, 25, 52)
+	t.equal(reused.shell_kind, 0, "standard fire resets special kind")
+	t.equal(reused.launch_serial, serial + 1, "reused shell has a fresh launch generation")
+	Pool.release(game.POOL_KEY, reused)
+	game.on_round_start()
+	packet = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	packet.round = 1
+	packet.phase = MatchPhase.P.INTRO
+	t.ok(replica.accept(packet, 4, "tank_arena"), "round reset world accepted")
+	replica.render(scene, 0.016)
+	t.ok(replica._tank.shots.is_empty(), "round reset clears old shell visuals")
+	for slot in 4:
+		t.equal(game.armor[slot], 100, "round restores armor")
+		t.equal(game.ammo[slot], 0, "round clears ammo")
+	for crate in game.crates:
+		t.ok(crate.node.visible and crate.cooldown == 0, "round restores crates")
+	AudioManager.enabled = enabled
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
+
+
+func _has_collision(node: Node) -> bool:
+	if node is CollisionObject3D:
+		return true
+	for child in node.get_children():
+		if _has_collision(child):
+			return true
+	return false

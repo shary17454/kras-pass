@@ -2,6 +2,64 @@
 
 ## Implemented boundary
 
+### Armed ATV snapshot adapter
+
+The `tank_arena` adapter reuses Turret Duel's pooled-launch presentation and
+adds all seven shell kinds, sticky fuse state, armor, ammunition, held weapon
+type and the five authored refill crates. A pooled projectile now carries a
+presentation kind that resets on release and standard firing. Each real tank
+launch assigns its own kind after firing; damage and weapon rules are unchanged.
+
+Both Godot and Node require an exact bounded world schema, consistent ammo/type
+pairs and valid per-roster armor. Guided shells may follow terrain in three
+dimensions; Turret Duel still requires horizontal directions. Vertical guest
+trajectories use a non-collinear up vector. Guests render the actual shell colors,
+sticky pulse, crate availability/rotation, cooldown and HUD weapon state, without
+spending ammunition, advancing fuses, collecting crates or awarding eliminations.
+The engine follows replicated local-player speed only during active play and
+stops in results. Fresh launches play cannon audio once; baselines, duplicates
+and stale/reconnect launches do not replay prior shots.
+
+`/tmp/kras-tank-network.log` passed 139 focused assertions, using real launches
+of every shell type and real projectile-pool reuse. All 80 Node tests passed.
+An initial parse check caught and resolved the inherited validator signature.
+Explicit audio-enabled tests initially failed because their roster had no human
+and counted the HUD's separate go cue as cannon audio; the fixture now uses one
+human and isolates that cue without suppressing product sounds. Earlier
+headless audio-enabled exits retained one WAV stream/playback pair. Verbose
+`/tmp/kras-tank-network-verbose.log` identified them; after shutdown the test
+runner now gives the mixer 100 ms of real wall time rather than only two fast
+fixed-FPS frames. `/tmp/kras-tank-audio-drain.log` and the final focused run
+completed without object-leak warnings. This delay is confined to the test
+runner; it is not a gameplay pause or proof of device audio quality.
+
+Final integration gate `kras-party-check.xfeLyI` compiled 286 scripts, audited
+323 resources with zero issues, passed 19,114 assertions, passed the real
+three-lap race regression and completed 39 stability matches without failure.
+The earlier `kras-party-check.f7j1dk` gate failed the two audio-fixture
+assertions described above and was not accepted as passing evidence.
+
+This is adapter preparation, not independent room acceptance. `tank_arena`
+is still excluded from online room allowlists. Real-process matches, tournament
+and reconnect tests across its authored maps are required next. Physical-device
+and Internet qualification, sampled-event limitations and impact/collection
+sound parity remain unresolved. Production online remains disabled.
+
+### Outstanding CI collection acceptance
+
+Run `37001208281` on historical source
+`6567c803b07064f941dfbfd0c29699ae0796378e` reported a failure in job
+`110819091468` (`network-crate_relay`). Its 2-human/2-bot match passed with
+scores `[21,3,12,15]`; the 4-human match reached results `[18,0,12,6]`,
+but peer 2 failed the fixture's per-local-player scoring assertion. The
+message says "without any scoring", although other players scored. This
+is an unresolved acceptance failure, not a passed room test. The remaining
+matrix jobs were still running when inspected; no full CI success is claimed.
+Preserved artifact `11226595746` contains the peer logs. Inspect the fixture's
+pickup/return routing and reproduce on Linux before changing either gameplay
+or the test requirement; do not convert this to a passing aggregate assertion
+or rerun blindly to erase the failure.
+
 ### Turret Duel rooms and tournament acceptance
 
 Development rooms accept `turret_duel` only on its authored `iron_flats`
