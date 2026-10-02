@@ -2,6 +2,48 @@
 
 ## Implemented boundary
 
+### Turret Duel rooms and tournament acceptance
+
+Development rooms accept `turret_duel` only on its authored `iron_flats`
+arena. Host-only snapshots require bounded launch generations, damage and
+cooldowns; guests cannot publish authoritative world state. The smoke runner
+now uses the server's game allowlist instead of maintaining a duplicate list.
+All 79 Node tests passed. An initial sandboxed run failed the local WebSocket
+listen with `EPERM`; rerunning with local-listen permission passed every test.
+
+Independent-process run `kras-network-smoke-mZM3bb` passed both 2 humans plus
+2 bots and 4 humans. Scores were `[10,12,0,0]` / `[8,2,1,6]`. Guests received
+1,489-1,508 world snapshots. Human input used actual steering and firing,
+without injected projectile contacts or score changes. Every peer observed
+shots, damage and hit points. Guest views converged to host launch generations,
+positions, cooldowns and damage without independent projectile physics.
+Host and guest identity recovery and interrupted result delivery passed.
+Maximum local server event-loop delay was 42 ms.
+
+Tournament run `kras-network-smoke-ld3Y2O` passed both rosters. The 2-human/
+2-bot roster completed three regular matches and two actual tiebreaks:
+points `[12,12,5,5]`, cups `[2,2,0,0]`, champion slot 0 and final awards
+`[0,0,0,0]`. The 4-human roster completed three matches: points `[9,11,8,8]`,
+cups `[2,3,2,2]`, champion slot 1. Its final match was a scoreless draw;
+shot/damage/score observation is an aggregate tournament assertion, not proof
+that every individual round scored a hit. Guests received 2,268-3,746 world
+snapshots. Reconnect, world presentation and final tournament agreement passed.
+Maximum local server loop delay was 85 ms. Both run directories had no script,
+parse, network-failure, normalization or object-leak errors.
+
+Full integration gate `kras-party-check.YOUvmT` compiled 284 scripts, audited
+321 resources with zero issues, passed 18,976 assertions, passed the real
+three-lap race regression and completed 39 stability matches without failure.
+The macOS system-CA lookup warning appeared in sandboxed headless runs;
+compilation and all listed checks still passed. HTTPS/device trust remains
+a separate release verification requirement.
+
+The development allowlist contains 29 games; 10 still need independent
+network acceptance. Production online remains disabled. These localhost
+headless tests do not qualify Internet latency, visual quality or phone FPS,
+thermal/battery performance. Impact/score sound parity remains unverified;
+sampled launch presentation is not a lossless event stream.
+
 ### Turret Duel snapshot adapter
 
 Host world snapshots carry active shots (pooled-body identity plus launch
@@ -30,9 +72,8 @@ Full gate `kras-party-check.Rcpn4a` compiled 284 scripts, audited 321 resources
 with zero issues, passed 18,976 assertions, passed the three-lap race
 regression and completed all 39 stability matches without failure.
 
-This is an adapter checkpoint, not room acceptance. `turret_duel` is not yet
-in the room allowlist. Independent-process matches/tournaments, reconnect
-and physical-device QA remain required. Launch audio is sampled presentation,
+This historical adapter checkpoint preceded the room acceptance above.
+Physical-device QA remains required. Launch audio is sampled presentation,
 not a lossless event stream; impact/score sound parity is not established.
 Production online remains disabled.
 
