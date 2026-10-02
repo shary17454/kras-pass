@@ -20,7 +20,7 @@ const TagReplica = preload("res://src/net/tag_replica.gd")
 const PaintReplica = preload("res://src/net/paint_replica.gd")
 const SaboteurReplica = preload("res://src/net/saboteur_replica.gd")
 const PAINT_GAMES := ["paint_grid", "mnatiq"]
-const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star"}
+const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star", "crate_relay": "crate"}
 var _collectibles: Node3D
 var _relic: Node3D
 var _saboteur: RefCounted
@@ -141,8 +141,10 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 		if not world.get("carrying") is Array or world.carrying.size() != count:
 			return false
+		if game_id == "crate_relay" and (world.size() != 2 or world.items.size() > 8):
+			return false
 		for carried in world.carrying:
-			if not _integer(carried, 0, 8):
+			if not _integer(carried, 0, 1 if game_id == "crate_relay" else 8):
 				return false
 	elif game_id != "ring_rumble":
 		return false
@@ -278,6 +280,8 @@ func render(scene: Node, delta: float) -> void:
 		_collectibles.apply(target.world.items)
 		for slot in scene.ctx.player_count():
 			scene.ctx.fighters[slot].carrying = int(target.world.carrying[slot])
+		if scene.config.minigame_id == "crate_relay":
+			scene.controller._update_carry_visuals()
 	scene.arena.apply_network_radius(float(target.radius))
 	scene.arena._tick_arctic_water(delta)
 	scene.ctx.time_left = float(target.time)

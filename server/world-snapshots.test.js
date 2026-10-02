@@ -194,3 +194,27 @@ test('collection worlds bound identities, visual fields, carrying and payload si
   data.items = [];
   assert.ok(validCollectionWorld(data, 4, 'gem'));
 });
+
+test('relay snapshots enforce single cargo and bounded crate population', () => {
+  const make = () => ({carrying: [0, 1, 0, 1], items: Array.from({length: 8}, (_, i) => ({
+    id: String(i + 1), kind: 'crate', position: [0, 1, 0], rotation: 0,
+    color: 'ffc46bff', size: .42, value: 1
+  }))});
+  assert.ok(validCollectionWorld(make(), 4, 'crate'));
+  for (const value of [-1, 2, .5, '1', null, true]) {
+    const data = make(); data.carrying[0] = value;
+    assert.equal(validCollectionWorld(data, 4, 'crate'), false);
+  }
+  for (const field of ['items', 'carrying']) {
+    const data = make(); delete data[field];
+    assert.equal(validCollectionWorld(data, 4, 'crate'), false);
+  }
+  const extra = make(); extra.extra = true;
+  assert.equal(validCollectionWorld(extra, 4, 'crate'), false);
+  const overflow = make(); overflow.items.push({...overflow.items[0], id: '9'});
+  assert.equal(validCollectionWorld(overflow, 4, 'crate'), false);
+  const wrongKind = make(); wrongKind.items[0].kind = 'star';
+  assert.equal(validCollectionWorld(wrongKind, 4, 'crate'), false);
+  const empty = make(); empty.items = []; empty.carrying = [0, 0];
+  assert.ok(validCollectionWorld(empty, 2, 'crate'));
+});

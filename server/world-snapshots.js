@@ -169,10 +169,12 @@ export function validGoalGuardWorld(data, count, extraBalls = 0) {
 }
 
 export function validCollectionWorld(data, count, kind) {
+  const relay = kind === 'crate';
   if (count < 2 || count > 4 || !data || typeof data !== 'object' || Array.isArray(data)
     || !Array.isArray(data.carrying) || data.carrying.length !== count
-    || !data.carrying.every(v => Number.isInteger(v) && v >= 0 && v <= 8)
-    || !Array.isArray(data.items) || data.items.length > 256) return false;
+    || !data.carrying.every(v => Number.isInteger(v) && v >= 0 && v <= (relay ? 1 : 8))
+    || !Array.isArray(data.items) || data.items.length > (relay ? 8 : 256)
+    || (relay && Object.keys(data).length !== 2)) return false;
   const ids = new Set();
   return data.items.every(row => {
     if (!row || typeof row !== 'object' || typeof row.id !== 'string'

@@ -2,6 +2,24 @@
 
 ## Implemented boundary
 
+### Crate Relay snapshot adapter
+
+Relay now reuses the existing collectible reconciler for host-owned crate
+identities and transforms, and publishes each player's single-crate carrying
+state. Guests release their generated pickups, disconnect the hit observer,
+and update carried visuals without running collection or delivery rules.
+Relay payloads permit only `items` and `carrying`, at most eight field crates,
+and carrying values of zero or one. Node and Godot enforce those bounds.
+
+`/tmp/kras-relay-network.log`: all 99 collection-network assertions passed
+across Gem Grab, Star Rush and Crate Relay, including collider-free replicas,
+carried visuals, observer removal, malformed payloads and score neutrality.
+The server suite passed all 57 tests. Relay remains absent from room
+allowlists pending independent-process match and tournament testing.
+Full gate `kras-party-check.fI21yO`: 262 scripts compiled, 299 resources
+audited with zero issues, 18,341 assertions passed, race regression passed
+and 39 stability matches completed without failure.
+
 ### Crate Relay lifecycle and input prerequisite
 
 Crate Relay now restores four center crates and the spawn clock between
