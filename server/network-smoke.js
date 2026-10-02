@@ -7,7 +7,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
-import {monitorEventLoopDelay} from 'node:perf_hooks';
+import {monitorEventLoopDelay, performance} from 'node:perf_hooks';
+import {NetworkTiming} from './network-timing.js';
 import {attachMultiplayer} from './multiplayer.js';
 import {ONLINE_GAMES, Rooms} from './rooms.js';
 
@@ -21,8 +22,12 @@ const service = attachMultiplayer(server, {enabled: true,
   rooms: seedText === undefined ? new Rooms() : new Rooms({seed: () => Number(seedText)})});
 const loopDelay = monitorEventLoopDelay({resolution: 20});
 loopDelay.enable();
+const timing = new NetworkTiming();
+const timingInterval = setInterval(() => timing.sample(service.rooms.rooms.values()), 100);
+timingInterval.unref();
 const handle = service.rooms.handle.bind(service.rooms);
 service.rooms.handle = (connection, message) => {
+  const began = performance.now();
   try {
     const result = handle(connection, message);
     if (['start', 'next', 'loaded', 'resume', 'result'].includes(message.op)) {
@@ -39,6 +44,7 @@ service.rooms.handle = (connection, message) => {
       state: connection.room?.state, epoch: message.epoch, reason: error.message}));
     throw error;
   }
+  finally { timing.recordOperation(message.op, performance.now() - began); }
 };
 const closeRoom = service.rooms.close.bind(service.rooms);
 service.rooms.close = (room, reason) => {
@@ -128,10 +134,18 @@ try {
       assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
       assert.ok(results[0].tournament.tie_attempts > 0);
     }
+    if (siegeTiebreak) {
+      assert.ok(results[0].matches > 3, 'a Siege final must actually run');
+      assert.deepEqual(results[0].tournament.points, [3, 3, 3, 3]);
+      assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
+      assert.ok(results[0].tournament.tie_attempts > 0);
+    }
     console.log(JSON.stringify({humans, status: 'PASS', results}));
   }
 } finally {
+  clearInterval(timingInterval);
   loopDelay.disable();
+  await writeFile(join(out, 'server-timing.json'), JSON.stringify(timing.report(), null, 2));
   console.log(JSON.stringify({event: 'server_timing', maxMs: Math.round(loopDelay.max / 1e6)}));
   for (const child of children) if (child.exitCode === null) child.kill('SIGTERM');
   service.close(); await new Promise(resolve => server.close(resolve));

@@ -2,6 +2,88 @@
 
 ## Implemented boundary
 
+### Base Siege development rooms (experimental)
+
+Source `b7d19ee01eeb71999958a3ba0e0485eb728b3765` adds Siege to both
+development allowlists on its original `iron_flats` and `crate_yard` maps.
+There are now 35 development games; the four boss games remain excluded.
+Room validation requires the bounded crystal world, host-only state/results
+and identity-preserving reconnect. Node passed 99 tests with actual Godot
+capture fixtures; the added room-model tournament tests are not driving
+evidence. Focused routing passed 67 assertions and all 297 scripts compiled.
+The workflow has 36 unique scenarios and passed YAML/embedded Bash syntax
+checks locally, not a Linux CI qualification.
+
+The independent four-human tournament `kras-network-smoke-PTx40o` passed
+three actual matches on both maps and an actual 20-second final. Final scores
+were `[4,3,23,17]`, champion slot 2, one tie attempt, points `[3,3,3,3]`,
+unchanged cups `[0,0,0,3]` and final awards `[0,0,0,0]`. Guests received
+3,238-to-3,257 world snapshots, with guest reconnect and host-result transport
+recovery. The fixture uses uniform round points to require a final, but does
+not fabricate damage, positions or match results. Ordinary fixture rounds
+last 45 seconds; the authored product default remains unchanged.
+
+Earlier tournament runs `kras-network-smoke-qM5Os6` and
+`kras-network-smoke-I90ayG` failed the real-damage/destruction requirement on
+`iron_flats`. Read-only diagnostics showed enabled controls and connected
+attack handlers, but the naive direct-to-target scripted movement stopped
+against the authored pillars. The corrected virtual input routes through
+the arena center; it does not move bodies directly or alter game physics.
+Those failures are retained. They also motivate separate AI obstacle-route
+qualification; improving scripted input does not prove product AI pathing.
+
+The stricter ordinary run `kras-network-smoke-WdY9lw` passed two humans plus
+two bots and four humans, requiring real damage/destruction in each internal
+round. Matching scores were `[31,12,5,24]` and `[24,0,32,28]`; guests received
+2,289 and 1,307-to-1,326 world snapshots respectively. Both recovery paths
+passed. Four-human slot 1 scored zero; these tests do not establish balance.
+The maximum sampled server loop delay was **6,073 ms**, versus 352 ms in the
+successful tournament. This is an unresolved performance failure, not a
+performance pass. Added smoke diagnostics separately record handler times,
+bounded scheduler-stall samples, process CPU consumption and room phases in
+`server-timing.json`, without tokens or message payloads. Their purpose is
+diagnosis; they do not establish the cause of the earlier delay.
+
+The full local gate `kras-party-check.ZyyZO8` subsequently passed 297
+scripts, 334 resources with zero inventory issues, 19,756 assertions in
+217.7 wall-clock seconds, the separate unchanged three-lap race and 39
+stability matches with zero failures. Server tests then passed 101/101 with
+zero skips using both actual capture files from this gate, including two
+new timing-diagnostic tests. Passing stability rounds does not make all 39
+games release-ready or qualify four-human touch usability and balance.
+
+The instrumented ordinary four-human repeat `kras-network-smoke-751eRW`
+passed with scores `[12,2,44,33]` and 1,416-to-1,435 guest world snapshots.
+It again exercised real damage/destruction in both rounds and both recovery
+paths. Sampled loop delay peaked at 30 ms; maximum snapshot-handler time was
+1.613 ms and input-handler time 3.367 ms. No scheduler sample exceeded the
+diagnostic's 100 ms threshold. This repeat did not reproduce the earlier
+6,073 ms delay, so it cannot identify its cause or establish a fix.
+
+The instrumented four-human tournament `kras-network-smoke-FwGaVC` also
+passed both authored maps and an actual final: four matches, scores
+`[4,7,19,13]`, champion slot 2, points `[3,3,3,3]`, unchanged cups
+`[0,0,1,2]`, zero final awards and one tie attempt. Guests received
+3,606-to-3,626 world snapshots; both recovery paths passed. Maximum sampled
+loop delay was 58 ms, snapshot-handler time 7.969 ms and input-handler time
+11.082 ms; no scheduler sample exceeded 100 ms. Timing reports for both
+instrumented runs are `server-timing.json` inside their evidence directories.
+CI now preserves that file alongside existing process logs. These two
+repeats narrow reproduction evidence but do not close the earlier delay.
+
+Before boss networking is enabled, separately test repeated rounds after
+actual defeat. Current `boss_controller.on_round_start` resets health/phase
+and telegraphs, but does not restore the node hidden by `_defeat` or clear
+shared projectiles. Subclass timers, weak-point windows and spawned objects
+also have no round-start override. `MatchScene._start_next_round` reuses the
+controller rather than rebuilding it. This is a source-audit risk requiring
+an actual round-reset regression and a complete fix, not justification to
+add the four games to allowlists prematurely.
+
+These are local independent-process functional tests, not Internet,
+iPhone/iPad frame-rate, battery, thermal, Railway deployment, archive,
+signing or Apple review evidence. Production online remains disabled.
+
 ### Base Siege adapter preparation
 
 `base_siege` now has a roster-ordered presentation adapter for each original
@@ -17,7 +99,8 @@ initial, reconnect and new-round baselines are quiet. Counters are sampled
 state, not a promise to deliver every intermediate impact. Both Godot and
 Node reject missing/extra fields, wrong roster sizes, nonnumeric values and
 out-of-range animation, health, cooldown and counter values before applying
-the world. This adapter does not yet add Siege to room allowlists.
+the world. At the preparation commit, Siege was not yet in room allowlists;
+the development-room section above supersedes that exclusion.
 
 The initial focused run `/tmp/kras-siege-network-tests.log` failed one audio
 assertion: the fixture counted the shared "go" phase cue as crystal feedback.
@@ -42,8 +125,8 @@ focused failures above remain failed evidence, not release passes. A native
 macOS certificate-store lookup error appeared in the focused headless runs;
 neither these tests nor the complete gate establish TLS or Apple signing.
 
-Room routing, course selection, tournament/reconnect contracts and actual
-multi-process Siege match qualification remain required. Production online
+Room routing and local multi-process evidence were subsequently added above;
+Internet and device qualification remain required. Production online
 is unchanged and disabled; this is not a Railway deployment, Internet test,
 device frame-rate result, signed archive or Apple submission.
 

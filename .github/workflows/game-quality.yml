@@ -121,6 +121,7 @@ jobs:
             ${{ runner.temp }}/kras-network-*.stdout
             ${{ runner.temp }}/kras-network-smoke-*/*.stdout
             ${{ runner.temp }}/kras-network-smoke-*/*.log
+            ${{ runner.temp }}/kras-network-smoke-*/server-timing.json
             ${{ runner.temp }}/kras-party-check.*/*.stdout
             ${{ runner.temp }}/kras-party-check.*/saves-tests/armed-world.json
             ${{ runner.temp }}/kras-party-check.*/saves-tests/siege-world.json
