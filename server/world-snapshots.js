@@ -25,6 +25,29 @@ export function validKartWorld(data, count, expectedCheckpoints = 0) {
       && pad.every(v => Number.isFinite(v) && v >= 0 && v <= 2));
 }
 
+export function validArmedRaceWorld(data, count, expectedCheckpoints = 0, crateCount = 20) {
+  const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  if (!object(data, 6) || !validKartWorld(data.race, count, expectedCheckpoints)
+    || !['held', 'shields'].every(k => Array.isArray(data[k]) && data[k].length === count)
+    || !data.held.every(v => integer(v, 0, 4))
+    || !data.shields.every(v => Number.isFinite(v) && v >= 0 && v <= 6)
+    || !integer(crateCount, 1, 20) || !Array.isArray(data.crates) || data.crates.length !== crateCount
+    || !data.crates.every(v => object(v, 2) && Number.isFinite(v.cooldown) && v.cooldown >= 0 && v.cooldown <= 7
+      && Number.isFinite(v.rotation) && Math.abs(v.rotation) <= Math.PI)
+    || !Array.isArray(data.bombs) || data.bombs.length > 64) return false;
+  const ids = new Set();
+  for (const bomb of data.bombs) {
+    if (!object(bomb, 5) || typeof bomb.id !== 'string' || !/^[1-9][0-9]{0,17}$/.test(bomb.id) || ids.has(bomb.id)
+      || !vector(bomb.position) || !integer(bomb.owner, 0, count - 1)
+      || !Number.isFinite(bomb.arm) || bomb.arm < -9 || bomb.arm > .55
+      || !Number.isFinite(bomb.life) || bomb.life <= 0 || bomb.life > 9) return false;
+    ids.add(bomb.id);
+  }
+  const zero = Array(count).fill(0);
+  return validTurretWorld({shots: data.shots, cooldowns: zero, damage: zero}, count, false);
+}
+
 export function validFawdaWorld(data, count) {
   const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;

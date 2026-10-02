@@ -1183,7 +1183,7 @@ func _online() -> bool:
 
 func _network_snapshot(data: Dictionary) -> void:
 	if ctx != null:
-		var checkpoints: int = controller._checkpoints.size() if config.minigame_id == "kart_sprint" else 0
+		var checkpoints: int = controller._checkpoints.size() if config.minigame_id in ["kart_sprint", "sabaq_sawarikh"] else 0
 		_network_replica.accept(data, config.player_count(), config.minigame_id, config.arena_id, checkpoints)
 
 

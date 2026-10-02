@@ -2,6 +2,43 @@
 
 ## Implemented boundary
 
+### Armed-race world adapter preparation
+
+The `sabaq_sawarikh` snapshot adapter now shares Kart's authoritative lap,
+checkpoint, boost and rescue presentation. Its additional world contains
+held items, shield durations, all 20 authored road crates, up to 64 bomb
+views and up to 128 missile views. Bomb identities and pooled missile launch
+generations are bounded and unique. The shared Turret renderer now exposes
+shot capture/presentation separately from combat-meter updates, so the race
+does not invent armor, ammunition or local damage rules.
+
+Guest bomb/missile views are ordinary visual nodes, not collision objects.
+Rendering does not advance shields, crate cooldowns, race time, projectile
+physics or scores. Round resets remove previous hazard views. Course geometry
+is checked before fighter presentation changes. The original offline race
+controller and weapon rules remain in use on the host.
+
+`/tmp/kras-armed-replica-tests-final.log` passed 65 assertions, including actual
+host crate pickup, bomb placement, missile launch, JSON transfer, malformed
+fields, course mismatch, duplicate suppression and round cleanup.
+`/tmp/kras-armed-shared-turret.log` passed 70 assertions and
+`/tmp/kras-armed-shared-tank.log` passed 143 for the existing shared consumers.
+`/tmp/kras-armed-replica-compile-final.log` compiled 295 scripts; inventory
+reported 332 resources and no issues in `/tmp/kras-armed-replica-inventory.log`.
+Node passed 93 tests with `KRAS_ARMED_WORLD_FIXTURE` pointing at the actual
+Godot capture under `/tmp/kras-armed-replica-tests-final-saves/armed-world.json`.
+The initial sandboxed Node run failed only on loopback listen (`EPERM`);
+the system-permission rerun passed WebSocket and all other tests.
+
+This is adapter preparation, not a qualified online game. Sabaq is still
+absent from both room allowlists. Host weapon event/audio replication, room
+course/lap binding, tournament routing and actual multi-process race/reconnect
+qualification must be completed before enabling it. Existing missile launch
+and Kart lap/boost cues are reused, but bomb detonation/pickup audio is not yet
+replicated. No production enablement, Railway deploy or Apple submission is
+claimed. The full test runner was not rerun after this adapter addition; the
+19,481-assertion result below belongs to the earlier finished-racer fix.
+
 ### Finished racers cannot absorb road weapons
 
 After `fe136deaac251a6a73e26327f0fcc582fc0bc55c`, the inherited Sabaq

@@ -8,15 +8,19 @@ var last_round := -1
 
 
 static func capture(game: Node) -> Dictionary:
-	var projectiles: Array = []
-	for shot in game._shots:
-		if is_instance_valid(shot) and shot.active:
-			projectiles.append({"id": str(shot.get_instance_id()), "generation": shot.launch_serial,
-				"position": Fields._vec(shot.global_position), "direction": Fields._vec(shot.direction), "shooter": shot.shooter})
 	var damage: Array = []
 	for fighter in game.ctx.fighters:
 		damage.append(fighter.damage_percent)
-	return {"shots": projectiles, "cooldowns": game._cooldowns.duplicate(), "damage": damage}
+	return {"shots": capture_shots(game._shots), "cooldowns": game._cooldowns.duplicate(), "damage": damage}
+
+
+static func capture_shots(projectiles: Array) -> Array:
+	var out: Array = []
+	for shot in projectiles:
+		if is_instance_valid(shot) and shot.active:
+			out.append({"id": str(shot.get_instance_id()), "generation": shot.launch_serial,
+				"position": Fields._vec(shot.global_position), "direction": Fields._vec(shot.direction), "shooter": shot.shooter})
+	return out
 
 
 static func valid(world: Variant, count: int, horizontal := true) -> bool:
@@ -45,16 +49,20 @@ func render(game: Node, world: Dictionary, round_index: int, delta: float, snap:
 	if not initialized:
 		game.cleanup()
 		initialized = true
+	for slot in game.ctx.player_count():
+		game._cooldowns[slot] = float(world.cooldowns[slot])
+		game.ctx.fighter(slot).damage_percent = float(world.damage[slot])
+	render_shots(game, world.shots, round_index, delta, snap, play_events)
+
+
+func render_shots(game: Node, rows: Array, round_index: int, delta: float, snap: bool, play_events: bool) -> void:
 	var new_round := last_round != round_index
 	if new_round:
 		for key in shots.keys():
 			_remove(key)
 	last_round = round_index
-	for slot in game.ctx.player_count():
-		game._cooldowns[slot] = float(world.cooldowns[slot])
-		game.ctx.fighter(slot).damage_percent = float(world.damage[slot])
 	var present := {}
-	for row in world.shots:
+	for row in rows:
 		var key: String = row.id + ":" + str(int(row.generation))
 		present[key] = true
 		if shots.has(key) and shots[key].get_meta("shooter") != int(row.shooter):
