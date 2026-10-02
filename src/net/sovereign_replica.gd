@@ -13,6 +13,8 @@ var _strike := 0
 var _phase := 0
 var _defeated := false
 var _shielded := false
+var _volleys := 0
+var _returns := 0
 
 
 static func capture(game: Node) -> Dictionary:
@@ -27,15 +29,18 @@ static func capture(game: Node) -> Dictionary:
 			orbs.append({"id": str(row.node.get_instance_id()), "position": Fields._vec(row.node.global_position),
 				"returned": row.returned})
 	return {"boss": Boss.capture_boss(game), "warnings": warnings, "orbs": orbs,
-		"shielded": game._shielded, "recovery": maxf(0.0, game._recover)}
+		"shielded": game._shielded, "recovery": maxf(0.0, game._recover),
+		"volleys": game.orb_volley_sequence, "returns": game.orb_return_sequence}
 
 
 static func valid(world: Variant, count: int) -> bool:
-	if count < 2 or count > 4 or not world is Dictionary or world.size() != 5 \
+	if count < 2 or count > 4 or not world is Dictionary or world.size() != 7 \
 		or not Boss.valid_boss(world.get("boss"), 1500.0, [0.66, 0.30]) \
 		or not world.get("shielded") is bool \
 		or (world.shielded and int(world.boss.phase) != 1) \
 		or not Fields.Number._number(world.get("recovery")) or world.recovery < 0.0 or world.recovery > 2.8 \
+		or not Fields._integer(world.get("volleys"), 0, 1000000) \
+		or not Fields._integer(world.get("returns"), 0, int(world.volleys) * 4) \
 		or not world.get("warnings") is Array or world.warnings.size() > 64 \
 		or not world.get("orbs") is Array or world.orbs.size() > 32:
 		return false
@@ -74,6 +79,8 @@ func render(game: Node, world: Dictionary, round_index: int, feedback: bool) -> 
 	game.boss_node.visible = not game.boss_defeated
 	game._shielded = bool(world.shielded)
 	game._recover = float(world.recovery)
+	game.orb_volley_sequence = int(world.volleys)
+	game.orb_return_sequence = int(world.returns)
 	if is_instance_valid(game._core):
 		game._core.scale = Vector3.ONE * (1.0 + 0.08 * sin(float(Time.get_ticks_msec()) * 0.004))
 	if not is_instance_valid(shield):
@@ -90,9 +97,6 @@ func render(game: Node, world: Dictionary, round_index: int, feedback: bool) -> 
 			var view := MeshFactory.sphere(0.7, Color("#ffd166"), 2.4)
 			add_child(view)
 			orbs[row.id] = view
-			if feedback and not baseline: AudioManager.play_sfx("shoot", _position(row))
-		elif feedback and not baseline and bool(row.returned) and not bool(orbs[row.id].get_meta("returned", false)):
-			AudioManager.play_sfx("hit", _position(row), 1.3)
 		orbs[row.id].set_meta("returned", bool(row.returned))
 		orbs[row.id].global_position = _position(row)
 	for id in orbs.keys():
@@ -101,6 +105,8 @@ func render(game: Node, world: Dictionary, round_index: int, feedback: bool) -> 
 			orbs[id].queue_free()
 			orbs.erase(id)
 	if feedback and not baseline:
+		if int(world.volleys) > _volleys: AudioManager.play_sfx("shoot", game.boss_node.global_position)
+		if int(world.returns) > _returns: AudioManager.play_sfx("hit", game.boss_node.global_position, 1.3)
 		if int(boss.damage) > _damage: AudioManager.play_sfx("hit", game.boss_node.global_position)
 		if int(boss.phase) != _phase: AudioManager.play_sfx("powerup")
 		if bool(world.shielded) != _shielded: AudioManager.play_sfx("shield_break", game.boss_node.global_position)
@@ -116,6 +122,8 @@ func render(game: Node, world: Dictionary, round_index: int, feedback: bool) -> 
 	_phase = int(boss.phase)
 	_defeated = bool(boss.defeated)
 	_shielded = bool(world.shielded)
+	_volleys = int(world.volleys)
+	_returns = int(world.returns)
 	_round = round_index
 
 

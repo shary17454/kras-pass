@@ -37,6 +37,14 @@ func run(t: TestHarness, host: Node) -> void:
 		capture.store_string(JSON.stringify(packet.world))
 		capture.close()
 	for count in [2, 3, 4]: t.ok(Sovereign.valid(packet.world, count), "bounded roster accepted")
+	for field in ["volleys", "returns"]:
+		for value in [-1, 0.5, true, INF, NAN, "1", null, 1000001]:
+			var invalid := packet.duplicate(true)
+			invalid.world[field] = value
+			t.ok(not Sovereign.valid(invalid.world, 4), "bounded integer orb event generation")
+	var excess_returns := packet.duplicate(true)
+	excess_returns.world.returns = 5
+	t.ok(not Sovereign.valid(excess_returns.world, 4), "cannot return more orbs than launched")
 	for field in packet.world.keys():
 		var bad := packet.duplicate(true)
 		bad.world.erase(field)
@@ -146,7 +154,14 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(replica.accept(packet, 4, "boss_sovereign"), "phase two shield accepted")
 	replica.render(guest, 0.016)
 	t.ok(view.shield.visible and guest.controller._shielded, "host shield displayed")
-	game._orbs[0].returned = true
+	for index in game._orbs.size():
+		game._orbs[index].node.global_position = game.boss_node.global_position + Vector3(30, 2.2, 0)
+	game._orbs[0].node.global_position = game.boss_node.global_position + Vector3(8, 2.2, 0)
+	fighter.global_position = game._orbs[0].node.global_position
+	fighter._attack_time = 0.2
+	game._tick_orbs(0.0)
+	fighter._attack_time = 0.0
+	t.equal(game.orb_return_sequence, 1, "actual swing increments return generation")
 	packet = _packet(source)
 	sample_time.now = 3000
 	t.ok(replica.accept(packet, 4, "boss_sovereign"), "orb return accepted")
@@ -176,11 +191,23 @@ func run(t: TestHarness, host: Node) -> void:
 	t.empty(view.orbs, "removed orb views pruned")
 	t.empty(view.warnings, "removed warning views pruned")
 	source._start_next_round()
+	t.equal(game.orb_volley_sequence, 0, "next round resets volley generation")
+	t.equal(game.orb_return_sequence, 0, "next round resets return generation")
 	packet = _packet(source)
 	t.ok(replica.accept(packet, 4, "boss_sovereign"), "actual next round accepted")
 	replica.render(guest, 0.016)
 	t.equal(guest.controller.boss_health, 1500.0, "new round restores health")
 	t.ok(guest.controller.boss_node.visible and not guest.controller.boss_defeated, "new round restores visible boss")
+	game._throw_orbs()
+	fighter.global_position = game.boss_node.global_position + Vector3(0, 2.2, 0)
+	fighter._attack_time = 0.2
+	game._tick_orbs(0.0)
+	fighter._attack_time = 0.0
+	packet = _packet(source)
+	t.empty(packet.world.orbs, "instant returns can disappear before the next snapshot")
+	t.equal(packet.world.volleys, 1, "snapshot preserves volley despite absent objects")
+	t.equal(packet.world.returns, 4, "snapshot preserves actual instant return events")
+	t.ok(Sovereign.valid(packet.world, 4), "instant-return snapshot remains valid")
 	var reconnect := Replica.new()
 	t.ok(reconnect.accept(packet, 4, "boss_sovereign"), "replacement accepts current host baseline")
 	reconnect._last_phase = MatchPhase.P.PLAYING

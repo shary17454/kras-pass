@@ -33,6 +33,8 @@ var _core: Node3D
 var _shield: Node3D
 var _orbs: Array = []
 var _hit_window := {}
+var orb_volley_sequence := 0
+var orb_return_sequence := 0
 
 
 func boss_build() -> void:
@@ -133,6 +135,7 @@ func _raise_shield() -> void:
 ## sends it back, and an orb that reaches the shield brings the shield down.
 func _throw_orbs() -> void:
 	if presentation_only: return
+	orb_volley_sequence += 1
 	for i in 4:
 		var ang := TAU * float(i) / 4.0 + ctx.rng.randf() * 0.5
 		var node := MeshFactory.sphere(0.7, Color("#ffd166"), 2.4)
@@ -178,6 +181,7 @@ func _tick_orbs(delta: float) -> void:
 				back.y = 0.0
 				o["vel"] = back.normalized() * 15.0
 				o["returned"] = true
+				orb_return_sequence += 1
 				o["by"] = s
 				o["life"] = 6.0
 				AudioManager.play_sfx("hit", node.global_position, 1.3)
@@ -302,6 +306,8 @@ func boss_reset_round() -> void:
 	_recover = 0.0
 	_shielded = false
 	_hit_window.clear()
+	orb_volley_sequence = 0
+	orb_return_sequence = 0
 	if is_instance_valid(_shield):
 		_shield.visible = false
 	if is_instance_valid(_core):

@@ -14,9 +14,11 @@ function validBossState(b, maximum, thresholds) {
 
 export function validSovereignWorld(data, count) {
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
-  if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 5)
+  if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 7)
     || !validBossState(data.boss, 1500, [.66, .30]) || typeof data.shielded !== 'boolean'
     || (data.shielded && data.boss.phase !== 1) || !Number.isFinite(data.recovery) || data.recovery < 0 || data.recovery > 2.8
+    || !Number.isInteger(data.volleys) || data.volleys < 0 || data.volleys > 1000000
+    || !Number.isInteger(data.returns) || data.returns < 0 || data.returns > data.volleys * 4
     || !Array.isArray(data.warnings) || data.warnings.length > 64 || !Array.isArray(data.orbs) || data.orbs.length > 32) return false;
   const ids = new Set();
   const row = (v, size) => {

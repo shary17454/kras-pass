@@ -117,6 +117,11 @@ var forge_defeat_by_round := {}
 var dread_damage_by_round := {}
 var dread_shot_by_round := {}
 var dread_defeat_by_round := {}
+var sovereign_damage_by_round := {}
+var sovereign_orbs_by_round := {}
+var sovereign_return_by_round := {}
+var sovereign_shield_by_round := {}
+var sovereign_defeat_by_round := {}
 
 
 func _process(_delta: float) -> void:
@@ -166,6 +171,12 @@ func _process(_delta: float) -> void:
 				"boss": _dread_world().get("boss", {}), "scores": Array(game.ctx.scores),
 				"damage_rounds": dread_damage_by_round.keys(), "shot_rounds": dread_shot_by_round.keys(),
 				"defeat_rounds": dread_defeat_by_round.keys()}))
+		if game_id == "boss_sovereign" and is_instance_valid(game):
+			print("NETWORK_SOVEREIGN=" + JSON.stringify({"round": game._round_index,
+				"world": _sovereign_world(), "scores": Array(game.ctx.scores),
+				"damage_rounds": sovereign_damage_by_round.keys(), "orb_rounds": sovereign_orbs_by_round.keys(),
+				"return_rounds": sovereign_return_by_round.keys(), "shield_rounds": sovereign_shield_by_round.keys(),
+				"defeat_rounds": sovereign_defeat_by_round.keys()}))
 		if game_id == "crate_relay" and is_instance_valid(game):
 			var players: Array = []
 			for fighter in game.ctx.fighters:
@@ -228,7 +239,7 @@ func _ready() -> void:
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
-	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id in ["boss_forge", "boss_dreadnought"] else (300 if tournament_mode else 150)
+	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign"] else (300 if tournament_mode else 150)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
@@ -285,7 +296,7 @@ func _start(cfg: MatchConfig) -> void:
 		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
 	preload("res://tests/network_smoke_config.gd").configure_boss(cfg)
-	if game_id in ["boss_forge", "boss_dreadnought"] and not cfg.rule("online_contenders", []).is_empty():
+	if game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign"] and not cfg.rule("online_contenders", []).is_empty():
 		observed_boss_final = true
 		if boss_final_cups.is_empty(): boss_final_cups = Net.tournament.get("cups", []).duplicate()
 	if game_id == "hurdle_dash":
@@ -337,6 +348,12 @@ func _start(cfg: MatchConfig) -> void:
 		dread_damage_by_round.clear()
 		dread_shot_by_round.clear()
 		dread_defeat_by_round.clear()
+	if game_id == "boss_sovereign":
+		sovereign_damage_by_round.clear()
+		sovereign_orbs_by_round.clear()
+		sovereign_return_by_round.clear()
+		sovereign_shield_by_round.clear()
+		sovereign_defeat_by_round.clear()
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
@@ -436,6 +453,13 @@ func _physics_process(_delta: float) -> void:
 		if int(world.get("boss", {}).get("damage", 0)) > 0: dread_damage_by_round[game._round_index] = true
 		if not world.get("shots", []).is_empty(): dread_shot_by_round[game._round_index] = true
 		if world.get("boss", {}).get("defeated", false): dread_defeat_by_round[game._round_index] = true
+	if game_id == "boss_sovereign":
+		var world := _sovereign_world()
+		if int(world.get("boss", {}).get("damage", 0)) > 0: sovereign_damage_by_round[game._round_index] = true
+		if int(world.get("volleys", 0)) > 0: sovereign_orbs_by_round[game._round_index] = true
+		if world.get("shielded", false): sovereign_shield_by_round[game._round_index] = true
+		if int(world.get("returns", 0)) > 0: sovereign_return_by_round[game._round_index] = true
+		if world.get("boss", {}).get("defeated", false): sovereign_defeat_by_round[game._round_index] = true
 	if game_id in ["turret_duel", "tank_arena"]:
 		var adapter = load("res://src/net/tank_replica.gd" if game_id == "tank_arena" else "res://src/net/turret_replica.gd")
 		var world: Dictionary = adapter.capture(game.controller) if host else game._network_replica.target.get("world", {})
@@ -565,6 +589,38 @@ func _physics_process(_delta: float) -> void:
 			if absf(diff) > 2.3 and fighter.speed_ratio() < 0.15:
 				movement = Vector2(clampf(diff * 1.8, -1.0, 1.0), 0.85)
 		var buttons := 0
+		if game_id == "boss_sovereign":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			var world := _sovereign_world()
+			var boss: Dictionary = world.get("boss", {})
+			if boss.has("position"):
+				var center := Vector3(boss.position[0], 0, boss.position[2])
+				var angle := TAU * float(slot) / 4.0
+				var target := center + Vector3(sin(angle), 0, cos(angle)) * 2.4
+				var swing := not bool(world.get("shielded", false))
+				if not swing:
+					var nearest := INF
+					for orb in world.get("orbs", []):
+						if orb.returned: continue
+						var point := Vector3(orb.position[0], 0, orb.position[2])
+						var distance := fighter.global_position.distance_squared_to(point)
+						if distance < nearest:
+							nearest = distance
+							target = point
+							swing = true
+				for warning in world.get("warnings", []):
+					var point := Vector3(warning.position[0], 0, warning.position[2])
+					if Vector2(point.x - fighter.global_position.x, point.z - fighter.global_position.z).length() < float(warning.radius) + 0.8:
+						var away := fighter.global_position - point
+						away.y = 0.0
+						target = fighter.global_position + (away.normalized() if away.length() > 0.1 else Vector3(sin(angle), 0, cos(angle))) * 5.0
+						swing = false
+						break
+				var direction := target - fighter.global_position
+				direction.y = 0.0
+				movement = Vector2(direction.x, direction.z).limit_length()
+				if swing and direction.length() < 2.7 and (Time.get_ticks_msec() - started_at) % 500 < 120:
+					buttons = InputFrame.Btn.ATTACK
 		if game_id == "boss_dreadnought":
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var world := _dread_world()
@@ -898,6 +954,10 @@ func _dread_world() -> Dictionary:
 	return load("res://src/net/dreadnought_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
 
 
+func _sovereign_world() -> Dictionary:
+	return load("res://src/net/sovereign_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+
+
 func _finished(result: MatchResult) -> void:
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
@@ -912,6 +972,23 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "boss_sovereign":
+		for round in range(game._round_index + 1):
+			if not sovereign_damage_by_round.has(round) or (contenders.is_empty() and (
+				not sovereign_orbs_by_round.has(round) or not sovereign_return_by_round.has(round)
+				or not sovereign_shield_by_round.has(round) or not sovereign_defeat_by_round.has(round))):
+				_fail("sovereign round %d lacks real damage, orb return, shield or defeat" % round)
+				return
+		if not host:
+			var world := _sovereign_world()
+			if world_snapshots < 5 or world.is_empty() or not game.controller.presentation_only:
+				_fail("sovereign world missing or guest remained authoritative")
+				return
+			for frame in 30: game._network_replica.render(game, 0.016)
+			if not game.controller._orbs.is_empty() or not game.controller._shots.is_empty() or not game.controller._telegraphs.is_empty() \
+				or absf(game.controller.boss_health - float(world.boss.health)) > 0.001:
+				_fail("sovereign guest simulated objects or diverged from health")
+				return
 	if game_id == "boss_dreadnought":
 		for round in range(game._round_index + 1):
 			if not dread_damage_by_round.has(round) or not dread_shot_by_round.has(round) \

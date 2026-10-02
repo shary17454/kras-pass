@@ -6,7 +6,7 @@ import {validSovereignWorld} from './world-snapshots.js';
 const world = () => ({boss: {health: 1440, phase: 0, defeated: false, position: [0, 1, 0], rotation: [0, 0, 0],
   damage: 1, strike: 0, strike_position: [0, 0, 0], strike_radius: 0},
   warnings: [{id: '1', position: [6, 0, 0], radius: 4.2, left: 1.35, total: 1.35}],
-  orbs: [{id: '2', position: [0, 3.2, 0], returned: false}], shielded: false, recovery: 0});
+  orbs: [{id: '2', position: [0, 3.2, 0], returned: false}], shielded: false, recovery: 0, volleys: 1, returns: 0});
 
 test('sovereign schema bounds phases, shields, recovery and visible objects', () => {
   for (const count of [2, 3, 4]) assert.ok(validSovereignWorld(world(), count));
@@ -30,6 +30,13 @@ test('sovereign schema bounds phases, shields, recovery and visible objects', ()
   for (const recovery of [-1, 2.801, true, NaN, Infinity, '1', null]) {
     const data = world(); data.recovery = recovery; assert.equal(validSovereignWorld(data, 4), false);
   }
+  for (const field of ['volleys', 'returns']) {
+    for (const value of [-1, .5, true, NaN, Infinity, '1', null, 1000001]) {
+      const data = world(); data[field] = value; assert.equal(validSovereignWorld(data, 4), false);
+    }
+  }
+  const excessReturns = world(); excessReturns.returns = 5;
+  assert.equal(validSovereignWorld(excessReturns, 4), false);
   for (const returned of [0, 1, 'false', null]) {
     const data = world(); data.orbs[0].returned = returned; assert.equal(validSovereignWorld(data, 4), false);
   }
@@ -59,5 +66,7 @@ test('actual Godot sovereign capture satisfies server schema', {skip: !process.e
   assert.equal(data.boss.damage, 1);
   assert.equal(data.orbs.length, 4);
   assert.equal(data.warnings.length, 1);
+  assert.equal(data.volleys, 1);
+  assert.equal(data.returns, 0);
   assert.ok(validSovereignWorld(data, 4));
 });
