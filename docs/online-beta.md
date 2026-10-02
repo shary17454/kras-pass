@@ -739,6 +739,34 @@ controls, retaining movement, attack and dash without an unused aim stick.
   disabled. CI run `36967949347` belongs to the preceding Storm Heart commit
   `94a5222dc333e0343f2582515fda27b9d8c5e12f`, not this Sky Court revision.
 
+## Shared falling-floor lifecycle prerequisite
+
+Before adapting Crumble Court, direct tests exposed shared ArenaTile defects:
+forced collapse retained its collision layer and skipped the collapse event;
+restore retained the warning mesh offset; warning shake used wall-clock time.
+The same tile implementation is used by Color Stand and paint games.
+
+Forced and timed collapse now share one idempotent state transition that
+removes collision and emits the event once. Warning motion uses simulation
+time, and one owned material is reused instead of filling the shared material
+and texture caches with intermediate warning colors. Restore clears the offset.
+Color Stand also resets its call stage, progression, timer and painted floor
+at round start instead of resuming the previous round's drop phase.
+
+- `/tmp/kras-tiles-before.log`: six failing assertions reproduced the original
+  tile defects. `/tmp/kras-color-reset-before.log` additionally reproduced the
+  missing Color Stand reset (97 failed assertions, many for individual tiles).
+- `/tmp/kras-tiles-integration.log`: 142 assertions passed after correction,
+  including real physics-ray collision removal, material identity/cache bounds,
+  neutral-material isolation, warning pause, timed/forced fall, respawn and
+  all Color Stand floor tiles on restart.
+- Complete gate `kras-party-check.zpzb59` passed: 244 scripts compiled,
+  281 resources audited with zero issues, 14,409 assertions, the real three-lap
+  race regression and 39 stability matches with zero failures. These are
+  desktop/headless checks, not physical-device performance certification.
+- These changes do not enable Crumble Court or Color Stand online. Their
+  floor-state adapters and multi-engine checks are still required.
+
 ## Expansion checklist per game
 
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects

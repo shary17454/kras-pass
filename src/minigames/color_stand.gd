@@ -35,6 +35,12 @@ func build() -> void:
 	_begin_call()
 
 
+func on_round_start() -> void:
+	_round_no = 0
+	_repaint()
+	_begin_call()
+
+
 func _repaint() -> void:
 	# A blocky quilt rather than a checkerboard: players must actually cross the
 	# floor rather than step one square sideways.

@@ -22,6 +22,7 @@ var _mesh: MeshInstance3D
 var _timer := 0.0
 var _home_y := 0.0
 var _size := 2.0
+var _warning_material: StandardMaterial3D
 
 
 func build(size: float, thickness: float, color: Color) -> void:
@@ -71,6 +72,8 @@ func force_collapse() -> void:
 		return
 	state = State.FALLING
 	_timer = 0.0
+	set_collision_layer_value(1, false)
+	collapsed.emit(self)
 
 
 func restore() -> void:
@@ -81,6 +84,7 @@ func restore() -> void:
 	set_collision_layer_value(1, true)
 	if _mesh != null and is_instance_valid(_mesh):
 		_mesh.scale = Vector3.ONE
+		_mesh.position.x = 0.0
 		_mesh.material_override = MeshFactory.toon(base_color)
 
 
@@ -94,15 +98,9 @@ func tick(delta: float) -> void:
 			_timer -= delta
 			# Shake harder the closer it is to going, so the tell is readable
 			# without a HUD element.
-			var urgency := 1.0 - clampf(_timer / maxf(crumble_delay, 0.001), 0.0, 1.0)
-			if _mesh != null and is_instance_valid(_mesh):
-				_mesh.position.x = sin(Time.get_ticks_msec() * 0.04) * 0.06 * urgency
-				_mesh.material_override = MeshFactory.toon(base_color.lerp(Color(1, 0.35, 0.3), urgency))
+			_update_warning_visual()
 			if _timer <= 0.0:
-				state = State.FALLING
-				_timer = 0.0
-				set_collision_layer_value(1, false)
-				collapsed.emit(self)
+				force_collapse()
 				AudioManager.play_sfx("crate_break", global_position)
 		State.FALLING:
 			_timer += delta
@@ -118,3 +116,16 @@ func tick(delta: float) -> void:
 				_timer += delta
 				if _timer >= respawn_time:
 					restore()
+
+
+func _update_warning_visual() -> void:
+	if not is_instance_valid(_mesh):
+		return
+	var elapsed := maxf(0.0, crumble_delay - _timer)
+	var urgency := clampf(elapsed / maxf(crumble_delay, 0.001), 0.0, 1.0)
+	_mesh.position.x = sin(elapsed * 40.0) * 0.06 * urgency
+	# One owned material per tile avoids caching a new color every warning tick.
+	if _warning_material == null:
+		_warning_material = MeshFactory.toon(base_color).duplicate()
+	_warning_material.albedo_color = base_color.lerp(Color(1, 0.35, 0.3), urgency)
+	_mesh.material_override = _warning_material
