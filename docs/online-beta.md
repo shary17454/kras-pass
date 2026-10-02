@@ -2,6 +2,51 @@
 
 ## Implemented boundary
 
+### Base Siege adapter preparation
+
+`base_siege` now has a roster-ordered presentation adapter for each original
+crystal's health, hit cooldown, rotation, floating height and sampled hit
+generation. The host retains the existing attack/charge damage, cover,
+scoring and elimination rules. Guests apply health and visuals directly,
+disable crystal collisions and cannot advance cooldowns, damage crystals,
+award points, eliminate owners or reset authoritative state through local
+callbacks. Controller cleanup also disconnects its attack handlers.
+
+Fresh sampled hit/destruction feedback uses the original sounds and bursts;
+initial, reconnect and new-round baselines are quiet. Counters are sampled
+state, not a promise to deliver every intermediate impact. Both Godot and
+Node reject missing/extra fields, wrong roster sizes, nonnumeric values and
+out-of-range animation, health, cooldown and counter values before applying
+the world. This adapter does not yet add Siege to room allowlists.
+
+The initial focused run `/tmp/kras-siege-network-tests.log` failed one audio
+assertion: the fixture counted the shared "go" phase cue as crystal feedback.
+An intermediate correction then exposed a typed-variant parse error and
+two round-transition cue assertions. The verified fixture now isolates base
+feedback from phase announcements while using the real next-round method:
+`/tmp/kras-siege-network-tests-verified.log` passed 92 assertions. It exercises
+actual attack signals, a real dash charge, host destruction, JSON transfer,
+quiet duplicates/reconnect, inert guest callbacks, visual scaling and round
+reset. These are two-scene fixtures, not independent network processes.
+Node passed 97 tests with the actual armed-race and Siege capture files;
+the Siege fixture records two real hits and crystal health 78. CI now requires
+both captures after its core Godot gate and preserves them as artifacts.
+Workflow YAML and all embedded Bash scripts passed local syntax checks.
+
+The subsequent complete gate `kras-party-check.CZnCQx` passed: 297 scripts,
+334 resources/zero inventory issues, 19,753 assertions in 105.1 wall-clock
+seconds, the unchanged real three-lap race and 39 stability matches with zero
+failures. Node then passed all 97 tests with both captures from this same
+gate's `saves-tests` directory, without skipped capture tests. The earlier
+focused failures above remain failed evidence, not release passes. A native
+macOS certificate-store lookup error appeared in the focused headless runs;
+neither these tests nor the complete gate establish TLS or Apple signing.
+
+Room routing, course selection, tournament/reconnect contracts and actual
+multi-process Siege match qualification remain required. Production online
+is unchanged and disabled; this is not a Railway deployment, Internet test,
+device frame-rate result, signed archive or Apple submission.
+
 ### Armed-race development-room integration (experimental)
 
 This supersedes the earlier preparation-only/excluded notes below. Both

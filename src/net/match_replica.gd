@@ -26,6 +26,7 @@ const ScrapReplica = preload("res://src/net/scrap_replica.gd")
 const FawdaReplica = preload("res://src/net/fawda_replica.gd")
 const KartReplica = preload("res://src/net/kart_replica.gd")
 const ArmedRaceReplica = preload("res://src/net/armed_race_replica.gd")
+const SiegeReplica = preload("res://src/net/siege_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -54,6 +55,7 @@ var _scrap: RefCounted
 var _fawda: Node3D
 var _kart: Node3D
 var _armed_race: Node3D
+var _siege: RefCounted
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -99,6 +101,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = KartReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "sabaq_sawarikh":
 		packet["world"] = ArmedRaceReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "base_siege":
+		packet["world"] = SiegeReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -146,6 +150,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 			return false
 	elif game_id == "sabaq_sawarikh":
 		if not ArmedRaceReplica.valid(data.get("world"), count, expected_checkpoints):
+			return false
+	elif game_id == "base_siege":
+		if not SiegeReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "hurdle_dash":
 		if not HurdleReplica.valid(data.get("world"), count):
@@ -271,6 +278,8 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 func render(scene: Node, delta: float) -> void:
 	if target.is_empty():
 		return
+	if scene.config.minigame_id == "base_siege" and scene.controller._bases.size() != target.world.bases.size():
+		return
 	if scene.config.minigame_id == "kart_sprint" and int(target.world.checkpoints) != scene.controller._checkpoints.size():
 		return
 	if scene.config.minigame_id == "sabaq_sawarikh" and (int(target.world.race.checkpoints) != scene.controller._checkpoints.size() \
@@ -354,6 +363,12 @@ func render(scene: Node, delta: float) -> void:
 		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
 		_armed_race.render(scene.controller, target.world, int(target.round), delta, snap,
 			fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH, P.FINISH])
+		_event_received_at = received_at
+	elif scene.config.minigame_id == "base_siege":
+		if _siege == null:
+			_siege = SiegeReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_siege.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "duel_pit":
 		DuelReplica.render(scene.controller, target.world)

@@ -20,6 +20,7 @@ const RAM_REACH := 2.2
 const HIT_COOLDOWN := 0.3
 
 var _bases: Array = []      # {slot, node, body, health, crystal, ring, cooldown}
+var presentation_only := false
 
 
 func configure() -> void:
@@ -40,9 +41,12 @@ func build() -> void:
 
 
 func on_round_start() -> void:
+	if presentation_only:
+		return
 	for base in _bases:
 		base["health"] = BASE_HEALTH
 		base["cooldown"] = 0.0
+		base["hits"] = 0
 		var node: Node3D = base["node"]
 		if is_instance_valid(node):
 			node.visible = true
@@ -95,10 +99,12 @@ func _make_base(arena: Arena, slot: int) -> Dictionary:
 		f.set_spawn(spawn)
 
 	return {"slot": slot, "node": node, "body": body, "health": BASE_HEALTH,
-		"crystal": crystal, "ring": ring, "cooldown": 0.0, "colour": col}
+		"crystal": crystal, "ring": ring, "cooldown": 0.0, "hits": 0, "colour": col}
 
 
 func tick(delta: float) -> void:
+	if presentation_only:
+		return
 	for base in _bases:
 		base["cooldown"] = maxf(0.0, float(base["cooldown"]) - delta)
 		if float(base["health"]) <= 0.0:
@@ -114,7 +120,7 @@ func tick(delta: float) -> void:
 ## nothing to line up, which gives the heavy characters a way to siege that
 ## does not depend on attack timing.
 func _check_rams(base: Dictionary) -> void:
-	if float(base["cooldown"]) > 0.0:
+	if presentation_only or float(base["cooldown"]) > 0.0:
 		return
 	var node: Node3D = base["node"]
 	if not is_instance_valid(node):
@@ -135,6 +141,8 @@ func _check_rams(base: Dictionary) -> void:
 
 
 func _on_attacked(slot: int) -> void:
+	if presentation_only:
+		return
 	var f := ctx.fighter(slot)
 	if f == null or not is_instance_valid(f):
 		return
@@ -158,7 +166,10 @@ func _on_attacked(slot: int) -> void:
 
 
 func _damage(base: Dictionary, attacker: int, amount: float) -> void:
+	if presentation_only:
+		return
 	base["cooldown"] = HIT_COOLDOWN
+	base["hits"] = int(base["hits"]) + 1
 	base["health"] = maxf(0.0, float(base["health"]) - amount)
 	ctx.add_score(attacker, maxi(1, int(round(HIT_POINTS * ctx.powerups.point_multiplier(attacker)))))
 	ctx.bump_detail(attacker, "base_hits")
@@ -189,6 +200,8 @@ func _refresh_base(base: Dictionary) -> void:
 
 
 func _destroy(base: Dictionary, attacker: int) -> void:
+	if presentation_only:
+		return
 	var slot := int(base["slot"])
 	ctx.add_score(attacker, DESTROY_POINTS)
 	ctx.bump_detail(attacker, "bases_broken")
@@ -252,8 +265,12 @@ func detail_rows() -> Array:
 
 
 func cleanup() -> void:
+	for fighter in ctx.fighters:
+		if is_instance_valid(fighter) and fighter.attacked.is_connected(_on_attacked):
+			fighter.attacked.disconnect(_on_attacked)
 	for base in _bases:
 		var node: Node3D = base["node"]
 		if is_instance_valid(node):
 			node.queue_free()
 	_bases.clear()
+	presentation_only = false

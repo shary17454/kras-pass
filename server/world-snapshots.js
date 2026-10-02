@@ -1,6 +1,19 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validSiegeWorld(data, count) {
+  return Number.isInteger(count) && count >= 2 && count <= 4
+    && data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 1 && Array.isArray(data.bases) && data.bases.length === count
+    && data.bases.every(base => base != null && typeof base === 'object' && !Array.isArray(base)
+      && Object.keys(base).length === 5
+      && Number.isFinite(base.health) && base.health >= 0 && base.health <= 100
+      && Number.isFinite(base.cooldown) && base.cooldown >= 0 && base.cooldown <= .3
+      && Number.isFinite(base.rotation) && Math.abs(base.rotation) <= Math.PI
+      && Number.isFinite(base.height) && base.height >= 1.279 && base.height <= 1.421
+      && Number.isInteger(base.hits) && base.hits >= 0 && base.hits <= 1000000);
+}
+
 export function validKartWorld(data, count, expectedCheckpoints = 0) {
   const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;

@@ -98,11 +98,12 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
           captures=("$RUNNER_TEMP"/kras-party-check.*/saves-tests/armed-world.json)
-          if [ "${#captures[@]}" -ne 1 ]; then
-            echo "Expected exactly one Godot armed-race capture" >&2
+          siege_captures=("$RUNNER_TEMP"/kras-party-check.*/saves-tests/siege-world.json)
+          if [ "${#captures[@]}" -ne 1 ] || [ "${#siege_captures[@]}" -ne 1 ]; then
+            echo "Expected exactly one Godot capture for each world schema" >&2
             exit 1
           fi
-          KRAS_ARMED_WORLD_FIXTURE="${captures[0]}" npm test 2>&1 | tee "$RUNNER_TEMP/kras-server-capture-tests.stdout"
+          KRAS_ARMED_WORLD_FIXTURE="${captures[0]}" KRAS_SIEGE_WORLD_FIXTURE="${siege_captures[0]}" npm test 2>&1 | tee "$RUNNER_TEMP/kras-server-capture-tests.stdout"
       - name: Preserve QA evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -119,5 +120,6 @@ jobs:
             ${{ runner.temp }}/kras-network-smoke-*/*.log
             ${{ runner.temp }}/kras-party-check.*/*.stdout
             ${{ runner.temp }}/kras-party-check.*/saves-tests/armed-world.json
+            ${{ runner.temp }}/kras-party-check.*/saves-tests/siege-world.json
             ${{ runner.temp }}/kras-party-check.*/saves-stability/stability.json
             build/stage0/inventory.json
