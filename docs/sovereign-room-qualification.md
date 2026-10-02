@@ -85,7 +85,47 @@ target eligibility and recovery need their own regression/QA pass.
 
 ## Pending qualification
 
-Four-client fights, tournaments and forced finals remain required. The automation sends
+The four-client ordinary fight subsequently passed on the committed room/event
+source `9ca764037d99af4102f8e02a7584fd273281a0f9`, seed 9614, room `SJJGDA`.
+Both internal rounds recorded real damage, volleys, shield, returns and boss
+defeat. All four distinct identities agreed on scores `[1380,840,300,480]`.
+The three guests received 1,666, 1,687 and 1,687 world snapshots. Host result
+transport loss and guest reconnect both recovered. Evidence:
+`/tmp/kras-sovereign-room-four-events.log` and
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-f9vAHL`.
+Server event-loop max was 1,551 ms; host max frame gap during preparation
+was 14,409 ms. The functional pass does not qualify these performance figures.
+
+The two-human/two-normal-Bot tournament also passed: three actual matches,
+seed 9614, final scores `[780,240,180,300]`, points `[11,10,5,7]`, cups
+`[2,1,0,0]`, champion slot zero, matching completed standings on both peers
+and 3,281 guest world snapshots. Both identities reconnected. Evidence:
+`/tmp/kras-sovereign-room-tournament.log` and
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-XUWAix`.
+The server loop max was 1,216 ms and the host preparation gap was 25,792 ms;
+those remain performance findings, not stable device behavior.
+
+The four-client forced-final smoke passed, seed 9614, room `85YHPL`:
+three ordinary actual boss defeats followed by a fourth, 20-second contender
+final. Final scores were `[240,180,180,180]`, champion slot zero. Points
+remained `[3,3,3,3]`, cups `[3,1,0,0]` were unchanged by the final, final
+awards remained zero and `tie_attempts` was one. All peers agreed on the
+completed standings; guests received 3,117, 3,137 and 3,137 world snapshots.
+Host/guest transport-loss recovery also passed. Evidence:
+`/tmp/kras-sovereign-room-final.log` and
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-QqiwdR`.
+The final is a short contribution contest; it is not reported as a fourth
+boss defeat. The host maximum preparation gap was 10,116 ms and server
+event-loop maximum was 1,386 ms, still unqualified performance findings.
+
+The CI matrix now includes Sovereign ordinary fights, tournament and forced
+final. This is checked-in automation, not evidence of a successful new Linux
+run. Run 37069444943 remains on earlier source `5d89d19`; it does not test
+the room/event changes or the new matrix entry. Production availability
+remains unchanged. Colossus is the remaining world adapter absent from the
+38-game development catalogue.
+
+The automation sends
 ordinary movement/attack input based on visible boss, warnings and orb rows;
 it does not write boss health or fabricate game results.
 

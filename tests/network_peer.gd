@@ -24,6 +24,7 @@ var duo_tiebreak := false
 var race_tiebreak := false
 var siege_tiebreak := false
 var forge_tiebreak := false
+var sovereign_tiebreak := false
 var dread_tiebreak := false
 var boss_final_cups: Array = []
 var observed_boss_final := false
@@ -218,6 +219,7 @@ func _ready() -> void:
 		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg == "--siege-tiebreak": siege_tiebreak = true
 		if arg == "--forge-tiebreak": forge_tiebreak = true
+		if arg == "--sovereign-tiebreak": sovereign_tiebreak = true
 		if arg == "--dread-tiebreak": dread_tiebreak = true
 		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
@@ -272,7 +274,7 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
-			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak or dread_tiebreak:
+			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak or dread_tiebreak or sovereign_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
 		return
@@ -1502,7 +1504,7 @@ func _finished(result: MatchResult) -> void:
 		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
 			_fail("siege final did not run or changed tournament awards")
 			return
-	if forge_tiebreak or dread_tiebreak:
+	if forge_tiebreak or dread_tiebreak or sovereign_tiebreak:
 		var totals_unchanged := observed_boss_final and boss_final_cups.size() == 4
 		for slot in 4:
 			totals_unchanged = totals_unchanged and int(Net.tournament.points[slot]) == 3 \
