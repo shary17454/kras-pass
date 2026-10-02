@@ -27,5 +27,8 @@ run_check race_regression tests/party_race_check.tscn
 run_check colossus_ai_345 tests/colossus_ai_check.tscn --seed=345
 run_check colossus_ai_9614 tests/colossus_ai_check.tscn --seed=9614
 run_check colossus_ai_172 tests/colossus_ai_check.tscn --seed=172
+run_check forge_ai_9614 tests/colossus_ai_check.tscn --game=boss_forge --seed=9614
+run_check dreadnought_ai_9614 tests/colossus_ai_check.tscn --game=boss_dreadnought --seed=9614
+run_check sovereign_ai_9614 tests/colossus_ai_check.tscn --game=boss_sovereign --seed=9614
 run_check stability tests/stage_zero_stability.tscn --cycles="${KRAS_STABILITY_CYCLES:-1}"
 printf 'Compile and tests passed; inspect device performance separately.\n'
