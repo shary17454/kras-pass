@@ -399,6 +399,29 @@ test('relay room accepts only host cargo with its authored arena', () => {
   }
 });
 
+test('hurdle rooms validate host times and award the fastest tournament runner', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'hurdle_dash', arena: 'hurdle_track', rounds: 1, bots: true, difficulty: 1,
+    tournament: {mode: 'points', target: 3, rotation: 'manual', points: [5, 3, 2, 1],
+      entries: [{game: 'hurdle_dash', arena: 'hurdle_track'}]}};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'crate_yard'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot(); data.world = {elapsed: 20, times: [1000, 1200, 1500, 99999]};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  for (const world of [undefined, {...data.world, times: [2001, 1200, 1500, 99999]}, {...data.world, elapsed: -1}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+  }
+  host.send({op: 'result', epoch, scores: data.world.times, higher_is_better: true});
+  assert.deepEqual(guest.last('result').tournament.points, [5, 3, 2, 1]);
+  assert.deepEqual(guest.last('result').tournament.cups, [1, 0, 0, 0]);
+});
+
 test('tournament snapshots follow the current game rather than the lobby default', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

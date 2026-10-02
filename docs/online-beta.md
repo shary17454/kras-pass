@@ -2,6 +2,43 @@
 
 ## Implemented boundary
 
+### Hurdle Dash room integration
+
+Development rooms now allow `hurdle_dash` only on `hurdle_track`. The server
+rejects guest snapshots, missing worlds, future finish times and negative
+clocks. Tournament ranking ignores client scoring-direction flags. All 64
+Node tests passed with local socket access; the sandbox-only run failed its
+WebSocket test with `listen EPERM`, not an application assertion.
+
+Independent Godot processes tested 2 humans plus 2 bots and 4 humans:
+
+- Ordinary matches `kras-network-smoke-lWCmzd`: both passed, aggregate times
+  `[1395,1355,2950,2948]` / `[1412,1372,1322,1315]`, 770-1,129 guest
+  snapshots, maximum local server event-loop delay 34 ms.
+- Tournaments `kras-network-smoke-Ev1bAr`: three matches per case, points
+  `[9,15,6,3]` / `[6,10,9,8]`, champion slot 1 in both cases,
+  1,181-2,292 guest snapshots, maximum event-loop delay 34 ms.
+
+Every active runner, including bots, had to finish. Guests verified the
+host clock and finish times. Both modes exercised guest reconnect and host
+result-transport loss. No final tournament tie occurred. Neither passing
+run reported script, parse, network-failure, normalization or object-leak
+errors. These are local headless tests, not Internet or physical-device QA.
+
+Earlier runs `kras-network-smoke-XVM0AY` and `kras-network-smoke-NtBDGo`
+failed because the scripted runner held jump after detecting an obstacle
+while airborne. Landing then produced no new jump edge. Position diagnostics
+isolated the stalled runner; the fixture now pulses jump while an obstacle
+is visible. Game rules were not weakened to pass the fixture.
+
+The CI matrix includes Hurdle Dash; that definition is not a completed CI
+run. Production online remains unchanged and disabled.
+
+Full gate `kras-party-check.aBaIew`: 265 scripts compiled, 302 resources
+audited with zero issues, 18,403 assertions passed, race regression passed
+and all 39 stability matches passed. The sandbox emitted the macOS system
+CA lookup diagnostic; these checks do not certify production TLS access.
+
 ### Hurdle Dash snapshot adapter
 
 Hurdle snapshots now carry only the host elapsed clock and per-slot finish
@@ -18,8 +55,8 @@ and failed despite equal values (`/tmp/kras-hurdle-network.log`); changing
 the assertions to compare each integer time fixed that test-only mismatch.
 `/tmp/kras-hurdle-network-after.log`: all 38 assertions passed. Server tests:
 63 passed. These tests cover state validation and round reset, not audible
-device QA. Hurdle Dash remains outside the room allowlists pending actual
-multi-process matches, race finish and tournament/reconnect verification.
+device QA. This adapter originally remained outside room allowlists; the
+subsequent integration and multi-process verification are documented above.
 Full gate `kras-party-check.YurKl9`: 265 scripts compiled, 302 resources
 audited with zero issues, 18,403 assertions passed, race regression passed
 and all 39 stability matches passed.
@@ -300,7 +337,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-one explicitly adapted rulesets; verification
+The development allowlist contains twenty-two explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard

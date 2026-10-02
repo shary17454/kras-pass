@@ -69,6 +69,11 @@ func _process(_delta: float) -> void:
 		print("NETWORK_TIMING=" + JSON.stringify({"epoch": Net.epoch, "state": Net.room_state,
 			"phase": game.phase if is_instance_valid(game) else -1, "running": Net.match_running,
 			"max_frame_gap_ms": _max_frame_gap_ms, "snapshots": snapshots}))
+		if game_id == "hurdle_dash" and is_instance_valid(game):
+			var runners: Array = []
+			for fighter in game.ctx.fighters:
+				runners.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity), "can_jump": fighter.can_jump, "control": fighter.control_enabled, "finish": game.controller.finish_times[fighter.slot]})
+			print("NETWORK_HURDLES=" + JSON.stringify(runners))
 
 class ResultDropTransport extends Node:
 	var delegate: Node
@@ -161,6 +166,8 @@ func _start(cfg: MatchConfig) -> void:
 		_fail("duplicate match")
 		return
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
+	if game_id == "hurdle_dash":
+		cfg.duration_override = 35.0
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -257,6 +264,14 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "hurdle_dash":
+			var fighter: Fighter = game.ctx.fighters[slot]
+			movement = Vector2(clampf((game.arena.global_position.x + game.arena.lane_x(slot) - fighter.global_position.x) * 2.0, -1.0, 1.0), -1.0)
+			var origin := fighter.global_position + Vector3.UP * 0.4
+			var query := PhysicsRayQueryParameters3D.create(origin, origin + Vector3.FORWARD * 3.0, 1)
+			# A held jump that starts airborne has no new edge upon landing.
+			if not fighter.get_world_3d().direct_space_state.intersect_ray(query).is_empty() and (Time.get_ticks_msec() - started_at) % 500 < 160:
+				buttons = InputFrame.Btn.JUMP
 		if game_id in ["crate_smash", "lab_crates"]:
 			movement = _crate_movement(slot)
 			if (Time.get_ticks_msec() - started_at) % 800 < 200:
@@ -409,6 +424,25 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "hurdle_dash":
+		for slot in game.ctx.player_count():
+			if game.ctx.is_alive(slot) and game.controller.finish_times[slot] == game.controller.UNFINISHED:
+				_fail("active hurdle runner did not reach the finish")
+				return
+		var best: int = result.scores.min()
+		for winner in result.winners():
+			if result.scores[winner] != best:
+				_fail("hurdle results do not rank lowest time first")
+				return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world_snapshots < 5 or world.is_empty() or absf(game.controller._elapsed - float(world.elapsed)) > 0.001:
+				_fail("missing hurdle clock")
+				return
+			for slot in game.ctx.player_count():
+				if game.controller.finish_times[slot] != int(world.times[slot]):
+					_fail("hurdle finish times diverged")
+					return
 	if not host and game_id in ["crate_smash", "lab_crates"]:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		var view = game._network_replica._crates
