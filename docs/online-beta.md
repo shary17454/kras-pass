@@ -892,7 +892,30 @@ the host's rules, timer, palette or results.
 - Production is not enabled by this room allowlist change; physical-device
   and Internet conditions remain unverified.
 
-### Quick Draw lifecycle prerequisite
+### Quick Draw snapshot adapter
+
+`draw_replica.gd` publishes the host's prompt phase, prompt number, accepted
+response order, false-start locks and monotonic feedback counters. It excludes
+the hidden random wait duration and signal age. Both Godot and Node validators
+reject missing fields, unexpected timing fields, duplicate/out-of-range slots,
+locked participants in the response order and responses during WAIT.
+
+Guests present the pillar state and host decisions without advancing timers or
+awarding points. Fresh events play once; initial snapshots, repeated rendering
+and reconnect gaps suppress historical sounds.
+
+- `/tmp/kras-draw-network.log`: 83 assertions passed, including JSON round trip,
+  malformed state rejection, presentation, score/timer non-authority and event
+  freshness. `npm test`: 49 server tests passed.
+- Full gate `kras-party-check.DFgBMB`: 253 scripts compiled, 290 resources
+  audited with zero issues, 17,552 assertions passed, race regression passed
+  and 39 stability matches completed with zero failures.
+- This is an adapter-only change. Room allowlists still exclude Quick Draw.
+  Multi-process rooms/tournaments, actual mobile presentation and latency
+  fairness remain pending. In particular, same-tick responses currently use
+  slot order; this needs a fair tie policy before online enablement.
+
+### Quick Draw round reset
 
 Each new match round now clears the prior signal age, response order and
 false-start locks, resets the prompt counter and starts a fresh random wait.

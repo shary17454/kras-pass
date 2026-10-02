@@ -68,6 +68,24 @@ export function validSaboteurWorld(data, count) {
     && (data.target >= 0 || data.mark === 0);
 }
 
+export function validDrawWorld(data, count) {
+  const integer = (value, max) => Number.isInteger(value) && value >= 0 && value <= max;
+  if (!Number.isInteger(count) || count < 2 || count > 4 || !data || typeof data !== 'object'
+    || Array.isArray(data) || Object.keys(data).length !== 8
+    || !integer(data.stage, 2) || !integer(data.prompt, 1000000)
+    || !['signal_sequence', 'correct_sequence', 'wrong_sequence', 'resolve_sequence']
+      .every(key => integer(data[key], 1000000))
+    || !Array.isArray(data.locked) || data.locked.length !== count
+    || !data.locked.every(value => typeof value === 'boolean')
+    || !Array.isArray(data.order) || data.order.length > count) return false;
+  const seen = new Set();
+  for (const slot of data.order) {
+    if (!integer(slot, count - 1) || seen.has(slot) || data.locked[slot]) return false;
+    seen.add(slot);
+  }
+  return data.stage !== 0 || data.order.length === 0;
+}
+
 export function validPaintWorld(data, count) {
   return Number.isInteger(count) && count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.owners) && data.owners.length === 169

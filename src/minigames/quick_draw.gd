@@ -25,6 +25,10 @@ var _locked := {}
 var _signal_age := 0.0
 var _pillar: MeshInstance3D
 var _round_no := 0
+var signal_sequence := 0
+var correct_sequence := 0
+var wrong_sequence := 0
+var resolve_sequence := 0
 
 
 func configure() -> void:
@@ -87,6 +91,7 @@ func tick(delta: float) -> void:
 
 
 func _fire_signal() -> void:
+	signal_sequence += 1
 	_stage = Stage.SIGNAL
 	_timer = 1.8
 	_signal_age = 0.0
@@ -102,6 +107,7 @@ func _watch_false_starts() -> void:
 			continue
 		if InputRouter.frame(i).just_pressed(InputFrame.Btn.ATTACK):
 			_locked[i] = true
+			wrong_sequence += 1
 			ctx.set_score(i, maxi(0, ctx.scores[i] - FALSE_START_PENALTY))
 			ctx.bump_detail(i, "mistakes")
 			AudioManager.play_sfx("wrong")
@@ -116,6 +122,7 @@ func _watch_draws() -> void:
 			continue
 		if InputRouter.frame(i).just_pressed(InputFrame.Btn.ATTACK):
 			_order.append(i)
+			correct_sequence += 1
 			ctx.set_detail(i, "reaction_ms", int(_signal_age * 1000.0))
 			AudioManager.play_sfx("correct")
 	if _order.size() >= ctx.alive_count() - _locked.size():
@@ -123,6 +130,7 @@ func _watch_draws() -> void:
 
 
 func _resolve() -> void:
+	resolve_sequence += 1
 	_stage = Stage.RESOLVE
 	_timer = 1.1
 	for place in _order.size():
