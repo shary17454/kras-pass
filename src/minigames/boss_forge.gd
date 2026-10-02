@@ -190,8 +190,15 @@ func weak_points() -> Array:
 	return out
 
 
-func cleanup() -> void:
-	super.cleanup()
+func boss_reset_round() -> void:
+	_clear_forge_objects()
+	_crate_timer = 2.0
+	_stomp_timer = STOMP_PERIOD
+	if is_instance_valid(_intake):
+		_intake.rotation = Vector3(PI * 0.5, 0, 0)
+
+
+func _clear_forge_objects() -> void:
 	for c in _crates:
 		if is_instance_valid(c):
 			c.queue_free()
@@ -200,3 +207,8 @@ func cleanup() -> void:
 		if is_instance_valid(s["node"]):
 			s["node"].queue_free()
 	_slag.clear()
+
+
+func cleanup() -> void:
+	_clear_forge_objects()
+	super.cleanup()

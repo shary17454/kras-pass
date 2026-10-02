@@ -176,9 +176,26 @@ func danger_zones() -> Array:
 	return out
 
 
-func cleanup() -> void:
-	super.cleanup()
+func boss_reset_round() -> void:
+	_clear_craters()
+	_slam_timer = 2.5
+	_sweep_timer = SWEEP_PERIOD
+	_exposed = 0.0
+	_hit_this_window.clear()
+	if is_instance_valid(_arm):
+		_arm.rotation = Vector3.ZERO
+	if is_instance_valid(_fist):
+		_fist.position = Vector3(9.2, 0, 0)
+		_fist.scale = Vector3.ONE
+
+
+func _clear_craters() -> void:
 	for c in _craters:
 		if is_instance_valid(c["node"]):
 			c["node"].queue_free()
 	_craters.clear()
+
+
+func cleanup() -> void:
+	_clear_craters()
+	super.cleanup()

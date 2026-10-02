@@ -275,9 +275,27 @@ func weak_points() -> Array:
 	return []
 
 
-func cleanup() -> void:
-	super.cleanup()
+func boss_reset_round() -> void:
+	_clear_orbs()
+	_lunge_timer = 2.0
+	_orb_timer = ORB_PERIOD
+	_collapse_timer = COLLAPSE_PERIOD
+	_recover = 0.0
+	_shielded = false
+	_hit_window.clear()
+	if is_instance_valid(_shield):
+		_shield.visible = false
+	if is_instance_valid(_core):
+		_core.scale = Vector3.ONE
+
+
+func _clear_orbs() -> void:
 	for o in _orbs:
 		if is_instance_valid(o["node"]):
 			o["node"].queue_free()
 	_orbs.clear()
+
+
+func cleanup() -> void:
+	_clear_orbs()
+	super.cleanup()

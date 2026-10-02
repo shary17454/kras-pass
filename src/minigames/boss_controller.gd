@@ -28,6 +28,7 @@ var boss_defeated := false
 var _telegraphs: Array = []
 var _shots: Array = []
 var _hit_flash := 0.0
+var _spawn_transform := Transform3D.IDENTITY
 
 
 func configure() -> void:
@@ -44,13 +45,20 @@ func build() -> void:
 	phase = 0
 	boss_defeated = false
 	boss_build()
+	_spawn_transform = boss_node.global_transform
 
 
 func on_round_start() -> void:
 	boss_health = boss_max_health
 	phase = 0
 	boss_defeated = false
+	_hit_flash = 0.0
 	_clear_telegraphs()
+	_clear_shots()
+	if is_instance_valid(boss_node):
+		boss_node.global_transform = _spawn_transform
+		boss_node.visible = true
+	boss_reset_round()
 
 
 func tick(delta: float) -> void:
@@ -210,10 +218,22 @@ func _tick_shots(delta: float) -> void:
 		i -= 1
 
 
+func _clear_shots() -> void:
+	for p in _shots:
+		if is_instance_valid(p):
+			p.queue_free()
+	_shots.clear()
+
+
 # --- hooks -----------------------------------------------------------------
 
 ## Build the boss's body and any props. `boss_node` already exists.
 func boss_build() -> void:
+	pass
+
+
+## Clear subclass objects and restore its authored opening state.
+func boss_reset_round() -> void:
 	pass
 
 
@@ -273,9 +293,6 @@ func music_track() -> String:
 
 func cleanup() -> void:
 	_clear_telegraphs()
-	for p in _shots:
-		if is_instance_valid(p):
-			p.queue_free()
-	_shots.clear()
+	_clear_shots()
 	if boss_node != null and is_instance_valid(boss_node):
 		boss_node.queue_free()

@@ -241,9 +241,23 @@ func danger_zones() -> Array:
 	return out
 
 
-func cleanup() -> void:
-	super.cleanup()
+func boss_reset_round() -> void:
+	_clear_mines()
+	_facing = 0.0
+	_aim_at = -1
+	_shell_timer = 2.0
+	_mine_timer = MINE_PERIOD
+	_spin_timer = SPIN_PERIOD
+	_vent_cd.clear()
+
+
+func _clear_mines() -> void:
 	for m in _mines:
 		if is_instance_valid(m["node"]):
 			m["node"].queue_free()
 	_mines.clear()
+
+
+func cleanup() -> void:
+	_clear_mines()
+	super.cleanup()

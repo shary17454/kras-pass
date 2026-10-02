@@ -71,18 +71,53 @@ instrumented runs are `server-timing.json` inside their evidence directories.
 CI now preserves that file alongside existing process logs. These two
 repeats narrow reproduction evidence but do not close the earlier delay.
 
-Before boss networking is enabled, separately test repeated rounds after
-actual defeat. Current `boss_controller.on_round_start` resets health/phase
-and telegraphs, but does not restore the node hidden by `_defeat` or clear
-shared projectiles. Subclass timers, weak-point windows and spawned objects
-also have no round-start override. `MatchScene._start_next_round` reuses the
-controller rather than rebuilding it. This is a source-audit risk requiring
-an actual round-reset regression and a complete fix, not justification to
-add the four games to allowlists prematurely.
+The subsequent local boss-round reset correction below addresses the
+previously identified state-retention risk. It is not justification to add
+the four boss games to network allowlists prematurely.
 
 These are local independent-process functional tests, not Internet,
 iPhone/iPad frame-rate, battery, thermal, Railway deployment, archive,
 signing or Apple review evidence. Production online remains disabled.
+
+### Shared boss round-reset correction
+
+The four original boss controllers now reuse a common round-reset hook.
+The shared spine restores the authored post-build transform, visibility,
+full health and first phase, clears hit flashes, cancels warning callbacks
+and frees old projectiles. Each subclass clears its round-owned objects and
+restores initial timers, weak-point hit allowances and animated parts:
+Forge crates/slag/intake, Colossus craters/arm/fist, Dreadnought mines/aim/vent
+cooldowns, and Sovereign orbs/shield/core/recovery. Body geometry is reused,
+not rebuilt for each round. Existing attack damage and win rules are unchanged.
+
+`tests/suites/test_boss_round_reset.gd` calls the real match's
+`_start_next_round` three times for each boss, including defeated and
+interrupted rounds. Defeat uses the production damage API; the fixture does
+not claim a full AI or human fight. It checks deferred object destruction,
+quiet cancelled callbacks, reset scores, body reuse and idempotent resets.
+The expanded fixture also exercises each next round's actual first attack
+and damage mechanic: crate break/slag intake, exposed fist, rear vent and
+lunge-exposed core. Player/slag positioning is controlled fixture setup,
+not normal gameplay or multiplayer qualification.
+
+The first run omitted the fixture's explicit scene teardown and reported
+resource leaks; that is retained in `/tmp/kras-boss-reset-before.log`, not
+treated as product leak evidence. With fixture teardown corrected, the
+unchanged product failed 256 assertions (149 passed), without runtime/exit
+leak errors: `/tmp/kras-boss-reset-before-cleanup.log`. After the fix,
+`/tmp/kras-boss-reset-after.log` passed 393 assertions. The expanded attack
+regression `/tmp/kras-boss-reset-mechanics.log` passed 429 assertions, without
+script errors or leak warnings. Four boss games still require complete
+network presentation, room contracts, independent-process matches and AI/
+balance/device qualification; their online availability remains disabled.
+
+The full post-fix gate `kras-party-check.MADUQl` passed 298 compiled scripts,
+335 resources with zero inventory issues, 20,184 assertions in 102.6
+wall-clock seconds, the unchanged real three-lap race and 39 stability
+matches with zero failures. Node passed 101/101 tests with zero skips using
+this gate's actual armed-race and Siege capture files. This verifies the
+current local regression scope, not all maps, players, difficulty tiers,
+boss phases, 1,000-match balance simulations or physical-device performance.
 
 ### Base Siege adapter preparation
 
