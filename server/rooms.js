@@ -1,4 +1,5 @@
 import {randomBytes, randomInt} from 'node:crypto';
+import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
 
 export const PROTOCOL = 1;
@@ -40,7 +41,7 @@ function validSnapshot(data, count) {
 // Room identity and permission checks live here, independently of WebSocket.
 // No Apple identity, email or long-lived credential is needed for guest play.
 export class Rooms {
-  constructor({now = Date.now, grace = 30000, maxRooms = 200} = {}) {
+  constructor({now = () => performance.now(), grace = 30000, maxRooms = 200} = {}) {
     this.now = now; this.grace = grace; this.maxRooms = maxRooms;
     this.rooms = new Map(); this.sessions = new Map();
   }

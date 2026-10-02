@@ -37,7 +37,7 @@ service.rooms.handle = (connection, message) => {
 const closeRoom = service.rooms.close.bind(service.rooms);
 service.rooms.close = (room, reason) => {
   console.log(JSON.stringify({event: 'room_closed', state: room.state, reason,
-    authorityAge: Date.now() - (room.authoritySeen || Date.now())}));
+    authorityAge: Math.round(service.rooms.now() - (room.authoritySeen ?? service.rooms.now()))}));
   closeRoom(room, reason);
 };
 const children = [];

@@ -22,17 +22,17 @@ export function attachMultiplayer(server, {rooms = new Rooms(), enabled = false,
     });
   });
   wss.on('connection', ws => {
-    let count = 0, start = Date.now(), lastPong = Date.now(), controls = 0;
+    let count = 0, start = rooms.now(), lastPong = rooms.now(), controls = 0;
     const c = rooms.connect(message => {
       if (ws.readyState !== WebSocket.OPEN) return;
       if (ws.bufferedAmount > 256000) { ws.close(1013, 'slow_client'); return; }
       ws.send(JSON.stringify(message));
     });
     c.send({op: 'hello', v: PROTOCOL, games: ONLINE_GAMES, reconnect_ms: rooms.grace});
-    ws.on('pong', () => { lastPong = Date.now(); });
+    ws.on('pong', () => { lastPong = rooms.now(); });
     ws.on('error', () => {});
     ws.on('message', (data, binary) => {
-      if (Date.now() - start >= 1000) { start = Date.now(); count = 0; controls = 0; }
+      if (rooms.now() - start >= 1000) { start = rooms.now(); count = 0; controls = 0; }
       if (++count > 90 || binary) { ws.close(1008, 'rate_or_format'); return; }
       try {
         const m = JSON.parse(data.toString());
@@ -49,7 +49,7 @@ export function attachMultiplayer(server, {rooms = new Rooms(), enabled = false,
       // Godot's initial scene build is synchronous. Honor the load barrier's
       // budget instead of disconnecting healthy clients while assets compile.
       const timeout = c.room?.state === 'loading' ? 65000 : 30000;
-      if (Date.now() - lastPong > timeout) { ws.terminate(); return; }
+      if (rooms.now() - lastPong > timeout) { ws.terminate(); return; }
       ws.ping();
     }, 10000);
     heartbeat.unref(); ws.on('close', () => clearInterval(heartbeat));

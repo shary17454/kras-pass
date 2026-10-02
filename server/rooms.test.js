@@ -11,6 +11,23 @@ const snapshot = () => ({phase: 4, round: 0, countdown: 0, radius: 10, time: 50,
   fighters: Array.from({length: 4}, () => ({position: [0, 0, 0], velocity: [0, 0, 0],
     facing: [0, 0, 1], health: 100, dash: 0, attack: 0, stun: 0, visible: true, alive: true}))});
 
+test('wall clock adjustments cannot expire a live room', () => {
+  const original = Date.now;
+  let wall = original();
+  Date.now = () => wall;
+  try {
+    const rooms = new Rooms();
+    const client = rooms.connect(() => {});
+    rooms.handle(client, {v: 1, op: 'create', capacity: 4, public: true});
+    wall += 86400000;
+    rooms.sweep();
+    assert.equal(rooms.rooms.size, 1);
+    wall -= 172800000;
+    rooms.sweep();
+    assert.equal(rooms.rooms.size, 1);
+  } finally { Date.now = original; }
+});
+
 function fixture() {
   let now = 1000;
   const rooms = new Rooms({now: () => now});
