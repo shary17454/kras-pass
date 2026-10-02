@@ -14,7 +14,8 @@ for pattern in \
   'WARNING: 2 ObjectDB instances were leaked at exit' \
   'ERROR: 1 resources still in use at exit' \
   'ERROR: 1 RID allocations of type' \
-  'ERROR: PagedAllocator: pages in use'; do
+  'ERROR: PagedAllocator: pages in use' \
+  'ERROR: Texture with GL ID of 64: leaked 349524 bytes.'; do
   if KRAS_FAKE_OUTPUT="$pattern" sh tools/check_party.sh > "$OUT/failure.stdout" 2>&1; then
     printf 'FAILED: wrapper accepted %s\n' "$pattern" >&2
     exit 1
@@ -24,4 +25,4 @@ if KRAS_FAKE_EXIT=2 sh tools/check_party.sh > "$OUT/exit.stdout" 2>&1; then
   printf 'FAILED: wrapper ignored an engine failure\n' >&2
   exit 1
 fi
-printf 'Wrapper checks passed: success path and 10 failure cases. Evidence: %s\n' "$OUT"
+printf 'Wrapper checks passed: success path and 11 failure cases. Evidence: %s\n' "$OUT"
