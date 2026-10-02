@@ -30,6 +30,7 @@ func build() -> void:
 
 
 func on_round_start() -> void:
+	_release_carrier()
 	_holder = -1
 	_accum = 0.0
 	_respawn = 0.0
@@ -137,7 +138,7 @@ func _drop(slot: int, by_slot: int) -> void:
 	var f := ctx.fighter(slot)
 	if f != null and is_instance_valid(f):
 		f.carrying = 0
-		f.can_attack = true
+		f.can_attack = allows_attack()
 	_clear_mark()
 	if _holder == slot:
 		_holder = -1
@@ -218,7 +219,18 @@ func detail_rows() -> Array:
 
 
 func cleanup() -> void:
+	_release_carrier()
+	_holder = -1
 	_clear_mark()
 	if _relic != null and is_instance_valid(_relic):
 		Pool.release(POOL_KEY, _relic)
 	_relic = null
+
+
+func _release_carrier() -> void:
+	if _holder < 0 or ctx == null:
+		return
+	var carrier := ctx.fighter(_holder)
+	if is_instance_valid(carrier):
+		carrier.carrying = 0
+		carrier.can_attack = allows_attack()

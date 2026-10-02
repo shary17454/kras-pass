@@ -23,6 +23,7 @@ const SUITES := [
 	"res://tests/suites/test_goal_guard.gd",
 	"res://tests/suites/test_collection_network.gd",
 	"res://tests/suites/test_zone_hold.gd",
+	"res://tests/suites/test_relic_hold.gd",
 	"res://tests/suites/test_race_conditions.gd",
 	"res://tests/suites/test_lifecycle.gd",
 ]

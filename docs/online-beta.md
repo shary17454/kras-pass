@@ -379,9 +379,32 @@ with matching scores and placements.
   received over 1,000 world snapshots and checked capture presentation against
   authority. Steering is deliberately arranged to exercise capture scoring,
   not a character or spawn balance benchmark.
-- CI now includes ordinary and tournament Zone Hold scenarios. The tournament
-  scenario, device rendering and production-network QA are not yet verified
-  for this adapter.
+- `kras-network-smoke-paEdK1`: three-match Zone Hold tournaments passed for
+  two humans/two bots and four humans. All peers agreed on the final points
+  `[12,6,9,6]` and `[15,6,6,6]`, with champion slot 0. Guests received more
+  than 1,600 world snapshots. Neither tournament required a tie-break. Late
+  in-flight input after room closure was rejected as `not_joined`; no results
+  were changed. These runs are not physical-device performance evidence.
+- CI now includes ordinary and tournament Zone Hold scenarios. Device rendering
+  and production-network QA remain unverified for this adapter.
+
+## Completed collection CI baseline
+
+[CI 36959389790](https://github.com/shary17454/kras-pass/actions/runs/36959389790)
+completed successfully for `ba4d218dfe86962ee26d68bdbf7e2ba746824275`: all five
+jobs passed, including ordinary/tournament networking for the four adapters at
+that commit. Core quality recorded 225 scripts, 12,570 assertions and 117
+stability matches with zero failures. This baseline predates the Zone Hold
+adapter and subsequent Relic Hold lifecycle fix; those need their own CI run.
+
+## Relic Hold round reset
+
+The previous relic carrier now regains the game's configured attack permission
+when a round starts or the controller cleans up. Carrying and fractional score
+are cleared; repeated callbacks do not duplicate the relic. Dropping also uses
+the declared attack permission rather than forcing attacks on unconditionally.
+`/tmp/kras-relic-round-reset.log` passed 15 assertions without resource-leak
+warnings. This fixes local lifecycle behavior; Relic Hold is not online-enabled.
 
 ## Expansion checklist per game
 
