@@ -912,8 +912,25 @@ and reconnect gaps suppress historical sounds.
   and 39 stability matches completed with zero failures.
 - This is an adapter-only change. Room allowlists still exclude Quick Draw.
   Multi-process rooms/tournaments, actual mobile presentation and latency
-  fairness remain pending. In particular, same-tick responses currently use
-  slot order; this needs a fair tie policy before online enablement.
+  fairness remain pending. Response order is an ordered list of participants,
+  not a unique placement: same-tick participants can share a scoring rank.
+
+### Quick Draw simultaneous-response fairness
+
+Responses sampled during the same simulation tick now share the same rank and
+points. Later responses rank after all preceding participants (two first-place
+responses earn three points each; the next response earns one point). This
+removes the previous advantage assigned to lower-numbered player slots.
+
+- `/tmp/kras-draw-ties-before.log`: 12 failures reproduced slot-order bias over
+  all ordered pairs of distinct players.
+- `/tmp/kras-draw-ties-after.log`: 47 assertions passed, including all pairs,
+  later responses, match reset and spectator exclusion.
+- Full gate `kras-party-check.tfBnE4`: 253 scripts compiled, 290 resources
+  audited with zero issues, 17,588 assertions passed, race regression passed
+  and 39 stability matches completed with zero failures.
+- This fixes local same-tick fairness only. It does not compensate network
+  transport delay or establish fairness across Internet connections.
 
 ### Quick Draw round reset
 

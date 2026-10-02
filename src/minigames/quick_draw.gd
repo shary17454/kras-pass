@@ -13,6 +13,7 @@ const FALSE_START_PENALTY := 1
 var _stage: Stage = Stage.WAIT
 var _timer := 0.0
 var _order: Array[int] = []
+var _response_places := {}
 var _locked := {}
 ## Simulated seconds since the signal fired. NOT wall-clock: the match runs on
 ## fixed physics ticks (see MatchScene's tick order), and headless/fast-forward
@@ -67,6 +68,7 @@ func _begin_wait() -> void:
 	_stage = Stage.WAIT
 	_signal_age = 0.0
 	_order.clear()
+	_response_places.clear()
 	_locked.clear()
 	_timer = ctx.rng.randf_range(1.6, 4.5)
 	if _pillar != null and is_instance_valid(_pillar):
@@ -117,11 +119,14 @@ func _watch_false_starts() -> void:
 
 
 func _watch_draws() -> void:
+	# Inputs in one simulation tick are indistinguishable; never break ties by slot.
+	var place := _order.size()
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i) or _locked.has(i) or _order.has(i):
 			continue
 		if InputRouter.frame(i).just_pressed(InputFrame.Btn.ATTACK):
 			_order.append(i)
+			_response_places[i] = place
 			correct_sequence += 1
 			ctx.set_detail(i, "reaction_ms", int(_signal_age * 1000.0))
 			AudioManager.play_sfx("correct")
@@ -135,7 +140,8 @@ func _resolve() -> void:
 	_timer = 1.1
 	for place in _order.size():
 		var slot: int = _order[place]
-		var pts: int = PLACE_POINTS[mini(place, PLACE_POINTS.size() - 1)]
+		var rank: int = int(_response_places.get(slot, place))
+		var pts: int = PLACE_POINTS[mini(rank, PLACE_POINTS.size() - 1)]
 		if pts > 0:
 			ctx.add_score(slot, int(pts * ctx.powerups.point_multiplier(slot)))
 			ctx.bump_detail(slot, "correct")

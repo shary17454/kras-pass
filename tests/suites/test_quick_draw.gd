@@ -37,6 +37,31 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(not game._order.has(3), "spectator cannot enter reaction ranking")
 	game._resolve()
 	t.equal(scene.ctx.scores[3], 5, "spectator cannot win reaction points")
+	for first in 4:
+		for second in 4:
+			if first == second:
+				continue
+			game.on_round_start()
+			for slot in 4:
+				scene.ctx.alive[slot] = true
+				scene.ctx.set_score(slot, 0)
+				InputRouter.frame(slot).bits = 0
+				InputRouter.frame(slot).prev_bits = 0
+			game._fire_signal()
+			InputRouter.frame(first).bits = InputFrame.Btn.ATTACK
+			InputRouter.frame(second).bits = InputFrame.Btn.ATTACK
+			game._watch_draws()
+			var later := (second + 1) % 4
+			while later == first or later == second:
+				later = (later + 1) % 4
+			InputRouter.frame(first).bits = 0
+			InputRouter.frame(second).bits = 0
+			InputRouter.frame(later).bits = InputFrame.Btn.ATTACK
+			game._watch_draws()
+			game._resolve()
+			t.equal(scene.ctx.scores[first], 3, "same-tick first participant shares first place")
+			t.equal(scene.ctx.scores[second], 3, "same-tick second participant shares first place")
+			t.equal(scene.ctx.scores[later], 1, "later response ranks after both tied participants")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
