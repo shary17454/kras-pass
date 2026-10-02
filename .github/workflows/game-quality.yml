@@ -76,6 +76,10 @@ jobs:
           npm ci --ignore-scripts
           node network-smoke.js --game="$GAME_ID" 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
           node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
+          if [ "$GAME_ID" = hurdle_dash ]; then
+            node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --seed=1032434731 2>&1 | tee "$RUNNER_TEMP/kras-network-hurdle-regression.stdout"
+            node network-smoke.js --game="$GAME_ID" --humans=4 --seed=1032434731 2>&1 | tee "$RUNNER_TEMP/kras-network-hurdle-four-player.stdout"
+          fi
           if [ "$GAME_ID" = duo_clash ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --duo-tiebreak 2>&1 | tee "$RUNNER_TEMP/kras-network-team-final.stdout"
           fi

@@ -3076,6 +3076,47 @@ its TCP latency tradeoff still requires real-network testing. References:
 [Godot WebSocket guide](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html),
 [ws](https://github.com/websockets/ws).
 
+## Hurdle seeded real-network regression (2026-10-02, follow-up)
+
+Actual loopback Godot/WebSocket matches ran on gameplay source
+`ca2c69a7bccc0d0b366979e5af53e527e67cde6a`, without weakening required finishes:
+
+- `node server/network-smoke.js --game=hurdle_dash --tournament --humans=2
+  --seed=1032434731`: PASS. Evidence directory `kras-network-smoke-Hbh4Mm`
+  under macOS TMPDIR. Three actual rounds finish with scores
+  [678,707,715,980], [687,678,715,980], [680,662,715,980]. Host and guest
+  reconnect; the guest receives 1,352 snapshots; both agree on final points
+  [11,13,6,3], cups [1,2,0,0], champion one and completed tournament.
+- `node server/network-smoke.js --game=hurdle_dash --humans=4
+  --seed=1032434731`: PASS. Evidence `kras-network-smoke-VbUbKG`. All four
+  actual processes agree on [1345,1352,1305,1348]; guest snapshot counts are
+  762/782/782. Host and the designated disconnecting guest resume correctly.
+- No Script Error, NETWORK_FAIL, Parse Error or reported resource leak appears
+  in either captured session. These are scripted input clients, not a physical
+  four-person touchscreen or controller playtest.
+
+The seed option fixes every epoch to 1032434731. It exercises the failing CI
+epoch's seed repeatedly, not the original varying epoch sequence starting at
+1148457985. Both fixed-seed commands are added to the existing Hurdle CI branch
+in addition to its ordinary random match and random tournament, not replacing
+them. YAML and all six shell blocks validate; the party wrapper success path
+and 11 failure cases pass (`kras-wrapper-test.YLy7OF`). The new CI commands have
+not yet run on Linux.
+
+Performance is NOT qualified: maximum server-loop observations are 601 ms
+(mixed tournament) and 225 ms (four-client match). The mixed run timing report
+also records snapshot handling up to 408.45 ms and a worst scheduling sample
+of 501.41 ms delay / 8.866 ms process CPU. These are diagnostics, not proof of
+a root cause or an acceptable latency budget; preserve `server-timing.json`.
+
+The old run 37053065343 remains pinned to 7f79f82, with its Hurdle failure
+unchanged. The latest observation has 28 successful jobs and other jobs still
+running. No job was cancelled or retried to hide the failure. Local seeded
+completion is stronger evidence for the contact fix, not completed CI,
+all-seed/difficulty balance, Internet stability or device performance. Full
+local gate validation after the contact change and a new Linux qualification
+remain pending; no Railway deployment or Apple submission occurred.
+
 ## Runner contact jump recovery (2026-10-02)
 
 RunnerBrain rejected jump requests for a detected obstacle at or below 0.5
