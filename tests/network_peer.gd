@@ -35,6 +35,8 @@ var observed_tank_armor := false
 var observed_tank_inventory := false
 var observed_scrap_ram := false
 var observed_scrap_damage := false
+var observed_fawda_events := {}
+var fawda_arenas_seen := {}
 var tank_arenas_seen := {}
 var tank_route := PackedVector3Array()
 var tank_route_target := Vector3.INF
@@ -243,6 +245,10 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 30.0
 		observed_scrap_ram = false
 		observed_scrap_damage = false
+	if game_id == "fawda":
+		cfg.duration_override = 25.0
+		observed_fawda_events.clear()
+		fawda_arenas_seen[cfg.arena_id] = true
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		cfg.duration_override = 20.0
 		observed_duo_final = true
@@ -285,6 +291,11 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "fawda":
+		var world: Dictionary = _fawda_world()
+		for kind in world.get("events", {}):
+			if int(world.events[kind].sequence) > 0:
+				observed_fawda_events[kind] = true
 	if game_id == "scrap_karts":
 		observed_scrap_ram = observed_scrap_ram or game.controller.ram_serial > 0
 		for health in game.controller.health:
@@ -407,6 +418,29 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "fawda":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			var target: Vector3 = game.arena.global_position
+			var nearest := INF
+			if fighter.carrying > 0:
+				for other in game.ctx.fighters:
+					var distance: float = fighter.global_position.distance_squared_to(other.global_position)
+					if other.slot != slot and other.alive and other.visible and distance < nearest:
+						nearest = distance
+						target = other.global_position
+			else:
+				for bomb in _fawda_world().get("bombs", []):
+					var position := Vector3(bomb.position[0], bomb.position[1], bomb.position[2])
+					var velocity := Vector3(bomb.velocity[0], bomb.velocity[1], bomb.velocity[2])
+					var distance: float = fighter.global_position.distance_squared_to(position)
+					if int(bomb.held) < 0 and velocity.length_squared() <= 4.0 and distance < nearest:
+						nearest = distance
+						target = position
+			var direction := target - fighter.global_position
+			direction.y = 0.0
+			movement = Vector2(direction.x, direction.z).limit_length()
+			if fighter.carrying > 0 and fighter.facing.dot(direction.normalized()) > 0.85 and (Time.get_ticks_msec() - started_at) % 600 < 150:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id in ["turret_duel", "tank_arena", "scrap_karts"]:
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var target: Vector3 = game.arena.global_position
@@ -559,6 +593,12 @@ func _physics_process(_delta: float) -> void:
 		Net.transport.socket.close()
 
 
+func _fawda_world() -> Dictionary:
+	if host:
+		return load("res://src/net/fawda_replica.gd").capture(game.controller)
+	return game._network_replica.target.get("world", {})
+
+
 func _tank_waypoint(origin: Vector3, target: Vector3) -> Vector3:
 	if tank_route.is_empty() or target.distance_to(tank_route_target) > 6.0:
 		tank_route = game.controller.world.route(origin, target)
@@ -649,6 +689,31 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "fawda":
+		for kind in ["drop", "pickup", "throw", "explode"]:
+			if not observed_fawda_events.has(kind):
+				_fail("fawda real event missing: " + kind)
+				return
+		if not host:
+			var world := _fawda_world()
+			if world_snapshots < 5 or world.is_empty() or not is_instance_valid(game._network_replica._fawda) or not game.controller._bombs.is_empty():
+				_fail("fawda world missing or guest simulated live bombs")
+				return
+			for frame in 30: game._network_replica.render(game, 0.016)
+			var views: Dictionary = game._network_replica._fawda.views
+			if views.size() != world.bombs.size():
+				_fail("fawda bomb count diverged")
+				return
+			for bomb in world.bombs:
+				var id := int(bomb.id)
+				var position := Vector3(bomb.position[0], bomb.position[1], bomb.position[2])
+				if not views.has(id) or views[id].node.global_position.distance_to(position) > 0.001 or absf(views[id].wick.scale.y - maxf(0.05, float(bomb.fuse) / 5.0)) > 0.001:
+					_fail("fawda position or fuse visual diverged")
+					return
+			for slot in game.ctx.player_count():
+				if game.ctx.fighter(slot).carrying != int(world.carrying[slot]):
+					_fail("fawda carrying state diverged")
+					return
 	if game_id == "scrap_karts":
 		if not observed_scrap_ram or not observed_scrap_damage:
 			_fail("scrap collision/damage evidence missing: %s %s" % [observed_scrap_ram, observed_scrap_damage])
@@ -1038,6 +1103,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if requested_game_id == "tank_arena" and tournament_mode and tank_arenas_seen.size() != 3:
 		_fail("ATV tournament did not visit all three authored arenas")
+		return
+	if requested_game_id == "fawda" and tournament_mode and fawda_arenas_seen.size() != 2:
+		_fail("fawda tournament did not visit both authored arenas")
 		return
 	if game_id == "sweeper_storm" and not observed_sweeper_hit:
 		_fail("no sweeper collision feedback observed")

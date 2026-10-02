@@ -34,13 +34,59 @@ test now explicitly requires that go cue, without muting it in product code.
 the final expanded fixture passed 130. All 84 Node tests passed, recorded in
 `/tmp/kras-fawda-server-tests.log`.
 
-Fawda is not yet in client/server room allowlists. Independent-process matches,
+At the adapter-preparation commit, Fawda was not in client/server room allowlists. Independent-process matches,
 tournaments, authored-map acceptance, Internet and physical-device behavior
 remain unqualified. Production online remains disabled. Full gate
 `kras-party-check.nIHgkC` compiled 290 scripts, audited 327 resources with zero
 issues, passed 19,321 assertions, passed the real three-lap race and completed
 39 stability matches with zero failures. Its headless results do not establish
 device audio/rendering quality or the complete product's release readiness.
+
+### Fawda room integration
+
+Development client/server allowlists now include Fawda only on its two authored
+arenas, `vortex_ring` and `storm_ring`. Snapshot dispatch applies the exact
+Fawda validator rather than accepting fighter-only frames. Room-contract tests
+exercise both arenas, reject an unrelated map, missing world data, invalid
+carrying/fuse values, absent event types and duplicate bomb identities. Guests
+cannot publish snapshots or final results. A real Rooms disconnect/resume
+preserves the same identity, selected map and bomb/carry/event baseline.
+All 85 Node tests passed in `/tmp/kras-fawda-room-contract.log`, and
+`/tmp/kras-fawda-room-compile.log` compiled all 290 scripts.
+
+The independent-process fixture uses only real movement and attack inputs.
+Players seek visible loose bombs, then aim at a visible opponent and release
+the carried bomb. Every match resets its drop/pickup/throw/explosion evidence.
+Guests must match bomb count, position, wick scale and carrying state without
+creating local rule bombs. Ordinary fixture `kras-network-smoke-JMiF5g` passed
+two humans plus bots with scores `[8,5,16,17]`, and four humans with scores
+`[14,18,8,10]`. All peers observed actual drop, pickup, throw and explosion
+events. Guests received 1,315 to 1,454 world snapshots; guest identity resume
+and the intentionally dropped host-result connection both recovered. Guest
+final bomb counts/positions/wicks and carrying state matched the host baseline,
+and guests never created live rule bombs. No script/parse failures or object
+leak warnings were found in these peer logs. Maximum local server-loop delay
+was 121 ms; this is not Internet latency or device FPS.
+
+Tournament fixture `kras-network-smoke-yJW5yb` passed both rosters, each
+completing three matches and visiting both authored arenas. Two humans plus
+bots finished with points `[6,5,9,13]`, cups `[0,0,1,2]` and champion 3; four
+humans finished with points `[4,10,6,13]`, cups `[0,1,0,2]` and champion 3.
+All peers matched tournament results and final bomb/carry presentation, with
+1,810 to 1,949 guest snapshots. Each match independently observed real drop,
+pickup, throw and explosion; no local rule bombs ran on guests. Reconnect and
+dropped-host-result recovery passed. Maximum local server-loop delay was
+115 ms. Neither roster required a final tiebreak, so this is not actual Fawda
+tiebreak qualification. No script/parse failures or object-leak warnings were
+found in these logs. CI now includes Fawda ordinary/tournament acceptance, but
+no new Linux result is claimed. Post-integration gate `kras-party-check.LU01ob`
+compiled 290 scripts, audited 327 resources with zero issues, passed 19,321
+assertions, passed the real three-lap race and completed 39 stability matches
+with zero failures. There are now 32 development-room games; Kart Sprint,
+the four bosses, Sabaq Sawarikh and Base Siege remain excluded.
+Production online remains disabled. Device graphics/audio, Internet behavior,
+complete event-stream parity and the rest of the product's release gates remain
+unqualified.
 
 ### Scrap collision adapter and room preparation
 

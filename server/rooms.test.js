@@ -418,6 +418,40 @@ test('bumper rooms require five bounded host-owned barriers', () => {
   }
 });
 
+test('fawda rooms require bounded host bomb state on both maps and preserve it on resume', () => {
+  for (const arena of ['vortex_ring', 'storm_ring']) {
+    const {rooms, host, client} = fixture();
+    const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+    const config = {game: 'fawda', arena, rounds: 2, bots: true, difficulty: 1};
+    assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'scrap_yard'}}), /invalid_config/);
+    host.send({op: 'configure', config});
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    const data = snapshot();
+    data.world = {bombs: [{id: 1, position: [1, 2, 3], velocity: [0, 0, 0], fuse: 3, held: 1, thrower: 1}],
+      carrying: [0, 1, 0, 0], events: Object.fromEntries(['drop', 'pickup', 'throw', 'explode']
+        .map(kind => [kind, {sequence: 1, position: [1, 2, 3]}]))};
+    assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+    host.send({op: 'snapshot', epoch, tick: 1, data});
+    assert.deepEqual(guest.last('snapshot').data.world, data.world);
+    for (const world of [undefined, {...data.world, carrying: [0, 2, 0, 0]},
+      {...data.world, bombs: [{...data.world.bombs[0], fuse: 5.01}]}, {...data.world, events: {}},
+      {...data.world, bombs: [data.world.bombs[0], data.world.bombs[0]]}]) {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+      assert.equal(guest.last('snapshot').tick, 1);
+    }
+    const token = guest.last('welcome').token;
+    const id = guest.c.player.id;
+    rooms.disconnect(guest.c);
+    const resumed = client(); resumed.send({op: 'resume', token});
+    assert.equal(resumed.last('welcome').id, id);
+    assert.equal(resumed.last('start').config.arena, arena);
+    assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+    assert.throws(() => resumed.send({op: 'result', epoch, scores: [9, 0, 0, 0]}), /host_only/);
+  }
+});
+
 test('scrap rooms validate host health and preserve collision baseline on resume', () => {
   const {rooms, host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
