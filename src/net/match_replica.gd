@@ -22,18 +22,21 @@ func capture(scene: Node) -> Dictionary:
 
 
 func accept(data: Dictionary, count: int) -> bool:
+	if count < 2 or count > 4:
+		return false
 	for key in ["fighters", "scores", "alive"]:
 		if not data.get(key) is Array or data[key].size() != count:
 			return false
 	for key in ["time", "phase", "round", "countdown", "radius"]:
 		if not _number(data.get(key)):
 			return false
-	if int(data.phase) < 0 or int(data.phase) > P.PAUSED or int(data.round) < 0 or int(data.round) > 9:
+	if not _integer(data.phase, 0, P.PAUSED) or not _integer(data.round, 0, 9) \
+			or not _integer(data.countdown, 0, 10):
 		return false
 	if float(data.radius) < 0.1 or float(data.radius) > 1000.0 or float(data.time) < 0.0 or float(data.time) > 3600.0:
 		return false
 	for i in count:
-		if not _number(data.scores[i]) or not data.alive[i] is bool:
+		if not _integer(data.scores[i], -1000000, 1000000) or not data.alive[i] is bool:
 			return false
 		var row: Variant = data.fighters[i]
 		if not row is Dictionary:
@@ -45,7 +48,7 @@ func accept(data: Dictionary, count: int) -> bool:
 				if not _number(component) or absf(float(component)) > 10000.0:
 					return false
 		for key in ["health", "dash", "attack", "stun"]:
-			if not _number(row.get(key)):
+			if not _number(row.get(key)) or absf(float(row[key])) > 10000.0:
 				return false
 		if not row.get("visible") is bool or not row.get("alive") is bool:
 			return false
@@ -115,3 +118,8 @@ static func _vec(value: Vector3) -> Array:
 
 static func _number(value: Variant) -> bool:
 	return (value is float or value is int) and is_finite(float(value))
+
+
+static func _integer(value: Variant, minimum: int, maximum: int) -> bool:
+	return _number(value) and float(value) == floorf(float(value)) \
+		and value >= minimum and value <= maximum

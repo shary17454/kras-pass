@@ -265,6 +265,31 @@ tokens or credentials. Godot logs report epoch, phase, maximum frame gap and
 snapshot count; the server reports loading/result transitions and event-loop
 delay. This distinguishes a paused host from a stalled service in future runs.
 
+## CI verification on 2026-10-02
+
+GitHub Actions run [36954750408](https://github.com/shary17454/kras-pass/actions/runs/36954750408)
+completed successfully for source `a5aad59d1f270a41d0eb722d78a30e676ef0ff28`:
+
+- Ordinary real-engine sessions passed with two humans plus bots and four humans.
+- Tournament sessions passed six matches per configuration, including reconnect,
+  lost-result recovery, tied standings and bounded sudden-death rounds.
+- The full Godot suite passed 12,438 assertions.
+- Three stability cycles completed 117 matches with zero failures.
+- Wrapper checks passed their success path and ten injected failure cases.
+
+This clears the repeatable Linux CI check for that exact source, not native
+iPhone performance or all-game online compatibility. It does not cover subsequent
+monotonic-clock or snapshot-validation changes until those are tested separately.
+The earlier failed local runs remain diagnostic evidence above.
+
+The follow-up monotonic-deadline change passed all 22 server tests. Client
+snapshot bounds passed 52 focused assertions using
+`/tmp/kras-snapshot-validation-final.log`, including malformed scalar values,
+unsupported roster sizes, last-valid-state preservation, and JSON numeric
+round trips. macOS sandbox CA-certificate lookup reported its environment error;
+the focused suite itself exited zero. Full CI on these follow-up changes remains
+required before release.
+
 ## Expansion checklist per game
 
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects

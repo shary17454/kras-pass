@@ -28,7 +28,34 @@ func run(t: TestHarness) -> void:
 	invalid = packet.duplicate(true)
 	invalid.phase = 99
 	t.ok(not replica.accept(invalid, 2), "reject invalid phase")
+	for field in ["phase", "round", "countdown"]:
+		invalid = packet.duplicate(true)
+		invalid[field] = 0.5
+		t.ok(not replica.accept(invalid, 2), "reject fractional " + field)
+	for value in [-1, 11]:
+		invalid = packet.duplicate(true)
+		invalid.countdown = value
+		t.ok(not replica.accept(invalid, 2), "reject countdown outside protocol bounds")
+	for value in [0.5, 1000001, -1000001]:
+		invalid = packet.duplicate(true)
+		invalid.scores[0] = value
+		t.ok(not replica.accept(invalid, 2), "reject malformed score")
+	for field in ["health", "dash", "attack", "stun"]:
+		invalid = packet.duplicate(true)
+		invalid.fighters[0][field] = 10001
+		t.ok(not replica.accept(invalid, 2), "reject excessive fighter " + field)
+	for roster_size in [0, 1, 5]:
+		invalid = packet.duplicate(true)
+		invalid.fighters.clear()
+		invalid.scores.clear()
+		invalid.alive.clear()
+		for slot in roster_size:
+			invalid.fighters.append(body.duplicate(true))
+			invalid.scores.append(0)
+			invalid.alive.append(true)
+		t.ok(not replica.accept(invalid, roster_size), "reject unsupported roster size")
 	t.equal(replica.target.scores, [5, 3], "malformed packet cannot replace last valid state")
+	t.ok(replica.accept(JSON.parse_string(JSON.stringify(packet)), 2), "JSON integer-valued floats remain valid")
 
 	t.suite("Network player mapping")
 	Net.leave()
