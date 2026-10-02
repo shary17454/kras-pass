@@ -67,9 +67,9 @@ func configure(color: Color, r: float, is_heavy: bool = false, is_explosive: boo
 			_label = Label3D.new()
 			_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 			_label.font_size = 80
-			_label.pixel_size = 0.006
+			_label.pixel_size = 0.018
 			_label.outline_size = 20
-			_label.position = Vector3(0, r + 0.6, 0)
+			_label.position = Vector3(0, r + 0.9, 0)
 			add_child(_label)
 		_label.visible = true
 	elif _label != null:

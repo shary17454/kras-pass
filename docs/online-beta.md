@@ -884,8 +884,33 @@ detonation, launch identity and collision mask agree with the final host state.
 - Final gate `kras-party-check.LJvbhj`: 248 scripts compiled, 285 resources
   audited with zero issues, 17,013 assertions passed, real three-lap race
   regression passed and 39 stability matches completed with zero failures.
-- Orientation captures and physical-device QA remain pending for this
-  integration. Production endpoint/configuration is unchanged.
+- Physical-device QA remains pending for this integration. Production
+  endpoint/configuration is unchanged. Desktop orientation evidence follows.
+
+### Blast Ball orientation polish
+
+The optional `--capture-blast=<path>` fixture renders a validated host snapshot
+with all four players and one real touch-control layout. It is a static QA
+fixture, not recorded online gameplay or an App Store marketing screenshot.
+
+Initial portrait/landscape inspection found the above-ball fuse too small and
+the description incorrectly suggesting a held-item mechanic. The explosive
+Label3D now uses a larger pixel scale and higher anchor. Arabic and English
+describe hitting the ball away and elimination within the blast radius.
+The fixture also resets its round index before capture rather than inheriting
+the preceding synthetic round-transition test.
+
+- `/tmp/kras-blast-portrait-final.png` (540x960) and
+  `/tmp/kras-blast-landscape-final.png` (960x540) were opened and inspected.
+  Four players, the ball/fuse, HUD and touch actions are visible without overlap.
+- Corresponding `*-final.log` files: 100 assertions passed in each graphical
+  run, with no reported leaked rendering resources.
+- `/tmp/kras-blast-polish-content.log`: 121 assertions passed, including
+  localization key parity and content references.
+- `/tmp/kras-blast-polish-goal.log`: 120 Goal Guard assertions passed after
+  the shared GameBall label change; normal-ball rules remain unchanged.
+- This targeted presentation change does not replace physical-device QA,
+  safe-area checks on iPhone/iPad, or frame-time/battery measurements.
 
 ### Blast Ball adapter in development
 
