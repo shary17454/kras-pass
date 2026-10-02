@@ -111,5 +111,6 @@ func cleanup() -> void:
 	super.cleanup()
 	for p in _shots:
 		if is_instance_valid(p):
+			p.on_released()
 			p.queue_free()
 	_shots.clear()

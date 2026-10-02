@@ -25,6 +25,12 @@ func build() -> void:
 		_spawn_crate()
 
 
+func on_round_start() -> void:
+	cleanup()
+	_spawn_timer = 1.1
+	build()
+
+
 func _spawn_crate() -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
@@ -112,7 +118,9 @@ func _break_crate(index: int, slot: int) -> void:
 			var away: Vector3 = f.global_position - pos
 			away.y = 0.0
 			f.take_hit(-1, away.normalized() if away.length() > 0.1 else Vector3.FORWARD, 16.0, 0.0)
-		ctx.world_root.add_child(MeshFactory.burst(Color("#ff5f8d"), 16))
+		var burst := MeshFactory.burst(Color("#ff5f8d"), 16)
+		ctx.world_root.add_child(burst)
+		burst.global_position = pos
 	else:
 		var gain := int(CRATE_POINTS * ctx.powerups.point_multiplier(slot))
 		ctx.add_score(slot, gain)
@@ -145,5 +153,7 @@ func crate_entries() -> Array:
 func cleanup() -> void:
 	for c in _crates:
 		if is_instance_valid(c["node"]):
+			c["node"].collision_layer = 0
+			c["node"].hide()
 			c["node"].queue_free()
 	_crates.clear()

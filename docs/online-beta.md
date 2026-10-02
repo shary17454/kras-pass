@@ -2,6 +2,26 @@
 
 ## Implemented boundary
 
+### Crate-game lifecycle prerequisite
+
+Before adapting crate games to networking, `crate_smash` and `lab_crates`
+now reset the field and spawn timer at each round start. Prior static crates
+lose collision and visibility immediately before deferred deletion. The lab
+also deactivates and reclaims its prior volley. Resetting neither awards nor
+deducts points. Bomb-crate feedback now appears at the broken crate instead
+of the world origin.
+
+`tests/suites/test_crate_rounds.gd` exercises both controllers, a partially
+destroyed field, stale spawn timing, an active lab volley, preserved scoring,
+explosion placement and repeated cleanup. Before the fix:
+`/tmp/kras-crate-rounds-before.log` had 75 failures. After:
+`/tmp/kras-crate-rounds-after.log` passed all 80 assertions. This does not
+enable crate-game networking; snapshots for crates and lab projectiles are
+still required, followed by actual multi-engine tests.
+Full gate `kras-party-check.dYNKR9`: 258 scripts compiled, 295 resources
+audited with zero issues, 17,872 assertions passed, race regression passed,
+and 39 stability matches completed with zero failures.
+
 ### Symbol Echo room integration
 
 `symbol_echo` now has a bounded presentation adapter and matching Node/Godot
