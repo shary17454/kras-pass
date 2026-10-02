@@ -45,6 +45,10 @@ var observed_draw_signal := false
 var observed_draw_response := false
 var observed_echo_cue := false
 var observed_echo_score := false
+var observed_crate_break := false
+var observed_crate_score := false
+var observed_lab_weapon := false
+var observed_lab_shot := false
 var echo_serial := -1
 var echo_cues := {}
 var echo_leaving := false
@@ -186,6 +190,13 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id in ["crate_smash", "lab_crates"]:
+		var world: Dictionary = load("res://src/net/crate_replica.gd").capture(game.controller, game_id == "lab_crates") if host else game._network_replica.target.get("world", {})
+		observed_crate_break = observed_crate_break or int(world.get("break_sequence", 0)) > 0
+		observed_lab_weapon = observed_lab_weapon or int(world.get("break_kind", 0)) >= 2
+		observed_lab_shot = observed_lab_shot or not world.get("shots", []).is_empty()
+		if slot >= 0:
+			observed_crate_score = observed_crate_score or game.ctx.scores[slot] > 0
 	if game_id == "symbol_echo":
 		var serial: int = game.controller.sequence_serial()
 		if serial != echo_serial:
@@ -243,6 +254,10 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id in ["crate_smash", "lab_crates"]:
+			movement = _crate_movement(slot)
+			if (Time.get_ticks_msec() - started_at) % 800 < 200:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "symbol_echo":
 			movement = _echo_movement(slot)
 		if game_id == "quick_draw":
@@ -333,6 +348,29 @@ func _collection_movement(slot: int) -> Vector2:
 	return Vector2(direction.x, direction.z).limit_length()
 
 
+func _crate_movement(slot: int) -> Vector2:
+	var position: Vector3 = game.ctx.fighters[slot].global_position
+	var candidates: Array = []
+	if host:
+		for entry in game.controller._crates:
+			candidates.append({"position": entry.node.global_position, "kind": 2 if entry.get("weapon", false) else (1 if entry.bomb else 0)})
+	elif is_instance_valid(game._network_replica._crates):
+		for view in game._network_replica._crates.crates.values():
+			candidates.append({"position": view.global_position, "kind": view.get_meta("kind")})
+	var target: Vector3 = game.ctx.arena_center()
+	var best := INF
+	for entry in candidates:
+		var cost: float = position.distance_squared_to(entry.position)
+		if entry.kind == 1:
+			cost += 1000.0
+		elif entry.kind == 2:
+			cost -= 1000.0
+		if cost < best:
+			best = cost
+			target = entry.position
+	return Vector2(target.x - position.x, target.z - position.z).limit_length()
+
+
 func _echo_movement(slot: int) -> Vector2:
 	var position: Vector3 = game.ctx.fighters[slot].global_position
 	var center: Vector3 = game.ctx.arena_center()
@@ -363,6 +401,19 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id in ["crate_smash", "lab_crates"]:
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		var view = game._network_replica._crates
+		if world_snapshots < 5 or world.is_empty() or not is_instance_valid(view):
+			_fail("missing crate world")
+			return
+		if not game.controller._crates.is_empty() or view.crates.size() != world.crates.size() or view.shots.size() != world.shots.size():
+			_fail("crate world diverged or procedural crates retained")
+			return
+		for row in world.crates:
+			if not view.crates.has(row.id) or view.crates[row.id].get_meta("kind") != int(row.kind) or view.crates[row.id].global_position.distance_to(Vector3(row.position[0], row.position[1], row.position[2])) > 0.001:
+				_fail("crate position or type diverged")
+				return
 	if not host and game_id == "symbol_echo":
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty() or world.has("sequence") or not game.controller._sequence.is_empty():
@@ -580,6 +631,12 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "symbol_echo" and (not observed_echo_cue or not observed_echo_score):
 		_fail("echo never displayed a cue or accepted this player's observed answer")
+		return
+	if game_id in ["crate_smash", "lab_crates"] and (not observed_crate_break or not observed_crate_score):
+		_fail("crate break or scoring was never observed")
+		return
+	if game_id == "lab_crates" and (not observed_lab_weapon or not observed_lab_shot):
+		_fail("lab weapon or volley was never observed")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

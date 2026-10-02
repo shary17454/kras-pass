@@ -144,6 +144,34 @@ test('echo room accepts only host public cues and consistent progress', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('crate rooms require their arena and host snapshots with game-specific weapons', () => {
+  for (const game of ['crate_smash', 'lab_crates']) {
+    const {host, client} = fixture();
+    const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+    const config = {game, arena: 'crate_yard', rounds: 2, bots: true, difficulty: 1};
+    assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'echo_hall'}}), /invalid_config/);
+    host.send({op: 'configure', config});
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    const data = snapshot();
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+    data.world = {crates: [{id: '10', kind: 0, position: [1, .75, 3]}], shots: [],
+      break_sequence: 0, break_kind: 0, break_position: [0, 0, 0]};
+    assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}));
+    host.send({op: 'snapshot', epoch, tick: 1, data});
+    assert.deepEqual(guest.last('snapshot').data.world, data.world);
+    data.world.shots = [{id: '20', position: [2, 1, 3], direction: [1, 0, 0], shooter: 0}];
+    if (game === 'lab_crates') {
+      host.send({op: 'snapshot', epoch, tick: 2, data});
+      data.world.shots[0].shooter = 4;
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 3, data}), /invalid_snapshot/);
+    } else {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+    }
+  }
+});
+
 test('draw room relays host decisions and rejects hidden timing or client authority', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

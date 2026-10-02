@@ -2,6 +2,43 @@
 
 ## Implemented boundary
 
+### Crate and lab room integration
+
+The development room/client allowlists now include `crate_smash` and
+`lab_crates`, both on `crate_yard`. The server requires their bounded world
+snapshots and rejects non-host publication, invalid arenas and lab-only
+weapons in ordinary Crate Smash. Server tests: 56 passed.
+
+Real independent Godot processes with scripted human input exercised 2 humans
+plus 2 bots and 4 humans for each game. Every human had to earn points; the
+lab additionally required observation of a weapon effect and an active volley.
+Guest crate identities, types, positions and projectile counts matched host
+snapshots. All runs exercised guest reconnect and host result transport loss.
+
+- Initial Crate Smash run `kras-network-smoke-cfjRPG` failed with four zero
+  scores: the fixture held attack continuously, but attacks use rising edges.
+  Input now presses/releases attack every 800 ms, and the assertion checks
+  the local human's score rather than accepting bot-only scoring. Game rules
+  were not weakened to make the test pass.
+- Crate matches `kras-network-smoke-o7oVlh`: both passed; scores
+  `[24,7,18,8]` and `[16,13,19,20]`; 906-925 guest snapshots, max local
+  server event-loop delay 48 ms.
+- Crate tournaments `kras-network-smoke-2fMOTl`: three rounds in both cases;
+  points `[10,9,7,8]` and `[14,7,8,4]`, champion slot 0 in each case;
+  1,425-1,445 snapshots, max event-loop delay 56 ms.
+- Lab matches `kras-network-smoke-NGLg1z`: both passed with observed volleys;
+  scores `[10,10,9,15]` and `[19,28,10,11]`; 906-925 snapshots, max delay 77 ms.
+- Lab tournaments `kras-network-smoke-k7swQO`: three rounds in both cases;
+  points `[13,8,8,6]` and `[11,7,6,9]`, champion slot 0 in each case;
+  1,438-1,460 snapshots, max delay 38 ms.
+
+These local headless tests did not produce a final tournament tie and do not
+certify Internet latency, device FPS, thermal/battery behavior or visual QA.
+Production remains disabled; these results are not an App Store submission.
+Final integration gate `kras-party-check.8dy6Z0`: 260 scripts compiled,
+297 resources audited with zero issues, 18,008 assertions passed, race
+regression passed and 39 stability matches completed with zero failures.
+
 ### Crate and lab snapshot adapter preparation
 
 `crate_smash` and `lab_crates` now share a presentation adapter for normal,
@@ -24,8 +61,9 @@ is presented; this is not lossless replay of every cosmetic event.
   identity reuse, unchanged score/spawn clock, removal and feedback freshness.
 - `npm test`: 55 tests passed including actual WebSocket transport tests and
   the new crate-world validator tests.
-- Both games remain excluded from room allowlists. Real multiplayer matches,
-  tournaments, lab weapon observations and portrait/landscape QA remain.
+- At the adapter-only commit both games were excluded from room allowlists.
+  The integration section below records subsequent match/room verification;
+  portrait/landscape and real-device QA remain separate release gates.
 - Full gate `kras-party-check.VOxBTB`: 260 scripts compiled, 297 resources
   audited with zero issues, 18,008 assertions passed, race regression passed
   and 39 stability matches completed with zero failures.
@@ -107,7 +145,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains eighteen explicitly adapted rulesets; verification
+The development allowlist contains twenty explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -144,8 +182,10 @@ without exposing the hidden wait countdown. Reaction latency is not compensated;
 the local scripted test exhibits host advantage and is not a balance approval.
 `symbol_echo` on `echo_hall` presents visible memory cues and authoritative
 progress without running a second scoring simulation on guests.
+`crate_smash` and `lab_crates` on `crate_yard` replicate crate fields, lab
+volleys and break feedback; only the host handles attacks, weapons and scores.
 Optional random power-ups remain disabled in online beta configurations.
-The other 21 games are not
+The other 19 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
