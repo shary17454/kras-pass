@@ -174,6 +174,13 @@ export function validTideWorld(data) {
     && Number.isFinite(data.age) && data.age >= 0 && data.age <= 3600;
 }
 
+export function validSweeperWorld(data) {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 1 && Array.isArray(data.angles)
+    && data.angles.length === 3
+    && data.angles.every(angle => Number.isFinite(angle) && Math.abs(angle) <= Math.PI);
+}
+
 export function validGoalGuardWorld(data, count, extraBalls = 0) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count

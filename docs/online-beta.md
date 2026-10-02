@@ -2,6 +2,26 @@
 
 ## Implemented boundary
 
+### Sweeper Storm snapshot adapter
+
+Snapshots now carry the three authored sweeper angles in stable arena order.
+Capture wraps angles to [-PI, PI]; both Godot and Node reject missing/extra
+fields, the wrong arm count, non-finite values, strings, booleans and angles
+outside that range. Guest presentation sets only arm transforms and never
+ticks acceleration or collision checks. New-round snapshots replace the
+previous seeded orientations.
+
+`/tmp/kras-sweeper-network.log`: all 26 assertions passed, including unchanged
+scores/alive state and acceleration age during repeated rendering. All 67
+Node tests passed. Sweeper Storm remains outside room allowlists until
+independent-process play, reconnect and tournament checks are complete.
+These tests do not establish smoothness or visual fidelity on a physical
+device; the current adapter applies authoritative angles without prediction.
+Full gate `kras-party-check.2OzdHE`: 271 scripts compiled, 308 resources
+audited with zero issues, 18,489 assertions passed, race regression passed,
+and 39 stability matches completed without failures. The sandbox system-CA
+lookup diagnostic does not establish or invalidate production TLS readiness.
+
 ### Rising Tide room integration
 
 Development rooms accept `rising_tide` only on `tide_spire` and require the

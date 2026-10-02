@@ -30,6 +30,7 @@ const SUITES := [
 	"res://tests/suites/test_survival_rounds.gd",
 	"res://tests/suites/test_tide_network.gd",
 	"res://tests/suites/test_tide_scoring.gd",
+	"res://tests/suites/test_sweeper_network.gd",
 	"res://tests/suites/test_crate_network.gd",
 	"res://tests/suites/test_echo_perception.gd",
 	"res://tests/suites/test_echo_network.gd",
