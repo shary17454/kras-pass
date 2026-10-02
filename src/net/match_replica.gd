@@ -8,6 +8,8 @@ const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
 const TagReplica = preload("res://src/net/tag_replica.gd")
+const PaintReplica = preload("res://src/net/paint_replica.gd")
+const PAINT_GAMES := ["paint_grid", "mnatiq"]
 const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star"}
 var _collectibles: Node3D
 var _relic: Node3D
@@ -35,6 +37,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = RelicReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "tag_hunt":
 		packet["world"] = TagReplica.capture(scene.controller)
+	elif PAINT_GAMES.has(scene.config.minigame_id):
+		packet["world"] = PaintReplica.capture(scene.controller)
 	elif COLLECTION_GAMES.has(scene.config.minigame_id):
 		var carrying: Array = []
 		for fighter in scene.ctx.fighters:
@@ -57,6 +61,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "tag_hunt":
 		if not TagReplica.valid(data.get("world"), count):
+			return false
+	elif PAINT_GAMES.has(game_id):
+		if not PaintReplica.valid(data.get("world"), count):
 			return false
 	elif COLLECTION_GAMES.has(game_id):
 		var world: Variant = data.get("world")
@@ -129,6 +136,8 @@ func render(scene: Node, delta: float) -> void:
 		ZoneReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "tag_hunt":
 		TagReplica.render(scene.controller, target.world, delta)
+	elif PAINT_GAMES.has(scene.config.minigame_id):
+		PaintReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "relic_hold":
 		if not is_instance_valid(_relic):
 			_relic = RelicReplica.new()

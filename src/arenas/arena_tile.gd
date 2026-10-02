@@ -53,7 +53,9 @@ func claim(slot: int, color: Color) -> bool:
 	if owner_slot == slot:
 		return false
 	owner_slot = slot
-	set_color(color, 0.35)
+	# Ownership is temporary; resets and scrubbers still need the neutral color.
+	if is_instance_valid(_mesh):
+		_mesh.material_override = MeshFactory.toon(color, 0.35)
 	return true
 
 

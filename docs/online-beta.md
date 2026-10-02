@@ -468,6 +468,23 @@ Zone Hold ordinary matches and tournaments. Core quality recorded 228 scripts,
 12,618 assertions and 117 stability matches with zero failures. That source
 predates the relic/tag network adapters; their results must be tracked separately.
 
+## Paint-family reset and prepared ownership adapter
+
+`ArenaTile.claim()` now changes the visible owner material without overwriting
+the neutral floor color. This fixes old player colors remaining after a round
+reset or Mukharrib scrub. `/tmp/kras-paint-reset.log` passed 34 assertions across
+Paint Grid, Mnatiq and Mukharrib, including score reset and scrub visuals.
+
+The prepared shared adapter for `paint_grid` and `mnatiq` sends 169 ownership
+slots indexed by the authored tile coordinates. It does not send arbitrary
+materials or run guest capture/recount logic. Tests check every coordinate
+against the fixed protocol layout, so an arena size change requires an explicit
+adapter update. `/tmp/kras-paint-replica-final.log` passed 722 assertions. All
+six server world-validator tests passed. Neither game is room-enabled yet:
+room routing, multi-engine matches/tournaments and device QA remain. Mukharrib
+also needs its drone and warning-state adapter; tile ownership alone is not
+sufficient to enable that game online.
+
 ## Expansion checklist per game
 
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects

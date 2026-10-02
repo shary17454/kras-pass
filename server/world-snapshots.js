@@ -1,6 +1,12 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validPaintWorld(data, count) {
+  return Number.isInteger(count) && count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
+    && Array.isArray(data.owners) && data.owners.length === 169
+    && data.owners.every(owner => Number.isInteger(owner) && owner >= -1 && owner < count);
+}
+
 export function validTagWorld(data, count) {
   return Number.isInteger(count) && count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Number.isInteger(data.hunter) && data.hunter >= -1 && data.hunter < count

@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld} from './world-snapshots.js';
+
+test('paint grid requires complete bounded tile ownership', () => {
+  const owners = Array(169).fill(-1);
+  assert.ok(validPaintWorld({owners}, 4));
+  for (const owner of [-2, 4, .5, '1', true, Infinity]) {
+    assert.equal(validPaintWorld({owners: [owner, ...owners.slice(1)]}, 4), false);
+  }
+  for (const size of [0, 168, 170, 1000]) assert.equal(validPaintWorld({owners: Array(size).fill(0)}, 4), false);
+  assert.equal(validPaintWorld({owners: Array(169).fill(3)}, 3), false);
+  assert.ok(validPaintWorld({owners: Array(169).fill(3)}, 4));
+});
 
 test('tag world bounds role and handover grace without coercing JSON types', () => {
   assert.ok(validTagWorld({hunter: 3, grace: 1.3}, 4));
