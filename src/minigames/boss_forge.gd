@@ -38,6 +38,8 @@ func boss_build() -> void:
 
 
 func boss_think(delta: float) -> void:
+	if presentation_only:
+		return
 	if _intake != null and is_instance_valid(_intake):
 		_intake.rotate_z(1.2 * delta)
 	_crate_timer -= delta
@@ -53,6 +55,8 @@ func boss_think(delta: float) -> void:
 
 
 func _lob_crate() -> void:
+	if presentation_only:
+		return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -74,6 +78,8 @@ func _lob_crate() -> void:
 
 
 func _stomp() -> void:
+	if presentation_only:
+		return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -95,6 +101,8 @@ func _stomp() -> void:
 
 ## Smashing a crate leaves slag. Slag cools, and cold slag is worthless.
 func _check_feeding() -> void:
+	if presentation_only:
+		return
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
 			continue
@@ -117,6 +125,8 @@ func _check_feeding() -> void:
 
 
 func _spawn_slag(pos: Vector3, by: int) -> void:
+	if presentation_only:
+		return
 	var node := MeshFactory.sphere(0.6, Color("#ff8a3d"), 2.6)
 	node.position = pos
 	ctx.world_root.add_child(node)
@@ -125,6 +135,8 @@ func _spawn_slag(pos: Vector3, by: int) -> void:
 
 
 func _tick_slag(delta: float) -> void:
+	if presentation_only:
+		return
 	var idx := _slag.size() - 1
 	while idx >= 0:
 		var s = _slag[idx]
@@ -167,6 +179,8 @@ func _tick_slag(delta: float) -> void:
 
 
 func on_phase_changed(_new_phase: int) -> void:
+	if presentation_only:
+		return
 	# It gets angry, and it says so: an immediate stomp under everyone.
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
@@ -191,6 +205,8 @@ func weak_points() -> Array:
 
 
 func boss_reset_round() -> void:
+	if presentation_only:
+		return
 	_clear_forge_objects()
 	_crate_timer = 2.0
 	_stomp_timer = STOMP_PERIOD

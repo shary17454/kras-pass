@@ -1,6 +1,33 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validForgeWorld(data, count) {
+  const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  const angles = v => vector(v) && v.every(n => Math.abs(n) <= Math.PI);
+  if (!integer(count, 2, 4) || !object(data, 5) || !object(data.boss, 9)) return false;
+  const b = data.boss;
+  if (!Number.isFinite(b.health) || b.health < 0 || b.health > 900 || !integer(b.phase, 0, 2)
+    || typeof b.defeated !== 'boolean' || b.defeated !== (b.health === 0)
+    || b.phase !== [.66, .33].filter(threshold => b.health / 900 <= threshold).length
+    || !vector(b.position) || !angles(b.rotation) || !angles(data.intake)
+    || !integer(b.damage, 0, 1000000) || !integer(b.strike, 0, 1000000)
+    || !vector(b.strike_position) || !Number.isFinite(b.strike_radius) || b.strike_radius < 0 || b.strike_radius > 100
+    || !Array.isArray(data.warnings) || data.warnings.length > 64
+    || !Array.isArray(data.crates) || data.crates.length > 96
+    || !Array.isArray(data.slag) || data.slag.length > 96) return false;
+  const ids = new Set();
+  const row = (v, size) => {
+    if (!object(v, size) || typeof v.id !== 'string' || !/^[1-9][0-9]{0,17}$/.test(v.id)
+      || ids.has(v.id) || !vector(v.position)) return false;
+    ids.add(v.id); return true;
+  };
+  return data.warnings.every(v => row(v, 5) && Number.isFinite(v.radius) && v.radius >= .25 && v.radius <= 100
+    && Number.isFinite(v.left) && Number.isFinite(v.total) && v.total > 0 && v.total <= 60 && v.left >= 0 && v.left <= v.total)
+    && data.crates.every(v => row(v, 2))
+    && data.slag.every(v => row(v, 4) && Number.isFinite(v.life) && v.life > 0 && v.life <= 6 && integer(v.by, 0, count - 1));
+}
+
 export function validSiegeWorld(data, count) {
   return Number.isInteger(count) && count >= 2 && count <= 4
     && data != null && typeof data === 'object' && !Array.isArray(data)

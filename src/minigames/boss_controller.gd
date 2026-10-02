@@ -24,6 +24,11 @@ var phase := 0
 var phase_thresholds: Array[float] = [0.66, 0.33]
 var boss_node: Node3D
 var boss_defeated := false
+var presentation_only := false
+var damage_sequence := 0
+var strike_sequence := 0
+var strike_position := Vector3.ZERO
+var strike_radius := 0.0
 
 var _telegraphs: Array = []
 var _shots: Array = []
@@ -49,10 +54,16 @@ func build() -> void:
 
 
 func on_round_start() -> void:
+	if presentation_only:
+		return
 	boss_health = boss_max_health
 	phase = 0
 	boss_defeated = false
 	_hit_flash = 0.0
+	damage_sequence = 0
+	strike_sequence = 0
+	strike_position = Vector3.ZERO
+	strike_radius = 0.0
 	_clear_telegraphs()
 	_clear_shots()
 	if is_instance_valid(boss_node):
@@ -62,6 +73,8 @@ func on_round_start() -> void:
 
 
 func tick(delta: float) -> void:
+	if presentation_only:
+		return
 	if _hit_flash > 0.0:
 		_hit_flash = maxf(0.0, _hit_flash - delta)
 	_tick_telegraphs(delta)
@@ -94,8 +107,9 @@ func in_reach(fighter: Node3D, point: Vector3, extra: float = 0.0) -> bool:
 ## Subclasses call this when a player lands a legitimate hit. Damage is banked
 ## as that player's score, so the results screen ranks contribution.
 func damage_boss(amount: float, by_slot: int) -> void:
-	if boss_defeated or amount <= 0.0:
+	if presentation_only or boss_defeated or amount <= 0.0:
 		return
+	damage_sequence += 1
 	boss_health = maxf(0.0, boss_health - amount)
 	_hit_flash = 0.12
 	if by_slot >= 0:
@@ -116,6 +130,8 @@ func damage_boss(amount: float, by_slot: int) -> void:
 
 
 func _defeat() -> void:
+	if presentation_only:
+		return
 	boss_defeated = true
 	_clear_telegraphs()
 	EventBus.shake(0.9, 0.8)
@@ -133,6 +149,8 @@ func _defeat() -> void:
 ## Mark a patch of floor, then run `on_land` there once the warning expires.
 ## This is the only way a boss is allowed to hit anyone.
 func telegraph(centre: Vector3, radius: float, warn: float, on_land: Callable) -> void:
+	if presentation_only:
+		return
 	var ring := MeshFactory.torus(radius - 0.25, radius, TELEGRAPH_COLOR, 1.8)
 	ring.position = centre + Vector3(0, 0.12, 0)
 	ctx.world_root.add_child(ring)
@@ -142,6 +160,8 @@ func telegraph(centre: Vector3, radius: float, warn: float, on_land: Callable) -
 
 
 func _tick_telegraphs(delta: float) -> void:
+	if presentation_only:
+		return
 	var i := _telegraphs.size() - 1
 	while i >= 0:
 		var t = _telegraphs[i]
@@ -164,6 +184,11 @@ func _tick_telegraphs(delta: float) -> void:
 
 ## The standard payload: a shove and a flash inside the marked circle.
 func strike(centre: Vector3, radius: float, power: float = 26.0) -> void:
+	if presentation_only:
+		return
+	strike_sequence += 1
+	strike_position = centre
+	strike_radius = radius
 	var burst := MeshFactory.burst(TELEGRAPH_COLOR, 16, radius)
 	ctx.world_root.add_child(burst)
 	burst.global_position = centre
@@ -198,6 +223,8 @@ func _clear_telegraphs() -> void:
 # --- projectiles -----------------------------------------------------------
 
 func fire_shot(from: Vector3, dir: Vector3, speed: float, damage: float, range_: float) -> void:
+	if presentation_only:
+		return
 	var p := Projectile.new()
 	ctx.world_root.add_child(p)
 	p.configure(TELEGRAPH_COLOR)
@@ -206,6 +233,8 @@ func fire_shot(from: Vector3, dir: Vector3, speed: float, damage: float, range_:
 
 
 func _tick_shots(delta: float) -> void:
+	if presentation_only:
+		return
 	var i := _shots.size() - 1
 	while i >= 0:
 		var p = _shots[i]

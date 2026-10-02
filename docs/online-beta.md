@@ -2,6 +2,58 @@
 
 ## Implemented boundary
 
+### Forge boss adapter preparation
+
+`boss_forge` now captures the original furnace's health, phase, defeat,
+position/rotation, intake animation, warning rings, crates and hot slag.
+The bounded JSON schema validates exact field sets, canonical unique object
+IDs across all groups, roster-bound slag credit, 64 warnings/96 crates/96
+slag at most, finite coordinates, warning durations, slag lifetime and
+health/phase/defeat consistency. Node and Godot use the same limits.
+No callback or hidden AI target is serialized.
+
+The shared boss spine has presentation guards and sampled damage/strike
+generations; Forge also guards its individual attack, feeding, spawning and
+phase/reset callbacks. Guests discard initial local physical objects and
+apply health and animations to the authored boss geometry. Warning/crate/
+slag views are meshes without collision bodies or authoritative callbacks.
+Fresh sampled events reuse original sounds and effects; duplicate, initial,
+reconnect and new-round baselines are quiet. This does not guarantee delivery
+of every intermediate impact between snapshots. A weak view-owner reference
+retires an old presentation node when a replacement replica is installed.
+
+The initial two-scene fixture passed 137 assertions but did not check view
+ownership. The new reconnect assertion then failed in
+`/tmp/kras-forge-reconnect-before.log`: two views instead of one. After the
+ownership fix, `/tmp/kras-forge-network-verified.log` reported 138 passing
+assertions but also an engine error from a missing metadata lookup; that run
+is not a clean pass. The lookup now checks key existence first.
+`/tmp/kras-forge-network-final.log` passed 138 assertions without script,
+engine or leak errors. It exercises real crate breaking and intake damage,
+JSON transfer, bounds rejection, inert guest callbacks, collision-free
+views, sampled feedback, reconnect replacement, host defeat and actual
+next-round reset. Controlled player/slag positions are test setup, not a
+complete AI/human match or an independent-process network qualification.
+
+Node passed 103 tests with zero skips using actual armed-race, Siege and
+Forge capture files. The Forge capture contains health 780, one damage and
+one strike generation, one warning, one remaining crate and one slag.
+CI requires and preserves all three captures after the core Godot gate;
+workflow YAML and embedded Bash syntax passed locally. Forge is not yet in
+room allowlists: host result/reconnect/tournament contracts and real
+independent-process matches remain required. All four boss games remain
+excluded from development rooms, and production online remains disabled.
+No Railway deployment, Internet/device test, archive or Apple review is
+implied by this adapter work.
+
+The complete post-adapter gate `kras-party-check.3czJdg` passed 300 compiled
+scripts, 337 resources with zero inventory issues, 20,321 assertions in
+102.9 wall-clock seconds, the unchanged real three-lap race and 39 stability
+matches with zero failures. Node then passed 103/103 tests with zero skips
+using all three actual captures from this same gate. These are local
+regression results, not four-human playtesting, network latency, visual
+smoothness, device battery/thermals or qualification of all boss phases.
+
 ### Base Siege development rooms (experimental)
 
 Source `b7d19ee01eeb71999958a3ba0e0485eb728b3765` adds Siege to both
