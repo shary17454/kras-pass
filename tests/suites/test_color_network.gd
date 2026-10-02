@@ -4,6 +4,13 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("color network presentation")
 	var cfg := MatchConfig.build("color_stand", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 105)
+	var capture_path := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--capture-color-network="):
+			capture_path = arg.trim_prefix("--capture-color-network=")
+	if not capture_path.is_empty():
+		cfg.players[0].is_human = true
+		cfg.players[0].device_type = 2
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	host.add_child(scene)
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
@@ -76,6 +83,27 @@ func run(t: TestHarness, host: Node) -> void:
 	replica._event_received_at = replica.received_at - 1501
 	replica.render(scene, 0.1)
 	t.ok(not AudioManager._last_played.has("whistle"), "reconnect skips old drop")
+	if not capture_path.is_empty() and DisplayServer.get_name() != "headless":
+		for i in 121:
+			packet.world.tiles[i] = [0, 0, 0, 0] if int(packet.world.colors[i]) == 2 else [3, 0, -12, 1]
+		t.ok(replica.accept(packet, 4, "color_stand"), "accept collapsed quilt fixture")
+		replica.render(scene, 1.0)
+		for slot in 4:
+			var tile: ArenaTile = game.safe_tile_near(scene.ctx.fighter(slot).global_position)
+			t.ok(tile != null, "fixture player has a visible safe tile")
+			var position := tile.global_position + Vector3(0, 0.9, 0)
+			packet.fighters[slot].position = [position.x, position.y, position.z]
+		t.ok(replica.accept(packet, 4, "color_stand"), "accept safe player positions")
+		replica.render(scene, 1.0)
+		scene.camera._intro_left = 0
+		await host.get_tree().create_timer(1.2).timeout
+		if scene._pause_menu != null or scene._paused:
+			scene._toggle_pause()
+		await host.get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		t.equal(scene.touch_sources.size(), 1, "replica fixture has touch controls")
+		t.ok(scene._pause_menu == null, "replica fixture is unobscured")
+		t.equal(host.get_viewport().get_texture().get_image().save_png(capture_path), OK, "save replicated color floor")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

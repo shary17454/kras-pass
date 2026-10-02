@@ -883,9 +883,30 @@ the host's rules, timer, palette or results.
 - Full gate `kras-party-check.REVpk0`: 250 scripts compiled, 287 resources
   audited with zero issues, 17,460 assertions passed, real three-lap race
   regression passed and 39 stability matches completed with zero failures.
+- Replicated-floor orientation fixtures: `/tmp/kras-color-network-portrait.png`
+  (540x960) and `/tmp/kras-color-network-landscape.png` (960x540), 441 assertions
+  each. Both were visually inspected: four players, surviving yellow tiles,
+  missing unsafe tiles and touch controls remain visible without overlap.
+  These are static desktop snapshot fixtures, not recorded online gameplay
+  or iPhone/iPad store screenshots.
 - Production is not enabled by this room allowlist change; physical-device
-  and Internet conditions remain unverified. Replicated-floor orientation
-  captures remain pending; previous Color Stand captures used local state.
+  and Internet conditions remain unverified.
+
+### Quick Draw lifecycle prerequisite
+
+Each new match round now clears the prior signal age, response order and
+false-start locks, resets the prompt counter and starts a fresh random wait.
+Inactive players cannot register responses or false starts. This prevents
+spectators from affecting reaction ranking and penalties.
+
+- `/tmp/kras-quick-before.log`: eight failing assertions reproduced stale
+  round state and spectator penalties before the fix.
+- `/tmp/kras-quick-after.log`: 11 assertions passed after the fix.
+- Full gate `kras-party-check.gxPb9f`: 251 scripts compiled, 288 resources
+  audited with zero issues, 17,470 assertions passed, three-lap race regression
+  passed and 39 stability matches completed with zero failures.
+- Quick Draw remains excluded from online rooms; no snapshot adapter or
+  network latency fairness claim is implied by this lifecycle repair.
 
 ### Color Stand snapshot adapter
 

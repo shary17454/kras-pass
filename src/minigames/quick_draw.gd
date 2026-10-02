@@ -53,9 +53,15 @@ func build() -> void:
 	_begin_wait()
 
 
+func on_round_start() -> void:
+	_round_no = 0
+	_begin_wait()
+
+
 func _begin_wait() -> void:
 	_round_no += 1
 	_stage = Stage.WAIT
+	_signal_age = 0.0
 	_order.clear()
 	_locked.clear()
 	_timer = ctx.rng.randf_range(1.6, 4.5)
@@ -92,7 +98,7 @@ func _fire_signal() -> void:
 
 func _watch_false_starts() -> void:
 	for i in ctx.fighters.size():
-		if _locked.has(i):
+		if not ctx.is_alive(i) or _locked.has(i):
 			continue
 		if InputRouter.frame(i).just_pressed(InputFrame.Btn.ATTACK):
 			_locked[i] = true
@@ -106,7 +112,7 @@ func _watch_false_starts() -> void:
 
 func _watch_draws() -> void:
 	for i in ctx.fighters.size():
-		if _locked.has(i) or _order.has(i):
+		if not ctx.is_alive(i) or _locked.has(i) or _order.has(i):
 			continue
 		if InputRouter.frame(i).just_pressed(InputFrame.Btn.ATTACK):
 			_order.append(i)
