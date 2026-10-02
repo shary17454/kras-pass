@@ -11,14 +11,24 @@ export function validBlastWorld(data) {
     && (!data.detonated || data.fuse === 0);
 }
 
-export function validCrumbleWorld(data) {
-  return !!data && Array.isArray(data.tiles) && data.tiles.length === 113
+export function validCrumbleWorld(data, tileCount = 113) {
+  return !!data && Array.isArray(data.tiles) && data.tiles.length === tileCount
     && data.tiles.every(row => Array.isArray(row) && row.length === 4 && row.every(Number.isFinite)
       && Number.isInteger(row[0]) && row[0] >= 0 && row[0] <= 3
       && row[1] >= 0 && row[1] <= 10 && row[2] >= -32 && row[2] <= 0
       && Number.isInteger(row[3]) && row[3] >= 0 && row[3] <= 1000000
       && (row[0] !== 0 || (row[1] === 0 && row[2] === 0))
       && (row[0] !== 1 || (row[1] <= .9 && row[2] === 0)));
+}
+
+export function validColorWorld(data) {
+  return validCrumbleWorld(data, 121)
+    && Array.isArray(data.colors) && data.colors.length === 121
+    && data.colors.every(color => Number.isInteger(color) && color >= 0 && color <= 3)
+    && Number.isInteger(data.called) && data.called >= 0 && data.called <= 3
+    && Number.isInteger(data.stage) && data.stage >= 0 && data.stage <= 2
+    && Number.isFinite(data.timer) && data.timer >= 0 && data.timer <= 60
+    && ['call_sequence', 'drop_sequence'].every(key => Number.isInteger(data[key]) && data[key] >= 0 && data[key] <= 1000000);
 }
 
 export function validSkyWorld(data, count) {

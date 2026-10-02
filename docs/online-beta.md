@@ -856,6 +856,31 @@ to preserve the original 60 Hz blend.
 
 ## Expansion checklist per game
 
+### Color Stand snapshot adapter
+
+`color_replica.gd` captures the authored 121-tile quilt, palette index per tile,
+called color, phase and timer. It reuses the falling-floor codec/presenter with
+an explicit internal tile-count parameter; Crumble Court still validates its
+original 113-tile layout by default. Guests present tile heights/visibility and
+palette without advancing floor physics, countdowns or scoring.
+
+Monotonic call/drop sequences gate countdown/whistle feedback. First snapshots,
+repeated snapshots and reconnect gaps cannot replay old cues. The shared match
+dispatcher validates Color Stand state before applying it. The server has a
+matching `validColorWorld` validator, not yet wired into room acceptance.
+
+- `/tmp/kras-color-replica.log`: 430 assertions passed for JSON round-trip,
+  missing/malformed fields, palette bounds, complete floor, host target,
+  disabled guest collision, stopped countdown and feedback freshness.
+- `npm test`: 47 tests passed, including new color bounds and existing
+  Crumble Court validation/room regressions.
+- Full gate `kras-party-check.88gtJ5`: 250 scripts compiled, 287 resources
+  audited with zero issues, 17,460 assertions passed, real three-lap race
+  regression passed and 39 stability matches completed with zero failures.
+- Color Stand is still excluded from online room allowlists. Remaining work:
+  room integration, multi-engine ordinary/tournament tests, reconnect state
+  agreement and presentation captures from the replicated floor.
+
 ### Color Stand readability prerequisite
 
 Reviewing the next candidate found that the HUD displayed only the game title

@@ -18,6 +18,8 @@ var _hold := 2.6
 var _called := 0
 var _tiles: Array[ArenaTile] = []
 var _round_no := 0
+var call_sequence := 0
+var drop_sequence := 0
 
 
 func configure() -> void:
@@ -53,6 +55,7 @@ func _repaint() -> void:
 
 
 func _begin_call() -> void:
+	call_sequence += 1
 	_round_no += 1
 	_called = ctx.rng.randi_range(0, COLORS.size() - 1)
 	_stage = Stage.CALL
@@ -79,6 +82,7 @@ func tick(delta: float) -> void:
 
 
 func _drop() -> void:
+	drop_sequence += 1
 	_stage = Stage.DROP
 	_timer = 1.6
 	AudioManager.play_sfx("whistle")

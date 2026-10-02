@@ -15,8 +15,8 @@ static func capture(game: Node) -> Dictionary:
 	return {"tiles": rows}
 
 
-static func valid(world: Variant) -> bool:
-	if not world is Dictionary or not world.get("tiles") is Array or world.tiles.size() != TILE_COUNT:
+static func valid(world: Variant, tile_count: int = TILE_COUNT) -> bool:
+	if not world is Dictionary or not world.get("tiles") is Array or world.tiles.size() != tile_count:
 		return false
 	for row in world.tiles:
 		if not row is Array or row.size() != 4:
@@ -37,7 +37,7 @@ static func valid(world: Variant) -> bool:
 
 func render(game: Node, world: Dictionary, play_events: bool) -> void:
 	if sequences.is_empty():
-		sequences.resize(TILE_COUNT)
+		sequences.resize(world.tiles.size())
 		sequences.fill(-1)
 	for i in game.ctx.arena.tiles.size():
 		var tile: ArenaTile = game.ctx.arena.tiles[i]
