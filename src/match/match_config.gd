@@ -39,6 +39,15 @@ func human_slots() -> Array[int]:
 	return out
 
 
+## Remote humans have peer IDs but no local input device on this process.
+func human_competitor_slots() -> Array[int]:
+	var out: Array[int] = []
+	for p in players:
+		if p.is_human or (context == Context.ONLINE and p.peer_id > 0):
+			out.append(p.slot)
+	return out
+
+
 func player_count() -> int:
 	return players.size()
 

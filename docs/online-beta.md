@@ -2,6 +2,46 @@
 
 ## Implemented boundary
 
+### Kart integration prerequisites
+
+Before adding Kart Sprint to rooms, source inspection found three actual
+integration blockers. Kart/Sabaq encode unfinished progress beneath a
+one-billion sentinel, whereas the room/tournament result checks previously
+rejected anything above one million. `validResultScore` now uses the checked-in
+game catalogue and allows that sentinel only for those two kart games, scaled
+by the configured 1-to-10 ordinary-match rounds. Tournament records remain
+single-round bounded. Race results must be nonnegative integers; ordinary
+arena games retain their existing signed one-million limit. No ranking flag or
+range can be supplied by the client. Snapshot score checks remain unchanged,
+because those represent context counters rather than aggregated final results.
+
+Kart round start now clears every pad's per-player cooldown, so a preceding
+round cannot suppress the first boost of the next. Kart completion now uses
+`MatchConfig.human_competitor_slots()`: remote peers are human competitors in
+online matches even though they are not local device owners. `human_slots()`
+and input-device routing are unchanged. This prevents the host's finish alone
+ending a race while a remote human is still driving, while preserving offline
+rules and the existing policy that unfinished bots do not block all humans.
+Sabaq inherits the same race controller fixes.
+
+`/tmp/kras-race-score-contract.log` passed all 87 Node tests. New cases verify
+unfinished-progress ranking behind finishers, up to ten summed race rounds,
+duplicate result rejection, integer/type/range bounds, unchanged arena limits
+and a complete pure Tournament-model sequence. This is not room or network
+race qualification. `/tmp/kras-race-round-reset-final.log` passed 16 focused
+assertions. Real pad contact starts recharge, round start restores availability,
+and the next contact is accepted. Ordered checkpoint ticks finish the host's
+three laps without ending the race until the remote human also finishes.
+That rule-level fixture positions riders at checkpoints; it is not physical
+driving, performance or independent-process evidence. Kart remains excluded
+from room allowlists; its world adapter, actual online race, recovery visuals
+and final tournament qualification remain to be implemented and verified.
+Full gate `kras-party-check.bkVDQo` compiled 291 scripts, audited 328 resources
+with zero issues, passed 19,336 assertions, passed the real three-lap race and
+completed 39 stability matches with zero failures. That physical race regression
+is offline; it does not establish a race across independent online peers or
+complete release readiness.
+
 ### Fawda bomb adapter preparation
 
 Fawda now assigns round-local monotonic bomb identities and records sampled

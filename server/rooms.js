@@ -1,6 +1,7 @@
 import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
+import {validResultScore} from './game-scoring.js';
 import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
@@ -202,7 +203,7 @@ export class Rooms {
     if (m.op === 'result') {
       this.host(c);
       if (r.state !== 'playing' || m.epoch !== r.epoch || !Array.isArray(m.scores)
-        || m.scores.length !== r.roster.length || m.scores.some(v => !integer(v, -1000000, 1000000))) fail('invalid_result');
+        || m.scores.length !== r.roster.length || m.scores.some(v => !validResultScore(r.matchConfig.game, v, r.matchConfig.rounds))) fail('invalid_result');
       if (r.tournament) r.tournament.record(r.epoch, m.scores);
       for (const peer of r.players.values()) peer.ready = false;
       r.state = 'results'; r.result = {op: 'result', epoch: r.epoch, scores: m.scores, tournament: r.tournament?.view() ?? null};

@@ -111,6 +111,8 @@ func on_round_start() -> void:
 	_next_cp.fill(0)
 	_started.fill(false)
 	_stuck_seconds.fill(0.0)
+	for pad in _boost_pads:
+		pad.cooldown.clear()
 	for i in ctx.fighters.size():
 		_drive_anchors[i] = ctx.fighter(i).global_position
 
@@ -265,7 +267,7 @@ func on_round_end() -> void:
 func is_round_over() -> bool:
 	if ctx.early_finish or _finished >= ctx.player_count():
 		return true
-	var humans := ctx.config.human_slots()
+	var humans := ctx.config.human_competitor_slots()
 	if humans.is_empty():
 		return false
 	for slot in humans:

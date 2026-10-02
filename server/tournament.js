@@ -1,5 +1,5 @@
 // Server-owned tournament accounting. The host supplies match scores only.
-import {higherIsBetter} from './game-scoring.js';
+import {higherIsBetter, validResultScore} from './game-scoring.js';
 
 export class Tournament {
   constructor(count, settings, seed) {
@@ -48,7 +48,7 @@ export class Tournament {
   record(epoch, scores) {
     if (!this.current || this.complete || epoch <= this.lastEpoch) throw new Error('invalid_tournament_result');
     if (!Array.isArray(scores) || scores.length !== this.points.length
-      || scores.some(s => !Number.isInteger(s) || Math.abs(s) > 1000000)) throw new Error('invalid_tournament_result');
+      || scores.some(s => !validResultScore(this.current.game, s))) throw new Error('invalid_tournament_result');
     const higher = higherIsBetter(this.current.game);
     const bestOf = values => higher ? Math.max(...values) : Math.min(...values);
     this.lastEpoch = epoch;
