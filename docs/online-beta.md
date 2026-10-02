@@ -2,6 +2,28 @@
 
 ## Implemented boundary
 
+### Symbol Echo adapter preparation
+
+`symbol_echo` now has a bounded presentation adapter and matching Node/Godot
+world validators. It publishes the currently visible pad/step, public sequence
+length, phase, progress, mistakes, finishers and monotonic feedback counters.
+It does not put the answer sequence or hidden phase timer in snapshots. Guest
+presentation discards its locally generated sequence and cannot score or tick
+the host rules. This is payload minimization, not a cryptographic secrecy or
+anti-cheat guarantee: the broader protocol still shares deterministic seeds.
+
+The game remains excluded from the online room allowlists until real
+multi-process ordinary/tournament matches and reconnect observations pass.
+Adapter tests cover malformed/missing/extra fields, inconsistent finishers,
+JSON round trips, repeated symbols, score/timer immutability and stale-audio
+suppression. `/tmp/kras-echo-network.log`: 120 assertions passed. Server tests:
+53 passed with local WebSocket listener permission; the sandbox-only attempt
+failed at `listen EPERM` and is not counted as a passing transport run.
+Full gate `kras-party-check.30MKH5`: 257 scripts compiled, 294 resources audited
+with zero issues, 17,793 assertions passed, the three-lap race regression
+passed and all 39 stability matches completed with zero failures. This is
+desktop headless coverage, not iPhone performance or App Store approval.
+
 The existing local match runtime remains authoritative on the host device.
 The Node service authenticates **connection ownership**, not Apple accounts,
 and controls room membership, readiness, loading barriers, slot assignment,

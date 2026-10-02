@@ -33,6 +33,10 @@ var _serial := 0
 var _finished: Array[int] = []
 var _flash_index := -1
 var _flash_remaining := 0.0
+var flash_sequence := 0
+var correct_sequence := 0
+var wrong_sequence := 0
+var finish_sequence := 0
 
 
 func configure() -> void:
@@ -123,6 +127,7 @@ func tick(delta: float) -> void:
 
 
 func _flash(index: int) -> void:
+	flash_sequence += 1
 	_reset_pad_colors()
 	_flash_index = index
 	_flash_remaining = _step_time * 0.6
@@ -158,10 +163,12 @@ func _read_inputs() -> void:
 		if _progress[i] >= _sequence.size():
 			continue
 		if on == _sequence[_progress[i]]:
+			correct_sequence += 1
 			_progress[i] += 1
 			ctx.add_score(i, int(STEP_POINTS * ctx.powerups.point_multiplier(i)))
 			AudioManager.play_sfx("correct", f.global_position)
 			if _progress[i] >= _sequence.size():
+				finish_sequence += 1
 				_finished.append(i)
 				var base := SEQUENCE_POINTS * _sequence.size()
 				var bonus: int = ORDER_BONUS[rank] if rank < ORDER_BONUS.size() else 0
@@ -172,6 +179,7 @@ func _read_inputs() -> void:
 					ctx.bump_detail(i, "first")
 				AudioManager.play_sfx("score")
 		else:
+			wrong_sequence += 1
 			_progress[i] = 0
 			_mistakes[i] += 1
 			ctx.bump_detail(i, "mistakes")
@@ -227,7 +235,7 @@ func visible_step() -> int:
 
 
 func sequence_length() -> int:
-	return _sequence.size()
+	return _length
 
 
 func current_pad(slot: int) -> int:
@@ -263,8 +271,8 @@ func is_round_over() -> bool:
 
 func hud_banner() -> String:
 	if _stage == Stage.SHOW:
-		return "%s  %d" % [Loc.t("hud.get_ready"), _sequence.size()]
-	return "%d" % _sequence.size()
+		return "%s  %d" % [Loc.t("hud.get_ready"), sequence_length()]
+	return "%d" % sequence_length()
 
 
 func ai_script() -> Script:

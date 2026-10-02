@@ -11,6 +11,7 @@ const CrumbleReplica = preload("res://src/net/crumble_replica.gd")
 const BlastReplica = preload("res://src/net/blast_replica.gd")
 const ColorReplica = preload("res://src/net/color_replica.gd")
 const DrawReplica = preload("res://src/net/draw_replica.gd")
+const EchoReplica = preload("res://src/net/echo_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -28,6 +29,7 @@ var _crumble: RefCounted
 var _blast: RefCounted
 var _color: RefCounted
 var _draw: RefCounted
+var _echo: RefCounted
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -61,6 +63,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = ColorReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "quick_draw":
 		packet["world"] = DrawReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "symbol_echo":
+		packet["world"] = EchoReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "zone_hold":
 		packet["world"] = ZoneReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "relic_hold":
@@ -105,6 +109,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "quick_draw":
 		if not DrawReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "symbol_echo":
+		if not EchoReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "zone_hold":
 		if not ZoneReplica.valid(data.get("world")):
@@ -203,6 +210,12 @@ func render(scene: Node, delta: float) -> void:
 			_color = ColorReplica.new()
 		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
 		_color.render(scene.controller, target.world, fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
+	elif scene.config.minigame_id == "symbol_echo":
+		if _echo == null:
+			_echo = EchoReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_echo.render(scene.controller, target.world, fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "quick_draw":
 		if _draw == null:

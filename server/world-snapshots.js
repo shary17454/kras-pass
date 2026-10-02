@@ -68,6 +68,31 @@ export function validSaboteurWorld(data, count) {
     && (data.target >= 0 || data.mark === 0);
 }
 
+export function validEchoWorld(data, count) {
+  const integer = (value, low, high) => Number.isInteger(value) && value >= low && value <= high;
+  if (!integer(count, 2, 4) || !data || typeof data !== 'object' || Array.isArray(data)
+    || Object.keys(data).length !== 13 || !integer(data.stage, 0, 2)
+    || !integer(data.serial, 0, 1000000) || !integer(data.length, 1, 9)
+    || !integer(data.pad, -1, 4) || !integer(data.step, -1, data.length - 1)
+    || !Number.isFinite(data.flash_left) || data.flash_left < 0 || data.flash_left > 5
+    || !['flash_sequence', 'correct_sequence', 'wrong_sequence', 'finish_sequence']
+      .every(key => integer(data[key], 0, 1000000))) return false;
+  if (data.pad < 0 ? (data.step !== -1 || data.flash_left !== 0)
+    : (data.stage !== 0 || data.step < 0 || data.flash_left <= 0)) return false;
+  for (const key of ['progress', 'mistakes']) {
+    if (!Array.isArray(data[key]) || data[key].length !== count
+      || !data[key].every(value => integer(value, 0, key === 'progress' ? data.length : 1000000))) return false;
+  }
+  if (!Array.isArray(data.finished) || data.finished.length > count) return false;
+  const seen = new Set();
+  for (const slot of data.finished) {
+    if (!integer(slot, 0, count - 1) || seen.has(slot) || data.progress[slot] !== data.length) return false;
+    seen.add(slot);
+  }
+  return data.progress.every((progress, slot) => (progress === data.length) === seen.has(slot)
+    && (data.stage !== 0 || progress === 0));
+}
+
 export function validDrawWorld(data, count) {
   const integer = (value, max) => Number.isInteger(value) && value >= 0 && value <= max;
   if (!Number.isInteger(count) || count < 2 || count > 4 || !data || typeof data !== 'object'
