@@ -3076,6 +3076,49 @@ its TCP latency tradeoff still requires real-network testing. References:
 [Godot WebSocket guide](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html),
 [ws](https://github.com/websockets/ws).
 
+## Colossus visible attack approach (2026-10-02)
+
+BossHunter previously fled craters within 3.8 metres while requiring a fist
+distance below 2.75 metres to swing. A radius-three physical crater made those
+requirements incompatible. Colossus now supplies an approach sampled around
+the visible fist at 3.55 metres, rejecting carved ground and the arena edge.
+The bot uses the same authored 3.75-metre reach and 5.5-metre vertical tolerance
+as arm hit resolution. Permanent holes have a 0.5-metre safety margin, while
+temporary telegraphs retain their original margin and escape priority. Other
+bosses retain their existing approach logic.
+
+The exposure window is 2.4 seconds rather than 1.5, allowing travel around real
+holes. Health remains 800, damage remains 55 and each player still gets only
+one hit per exposure. This is a tuning change, not a completed balance pass.
+
+Evidence:
+- `/tmp/kras-colossus-approach-before.log`: two failing assertions reproduce
+  the unreachable attack decision; two other assertions pass.
+- `/tmp/kras-colossus-approach-final.log`: 56 focused assertions pass, including
+  approach directions, safe ground, unreachable vertical offset, unexposed
+  fist and telegraph escape priority. Perfect decision parameters in this
+  controlled fixture are not representative full difficulty profiles.
+- `/tmp/kras-colossus-ai-real.log`: real four-Expert-bot match with the initial
+  1.5-second window, seed 9614, ends without defeat at health 250.
+- `/tmp/kras-colossus-ai-window.log`: with the new window, the same actual
+  match defeats the boss through normal inputs and credits all four bots.
+- `/tmp/kras-colossus-ai-seed345.log`: another actual match ends without boss
+  defeat at health 415. The checker intentionally returns failure for this
+  qualification gap, even though the round itself ends normally.
+- `kras-party-check.txFSqK`: 307 scripts compile; 345 resources and the existing
+  autoloads/routes report zero inventory issues; 20,463 assertions pass in
+  544.6 seconds; the real three-lap race and all 39 stability matches pass.
+  Logs are under the macOS TMPDIR printed by `tools/check_party.sh`. This
+  headless wall time is not a device frame-rate or battery qualification.
+
+Reproduce the actual, unshortened match via `tests/colossus_ai_check.tscn`
+with `--fixed-fps 60`, an isolated `--test-data-dir` and optional `--seed=345`.
+The checker does not mutate health, damage, positions, AI profile or duration
+after setup. It is not part of the required gate yet: dense-hole navigation,
+multi-seed and multi-difficulty balance, spawn advantage, delayed boss-state
+perception and human playtests remain unqualified. Do not label Colossus READY
+or online-ready from the successful seed alone.
+
 ## Colossus physical crater regression (2026-10-02)
 
 The opt-in carved disc floor now has direct physics coverage: raycasts inside

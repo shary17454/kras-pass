@@ -12,11 +12,9 @@ extends "res://src/minigames/boss_controller.gd"
 const SLAM_PERIOD := 4.4
 const SWEEP_PERIOD := 7.0
 const ARM_DAMAGE := 55.0
-## Long enough that reading the slam and arriving is a real, repeatable play,
-## short enough that only someone who moved on the telegraph gets there. At
-## 2.4 s anyone who wandered over late still cashed in and the tiers scored
-## alike (0.42); the window is the skill test, so it has to be a window.
-const EXPOSED_TIME := 1.5
+## Carved craters require an approach around the rim, not through the fist.
+## This window includes that travel while retaining one hit per player.
+const EXPOSED_TIME := 2.4
 ## One strike per exposure, so the reward is arriving, not standing there.
 const HIT_PER_WINDOW := true
 
@@ -169,12 +167,37 @@ func weak_points() -> Array:
 	return []
 
 
+func attack_plan(from: Vector3) -> Dictionary:
+	var spots := weak_points()
+	var arena := ctx.arena as Arena
+	if spots.is_empty() or arena == null:
+		return {}
+	var point: Vector3 = spots[0]
+	var best := Vector3.INF
+	var distance := INF
+	# All inputs are visible: the exposed fist and the carved arena surface.
+	for step in 64:
+		var angle := TAU * float(step) / 64.0
+		var candidate := point + Vector3(cos(angle), 0, sin(angle)) * 3.55
+		candidate.y = from.y
+		if arena.is_inside(candidate, 0.5):
+			var d := candidate.distance_squared_to(from)
+			if d < distance:
+				distance = d
+				best = candidate
+	if best == Vector3.INF:
+		return {}
+	var offset := point - from
+	offset.y = 0.0
+	return {"target": best, "attack": arena.is_inside(from, 0.5) and absf(point.y - from.y) <= 5.5 and offset.length() <= Balance.num("tuning", "fighter.attack_range", 2.15) + 1.6}
+
+
 func danger_zones() -> Array:
 	var out: Array = super.danger_zones()
 	# Craters are permanent holes, so they are danger too — treat them as
 	# warnings that never expire.
 	for c in _craters:
-		out.append({"pos": c["pos"], "radius": float(c["radius"]), "left": 99.0})
+		out.append({"pos": c["pos"], "radius": float(c["radius"]), "left": 99.0, "margin": 0.5})
 	return out
 
 
