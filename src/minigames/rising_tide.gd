@@ -5,6 +5,8 @@ extends MiniGameController
 ## means and hands the AI a reason to go up. Shoving still works, and shoving
 ## someone off a ledge into rising water is the fastest way to end them.
 
+var _eliminated_at: Dictionary = {}
+
 
 func configure() -> void:
 	eliminate_on_fall = true
@@ -16,9 +18,31 @@ func build() -> void:
 
 
 func on_round_start() -> void:
+	_eliminated_at.clear()
 	var arena := ctx.arena as Arena
 	if arena != null:
 		arena.reset_hazards()
+
+
+func _handle_out(slot: int) -> void:
+	var was_alive := ctx.is_alive(slot)
+	super._handle_out(slot)
+	if was_alive and not ctx.is_alive(slot):
+		_eliminated_at[slot] = ctx.arena._water._age
+
+
+func compute_scores() -> Array[int]:
+	var ranks := ctx.survival_scores()
+	for slot in _eliminated_at:
+		# Water processes a batch of victims; iteration order is not survival skill.
+		var rank := 1
+		for other in _eliminated_at:
+			if float(_eliminated_at[other]) < float(_eliminated_at[slot]) and not is_equal_approx(float(_eliminated_at[other]), float(_eliminated_at[slot])):
+				rank += 1
+		ranks[slot] = rank
+	for slot in ranks.size():
+		ranks[slot] = ranks[slot] * 2 + int(ctx.details[slot].get("knockouts", 0)) * survival_knockout_weight
+	return ranks
 
 
 func tick(_delta: float) -> void:
