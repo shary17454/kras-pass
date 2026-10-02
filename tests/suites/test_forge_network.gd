@@ -36,6 +36,8 @@ func run(t: TestHarness, host: Node) -> void:
 	var packet: Dictionary = JSON.parse_string(JSON.stringify(Replica.new().capture(source)))
 	packet.phase = MatchPhase.P.PLAYING
 	var replica := Replica.new()
+	var sample_time := {"now": 1000}
+	replica.receive_clock = func(): return sample_time.now
 	t.ok(replica.accept(packet, 4, "boss_forge"), "actual host forge JSON accepted")
 	var capture := FileAccess.open(SaveSystem.storage_root.path_join("forge-world.json"), FileAccess.WRITE)
 	t.ok(capture != null, "actual forge capture writable")
@@ -145,7 +147,9 @@ func run(t: TestHarness, host: Node) -> void:
 	game._slag[0].node.global_position = game._intake.global_position
 	game._tick_slag(0.0)
 	packet = _packet(source)
+	sample_time.now = 2000
 	t.ok(replica.accept(packet, 4, "boss_forge"), "second actual intake hit accepted")
+	t.equal(replica.received_at - replica._event_received_at, 1000, "fresh sample at exact feedback boundary")
 	AudioManager._last_played.erase("hit")
 	voice = AudioManager._next_voice
 	replica.render(guest, 0.016)
@@ -156,6 +160,14 @@ func run(t: TestHarness, host: Node) -> void:
 	voice = AudioManager._next_voice
 	replica.render(guest, 0.016)
 	t.equal(AudioManager._next_voice, voice, "duplicate feedback stays quiet without debounce")
+	game.damage_boss(1, 0)
+	packet = _packet(source)
+	sample_time.now = 3001
+	t.ok(replica.accept(packet, 4, "boss_forge"), "stale damage state still accepted")
+	AudioManager._last_played.erase("hit")
+	voice = AudioManager._next_voice
+	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, voice, "1001 ms sample updates state without historical sound")
 	var reconnect := Replica.new()
 	t.ok(reconnect.accept(packet, 4, "boss_forge"), "reconnect accepts current host state")
 	reconnect._last_phase = MatchPhase.P.PLAYING

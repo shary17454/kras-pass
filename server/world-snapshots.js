@@ -12,6 +12,23 @@ function validBossState(b, maximum, thresholds) {
     && vector(b.strike_position) && Number.isFinite(b.strike_radius) && b.strike_radius >= 0 && b.strike_radius <= 100;
 }
 
+export function validSovereignWorld(data, count) {
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 5)
+    || !validBossState(data.boss, 1500, [.66, .30]) || typeof data.shielded !== 'boolean'
+    || (data.shielded && data.boss.phase !== 1) || !Number.isFinite(data.recovery) || data.recovery < 0 || data.recovery > 2.8
+    || !Array.isArray(data.warnings) || data.warnings.length > 64 || !Array.isArray(data.orbs) || data.orbs.length > 32) return false;
+  const ids = new Set();
+  const row = (v, size) => {
+    if (!object(v, size) || typeof v.id !== 'string' || !/^[1-9][0-9]{0,17}$/.test(v.id)
+      || ids.has(v.id) || !vector(v.position)) return false;
+    ids.add(v.id); return true;
+  };
+  return data.warnings.every(v => row(v, 5) && Number.isFinite(v.radius) && v.radius >= .25 && v.radius <= 100
+    && Number.isFinite(v.left) && Number.isFinite(v.total) && v.total > 0 && v.total <= 60 && v.left >= 0 && v.left <= v.total)
+    && data.orbs.every(v => row(v, 3) && typeof v.returned === 'boolean');
+}
+
 export function validDreadnoughtWorld(data, count) {
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
   if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 4)

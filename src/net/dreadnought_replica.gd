@@ -76,22 +76,8 @@ func render(game: Node, world: Dictionary, round_index: int, feedback: bool) -> 
 	game.boss_node.global_position = _position(boss)
 	game.boss_node.rotation = Vector3(boss.rotation[0], boss.rotation[1], boss.rotation[2])
 	game.boss_node.visible = not game.boss_defeated
+	Boss.render_warning_views(self, warnings, world.warnings, feedback and not baseline)
 	var present := {}
-	for row in world.warnings:
-		present[row.id] = true
-		if warnings.has(row.id) and not is_equal_approx(float(warnings[row.id].get_meta("radius")), float(row.radius)):
-			_remove(warnings, row.id)
-		if not warnings.has(row.id):
-			var view := MeshFactory.torus(float(row.radius) - 0.25, float(row.radius), Boss.COLOR, 1.8)
-			view.set_meta("radius", float(row.radius))
-			add_child(view)
-			warnings[row.id] = view
-			if feedback and not baseline: AudioManager.play_sfx("tick", _position(row), 0.7)
-		warnings[row.id].global_position = _position(row) + Vector3(0, 0.12, 0)
-		var fill: float = 1.0 - clampf(float(row.left) / float(row.total), 0.0, 1.0)
-		warnings[row.id].scale = Vector3(0.35 + 0.65 * fill, 1, 0.35 + 0.65 * fill)
-	_prune(warnings, present)
-	present.clear()
 	for index in world.mines.size():
 		var row: Dictionary = world.mines[index]
 		present[row.id] = true

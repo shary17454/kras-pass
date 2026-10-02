@@ -90,6 +90,30 @@ static func valid_warning(row: Variant, ids: Dictionary) -> bool:
 		and row.left >= 0.0 and row.left <= row.total
 
 
+static func render_warning_views(parent: Node3D, views: Dictionary, rows: Array, feedback: bool) -> void:
+	var present := {}
+	for row in rows:
+		present[row.id] = true
+		if views.has(row.id) and not is_equal_approx(float(views[row.id].get_meta("radius")), float(row.radius)):
+			views[row.id].hide()
+			views[row.id].queue_free()
+			views.erase(row.id)
+		if not views.has(row.id):
+			var view := MeshFactory.torus(float(row.radius) - 0.25, float(row.radius), COLOR, 1.8)
+			view.set_meta("radius", float(row.radius))
+			parent.add_child(view)
+			views[row.id] = view
+			if feedback: AudioManager.play_sfx("tick", Vector3(row.position[0], row.position[1], row.position[2]), 0.7)
+		views[row.id].global_position = Vector3(row.position[0], row.position[1], row.position[2]) + Vector3(0, 0.12, 0)
+		var fill: float = 1.0 - clampf(float(row.left) / float(row.total), 0.0, 1.0)
+		views[row.id].scale = Vector3(0.35 + 0.65 * fill, 1, 0.35 + 0.65 * fill)
+	for id in views.keys():
+		if not present.has(id):
+			views[id].hide()
+			views[id].queue_free()
+			views.erase(id)
+
+
 static func _row(row: Variant, size: int, ids: Dictionary) -> bool:
 	return row is Dictionary and row.size() == size and Fields._id(row.get("id"), ids) and Fields._vector(row.get("position"))
 
@@ -123,22 +147,8 @@ func render(game: Node, world: Dictionary, round_index: int, feedback: bool) -> 
 	game.boss_node.rotation = Vector3(boss.rotation[0], boss.rotation[1], boss.rotation[2])
 	game.boss_node.visible = not game.boss_defeated
 	game._intake.rotation = Vector3(world.intake[0], world.intake[1], world.intake[2])
+	render_warning_views(self, warnings, world.warnings, feedback and not baseline)
 	var present := {}
-	for row in world.warnings:
-		present[row.id] = true
-		if warnings.has(row.id) and not is_equal_approx(float(warnings[row.id].get_meta("radius")), float(row.radius)):
-			_remove(warnings, row.id)
-		if not warnings.has(row.id):
-			var view := MeshFactory.torus(float(row.radius) - 0.25, float(row.radius), COLOR, 1.8)
-			view.set_meta("radius", float(row.radius))
-			add_child(view)
-			warnings[row.id] = view
-			if feedback and not baseline: AudioManager.play_sfx("tick", _position(row), 0.7)
-		warnings[row.id].global_position = _position(row) + Vector3(0, 0.12, 0)
-		var fill: float = 1.0 - clampf(float(row.left) / float(row.total), 0.0, 1.0)
-		warnings[row.id].scale = Vector3(0.35 + 0.65 * fill, 1, 0.35 + 0.65 * fill)
-	_prune(warnings, present)
-	present.clear()
 	for row in world.crates:
 		present[row.id] = true
 		if not crates.has(row.id):

@@ -29,6 +29,7 @@ const ArmedRaceReplica = preload("res://src/net/armed_race_replica.gd")
 const SiegeReplica = preload("res://src/net/siege_replica.gd")
 const ForgeReplica = preload("res://src/net/forge_replica.gd")
 const DreadnoughtReplica = preload("res://src/net/dreadnought_replica.gd")
+const SovereignReplica = preload("res://src/net/sovereign_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -60,6 +61,8 @@ var _armed_race: Node3D
 var _siege: RefCounted
 var _forge: Node3D
 var _dreadnought: Node3D
+var _sovereign: Node3D
+var receive_clock := Callable(Time, "get_ticks_msec")
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -111,6 +114,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = ForgeReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "boss_dreadnought":
 		packet["world"] = DreadnoughtReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "boss_sovereign":
+		packet["world"] = SovereignReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -167,6 +172,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 			return false
 	elif game_id == "boss_dreadnought":
 		if not DreadnoughtReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "boss_sovereign":
+		if not SovereignReplica.valid(data.get("world"), count):
 			return false
 	elif game_id == "hurdle_dash":
 		if not HurdleReplica.valid(data.get("world"), count):
@@ -285,7 +293,7 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 		if not row.get("visible") is bool or not row.get("alive") is bool:
 			return false
 	target = data.duplicate(true)
-	received_at = Time.get_ticks_msec()
+	received_at = int(receive_clock.call())
 	return true
 
 
@@ -397,6 +405,13 @@ func render(scene: Node, delta: float) -> void:
 			scene.ctx.world_root.add_child(_dreadnought)
 		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
 		_dreadnought.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH, P.FINISH])
+		_event_received_at = received_at
+	elif scene.config.minigame_id == "boss_sovereign":
+		if not is_instance_valid(_sovereign):
+			_sovereign = SovereignReplica.new()
+			scene.ctx.world_root.add_child(_sovereign)
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_sovereign.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH, P.FINISH])
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "duel_pit":
 		DuelReplica.render(scene.controller, target.world)

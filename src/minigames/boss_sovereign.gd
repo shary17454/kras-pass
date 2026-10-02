@@ -51,6 +51,7 @@ func boss_build() -> void:
 
 
 func boss_think(delta: float) -> void:
+	if presentation_only: return
 	if _core != null and is_instance_valid(_core):
 		_core.scale = Vector3.ONE * (1.0 + 0.08 * sin(float(Time.get_ticks_msec()) * 0.004))
 	_tick_orbs(delta)
@@ -81,6 +82,7 @@ func boss_think(delta: float) -> void:
 # --- phase I ---------------------------------------------------------------
 
 func _pursuit(delta: float) -> void:
+	if presentation_only: return
 	var target := _closest_alive()
 	if target < 0:
 		return
@@ -106,6 +108,7 @@ func _pursuit(delta: float) -> void:
 # --- phase II --------------------------------------------------------------
 
 func _siege(delta: float) -> void:
+	if presentation_only: return
 	if not _shielded:
 		_raise_shield()
 	_orb_timer -= delta
@@ -115,6 +118,7 @@ func _siege(delta: float) -> void:
 
 
 func _raise_shield() -> void:
+	if presentation_only: return
 	_shielded = true
 	if _shield == null or not is_instance_valid(_shield):
 		_shield = MeshFactory.sphere(3.6, Color("#5ad6a0"), 0.9)
@@ -128,6 +132,7 @@ func _raise_shield() -> void:
 ## Orbs drift outward slowly enough to be met. A fighter who swings at one
 ## sends it back, and an orb that reaches the shield brings the shield down.
 func _throw_orbs() -> void:
+	if presentation_only: return
 	for i in 4:
 		var ang := TAU * float(i) / 4.0 + ctx.rng.randf() * 0.5
 		var node := MeshFactory.sphere(0.7, Color("#ffd166"), 2.4)
@@ -139,6 +144,7 @@ func _throw_orbs() -> void:
 
 
 func _tick_orbs(delta: float) -> void:
+	if presentation_only: return
 	var i := _orbs.size() - 1
 	while i >= 0:
 		var o = _orbs[i]
@@ -204,6 +210,7 @@ func _tick_orbs(delta: float) -> void:
 # --- phase III -------------------------------------------------------------
 
 func _collapse(delta: float) -> void:
+	if presentation_only: return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -229,6 +236,7 @@ func _collapse(delta: float) -> void:
 # --- shared ----------------------------------------------------------------
 
 func _check_core_hits() -> void:
+	if presentation_only: return
 	if _core == null or not is_instance_valid(_core) or _shielded:
 		return
 	for i in ctx.fighters.size():
@@ -260,6 +268,7 @@ func _closest_alive() -> int:
 
 
 func on_phase_changed(new_phase: int) -> void:
+	if presentation_only: return
 	_recover = RECOVER_TIME
 	_hit_window.clear()
 	if new_phase >= 2:
@@ -285,6 +294,7 @@ func weak_points() -> Array:
 
 
 func boss_reset_round() -> void:
+	if presentation_only: return
 	_clear_orbs()
 	_lunge_timer = 2.0
 	_orb_timer = ORB_PERIOD

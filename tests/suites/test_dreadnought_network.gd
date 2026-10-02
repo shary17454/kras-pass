@@ -29,6 +29,8 @@ func run(t: TestHarness, host: Node) -> void:
 	game.telegraph(Vector3(6, 0, 0), 2.6, 1.3, func(_pos, _radius): pass)
 	var packet := _packet(source)
 	var replica := Replica.new()
+	var sample_time := {"now": 1000}
+	replica.receive_clock = func(): return sample_time.now
 	t.ok(replica.accept(packet, 4, "boss_dreadnought"), "actual host JSON accepted")
 	var capture := FileAccess.open(SaveSystem.storage_root.path_join("dreadnought-world.json"), FileAccess.WRITE)
 	t.ok(capture != null, "actual capture writable")
@@ -123,7 +125,9 @@ func run(t: TestHarness, host: Node) -> void:
 	t.empty(guest.controller._shots, "guest cannot fire damaging shells")
 	game.damage_boss(45, 0)
 	packet = _packet(source)
+	sample_time.now = 2000
 	t.ok(replica.accept(packet, 4, "boss_dreadnought"), "fresh host damage accepted")
+	t.equal(replica.received_at - replica._event_received_at, 1000, "fresh sample at exact feedback boundary")
 	AudioManager._last_played.erase("hit")
 	voice = AudioManager._next_voice
 	replica.render(guest, 0.016)
@@ -133,6 +137,14 @@ func run(t: TestHarness, host: Node) -> void:
 	voice = AudioManager._next_voice
 	replica.render(guest, 0.016)
 	t.equal(AudioManager._next_voice, voice, "duplicate damage does not replay sound")
+	game.damage_boss(1, 0)
+	packet = _packet(source)
+	sample_time.now = 3001
+	t.ok(replica.accept(packet, 4, "boss_dreadnought"), "stale damage state still accepted")
+	AudioManager._last_played.erase("hit")
+	voice = AudioManager._next_voice
+	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, voice, "1001 ms sample updates state without historical sound")
 	game._clear_mines()
 	game._clear_shots()
 	game._clear_telegraphs()
