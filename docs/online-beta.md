@@ -2,6 +2,19 @@
 
 ## Implemented boundary
 
+### Current Dreadnought checkpoint (2026-10-03)
+
+The development allowlists now cover 37 games, including Dreadnought.
+Actual two-client/Bot and four-client ordinary fights, a mixed tournament
+and a four-client forced final passed after correcting a 15-second smoke
+override to the authored boss duration. Room contracts, source evidence,
+failed/aborted runs and unresolved timing observations are retained in
+[Dreadnought qualification](dreadnought-network-qualification.md).
+These are scripted local network clients, not four physical/Internet players.
+Production online remains off; Colossus/Sovereign network adapters, final
+qualification and Apple/Railway release gates remain outstanding. Earlier
+sections below are historical checkpoints, not current game-count claims.
+
 ### Sovereign collapse winnability repair (offline regression)
 
 The original final phase advertised a permanently exposed core through

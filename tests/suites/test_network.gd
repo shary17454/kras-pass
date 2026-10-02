@@ -124,6 +124,18 @@ func run(t: TestHarness) -> void:
 	Net.match_data["tournament"] = {"contenders": [0, 2]}
 	t.equal(Net.make_match_config().rule("online_contenders", []), [0, 2], "dreadnought final preserves contender roster")
 	Net.match_data.erase("tournament")
+	for boss_id in ["boss_forge", "boss_dreadnought"]:
+		Net.match_data.config.game = boss_id
+		var smoke_config := Net.make_match_config()
+		smoke_config.duration_override = 15.0
+		preload("res://tests/network_smoke_config.gd").configure_boss(smoke_config)
+		t.equal(smoke_config.duration_override, 0.0, "actual ordinary boss smoke restores authored duration")
+		Net.match_data["tournament"] = {"contenders": [0, 2]}
+		smoke_config = Net.make_match_config()
+		smoke_config.duration_override = 15.0
+		preload("res://tests/network_smoke_config.gd").configure_boss(smoke_config)
+		t.equal(smoke_config.duration_override, 20.0, "actual boss final smoke preserves short final")
+		Net.match_data.erase("tournament")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
 	var frame := InputFrame.new()
 	frame.bits = 4

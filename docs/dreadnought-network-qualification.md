@@ -44,7 +44,7 @@ The local WebSocket test ran with the required system permission.
 Workflow YAML and all six shell blocks parsed successfully; this is syntax
 validation, not execution of the new workflow on Linux.
 
-## Not yet qualified
+## Outstanding at the adapter checkpoint (`25cb0be`)
 
 Dreadnought is deliberately not added to the online allowlist yet. Room
 configuration, actual multi-process matchmaking, host/guest resume, mixed
@@ -65,3 +65,86 @@ gate has not been removed, weakened or reclassified as successful.
 These changes do not resolve that Linux gameplay failure, perform a Railway
 deploy, or create/sign/upload/submit an Apple build. Release qualification
 remains incomplete.
+
+## Room integration and duration regression (2026-10-03)
+
+Source `38351848dcdafa2913d77c6b375e60c3edc6f318` adds Dreadnought to the
+development room/client allowlists on `iron_flats`, applies the strict host
+world validator, and exercises room identity/world/result restoration. It
+does not enable production online.
+
+The first actual two-client run `kras-network-smoke-PGzQxC` failed its boss
+defeat requirement. The diagnostic retry `kras-network-smoke-Fl28BR` also
+failed: damage and shells were observed in both rounds, but no defeat was
+observed and final boss health was 245. These were **15-second fixtures**,
+not authored-duration fights. The generic smoke setup assigned 15 seconds
+after the room configuration was checked. The earlier focused room test
+verified `Net.make_match_config`, not the later smoke override, so it did
+not cover this error. The interrupted `kras-network-smoke-88BU5U` is not
+counted as a completed test.
+
+`tests/network_smoke_config.gd` now sets the actual ordinary Forge/Dreadnought
+smoke configuration to zero override (authored 150 seconds), and a contender
+final to the existing 20 seconds. Both callers share this rule. Four new
+assertions execute this same helper starting with the erroneous 15-second
+override. The focused network suite passed 79 assertions. No boss health,
+damage, attack window, production duration or defeat assertion was weakened.
+
+Actual authored-duration runs use normal virtual movement/attack input only:
+
+| Run | Coverage | Outcome |
+| --- | --- | --- |
+| `kras-network-smoke-Sc9pww` | Two human-input clients and two normal Bots, two internal rounds, guest resume and lost host-result transport | PASS, real defeat in both rounds, matching scores `[630,720,450,450]`, guest 1,314 world snapshots |
+| `kras-network-smoke-0qUvgX` | Four human-input clients, two internal rounds, resume and result restoration | PASS, real defeat in both rounds, matching scores `[540,630,585,495]`, guests 1,017--1,036 snapshots |
+| `kras-network-smoke-eLFbZD` | Two human-input clients and two Bots, three-match tournament | PASS, champion slot 0, matching totals `[13,11,6,5]`, cups `[2,1,0,0]`, 1,780 guest snapshots |
+| `kras-network-smoke-Xad4ww` | Four human-input clients, three authored-duration matches and an actual 20-second contender final | PASS, champion slot 0, final scores `[360,270,315,180]`, ordinary points `[3,3,3,3]`, unchanged cups `[1,2,1,0]`, final awards `[0,0,0,0]`, guests 2,285--2,304 snapshots |
+
+Logs: `/tmp/kras-dread-authored-{two,four,tournament,final}.log`; each contains its
+actual evidence directory under the system temporary directory. Maximum
+server event-loop delay was 448, 112 and 271 ms respectively; the two-client
+host also observed a 5,162 ms frame gap. These remain performance findings,
+not proof of device FPS, Internet latency or acceptable thermal/battery use.
+
+The forced final uses equal ordinary-round tournament points, not fabricated
+game scores. The normal fights still require boss defeat. The final ranks
+real damage contribution within the existing short-final rules. Its maximum
+server event-loop delay was 467 ms, still an unresolved performance finding.
+
+The room-model suite passed 54 tests after extending the existing Forge
+tournament contract to Dreadnought. Compilation passed 311 scripts. CI now
+has 38 scenarios (core and 37 development games), including ordinary,
+tournament and forced-final Dreadnought runs. YAML and all six embedded shell
+blocks parsed locally; this is not execution of the new Linux scenario.
+Linux networking, physical-device QA,
+Colossus/Sovereign adapters and production activation remain separate gates.
+This checkpoint is not a Railway deploy or an Apple archive/submission.
+
+## Final local gate for the duration/final correction
+
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-party-check.br03z6`
+completed successfully: 311 scripts, 349 resources and zero inventory issues,
+20,636 unit/integration assertions, the actual three-lap race, all six boss
+AI regressions and 39 stability matches with zero failures. The suite took
+632.6 seconds; the difference from earlier wall times is not explained or
+claimed as a performance improvement. The only `ERROR` entry is the deliberate
+`test_save.gd::_failed_write` fixture. No script, parse or leak diagnostics
+were found. Wrapper log: `/tmp/kras-dread-authored-gate.log`.
+
+Node passed 111/111 tests with zero skipped, using all four world captures
+freshly generated by that same gate. Log:
+`/tmp/kras-dread-authored-server-full.log`.
+
+The existing Linux run `37069444943`, pinned to the earlier source
+`5d89d19450c775d24e849496605b82760c406c5c`, has a successful core job and was
+still running/queued for other scenarios at the last observation. It does
+not validate this new Dreadnought CI scenario and has not been restarted.
+
+Xcode 27 is installed. `devicectl list devices` reports the known physical
+iPhone 16 Pro Max as unavailable; the other listed devices are simulated.
+This does not meet physical-device performance, thermal or battery gates.
+
+A read-only request to the production Railway `/health` returned
+`{"ok":true,"authentication_ready":true}`. It did not expose a source
+commit or the current source's `multiplayer_enabled` field, so deployment
+provenance and production multiplayer state are not verified by that reply.
+No configuration change, deployment, archive, upload or submission occurred.

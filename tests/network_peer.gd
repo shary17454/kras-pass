@@ -24,8 +24,9 @@ var duo_tiebreak := false
 var race_tiebreak := false
 var siege_tiebreak := false
 var forge_tiebreak := false
-var forge_final_cups: Array = []
-var observed_forge_final := false
+var dread_tiebreak := false
+var boss_final_cups: Array = []
+var observed_boss_final := false
 var observed_kart_final := false
 var kart_final_cups: Array = []
 var observed_duo_final := false
@@ -160,6 +161,11 @@ func _process(_delta: float) -> void:
 			print("NETWORK_FORGE=" + JSON.stringify({"round": game._round_index, "fighters": fighters,
 				"world": _forge_world(), "damage_rounds": forge_damage_by_round.keys(),
 				"slag_rounds": forge_slag_by_round.keys(), "strike_rounds": forge_strike_by_round.keys()}))
+		if game_id == "boss_dreadnought" and is_instance_valid(game):
+			print("NETWORK_DREAD=" + JSON.stringify({"round": game._round_index,
+				"boss": _dread_world().get("boss", {}), "scores": Array(game.ctx.scores),
+				"damage_rounds": dread_damage_by_round.keys(), "shot_rounds": dread_shot_by_round.keys(),
+				"defeat_rounds": dread_defeat_by_round.keys()}))
 		if game_id == "crate_relay" and is_instance_valid(game):
 			var players: Array = []
 			for fighter in game.ctx.fighters:
@@ -201,6 +207,7 @@ func _ready() -> void:
 		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg == "--siege-tiebreak": siege_tiebreak = true
 		if arg == "--forge-tiebreak": forge_tiebreak = true
+		if arg == "--dread-tiebreak": dread_tiebreak = true
 		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
@@ -254,7 +261,7 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
-			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak:
+			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak or dread_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
 		return
@@ -277,6 +284,10 @@ func _start(cfg: MatchConfig) -> void:
 	if game_id == "duo_clash":
 		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
+	preload("res://tests/network_smoke_config.gd").configure_boss(cfg)
+	if game_id in ["boss_forge", "boss_dreadnought"] and not cfg.rule("online_contenders", []).is_empty():
+		observed_boss_final = true
+		if boss_final_cups.is_empty(): boss_final_cups = Net.tournament.get("cups", []).duplicate()
 	if game_id == "hurdle_dash":
 		cfg.duration_override = 35.0
 	if game_id == "rising_tide":
@@ -318,10 +329,6 @@ func _start(cfg: MatchConfig) -> void:
 		siege_hits_by_round.clear()
 		siege_destruction_by_round.clear()
 	if game_id == "boss_forge":
-		cfg.duration_override = 0.0 if cfg.rule("online_contenders", []).is_empty() else 20.0
-		if not cfg.rule("online_contenders", []).is_empty():
-			observed_forge_final = true
-			if forge_final_cups.is_empty(): forge_final_cups = Net.tournament.get("cups", []).duplicate()
 		forge_damage_by_round.clear()
 		forge_slag_by_round.clear()
 		forge_strike_by_round.clear()
@@ -909,6 +916,9 @@ func _finished(result: MatchResult) -> void:
 		for round in range(game._round_index + 1):
 			if not dread_damage_by_round.has(round) or not dread_shot_by_round.has(round) \
 				or (contenders.is_empty() and not dread_defeat_by_round.has(round)):
+				print("NETWORK_DREAD_FAILURE=" + JSON.stringify({"round": round, "host": host,
+					"boss": _dread_world().get("boss", {}), "damage": dread_damage_by_round,
+					"shots": dread_shot_by_round, "defeats": dread_defeat_by_round}))
 				_fail("dreadnought round %d lacks actual damage, shells or boss defeat" % round)
 				return
 		if not host:
@@ -1415,13 +1425,13 @@ func _finished(result: MatchResult) -> void:
 		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
 			_fail("siege final did not run or changed tournament awards")
 			return
-	if forge_tiebreak:
-		var totals_unchanged := observed_forge_final and forge_final_cups.size() == 4
+	if forge_tiebreak or dread_tiebreak:
+		var totals_unchanged := observed_boss_final and boss_final_cups.size() == 4
 		for slot in 4:
 			totals_unchanged = totals_unchanged and int(Net.tournament.points[slot]) == 3 \
-				and int(Net.tournament.cups[slot]) == int(forge_final_cups[slot]) and int(Net.tournament.awards[slot]) == 0
+				and int(Net.tournament.cups[slot]) == int(boss_final_cups[slot]) and int(Net.tournament.awards[slot]) == 0
 		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
-			_fail("forge final did not run or changed tournament awards")
+			_fail("boss final did not run or changed tournament awards")
 			return
 	if race_tiebreak:
 		var totals_unchanged := observed_kart_final and kart_final_cups.size() == 4

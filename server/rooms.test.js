@@ -85,12 +85,13 @@ test('forge room validates host state and restores identity, world and result on
   assert.deepEqual(resumed.last('result').scores, [0, 120, 0, 0]);
 });
 
-test('forge tournament resolves final without changing ordinary points or cups', () => {
+for (const [game, arena, world] of [['boss_forge', 'crate_yard', forgeWorld], ['boss_dreadnought', 'iron_flats', dreadWorld]]) {
+test(`${game} tournament resolves final without changing ordinary points or cups`, () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
-  host.send({op: 'configure', config: {game: 'boss_forge', arena: 'crate_yard', rounds: 1, bots: true, difficulty: 1,
+  host.send({op: 'configure', config: {game, arena, rounds: 1, bots: true, difficulty: 1,
     tournament: {mode: 'points', target: 3, rotation: 'random_no_repeat', points: [1, 1, 1, 1],
-      entries: [{game: 'boss_forge', arena: 'crate_yard'}]}}});
+      entries: [{game, arena}]}}});
   for (let round = 0; round < 3; round++) {
     host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
     host.send({op: round === 0 ? 'start' : 'next'});
@@ -101,10 +102,10 @@ test('forge tournament resolves final without changing ordinary points or cups',
   const cups = [...host.last('room').tournament.cups];
   host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'next'});
   const start = host.last('start');
-  assert.equal(start.config.game, 'boss_forge');
+  assert.equal(start.config.game, game);
   assert.deepEqual(start.tournament.contenders, [0, 1, 2, 3]);
   host.send({op: 'loaded', epoch: start.epoch}); guest.send({op: 'loaded', epoch: start.epoch});
-  host.send({op: 'snapshot', epoch: start.epoch, tick: 1, data: {...snapshot(), world: forgeWorld()}});
+  host.send({op: 'snapshot', epoch: start.epoch, tick: 1, data: {...snapshot(), world: world()}});
   host.send({op: 'result', epoch: start.epoch, scores: [0, 120, 0, 0]});
   const result = host.last('room').tournament;
   assert.deepEqual(result.points, [3, 3, 3, 3]);
@@ -113,6 +114,7 @@ test('forge tournament resolves final without changing ordinary points or cups',
   assert.deepEqual(result.champions, [1]);
   assert.equal(result.complete, true);
 });
+}
 
 test('siege rooms bind both arenas and preserve host crystal state on resume', () => {
   for (const arena of ['iron_flats', 'crate_yard']) {
