@@ -1,5 +1,11 @@
 # Kras Pass App Store Readiness
 
+This is a draft, not the live App Store listing or release approval. The
+registry currently contains 39 minigame definitions; definition count alone is
+not evidence that every game is release-ready. Confirm the shipping selection,
+device QA and signed build before publishing copy or screenshots. Online play
+is a development beta and must not be advertised as a released feature yet.
+
 ## Listing Copy
 
 ### Arabic
@@ -13,7 +19,7 @@
 **Description:**
 كراس باس لعبة حفلات ومنافسات مصغرة مبنية حول جولات قصيرة وواضحة. اختر شخصيتك، ادخل بطولة، وتنافس في مجموعة ألعاب متنوعة تجمع السرعة، التركيز، الحركة، والنجاة.
 
-اللعبة تقدم 21 لعبة مصغرة، 8 شخصيات، ساحات متعددة، منافسين بالذكاء الاصطناعي، إعادة مشاهدة للمباريات، وتحديات يومية. كل شيء مصمم ليكون سريع الدخول، مناسبًا للعب المحلي، ومفهومًا من أول جولة.
+اللعبة تقدم تحديات مصغرة متنوعة، 8 شخصيات، ساحات متعددة، منافسين بالذكاء الاصطناعي، إعادة مشاهدة للمباريات، وتحديات يومية. كل شيء مصمم ليكون سريع الدخول، مناسبًا للعب المحلي، ومفهومًا من أول جولة.
 
 **Keywords:** ألعاب,حفلات,بطولة,محلي,منافسة,عربي,مصغرة,تحديات,كأس
 
@@ -23,12 +29,12 @@
 
 **Subtitle:** Fast chaotic mini-game cups
 
-**Promotional text:** Short challenges, balanced characters, local tournaments, and quick party play on one device.
+**Promotional text:** Short challenges, original characters, local tournaments, and quick party play on one device.
 
 **Description:**
 Kras Pass is an original party game built around short competitive mini-games. Pick a character, start a cup, and jump through fast rounds of movement, timing, survival, memory, racing, and light combat.
 
-The game includes 21 mini-games, 8 characters, varied arenas, AI opponents, replay playback, daily challenges, and Arabic/English localization. It is designed for quick sessions, local play, and clear rules from the first round.
+The game includes varied mini-games, 8 characters, multiple arenas, AI opponents, replay playback, daily challenges, and Arabic/English localization. It is designed for quick sessions, local play, and clear rules from the first round.
 
 **Keywords:** party,mini-games,cup,local,competition,arcade,Arabic,tournament
 
@@ -69,3 +75,8 @@ Record:
 - Signed archive succeeds in Xcode with the Apple Developer account.
 - At least one physical iPhone or iPad run is completed.
 - App Store screenshots are captured from a real run or approved simulator run.
+- The final source commit, Bundle ID, version and build are verified against
+  the actual signed archive; record upload, processing and review separately.
+- The listing describes only content verified in that build. Development-beta
+  networking and debug fixtures must not appear as production capabilities or
+  App Store gameplay screenshots.
