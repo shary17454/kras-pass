@@ -19,6 +19,7 @@ const SweeperReplica = preload("res://src/net/sweeper_replica.gd")
 const DuelReplica = preload("res://src/net/duel_replica.gd")
 const BumperReplica = preload("res://src/net/bumper_replica.gd")
 const DuoReplica = preload("res://src/net/duo_replica.gd")
+const FloeReplica = preload("res://src/net/floe_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -72,6 +73,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = BumperReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "duo_clash":
 		packet["world"] = DuoReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "drift_floes":
+		packet["world"] = FloeReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -131,6 +134,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena
 			return false
 	elif game_id == "duo_clash":
 		if not DuoReplica.valid(data.get("world"), count, arena_id):
+			return false
+	elif game_id == "drift_floes":
+		if not FloeReplica.valid(data.get("world")):
 			return false
 	elif game_id == "magnet_court":
 		if not MagnetReplica.valid(data.get("world"), count):
@@ -257,6 +263,8 @@ func render(scene: Node, delta: float) -> void:
 		TideReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "sweeper_storm":
 		SweeperReplica.render(scene.controller, target.world)
+	elif scene.config.minigame_id == "drift_floes":
+		FloeReplica.render(scene.controller, target.world, delta, snap)
 	elif scene.config.minigame_id == "duel_pit":
 		DuelReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "bumper_bowl":

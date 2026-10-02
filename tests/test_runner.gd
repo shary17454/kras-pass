@@ -34,6 +34,8 @@ const SUITES := [
 	"res://tests/suites/test_arena_respawn_scoring.gd",
 	"res://tests/suites/test_duel_network.gd",
 	"res://tests/suites/test_duo_network.gd",
+	"res://tests/suites/test_floe_reset.gd",
+	"res://tests/suites/test_floe_network.gd",
 	"res://tests/suites/test_bumper_network.gd",
 	"res://tests/suites/test_crate_network.gd",
 	"res://tests/suites/test_echo_perception.gd",

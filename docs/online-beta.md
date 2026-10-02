@@ -2,6 +2,31 @@
 
 ## Implemented boundary
 
+### Drift Floes lifecycle and snapshot adapter
+
+The moving plates previously retained sudden-death speed multipliers and
+their last positions until the next gameplay tick. New rounds now restore
+each authored base speed and place all three plates at their time-zero
+positions before countdown. `/tmp/kras-floe-reset-before.log` demonstrated
+18 failing assertions; `/tmp/kras-floe-reset-after.log` passed all 22
+assertions across three consecutive reset cycles.
+
+The adapter publishes exactly three bounded platform positions and a bounded
+motion age. Both Godot and Node reject missing/extra fields, wrong counts,
+non-finite values and JSON type coercion. Guest platforms interpolate toward
+host positions, snap on a new round and have no collision layers or kinematic
+physics synchronization. Rendering does not run carry physics, elimination,
+respawn, scoring or difficulty updates. `/tmp/kras-floe-network.log` passed
+all 41 focused assertions; all 76 Node tests passed.
+
+Full gate `kras-party-check.EdrXr7` compiled 281 scripts, audited 318 resources
+with zero issues, passed 18,850 assertions, passed the three-lap race
+regression and completed all 39 stability matches without failure.
+
+This is an adapter checkpoint only: `drift_floes` is not yet in the room
+allowlist. Independent-process matches/tournaments, reconnect and device QA
+remain required. Production online remains disabled.
+
 ### Duo Clash integration
 
 Development rooms accept both authored team arenas: `sweeper_ring` and

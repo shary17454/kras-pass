@@ -214,6 +214,15 @@ export function validDuoWorld(data, count, arena = '') {
     && (data.arena === 'sweeper_ring' ? validSweeperWorld(data.hazards) : validBumperWorld(data.hazards));
 }
 
+export function validFloeWorld(data) {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 2
+    && Number.isFinite(data.age) && data.age >= 0 && data.age <= 3600
+    && Array.isArray(data.positions) && data.positions.length === 3
+    && data.positions.every(position => Array.isArray(position) && position.length === 3
+      && position.every(value => Number.isFinite(value) && Math.abs(value) <= 1000));
+}
+
 export function validGoalGuardWorld(data, count, extraBalls = 0) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count

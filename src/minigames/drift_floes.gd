@@ -36,6 +36,9 @@ func on_round_start() -> void:
 	var arena := ctx.arena as Arena
 	if arena != null:
 		arena.reset_hazards()
+	for floe in _floes:
+		floe["speed"] = floe["base_speed"]
+	tick(0.0)
 
 
 func _make_floe(arena: Arena, index: int) -> Dictionary:
@@ -84,8 +87,9 @@ func _make_floe(arena: Arena, index: int) -> Dictionary:
 	var mode := "radial" if index == FLOE_COUNT - 1 else "orbit"
 	var phase := TAU * float(index) / float(FLOE_COUNT)
 	body.global_position = arena.global_position + Vector3(cos(phase) * orbit, y, sin(phase) * orbit)
+	var speed := 0.34 + 0.09 * float(index)
 	return {"body": body, "orbit": orbit, "phase": phase, "mode": mode, "y": y,
-		"speed": 0.34 + 0.09 * float(index), "radius": radius}
+		"speed": speed, "base_speed": speed, "radius": radius}
 
 
 func tick(delta: float) -> void:
