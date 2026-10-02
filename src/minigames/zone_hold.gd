@@ -6,15 +6,17 @@ extends MiniGameController
 ## around the ring so nobody can camp.
 
 const CAPTURE_RATE := 1.0
+const BASE_RADIUS := 3.4
 const CONTESTED_COLOR := Color("#ff5f6d")
 
 var zone_position := Vector3.ZERO
-var zone_radius := 3.4
+var zone_radius := BASE_RADIUS
 var _marker: Node3D
 var _ring: MeshInstance3D
 var _move_timer := 0.0
 var _accum: Array[float] = []
 var _target := Vector3.ZERO
+var _ring_color := Color.TRANSPARENT
 
 
 func configure() -> void:
@@ -39,6 +41,26 @@ func build() -> void:
 	_pick_new_spot()
 	zone_position = _target
 	_marker.global_position = zone_position
+	_set_ring_color(UIKit.ACCENT_2)
+
+
+func on_round_start() -> void:
+	zone_radius = BASE_RADIUS
+	_accum.fill(0.0)
+	_sync_radius()
+	_set_ring_color(UIKit.ACCENT_2)
+
+
+func _sync_radius() -> void:
+	if is_instance_valid(_marker):
+		var ratio := zone_radius / BASE_RADIUS
+		_marker.scale = Vector3(ratio, 1.0, ratio)
+
+
+func _set_ring_color(color: Color) -> void:
+	if is_instance_valid(_ring) and color != _ring_color:
+		_ring_color = color
+		_ring.material_override = MeshFactory.toon(color, 1.4)
 
 
 func _pick_new_spot() -> void:
@@ -74,7 +96,7 @@ func tick(delta: float) -> void:
 	if _ring != null and is_instance_valid(_ring):
 		var col := CONTESTED_COLOR if inside.size() > 1 else (
 			UIKit.adapt(ctx.config.players[inside[0]].color()) if inside.size() == 1 else UIKit.ACCENT_2)
-		_ring.material_override = MeshFactory.toon(col, 1.4)
+		_set_ring_color(col)
 	if contested:
 		return
 	var slot := inside[0]
@@ -88,6 +110,7 @@ func tick(delta: float) -> void:
 
 func on_sudden_death() -> void:
 	zone_radius *= 0.6
+	_sync_radius()
 	_pick_new_spot()
 
 

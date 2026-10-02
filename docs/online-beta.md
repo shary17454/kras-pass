@@ -351,6 +351,17 @@ Production remains disabled. Another 35 minigames need world adapters, and
 guest pickup/deposit sound events and physical-device QA remain outstanding.
 No iOS archive, upload or App Review submission is represented by these tests.
 
+## Local capture-zone lifecycle regression
+
+Zone Hold now scales its visible capture marker when sudden death shrinks the
+scoring radius, and restores both at round start. Fractional capture points are
+cleared between rounds. Unchanged ownership no longer reassigns the cached ring
+material every tick. `/tmp/kras-zone-hold.log` passed 15 assertions covering
+contested scoring, visual/rule agreement and repeatable round reset. This does
+not add Zone Hold to the online allowlist. `/tmp/kras-zone-replay.log` also
+passed 71 replay assertions, including an actual Zone Hold recording/playback
+with matching scores and placements.
+
 ## Expansion checklist per game
 
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects
