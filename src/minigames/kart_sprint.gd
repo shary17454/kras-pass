@@ -23,6 +23,7 @@ var _checkpoints: Array[Vector3] = []
 var _boost_pads: Array = []
 var boost_serial: Array[int] = []
 var _network_recovery: Array[float] = []
+var _finish_collision := {}
 
 
 ## Overridable so a game on a longer circuit can run fewer laps. Distance is
@@ -109,6 +110,7 @@ func camera_mode() -> int:
 
 
 func on_round_start() -> void:
+	_restore_finish_collision()
 	_clear_recoveries()
 	_elapsed = 0.0
 	_finished = 0
@@ -157,6 +159,9 @@ func tick(delta: float) -> void:
 					ctx.set_detail(i, "laps", lap[i])
 					_finished += 1
 					f.control_enabled = false
+					_finish_collision[i] = {"layer": f.collision_layer, "mask": f.collision_mask}
+					f.collision_layer &= ~Fighter.LAYER_PLAYER
+					f.collision_mask &= ~Fighter.LAYER_PLAYER
 			if crossed_start:
 				_started[i] = true
 		_check_boost(i, f, delta)
@@ -252,8 +257,18 @@ func process_respawns(delta: float) -> void:
 
 
 func cleanup() -> void:
+	_restore_finish_collision()
 	_network_recovery.fill(-1.0)
 	_clear_recoveries()
+
+
+func _restore_finish_collision() -> void:
+	for slot in _finish_collision:
+		var fighter: Fighter = ctx.fighter(int(slot))
+		if is_instance_valid(fighter):
+			fighter.collision_layer = int(_finish_collision[slot].layer)
+			fighter.collision_mask = int(_finish_collision[slot].mask)
+	_finish_collision.clear()
 
 
 func _clear_recoveries() -> void:

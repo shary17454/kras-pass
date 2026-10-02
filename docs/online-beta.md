@@ -2,6 +2,54 @@
 
 ## Implemented boundary
 
+### Seeded Kart tournament and finished-racer collision
+
+Source `3c26b94bf4a4f2da4685f53cddc6676f68943e33` introduced an internal
+Rooms seed provider for diagnostic runs. Production defaults still use
+`crypto.randomInt`; the public protocol cannot choose the seed. The provider
+rejects invalid bounds/types. `/tmp/kras-kart-seed-contract.log` passed all
+91 Node tests. The smoke runner accepts `--seed` and reports the actual seed
+on every peer. This fixes simulation randomness, not network scheduling or
+cross-platform physics determinism.
+
+`kras-network-smoke-ojyNKb` reran the original timeout's seed `443020368`
+with four humans and passed two three-lap rounds: scores
+`[5673,4477,4062,4522]`, 1,622-to-1,642 guest snapshots, matching results,
+guest resume and host-result transport recovery. The earlier timeout is not
+erased by this success and its root cause remains unconfirmed.
+
+`kras-network-smoke-O9gxUo` then passed an actual four-human tournament on
+that same source/seed: three ordinary three-lap matches followed by one actual
+one-lap tiebreak. The permitted uniform table `[1,1,1,1]` intentionally makes
+the ordinary total points tie; the real controller still drives and scores
+every race, without fabricated positions or results. All peers reported four
+matches, points `[3,3,3,3]`, unchanged cups `[0,3,0,0]`, no extra final awards,
+one tie attempt and champion slot 1. Final race times were
+`[1137,675,698,713]`, with 3,037-to-3,056 guest snapshots and sampled maximum
+server loop delay 49 ms. This run is independent-process tournament evidence,
+but not Internet, mobile performance or general stability qualification.
+
+A subsequent real PhysicsServer motion probe proved a separate concrete
+problem: a completed kart remained an obstacle to an unfinished racer.
+`/tmp/kras-finished-collision-before.log` retained the failing regression
+(26 passes, one failure). Kart now removes only the player layer/mask bits
+when recording a finish. World collision remains, so floor support is
+preserved; new-round and cleanup paths restore the exact saved layer/mask.
+The shared race controller applies the fix to Sabaq as well. The visible
+kart is retained, and no race time, checkpoint, score, boost or rescue penalty
+is changed. `/tmp/kras-finished-collision-after.log` passed all 27 assertions,
+including actual blocked motion before finish, clear passage afterward and
+restored contact in the next round. This narrow collider fixture does not
+prove the original network timeout had that same cause.
+
+After the collision fix, `kras-network-smoke-aTfZmy` passed the seeded
+four-human ordinary race with scores `[6034,4460,5710,4510]` and
+1,787-to-1,806 guest snapshots, all required laps, real boost/rescue and both
+reconnect paths. Sampled server loop delay reached 302 ms on this run; this
+is functional acceptance, not a performance pass. The tournament evidence
+above predates the collider fix and is not claimed as a post-fix tournament
+run. `/tmp/kras-finished-collision-compile.log` compiled all 293 scripts.
+
 ### Kart development-room integration (experimental)
 
 The development allowlists now accept Kart Sprint on `circuit_loop` only.

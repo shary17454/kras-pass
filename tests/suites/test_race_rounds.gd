@@ -57,6 +57,46 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+	await _check_finished_collision(t, host)
+
+
+func _check_finished_collision(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("kart_sprint", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 118)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	for rider in scene.ctx.fighters: rider.set_physics_process(false)
+	var blocker: Fighter = scene.ctx.fighter(0)
+	var racer: Fighter = scene.ctx.fighter(1)
+	var layer: int = blocker.collision_layer
+	var mask: int = blocker.collision_mask
+	for slot in [2, 3]: scene.ctx.fighter(slot).global_position = Vector3(100 + slot * 10, 20, 100)
+	racer.global_position = Vector3(0, 20, 0)
+	blocker.global_position = Vector3(3, 20, 0)
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	var parameters := PhysicsTestMotionParameters3D.new()
+	parameters.from = racer.global_transform
+	parameters.motion = Vector3(6, 0, 0)
+	var contact := PhysicsTestMotionResult3D.new()
+	t.ok(PhysicsServer3D.body_test_motion(racer.get_rid(), parameters, contact), "unfinished racer still has physical player collision")
+	t.equal(contact.get_collider(), blocker, "real physics probe contacts the other racer")
+	_finish_checkpoints(scene.controller, blocker)
+	blocker.global_position = Vector3(3, 20, 0)
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.ok(not PhysicsServer3D.body_test_motion(racer.get_rid(), parameters), "finished kart cannot physically block an unfinished racer")
+	t.equal(blocker.collision_mask & Fighter.LAYER_WORLD, mask & Fighter.LAYER_WORLD, "finished kart keeps world collision for floor support")
+	scene.controller.on_round_start()
+	t.equal(blocker.collision_layer, layer, "next round restores the original player collision layer")
+	t.equal(blocker.collision_mask, mask, "next round restores the original collision mask")
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.ok(PhysicsServer3D.body_test_motion(racer.get_rid(), parameters), "next round restores actual racer contact")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _finish_checkpoints(game: Node, rider: Fighter) -> void:
