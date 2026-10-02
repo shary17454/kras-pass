@@ -14,6 +14,8 @@ signal radius_changed(r: float)
 signal fighter_submerged(fighter)
 
 const TILE_SIZE := 2.0
+const CraterFloor = preload("res://src/arenas/crater_floor.gd")
+var _crater_floor
 
 var def: ArenaDef
 var tiles: Array[ArenaTile] = []
@@ -105,6 +107,8 @@ func build(arena_def: ArenaDef) -> void:
 # --- queries used by gameplay and AI ---------------------------------------
 
 func is_inside(pos: Vector3, margin: float = 0.0) -> bool:
+	if is_instance_valid(_crater_floor) and not _crater_floor.has_ground(pos - global_position, margin):
+		return false
 	var p := Vector2(pos.x - global_position.x, pos.z - global_position.z)
 	match def.shape:
 		"square", "grid", "tiles":
@@ -129,6 +133,8 @@ func is_inside(pos: Vector3, margin: float = 0.0) -> bool:
 ## Distance to the nearest lethal edge. Negative when already outside. The AI's
 ## edge-awareness and every "shove them off" heuristic read this.
 func edge_distance(pos: Vector3) -> float:
+	if is_instance_valid(_crater_floor):
+		return _crater_floor.edge_distance(pos - global_position)
 	var p := Vector2(pos.x - global_position.x, pos.z - global_position.z)
 	match def.shape:
 		"square", "grid", "tiles":
@@ -1118,8 +1124,30 @@ func _build_hazards() -> void:
 				_hazards.append(_water)
 
 
+func enable_crater_floor() -> void:
+	if is_instance_valid(_crater_floor) or def.shape != "disc" or not is_instance_valid(_floor_mesh):
+		return
+	_crater_floor = CraterFloor.new()
+	_static_root.add_child(_crater_floor)
+	_crater_floor.build(current_radius, def.thickness, _floor_mesh.material_override)
+	_floor_mesh.visible = false
+	(_floor_mesh.get_parent() as StaticBody3D).collision_layer = 0
+
+
+func open_crater(point: Vector3, radius: float) -> void:
+	if is_instance_valid(_crater_floor):
+		_crater_floor.open_hole(point - global_position, radius)
+
+
+func reset_craters() -> void:
+	if is_instance_valid(_crater_floor):
+		_crater_floor.reset()
+
+
 func _on_radius_changed(r: float) -> void:
 	current_radius = r
+	if is_instance_valid(_crater_floor):
+		_crater_floor.set_radius(r)
 	# Move the physical edge with the painted one, otherwise players keep
 	# standing on floor that visually no longer exists.
 	if _floor_shape != null:

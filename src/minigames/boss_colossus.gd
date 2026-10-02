@@ -35,6 +35,7 @@ func boss_build() -> void:
 	var arena := ctx.arena as Arena
 	if arena != null:
 		boss_node.global_position = arena.global_position + Vector3(0, 0.0, 0)
+		arena.enable_crater_floor()
 	var torso := MeshFactory.cylinder(3.2, 6.0, Color("#4a5a72"), 0.2)
 	torso.position.y = 3.0
 	boss_node.add_child(torso)
@@ -102,10 +103,11 @@ func _open_crater(pos: Vector3, radius: float) -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
-	var hole := MeshFactory.cylinder(radius * 0.75, 0.3, Color("#161a2c"), 0.0)
+	var hole := MeshFactory.torus(radius * 0.75 - 0.15, radius * 0.75, Color("#161a2c"), 0.0)
 	hole.position = pos + Vector3(0, 0.1, 0)
 	ctx.world_root.add_child(hole)
 	_craters.append({"node": hole, "pos": pos, "radius": radius * 0.75})
+	arena.open_crater(pos, radius * 0.75)
 
 
 func _sweep() -> void:
@@ -190,10 +192,27 @@ func boss_reset_round() -> void:
 
 
 func _clear_craters() -> void:
+	if ctx != null and ctx.arena is Arena:
+		ctx.arena.reset_craters()
 	for c in _craters:
 		if is_instance_valid(c["node"]):
 			c["node"].queue_free()
 	_craters.clear()
+
+
+func safe_respawn_position(slot: int) -> Vector3:
+	var arena := ctx.arena as Arena
+	var preferred := spawn_position(slot)
+	if arena == null or arena.is_inside(preferred, 1.0):
+		return preferred
+	for ring in [0.0, 0.25, 0.5, 0.75]:
+		for step in 32:
+			var angle := TAU * (float(step) / 32.0 + float(slot) / 4.0)
+			var point := arena.global_position + Vector3(cos(angle), 0, sin(angle)) * arena.current_radius * float(ring)
+			point.y = preferred.y
+			if arena.is_inside(point, 1.0):
+				return point
+	return preferred
 
 
 func cleanup() -> void:
