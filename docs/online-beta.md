@@ -3076,6 +3076,44 @@ its TCP latency tradeoff still requires real-network testing. References:
 [Godot WebSocket guide](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html),
 [ws](https://github.com/websockets/ws).
 
+## Handler CPU diagnostic follow-up (2026-10-03)
+
+Smoke operation timing now includes optional process CPU deltas alongside
+wall duration. The `cpu.atMaxWallMs` value belongs to the actual worst wall
+sample, not to an unrelated peak CPU sample. Missing/invalid measurements are
+not reported as measured zero. Existing wall fields remain unchanged; operation
+cardinality is capped at 32, retained stall samples at 50. No match rules,
+results, timing thresholds or production server behavior are changed here.
+Process CPU over a handler interval is not exclusive function/thread profiling.
+
+Evidence:
+- Four focused NetworkTiming tests pass: backwards compatibility, worst wall
+  association, invalid/missing CPU measurements and bounded operation names.
+- All 107 server tests pass with zero skips using the existing Godot captures
+  from `kras-party-check.2IqAw5`. The initial sandbox run failed its actual
+  WebSocket listener with EPERM; rerunning with loopback permission passes.
+  These captures were not regenerated during this diagnostic pass.
+- Actual mixed-player Hurdle match, seed 1032434731: `kras-network-smoke-yBA4ZT`
+  passes, host/guest resume and agree on [1389,1350,2047,1703], guest receives
+  949 snapshots. Server loop maximum is 68 ms. Worst input wall/associated CPU
+  is 35.66/0.194 ms; worst snapshot wall/associated CPU is 3.33/0.115 ms.
+- The same three-round tournament scenario as the preceding 601-ms observation
+  was also rerun, with no concurrent test gate: `kras-network-smoke-p4pjvH`
+  passes, both participants resume and agree on [673,702,715,980], final points
+  [15,9,6,3], champion zero and 1,353 guest snapshots. Server loop maximum is
+  137 ms; worst snapshot wall/associated CPU is 39.60/1.524 ms; worst input
+  wall/associated CPU is 23.31/0.096 ms. Each directory has `server-timing.json`.
+- Both actual sessions have no reported Script Error, NETWORK_FAIL, Parse Error
+  or resource leak. `worstStall` is null because the separate sampling threshold
+  requires at least 100 ms extra delay; it does not mean zero event-loop delay.
+
+The 601-ms stall and 408-ms snapshot were not reproduced. The gap between wall
+and CPU indicates that not all elapsed time is process calculation, but does
+not identify its cause. No frame-rate, Internet latency, battery, thermal or
+device-performance qualification follows from these runs. The old Linux run
+and full latest-source gate remain separate pending qualifications. No Railway
+deployment, archive, signing, upload or Apple submission occurred.
+
 ## Hurdle seeded real-network regression (2026-10-02, follow-up)
 
 Actual loopback Godot/WebSocket matches ran on gameplay source

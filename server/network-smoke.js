@@ -28,6 +28,7 @@ timingInterval.unref();
 const handle = service.rooms.handle.bind(service.rooms);
 service.rooms.handle = (connection, message) => {
   const began = performance.now();
+  const beganCpu = process.cpuUsage();
   try {
     const result = handle(connection, message);
     if (['start', 'next', 'loaded', 'resume', 'result'].includes(message.op)) {
@@ -44,7 +45,11 @@ service.rooms.handle = (connection, message) => {
       state: connection.room?.state, epoch: message.epoch, reason: error.message}));
     throw error;
   }
-  finally { timing.recordOperation(message.op, performance.now() - began); }
+  finally {
+    const elapsed = performance.now() - began;
+    const usedCpu = process.cpuUsage(beganCpu);
+    timing.recordOperation(message.op, elapsed, (usedCpu.user + usedCpu.system) / 1000);
+  }
 };
 const closeRoom = service.rooms.close.bind(service.rooms);
 service.rooms.close = (room, reason) => {

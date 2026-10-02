@@ -12,13 +12,23 @@ export class NetworkTiming {
     this.previousCpu = cpu();
   }
 
-  recordOperation(op, elapsedMs) {
+  recordOperation(op, elapsedMs, cpuMs = null) {
     if (typeof op !== 'string' || !/^[a-z_]{1,40}$/.test(op)
       || !Number.isFinite(elapsedMs) || elapsedMs < 0) return;
+    if (!this.operations.has(op) && this.operations.size >= 32) return;
     const row = this.operations.get(op) ?? {count: 0, totalMs: 0, maxMs: 0};
+    const previousMax = row.maxMs;
+    const measuredCpu = Number.isFinite(cpuMs) && cpuMs >= 0;
     row.count++;
     row.totalMs += elapsedMs;
     row.maxMs = Math.max(row.maxMs, elapsedMs);
+    if (measuredCpu) {
+      row.cpu ??= {count: 0, totalMs: 0, maxMs: 0, atMaxWallMs: null};
+      row.cpu.count++;
+      row.cpu.totalMs += cpuMs;
+      row.cpu.maxMs = Math.max(row.cpu.maxMs, cpuMs);
+    }
+    if (row.cpu && elapsedMs >= previousMax) row.cpu.atMaxWallMs = measuredCpu ? cpuMs : null;
     this.operations.set(op, row);
   }
 
