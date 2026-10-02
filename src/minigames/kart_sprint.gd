@@ -21,6 +21,8 @@ var _elapsed := 0.0
 var _finished := 0
 var _checkpoints: Array[Vector3] = []
 var _boost_pads: Array = []
+var boost_serial: Array[int] = []
+var _network_recovery: Array[float] = []
 
 
 ## Overridable so a game on a longer circuit can run fewer laps. Distance is
@@ -60,6 +62,10 @@ func build() -> void:
 	_drive_anchors.resize(n)
 	_stuck_seconds.resize(n)
 	_stuck_seconds.fill(0.0)
+	boost_serial.resize(n)
+	boost_serial.fill(0)
+	_network_recovery.resize(n)
+	_network_recovery.fill(-1.0)
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -111,6 +117,8 @@ func on_round_start() -> void:
 	_next_cp.fill(0)
 	_started.fill(false)
 	_stuck_seconds.fill(0.0)
+	boost_serial.fill(0)
+	_network_recovery.fill(-1.0)
 	for pad in _boost_pads:
 		pad.cooldown.clear()
 	for i in ctx.fighters.size():
@@ -185,6 +193,7 @@ func _check_boost(slot: int, f, delta: float) -> void:
 		if to.length() > float(pad["radius"]):
 			continue
 		cd[slot] = 2.0
+		boost_serial[slot] += 1
 		f.apply_impulse(f.facing.normalized() * Balance.num("tuning", "vehicle.boost_multiplier", 1.7) * 9.0)
 		AudioManager.play_sfx("dash", f.global_position)
 
@@ -215,7 +224,7 @@ func on_fighter_fell(slot: int) -> void:
 
 
 func is_recovering(slot: int) -> bool:
-	return _recoveries.has(slot)
+	return _recoveries.has(slot) or (slot >= 0 and slot < _network_recovery.size() and _network_recovery[slot] >= 0.0)
 
 
 func process_respawns(delta: float) -> void:
@@ -243,6 +252,7 @@ func process_respawns(delta: float) -> void:
 
 
 func cleanup() -> void:
+	_network_recovery.fill(-1.0)
 	_clear_recoveries()
 
 

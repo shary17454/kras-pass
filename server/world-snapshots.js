@@ -1,6 +1,30 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validKartWorld(data, count, expectedCheckpoints = 0) {
+  const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  if (!integer(count, 2, 4) || !object(data, 9) || !Number.isFinite(data.elapsed) || data.elapsed < 0 || data.elapsed > 3600
+    || !integer(data.laps, 1, 10) || !integer(data.checkpoints, 1, 1024)
+    || (expectedCheckpoints > 0 && data.checkpoints !== expectedCheckpoints)
+    || !['times', 'lap', 'next', 'started', 'recovery'].every(k => Array.isArray(data[k]) && data[k].length === count)) return false;
+  for (let slot = 0; slot < count; slot++) {
+    const time = data.times[slot], finished = time !== 1000000000;
+    if (!integer(time, 0, 1000000000) || (finished && time > Math.round(data.elapsed * 100))
+      || !integer(data.lap[slot], 0, data.laps) || !integer(data.next[slot], 0, data.checkpoints - 1)
+      || typeof data.started[slot] !== 'boolean' || !Number.isFinite(data.recovery[slot])
+      || (data.recovery[slot] !== -1 && (data.recovery[slot] < 0 || data.recovery[slot] > 1))
+      || finished !== (data.lap[slot] === data.laps)
+      || (finished && (!data.started[slot] || data.recovery[slot] >= 0))
+      || (!data.started[slot] && (data.lap[slot] !== 0 || data.next[slot] !== 0))) return false;
+  }
+  return object(data.boost, 2) && Array.isArray(data.boost.serial) && data.boost.serial.length === count
+    && data.boost.serial.every(v => integer(v, 0, 1000000))
+    && Array.isArray(data.boost.pads) && data.boost.pads.length === 4
+    && data.boost.pads.every(pad => Array.isArray(pad) && pad.length === count
+      && pad.every(v => Number.isFinite(v) && v >= 0 && v <= 2));
+}
+
 export function validFawdaWorld(data, count) {
   const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
