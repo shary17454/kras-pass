@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains nine explicitly adapted rulesets; verification
+The development allowlist contains ten explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -31,8 +31,9 @@ drop and held-time scoring remain host-only. Its configured arenas are
 grace; guests do not perform contact detection or free-time scoring.
 `paint_grid` and `mnatiq` replicate all 169 tile owners on `paint_grid`;
 capture, enclosed-region rewards and recounting remain host-only.
+`mukharrib` adds the drone, warnings and sequenced scrub feedback on `paint_grid`.
 Optional random power-ups remain disabled in online beta configurations.
-The other 30 games are not
+The other 29 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -512,15 +513,20 @@ sufficient to enable that game online.
   standings agreed after reconnect; guests received 1661-1684 snapshots.
   A tied ordinary round shared awards correctly, but neither final standing
   required a sudden-death match. Server event-loop maximum was 1784 ms.
-- Mnatiq's tournament run and real-device latency/performance checks remain.
+- `kras-network-smoke-g3Xzyy`: Mnatiq three-match tournaments passed with two
+  humans/two bots and four humans. Final points/cups/champions agreed across all
+  peers after reconnect; guests received 1664-1684 snapshots. Neither final
+  required sudden death. Server event-loop maximum was 1835 ms; device latency
+  and performance acceptance remain outstanding.
 
-## Prepared Saboteur world adapter
+## Saboteur world adapter and event replay protection
 
 `saboteur_replica.gd` combines fixed-grid ownership with bounded drone position,
 rotor angle, target tile and warning/cycle timers. The guest renders the host's
 warning cells without running target choice, scrub, damage or point logic.
 Repeated snapshots reuse warning meshes; clearing/changing targets removes the
-old warning. This game remains outside both room allowlists pending integration.
+old warning. Both development room allowlists now include this game; production
+online play remains disabled.
 
 - `/tmp/kras-saboteur-unit.log`: 211 assertions passed, covering JSON capture,
   malformed/missing fields, last-valid-state retention, warning cells at centre
@@ -537,8 +543,34 @@ old warning. This game remains outside both room allowlists pending integration.
 - Import generated the new script UIDs. The sandbox reported inability to save
   the user's editor settings and read system CA certificates; these are not
   treated as product errors or proof of successful release building.
-- Scrub burst/audio events, real multiplayer matches/tournaments and device QA
-  are still required before declaring it complete.
+- Host warning/scrub sequences now survive round changes. Guest presentation
+  consumes each new event once, and suppresses historical effects on first
+  snapshot, round change or after a snapshot gap longer than one second.
+  The controller exposes visual/audio scrub feedback separately from damage,
+  tile ownership and scoring; guest feedback never applies those rules.
+- `/tmp/kras-saboteur-events-unit.log`: 236 assertions passed, including repeated
+  snapshots, reconnect gaps, first snapshots and monotonic host event capture.
+- `/tmp/kras-saboteur-events-visual.log`: 240 assertions passed with actual
+  pooled sound triggers and no leak warning. The capture is a test fixture.
+- `/tmp/kras-saboteur-room-compile.log`: all 236 scripts compile; 36 server tests
+  passed, including room rejection of ownership-only Saboteur packets.
+- `kras-network-smoke-kVJ1mS`: ordinary Saboteur matches passed with two
+  humans/two bots and four humans. The fixture requires an observed warning and
+  scrub, compares drone/target/tile presentation against the final host snapshot,
+  and verifies reconnect and identical scores. Guests received 1088-1107 world
+  snapshots. Server event-loop maximum was 51 ms in this run, not an iOS FPS or
+  network-latency certification.
+- Saboteur's tournament run and device QA remain required; the CI matrix now
+  includes ordinary/tournament scenarios for all ten development rulesets.
+
+## Completed seven-game CI baseline
+
+GitHub Actions run `36962406988`, source
+`ea0653a1de827d1ef8e07c52b094ceaf187c0197`, completed all eight matrix jobs
+successfully. Its core job `110698736499` compiled 231 scripts, passed 12,673
+assertions, and completed 117 stability matches with zero failures. The other
+jobs cover ordinary/tournament networking for the seven rulesets through Tag
+Hunt. This is not evidence for the later paint or Saboteur commits or a release.
 
 ## Expansion checklist per game
 

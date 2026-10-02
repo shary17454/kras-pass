@@ -18,6 +18,9 @@ var _target: ArenaTile
 var _mark := 0.0
 var _cycle := SCRUB_PERIOD
 var _markers: Array = []
+var _warning_sequence := 0
+var _scrub_sequence := 0
+var _last_scrub := Vector3.ZERO
 
 
 func build() -> void:
@@ -83,6 +86,7 @@ func _choose_target() -> void:
 		return
 	_target = owned[ctx.rng.randi_range(0, owned.size() - 1)]
 	_mark = MARK_TIME
+	_warning_sequence += 1
 	_show_markers(_target)
 	AudioManager.play_sfx("countdown", _target.global_position)
 
@@ -117,11 +121,9 @@ func _scrub() -> void:
 		t.owner_slot = -1
 		t.set_color(t.base_color)
 	_clear_markers()
-	var burst := MeshFactory.burst(Color("#c8ccd8"), 12)
-	ctx.world_root.add_child(burst)
-	burst.global_position = _target.global_position + Vector3(0, 0.6, 0)
-	AudioManager.play_sfx("explode", _target.global_position)
-	EventBus.shake(0.25, 0.18)
+	_scrub_sequence += 1
+	_last_scrub = _target.global_position
+	present_scrub(_last_scrub)
 	# Anyone standing in the blast is shoved clear — the drone does not paint
 	# for them either, so being caught costs tempo on top of territory.
 	for i in ctx.fighters.size():
@@ -137,6 +139,14 @@ func _scrub() -> void:
 	if wiped > 0:
 		_recount_scores()
 	_target = null
+
+
+func present_scrub(position: Vector3) -> void:
+	var burst := MeshFactory.burst(Color("#c8ccd8"), 12)
+	ctx.world_root.add_child(burst)
+	burst.global_position = position + Vector3(0, 0.6, 0)
+	AudioManager.play_sfx("explode", position)
+	EventBus.shake(0.25, 0.18)
 
 
 func _clear_markers() -> void:

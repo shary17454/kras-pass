@@ -109,7 +109,7 @@ test('tag match requires bounded authoritative hunter role', () => {
 });
 
 test('paint games relay complete ownership and reject invalid grids', () => {
-  for (const game of ['paint_grid', 'mnatiq']) {
+  for (const game of ['paint_grid', 'mnatiq', 'mukharrib']) {
     const {host, client} = fixture();
     const guest = client(); guest.send({op: 'join', code: host.c.room.code});
     const config = {game, arena: 'paint_grid', rounds: 2, bots: true, difficulty: 1};
@@ -121,10 +121,15 @@ test('paint games relay complete ownership and reject invalid grids', () => {
     assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /invalid_snapshot/);
     const data = snapshot(); data.world = {owners: Array(169).fill(-1)};
     data.world.owners[168] = 3;
+    if (game === 'mukharrib') {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+      Object.assign(data.world, {drone: [0, 3.2, 0], rotor: 0, target: -1, mark: 0, cycle: 3.4,
+        warning_sequence: 0, scrub_sequence: 0, scrub_position: [0, 0, 0]});
+    }
     host.send({op: 'snapshot', epoch, tick: 1, data});
     assert.deepEqual(guest.last('snapshot').data.world, data.world);
     for (const owners of [Array(168).fill(-1), Array(170).fill(-1), Array(169).fill(4), Array(169).fill(0.5)]) {
-      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world: {owners}}}), /invalid_snapshot/);
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world: {...data.world, owners}}}), /invalid_snapshot/);
       assert.equal(guest.last('snapshot').tick, 1);
     }
   }

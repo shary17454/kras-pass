@@ -3,6 +3,8 @@ const vector = value => Array.isArray(value) && value.length === 3 && value.ever
 
 export function validSaboteurWorld(data, count) {
   return validPaintWorld(data, count) && vector(data.drone)
+    && vector(data.scrub_position)
+    && ['warning_sequence', 'scrub_sequence'].every(key => Number.isInteger(data[key]) && data[key] >= 0 && data[key] <= 1000000)
     && Number.isFinite(data.rotor) && data.rotor >= 0 && data.rotor <= Math.PI * 2
     && Number.isInteger(data.target) && data.target >= -1 && data.target < 169
     && Number.isFinite(data.mark) && data.mark >= 0 && data.mark <= 1.5

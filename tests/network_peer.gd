@@ -28,6 +28,8 @@ var observed_tag_change := false
 var last_hunter := -1
 var hunter_round := -1
 var observed_carrying := false
+var observed_scrub := false
+var observed_warning := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -160,6 +162,10 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "mukharrib":
+		observed_warning = observed_warning or game.controller._target != null
+		var sequence: int = game.controller._scrub_sequence if host else int(game._network_replica.target.get("world", {}).get("scrub_sequence", 0))
+		observed_scrub = observed_scrub or sequence > 0
 	if game_id == "zone_hold":
 		for score in game.ctx.scores:
 			observed_zone_score = observed_zone_score or score > 0
@@ -176,7 +182,7 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
-		if game_id in ["paint_grid", "mnatiq"]:
+		if game_id in ["paint_grid", "mnatiq", "mukharrib"]:
 			var angle := float(Time.get_ticks_msec() - started_at) / 1800.0 + slot * PI / 2.0
 			var target: Vector3 = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * 7.0
 			var direction: Vector3 = target - game.ctx.fighters[slot].global_position
@@ -316,7 +322,7 @@ func _finished(result: MatchResult) -> void:
 				or absf(game.controller.handover_grace() - float(world.get("grace", -1))) > 0.001:
 			_fail("hunter role presentation diverged")
 			return
-	if not host and game_id in ["paint_grid", "mnatiq"]:
+	if not host and game_id in ["paint_grid", "mnatiq", "mukharrib"]:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		var painted := false
 		if world_snapshots < 5 or world.get("owners", []).size() != 169:
@@ -331,6 +337,12 @@ func _finished(result: MatchResult) -> void:
 		if not painted:
 			_fail("paint match never claimed a tile")
 			return
+		if game_id == "mukharrib":
+			var position := Vector3(world.drone[0], world.drone[1], world.drone[2])
+			var actual_target: int = -1 if game.controller._target == null else (game.controller._target.grid_x + 6) * 13 + game.controller._target.grid_z + 6
+			if not game.controller._drone.global_position.is_equal_approx(position) or actual_target != int(world.target):
+				_fail("drone or warning presentation diverged")
+				return
 	if host and Net._inputs.size() < count - 1:
 		_fail("missing remote inputs")
 		return
@@ -352,6 +364,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "tag_hunt" and not observed_tag_change:
 		_fail("match never transferred hunter role during a round")
+		return
+	if game_id == "mukharrib" and (not observed_scrub or not observed_warning):
+		_fail("drone never warned and scrubbed during match")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

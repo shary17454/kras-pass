@@ -4,11 +4,12 @@ import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWor
 
 test('saboteur requires bounded drone and warning state with tile ownership', () => {
   const make = () => ({owners: Array(169).fill(-1), drone: [1, 3.2, -1], rotor: 2,
-    target: 168, mark: 1.5, cycle: 3.4});
+    target: 168, mark: 1.5, cycle: 3.4, warning_sequence: 2, scrub_sequence: 1, scrub_position: [0, 0, 0]});
   assert.ok(validSaboteurWorld(make(), 4));
   assert.ok(validSaboteurWorld({...make(), target: -1, mark: 0}, 2));
   for (const [key, values] of Object.entries({drone: [[], [0, 0, Infinity], [0, '3', 0]],
-    rotor: [-1, 7, true], target: [-2, 169, 1.5, '1'], mark: [-1, 2, true], cycle: [-1, 4, null]})) {
+    rotor: [-1, 7, true], target: [-2, 169, 1.5, '1'], mark: [-1, 2, true], cycle: [-1, 4, null],
+    warning_sequence: [-1, .5, true, 1000001], scrub_sequence: [-1, '1', Infinity], scrub_position: [[0], [0, NaN, 0]]})) {
     for (const value of values) assert.equal(validSaboteurWorld({...make(), [key]: value}, 4), false, key);
   }
   for (const key of Object.keys(make())) {

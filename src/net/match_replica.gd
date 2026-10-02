@@ -14,6 +14,8 @@ const PAINT_GAMES := ["paint_grid", "mnatiq"]
 const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star"}
 var _collectibles: Node3D
 var _relic: Node3D
+var _saboteur: RefCounted
+var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
 var _last_phase := -1
@@ -145,7 +147,11 @@ func render(scene: Node, delta: float) -> void:
 	elif PAINT_GAMES.has(scene.config.minigame_id):
 		PaintReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "mukharrib":
-		SaboteurReplica.render(scene.controller, target.world)
+		if _saboteur == null:
+			_saboteur = SaboteurReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_saboteur.render(scene.controller, target.world, fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
 	elif scene.config.minigame_id == "relic_hold":
 		if not is_instance_valid(_relic):
 			_relic = RelicReplica.new()
