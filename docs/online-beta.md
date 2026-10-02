@@ -3076,6 +3076,34 @@ its TCP latency tradeoff still requires real-network testing. References:
 [Godot WebSocket guide](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html),
 [ws](https://github.com/websockets/ws).
 
+## Runner contact jump recovery (2026-10-02)
+
+RunnerBrain rejected jump requests for a detected obstacle at or below 0.5
+metres. A close-contact collision can remain below that threshold, preventing
+the bot from recovering after a late jump. The lower cutoff is removed; the
+existing look-ahead, accuracy-dependent jump distance, difficulty profile,
+forward movement and dash rules are unchanged. No scores, duration, finish
+sentinel or required finish assertions were altered.
+
+Evidence:
+- `/tmp/kras-runner-recovery-before.log`: four assertions pass and one fails.
+  An actual physics ray sees a fixture obstacle at 0.4 metres while the bot
+  fails to request a jump.
+- `/tmp/kras-runner-recovery-after.log`: all five assertions pass, including
+  the close-contact jump and absence of invented obstacles/jumps on clear
+  ground. This controlled decision fixture is not a full race.
+- `/tmp/kras-runner-hurdle-rounds.log`: all 26 finish, rescue, round and result
+  lifecycle assertions pass.
+- `/tmp/kras-runner-compile.log`: all 308 scripts compile.
+
+The full local gate, real mixed-player race and original CI tournament have
+not been rerun on this change. The CI failure below is still open: contact
+recovery is a proven defect and plausible contributor, not a proven complete
+explanation of the unfinished slot. Reproduce the recorded seeds and retain
+the requirement that every active runner reaches the finish before claiming
+the network qualification is fixed. Device and difficulty balance remain
+unqualified. No Railway deployment or Apple release occurred in this pass.
+
 ## Open CI qualification failure (2026-10-02)
 
 Run `37053065343` remains pinned to
