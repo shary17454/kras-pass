@@ -32,6 +32,8 @@ var observed_scrub := false
 var observed_warning := false
 var observed_magnet := false
 var observed_magnet_hold := false
+var observed_storm_warning := false
+var observed_storm_volley := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -164,6 +166,10 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "storm_heart":
+		observed_storm_warning = observed_storm_warning or game.controller.is_winding()
+		var sequence: int = game.controller._volley_sequence if host else int(game._network_replica.target.get("world", {}).get("volley_sequence", 0))
+		observed_storm_volley = observed_storm_volley or sequence > 0
 	if game_id == "magnet_court":
 		observed_magnet_hold = observed_magnet_hold or not game.controller._held.is_empty()
 		for active in game.controller._magnet_until:
@@ -275,10 +281,10 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
-	if not host and game_id in ["goal_guard", "magnet_court"] and (world_snapshots < 5 or game.controller.balls.is_empty()):
+	if not host and game_id in ["goal_guard", "magnet_court", "storm_heart"] and (world_snapshots < 5 or game.controller.balls.is_empty()):
 		_fail("missing goal world")
 		return
-	if not host and game_id in ["goal_guard", "magnet_court"]:
+	if not host and game_id in ["goal_guard", "magnet_court", "storm_heart"]:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if game.controller.balls.size() != world.get("balls", []).size():
 			_fail("replica ball count diverged")
@@ -289,6 +295,12 @@ func _finished(result: MatchResult) -> void:
 			var position := Vector3(row.position[0], row.position[1], row.position[2])
 			if ball.global_position.distance_to(position) > 1.0 or ball.heavy != bool(row.heavy):
 				_fail("replica ball presentation diverged")
+				return
+		if game_id == "storm_heart":
+			if absf(game.controller._windup - float(world.windup)) > 0.001 \
+					or absf(game.controller._volley_timer - float(world.volley_timer)) > 0.001 \
+					or absf(angle_difference(game.controller._blades.rotation.y, float(world.rotor))) > 0.001:
+				_fail("turbine presentation diverged")
 				return
 		if game_id == "magnet_court":
 			for slot in game.ctx.player_count():
@@ -396,6 +408,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "magnet_court" and (not observed_magnet or not observed_magnet_hold):
 		_fail("match never activated and caught a ball with a magnet")
+		return
+	if game_id == "storm_heart" and (not observed_storm_warning or not observed_storm_volley):
+		_fail("turbine never warned and fired a volley")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

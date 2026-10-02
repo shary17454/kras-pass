@@ -1,6 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld} from './world-snapshots.js';
+
+test('storm world allows two extra balls but requires turbine state and bounded events', () => {
+  for (const count of [2, 3, 4]) {
+    const make = () => ({balls: Array.from({length: count + 2}, () => ({position: [0, .9, 0], velocity: [9, 0, 0], generation: 3, heavy: false})),
+      charges: Array(count).fill(1), rotor: 2, windup: 1.6, volley_timer: 8, warning_sequence: 2, volley_sequence: 1});
+    assert.ok(validStormWorld(make(), count));
+    assert.equal(validGoalGuardWorld(make(), count), false, 'ordinary court retains its original ball cap');
+    const extra = make(); extra.balls.push(extra.balls[0]);
+    assert.equal(validStormWorld(extra, count), false);
+    for (const key of Object.keys(make())) {
+      const data = make(); delete data[key];
+      assert.equal(validStormWorld(data, count), false, key);
+    }
+    for (const [key, values] of Object.entries({rotor: [-1, 7, true, '1'], windup: [-1, 1.7, Infinity],
+      volley_timer: [-1, 9, null], warning_sequence: [-1, .5, 1000001], volley_sequence: [true, '1', NaN]})) {
+      for (const value of values) assert.equal(validStormWorld({...make(), [key]: value}, count), false, key);
+    }
+  }
+});
 
 test('magnet world maps every ball to a bounded owner and every player to a meter', () => {
   const make = () => ({balls: [{position: [0, .9, 0], velocity: [1, 0, 0], generation: 1, heavy: false}],

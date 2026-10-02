@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains eleven explicitly adapted rulesets; verification
+The development allowlist contains twelve explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -35,8 +35,10 @@ capture, enclosed-region rewards and recounting remain host-only.
 `magnet_court` on `quad_court` adds charge, active timers and held-ball ownership
 by ball slot, never by engine instance ID. Guests do not simulate attraction,
 release, recharge or goals.
+`storm_heart` on the same court adds turbine rotation, windup and volley timers,
+two additional ball slots, and sequenced warning/volley feedback.
 Optional random power-ups remain disabled in online beta configurations.
-The other 28 games are not
+The other 27 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -627,6 +629,43 @@ Its dash and ability hit regions are tested at portrait and landscape sizes.
   1665-1684 snapshots, and the server event-loop maximum was 40 ms.
 - Device QA and guest ability sound-event parity remain pending. Production
   online play is still disabled.
+
+## Storm Heart turbine replication
+
+The turbine presenter extends the shared ball state with bounded rotation,
+warning/volley timers and monotonic event counters. Only this ruleset accepts
+up to two extra balls beyond the player count; ordinary Goal Guard and Magnet
+retain their original limits. The host still creates and launches all balls.
+Guest effects cannot score, launch or spawn anything. Repeated snapshots,
+first snapshots, round changes and reconnect gaps cannot replay old sounds.
+The controller separates presentation from authoritative volley rules and
+resets turbine rotation between rounds. Keeper controls remove an unused
+second stick without removing attack or dash.
+
+- `/tmp/kras-storm-unit.log`: 163 assertions passed for two-, three- and
+  four-player state, bounds, extra balls, reset, events and host-only rules.
+- `/tmp/kras-storm-events-final.log`: 185 graphical assertions passed, including
+  pooled sounds, keeper controls and suppression across pause/resume.
+  `/tmp/kras-storm-final.png` was inspected:
+  the turbine, post-launch normal/heavy balls and four keepers are visible.
+  This desktop fixture is not device performance or complete gameplay QA.
+- `/tmp/kras-storm-import.log`: asset/class import completed;
+  `/tmp/kras-storm-compile.log`: all 240 scripts compiled.
+- All 40 server tests passed, including real WebSockets and room-level
+  rejection of missing turbine state and excessive ball counts.
+- `kras-network-smoke-x6ZN4N`: ordinary matches passed with two humans/two bots
+  and four humans. All clients observed warning and volley, compared turbine
+  state/balls with the host, and agreed on results after reconnect. Guests
+  received 1088-1107 snapshots; the server event-loop maximum was 62 ms.
+- `kras-network-smoke-lVEZ4U`: three-match points tournaments passed with two
+  humans/two bots and four humans, including host/guest reconnect and identical
+  final standings. Final points were `[7,4,12,11]` and `[7,13,9,5]`; neither run
+  required final sudden death. Guests received 1665-1684 snapshots; the server
+  event-loop maximum was 38 ms. Neither network run is an iOS performance test.
+- `/tmp/kras-storm-full-tests.log`: the complete local suite passed 13,884
+  assertions after these changes, including Goal Guard, Magnet, replay and
+  full-length race regression cases. Device acceptance remains pending.
+  The development CI matrix includes this ruleset. Production remains off.
 
 ## Expansion checklist per game
 

@@ -15,6 +15,8 @@ var _volley_timer := VOLLEY_PERIOD
 var _windup := 0.0
 var _heart: Node3D
 var _blades: Node3D
+var _warning_sequence := 0
+var _volley_sequence := 0
 
 
 func build() -> void:
@@ -41,6 +43,8 @@ func on_round_start() -> void:
 	super.on_round_start()
 	_volley_timer = VOLLEY_PERIOD
 	_windup = 0.0
+	if is_instance_valid(_blades):
+		_blades.rotation.y = 0.0
 
 
 func tick(delta: float) -> void:
@@ -58,7 +62,8 @@ func tick(delta: float) -> void:
 	if _volley_timer <= 0.0:
 		_volley_timer = VOLLEY_PERIOD
 		_windup = WINDUP_TIME
-		AudioManager.play_sfx("countdown", _heart.global_position if _heart != null else ctx.arena_center())
+		_warning_sequence += 1
+		present_warning()
 
 
 func _fire_volley() -> void:
@@ -78,8 +83,17 @@ func _fire_volley() -> void:
 		b.launch(arena.global_position + Vector3(0, 0.9, 0), Vector3(cos(ang), 0, sin(ang)),
 			Balance.num("tuning", "ball.base_speed", 9.0) * 1.35)
 		n += 1
+	_volley_sequence += 1
+	present_volley()
+
+
+func present_warning() -> void:
+	AudioManager.play_sfx("countdown", ctx.arena_center())
+
+
+func present_volley() -> void:
 	EventBus.shake(0.45, 0.3)
-	AudioManager.play_sfx("shoot", arena.global_position)
+	AudioManager.play_sfx("shoot", ctx.arena_center())
 
 
 ## True while the turbine is winding up — the same warning the spin and the

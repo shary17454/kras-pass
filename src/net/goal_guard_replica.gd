@@ -10,10 +10,10 @@ static func capture(game: Node) -> Dictionary:
 	return {"balls": rows, "charges": Array(game.charges)}
 
 
-static func valid(data: Variant, count: int) -> bool:
+static func valid(data: Variant, count: int, extra_balls: int = 0) -> bool:
 	if count < 2 or count > 4 or not data is Dictionary:
 		return false
-	if not data.get("balls") is Array or data.balls.is_empty() or data.balls.size() > count:
+	if not data.get("balls") is Array or data.balls.is_empty() or data.balls.size() > count + extra_balls:
 		return false
 	if not data.get("charges") is Array or data.charges.size() != count:
 		return false

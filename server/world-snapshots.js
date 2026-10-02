@@ -1,6 +1,14 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validStormWorld(data, count) {
+  return validGoalGuardWorld(data, count, 2)
+    && Number.isFinite(data.rotor) && data.rotor >= 0 && data.rotor <= Math.PI * 2
+    && Number.isFinite(data.windup) && data.windup >= 0 && data.windup <= 1.6
+    && Number.isFinite(data.volley_timer) && data.volley_timer >= 0 && data.volley_timer <= 8
+    && ['warning_sequence', 'volley_sequence'].every(key => Number.isInteger(data[key]) && data[key] >= 0 && data[key] <= 1000000);
+}
+
 export function validMagnetWorld(data, count) {
   return validGoalGuardWorld(data, count)
     && Array.isArray(data.magnet_charge) && data.magnet_charge.length === count
@@ -48,11 +56,11 @@ export function validRelicWorld(data, count) {
     && validCollectionWorld({items: data.items, carrying: Array(count).fill(0)}, count, 'gem');
 }
 
-export function validGoalGuardWorld(data, count) {
+export function validGoalGuardWorld(data, count, extraBalls = 0) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count
     && data.charges.every(value => Number.isFinite(value) && value >= 0 && value <= 1)
-    && Array.isArray(data.balls) && data.balls.length >= 1 && data.balls.length <= count
+    && Array.isArray(data.balls) && data.balls.length >= 1 && data.balls.length <= count + extraBalls
     && data.balls.every(ball => ball != null && typeof ball === 'object'
       && typeof ball.heavy === 'boolean' && Number.isInteger(ball.generation)
       && ball.generation >= 0 && ball.generation <= 1000000

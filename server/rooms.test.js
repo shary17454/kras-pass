@@ -60,6 +60,23 @@ test('goal guard enforces its arena and complete world snapshots', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('storm room relays turbine state and rejects missing or excessive state', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'storm_heart', arena: 'quad_court', rounds: 2, bots: true, difficulty: 1}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot(); data.world = {charges: [1, 1, 1, 1], balls: Array.from({length: 6}, () => ({position: [0, .9, 0], velocity: [0, 0, 0], heavy: false, generation: 1}))};
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  Object.assign(data.world, {rotor: 2, windup: 1.6, volley_timer: 8, warning_sequence: 3, volley_sequence: 2});
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.balls.push(data.world.balls[0]);
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('magnet rooms require both ball state and bounded magnet ownership', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
