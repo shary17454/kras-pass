@@ -8,7 +8,9 @@ const fixture = () => ({race: {elapsed: 0, times: Array(4).fill(1000000000), lap
   recovery: Array(4).fill(-1), boost: {serial: [0, 0, 0, 0], pads: Array.from({length: 4}, () => [0, 0, 0, 0])}},
 held: [1, 2, 3, 4], shields: [0, 0, 0, 2], crates: Array.from({length: 20}, () => ({cooldown: 0, rotation: 0})),
 bombs: [{id: '12', position: [0, 1, 0], owner: 0, arm: .55, life: 9}],
-shots: [{id: '13', generation: 1, position: [0, 1, 0], direction: [1, 0, 0], shooter: 1}]});
+shots: [{id: '13', generation: 1, position: [0, 1, 0], direction: [1, 0, 0], shooter: 1}],
+events: Object.fromEntries(['pickup', 'boost', 'shield', 'drop', 'explode', 'hit', 'block', 'respawn']
+  .map(kind => [kind, {sequence: 0, position: [0, 0, 0]}]))});
 
 test('armed race world bounds inventory hazards and inherited progress', () => {
   const data = fixture();
@@ -42,6 +44,15 @@ test('armed race world bounds inventory hazards and inherited progress', () => {
   }
   const shots = structuredClone(data); shots.shots[0].direction = [0, 0, 0];
   assert.equal(validArmedRaceWorld(shots, 4), false);
+  for (const kind of Object.keys(data.events)) {
+    const missing = structuredClone(data); delete missing.events[kind]; assert.equal(validArmedRaceWorld(missing, 4), false);
+    for (const value of [-1, .5, true, '1', Infinity, NaN, 1000001]) {
+      const bad = structuredClone(data); bad.events[kind].sequence = value;
+      assert.equal(validArmedRaceWorld(bad, 4), false);
+    }
+    const bad = structuredClone(data); bad.events[kind].position[0] = 10001;
+    assert.equal(validArmedRaceWorld(bad, 4), false);
+  }
 });
 
 test('actual Godot armed-race capture satisfies server schema', {skip: !process.env.KRAS_ARMED_WORLD_FIXTURE}, () => {
@@ -50,4 +61,6 @@ test('actual Godot armed-race capture satisfies server schema', {skip: !process.
   assert.equal(data.bombs.length, 1);
   assert.equal(data.shots.length, 1);
   assert.ok(data.held[0] > 0);
+  assert.equal(data.events.pickup.sequence, 1);
+  assert.equal(data.events.drop.sequence, 1);
 });

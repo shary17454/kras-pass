@@ -9,6 +9,7 @@ var race: Node3D = Kart.new()
 var projectiles: Node3D = Shots.new()
 var bombs := {}
 var _round := -1
+var _sequences := {}
 
 
 func _init() -> void:
@@ -24,13 +25,22 @@ static func capture(game: Node) -> Dictionary:
 	for bomb in game._bombs:
 		hazards.append({"id": str(bomb.node.get_instance_id()), "position": Fields._vec(bomb.pos),
 			"owner": bomb.owner, "arm": bomb.arm, "life": bomb.life})
+	var events := {}
+	for kind in Race.WEAPON_EVENTS:
+		var event: Dictionary = game.weapon_events[kind]
+		events[kind] = {"sequence": event.sequence, "position": Fields._vec(event.position)}
 	return {"race": Kart.capture(game), "held": Array(game.held), "shields": Array(game.shielded),
-		"crates": crates, "bombs": hazards, "shots": Shots.capture_shots(game._missiles)}
+		"crates": crates, "bombs": hazards, "shots": Shots.capture_shots(game._missiles), "events": events}
 
 
 static func valid(world: Variant, count: int, checkpoints: int = 0, crate_count: int = 20) -> bool:
-	if not world is Dictionary or world.size() != 6 or not Kart.valid(world.get("race"), count, checkpoints):
+	if not world is Dictionary or world.size() != 7 or not Kart.valid(world.get("race"), count, checkpoints):
 		return false
+	if not world.get("events") is Dictionary or world.events.size() != Race.WEAPON_EVENTS.size(): return false
+	for kind in Race.WEAPON_EVENTS:
+		var event: Variant = world.events.get(kind)
+		if not event is Dictionary or event.size() != 2 or not Fields._integer(event.get("sequence"), 0, 1000000) \
+			or not Fields._vector(event.get("position")): return false
 	for field in ["held", "shields"]:
 		if not world.get(field) is Array or world[field].size() != count: return false
 	for slot in count:
@@ -59,7 +69,8 @@ static func valid(world: Variant, count: int, checkpoints: int = 0, crate_count:
 
 
 func render(game: Node, world: Dictionary, round_index: int, delta: float, snap: bool, feedback: bool) -> void:
-	if _round != round_index:
+	var baseline := _round != round_index
+	if baseline:
 		for key in bombs.keys(): _remove_bomb(key)
 	race.render(game, world.race, round_index, feedback)
 	game.held.assign(world.held)
@@ -82,6 +93,20 @@ func render(game: Node, world: Dictionary, round_index: int, delta: float, snap:
 	for key in bombs.keys():
 		if not present.has(key): _remove_bomb(key)
 	projectiles.render_shots(game, world.shots, round_index, delta, snap, feedback)
+	for kind in Race.WEAPON_EVENTS:
+		var event: Dictionary = world.events[kind]
+		var position := Vector3(event.position[0], event.position[1], event.position[2])
+		if feedback and not baseline and int(event.sequence) > int(_sequences.get(kind, 0)):
+			match kind:
+				"pickup", "shield": AudioManager.play_sfx("pickup", position)
+				"boost": AudioManager.play_sfx("dash", position)
+				"drop": AudioManager.play_sfx("bounce", position, 0.7)
+				"block": AudioManager.play_sfx("bounce", position)
+				"hit": AudioManager.play_sfx("hit", position)
+				"respawn": AudioManager.play_sfx("tick", position, 0.4)
+				"explode": game.present_bomb_explosion(position)
+		_sequences[kind] = int(event.sequence)
+		game.weapon_events[kind] = {"sequence": int(event.sequence), "position": position}
 	_round = round_index
 
 

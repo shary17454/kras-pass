@@ -17,6 +17,8 @@ func run(t: TestHarness, host: Node) -> void:
 	game._drop_bomb(1, source.ctx.fighter(1))
 	game._launch_missile(2, source.ctx.fighter(2))
 	game.shielded[3] = 2.0
+	t.equal(game.weapon_events.pickup.sequence, 1, "actual crate pickup advances host audio generation")
+	t.equal(game.weapon_events.drop.sequence, 1, "actual bomb placement advances host audio generation")
 	var replica = Replica.new()
 	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(source)))
 	packet.phase = MatchPhase.P.PLAYING
@@ -26,6 +28,11 @@ func run(t: TestHarness, host: Node) -> void:
 		fixture.store_string(JSON.stringify(packet.world))
 		fixture.close()
 	t.ok(replica.accept(packet, 4, "sabaq_sawarikh", source.config.arena_id, game._checkpoints.size()), "real host weapons survive JSON snapshot")
+	for kind in game.WEAPON_EVENTS:
+		for value in [-1, 0.5, true, "1", INF, NAN, 1000001]:
+			var malformed := packet.duplicate(true)
+			malformed.world.events[kind].sequence = value
+			t.ok(not replica.accept(malformed, 4, "sabaq_sawarikh"), "invalid weapon event generation rejected")
 	for field in packet.world.keys():
 		var bad := packet.duplicate(true)
 		bad.world.erase(field)
@@ -63,7 +70,13 @@ func run(t: TestHarness, host: Node) -> void:
 	bad.world.crates[0].cooldown = 7.01
 	t.ok(not replica.accept(bad, 4, "sabaq_sawarikh"), "crate recharge bound matches authored seven seconds")
 	t.ok(replica.accept(packet, 4, "sabaq_sawarikh"), "valid packet still accepted after malformed updates")
+	replica._last_phase = MatchPhase.P.PLAYING
+	replica._last_round = int(packet.round)
+	AudioManager.enabled = true
+	var voice: int = AudioManager._next_voice
 	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, voice, "first snapshot cannot replay old pickup or bomb placement")
+	AudioManager.enabled = false
 	t.equal(Array(guest.controller.held), Array(game.held), "host weapon inventory drives guest HUD")
 	t.near(guest.controller.shielded[3], 2.0, 0.001, "guest shield remains host-owned")
 	t.equal(replica._armed_race.bombs.size(), 1, "one host bomb creates one visual")
@@ -79,6 +92,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.near(guest.controller._crates[0].cooldown, cooldown, 0.001, "repeated render cannot respawn host crate")
 	t.equal(replica._armed_race.bombs.size(), 1, "repeated snapshot cannot duplicate bomb")
 	t.equal(replica._armed_race.projectiles.shots.size(), 1, "repeated snapshot cannot duplicate missile")
+	await _events(t, source, guest, replica)
 	var position: Vector3 = guest.ctx.fighter(0).global_position
 	bad = packet.duplicate(true)
 	bad.world.race.checkpoints += 1
@@ -92,7 +106,12 @@ func run(t: TestHarness, host: Node) -> void:
 	packet.phase = MatchPhase.P.PLAYING
 	packet.round += 1
 	t.ok(replica.accept(packet, 4, "sabaq_sawarikh"), "host round reset accepted")
+	AudioManager.enabled = true
+	AudioManager._last_played.erase("go")
+	voice = AudioManager._next_voice
 	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, (voice + 1) % AudioManager.SFX_VOICES, "new round plays only UI countdown cue, not past weapons")
+	AudioManager.enabled = false
 	t.equal(replica._armed_race.bombs.size(), 0, "new round removes previous bomb")
 	t.equal(replica._armed_race.projectiles.shots.size(), 0, "new round removes previous missile")
 	t.ok(guest.controller.held.all(func(value): return value == 0), "new round restores empty inventory")
@@ -102,6 +121,62 @@ func run(t: TestHarness, host: Node) -> void:
 	guest.queue_free()
 	AudioManager.enabled = enabled
 	await host.get_tree().process_frame
+
+
+func _events(t: TestHarness, source: Node, guest: Node, replica: RefCounted) -> void:
+	var game: Node = source.controller
+	var fighter: Fighter = source.ctx.fighter(0)
+	for kind in ["pickup", "boost", "shield", "block", "hit", "drop", "explode", "respawn"]:
+		AudioManager.enabled = false
+		match kind:
+			"pickup":
+				game.held[0] = game.Item.NONE
+				fighter.global_position = game._crates[1].pos
+				game._tick_crates(0.01)
+			"boost":
+				game.held[0] = game.Item.BOOST
+				game._use(0, fighter)
+			"shield":
+				game.held[0] = game.Item.SHIELD
+				game._use(0, fighter)
+			"block", "hit": game._spin_out(0, 1, Vector3.RIGHT)
+			"drop": game._drop_bomb(0, fighter)
+			"explode": game._detonate({"pos": Vector3(500, 1, 500)}, 0)
+			"respawn":
+				game.held.fill(game.Item.SHIELD)
+				game._crates[0].cooldown = 0.005
+				game._tick_crates(0.01)
+		t.ok(game.weapon_events[kind].sequence > 0, "real host action advances " + kind)
+		var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(source)))
+		packet.phase = MatchPhase.P.PLAYING
+		t.ok(replica.accept(packet, 4, "sabaq_sawarikh"), "fresh weapon event accepted")
+		var sound: String = {"pickup": "pickup", "boost": "dash", "shield": "pickup", "block": "bounce", "hit": "hit", "drop": "bounce", "explode": "explode", "respawn": "tick"}[kind]
+		AudioManager.enabled = true
+		AudioManager._last_played.erase(sound)
+		var voice: int = AudioManager._next_voice
+		var scores: Array = Array(guest.ctx.scores).duplicate()
+		var velocity: Vector3 = guest.ctx.fighter(1).velocity
+		replica.render(guest, 0.016)
+		t.equal(AudioManager._next_voice, (voice + 1) % AudioManager.SFX_VOICES, "fresh " + kind + " plays exactly once")
+		t.equal(Array(guest.ctx.scores), scores, "weapon presentation never scores")
+		t.equal(guest.ctx.fighter(1).velocity, velocity, "weapon presentation never applies guest impulses")
+		AudioManager._last_played.erase(sound)
+		voice = AudioManager._next_voice
+		replica.render(guest, 0.016)
+		t.equal(AudioManager._next_voice, voice, "repeated " + kind + " remains quiet without audio debounce")
+	var resumed = Replica.new()
+	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(source)))
+	packet.phase = MatchPhase.P.PLAYING
+	t.ok(resumed.accept(packet, 4, "sabaq_sawarikh"), "reconnect baseline accepts existing weapon history")
+	resumed._last_phase = MatchPhase.P.PLAYING
+	resumed._last_round = int(packet.round)
+	AudioManager._last_played.clear()
+	var voice: int = AudioManager._next_voice
+	resumed.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, voice, "reconnect baseline does not replay old weapon sounds")
+	resumed._armed_race.queue_free()
+	await guest.get_tree().process_frame
+	AudioManager.enabled = false
 
 
 func _scene(host: Node) -> Node:

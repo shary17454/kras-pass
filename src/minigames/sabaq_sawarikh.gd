@@ -32,12 +32,14 @@ const SPIN_SECONDS := 1.15
 const BOMB_ARM_DELAY := 0.55
 const BOMB_LIFETIME := 9.0
 const BOMB_RADIUS := 3.2
+const WEAPON_EVENTS := ["pickup", "boost", "shield", "drop", "explode", "hit", "block", "respawn"]
 
 var held: Array[int] = []
 var shielded: Array[float] = []
 var _crates: Array = []
 var _bombs: Array = []
 var _missiles: Array[Projectile] = []
+var weapon_events := {}
 
 
 ## Three laps. The first cut was two, chosen by matching *distance* to Kart
@@ -56,6 +58,7 @@ func laps() -> int:
 
 func build() -> void:
 	super.build()
+	_reset_weapon_events()
 	var n := ctx.player_count()
 	held.resize(n)
 	held.fill(Item.NONE)
@@ -133,6 +136,7 @@ func uses_powerups() -> bool:
 
 func on_round_start() -> void:
 	super.on_round_start()
+	_reset_weapon_events()
 	held.fill(Item.NONE)
 	shielded.fill(0.0)
 	for crate in _crates:
@@ -164,6 +168,7 @@ func _tick_crates(delta: float) -> void:
 			crate["cooldown"] = float(crate["cooldown"]) - delta
 			if float(crate["cooldown"]) <= 0.0 and is_instance_valid(node):
 				node.visible = true
+				_weapon_event("respawn", crate["pos"])
 				AudioManager.play_sfx("tick", crate["pos"], 0.4)
 			continue
 		if is_instance_valid(node):
@@ -183,6 +188,7 @@ func _tick_crates(delta: float) -> void:
 			if is_instance_valid(node):
 				node.visible = false
 			ctx.bump_detail(i, "crates")
+			_weapon_event("pickup", f.global_position)
 			AudioManager.play_sfx("pickup", f.global_position)
 			break
 
@@ -238,9 +244,11 @@ func _use(slot: int, f) -> void:
 	match item:
 		Item.BOOST:
 			f.apply_impulse(f.facing.normalized() * 13.0)
+			_weapon_event("boost", f.global_position)
 			AudioManager.play_sfx("dash", f.global_position)
 		Item.SHIELD:
 			shielded[slot] = 6.0
+			_weapon_event("shield", f.global_position)
 			AudioManager.play_sfx("pickup", f.global_position)
 		Item.BOMB:
 			_drop_bomb(slot, f)
@@ -257,6 +265,7 @@ func _drop_bomb(slot: int, f) -> void:
 	mesh.position = pos
 	ctx.world_root.add_child(mesh)
 	_bombs.append({"pos": pos, "node": mesh, "owner": slot, "arm": BOMB_ARM_DELAY, "life": BOMB_LIFETIME})
+	_weapon_event("drop", pos)
 	AudioManager.play_sfx("bounce", pos, 0.7)
 
 
@@ -292,11 +301,8 @@ func _tick_bombs(delta: float) -> void:
 
 func _detonate(bomb: Dictionary, owner: int) -> void:
 	var pos: Vector3 = bomb["pos"]
-	var burst := MeshFactory.burst(UIKit.DANGER, 16, 3.4, 0.6)
-	ctx.world_root.add_child(burst)
-	burst.global_position = pos
-	EventBus.shake(0.4, 0.28)
-	AudioManager.play_sfx("explode", pos)
+	_weapon_event("explode", pos)
+	present_bomb_explosion(pos)
 	for s in ctx.fighters.size():
 		var f := ctx.fighter(s)
 		if f == null or not is_instance_valid(f) or not ctx.is_alive(s) or finish_times[s] != UNFINISHED:
@@ -306,6 +312,14 @@ func _detonate(bomb: Dictionary, owner: int) -> void:
 		if to.length() > BOMB_RADIUS:
 			continue
 		_spin_out(s, owner, to.normalized() if to.length() > 0.05 else Vector3.FORWARD)
+
+
+func present_bomb_explosion(pos: Vector3) -> void:
+	var burst := MeshFactory.burst(UIKit.DANGER, 16, 3.4, 0.6)
+	ctx.world_root.add_child(burst)
+	burst.global_position = pos
+	EventBus.shake(0.4, 0.28)
+	AudioManager.play_sfx("explode", pos)
 
 
 func _launch_missile(slot: int, f) -> void:
@@ -378,6 +392,7 @@ func _spin_out(slot: int, by_slot: int, push: Vector3) -> void:
 		return
 	if shielded[slot] > 0.0:
 		shielded[slot] = 0.0
+		_weapon_event("block", ctx.fighter(slot).global_position if ctx.fighter(slot) != null else Vector3.ZERO)
 		AudioManager.play_sfx("bounce", ctx.fighter(slot).global_position if ctx.fighter(slot) != null else Vector3.ZERO)
 		return
 	var f := ctx.fighter(slot)
@@ -388,7 +403,19 @@ func _spin_out(slot: int, by_slot: int, push: Vector3) -> void:
 	ctx.bump_detail(slot, "spun")
 	if by_slot >= 0 and by_slot != slot:
 		ctx.bump_detail(by_slot, "hits")
+	_weapon_event("hit", f.global_position)
 	AudioManager.play_sfx("hit", f.global_position)
+
+
+func _weapon_event(kind: String, position: Vector3) -> void:
+	weapon_events[kind].sequence += 1
+	weapon_events[kind].position = position
+
+
+func _reset_weapon_events() -> void:
+	weapon_events.clear()
+	for kind in WEAPON_EVENTS:
+		weapon_events[kind] = {"sequence": 0, "position": Vector3.ZERO}
 
 
 ## Read by the armed racer brain. A bot knowing what it is holding is not a

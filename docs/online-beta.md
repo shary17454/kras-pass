@@ -2,6 +2,41 @@
 
 ## Implemented boundary
 
+### Armed-race sampled weapon feedback
+
+The Sabaq host now records bounded generations/positions for pickup, item
+boost, shield activation, bomb drop, explosion, hit, shield block and crate
+respawn. These are initialized during build as well as each new round, so
+loading snapshots do not access an empty event dictionary. The original
+offline sounds remain unchanged. Bomb explosion presentation is separated
+from damage rules and reused by guests; rendering never calls detonation or
+spin-out rules. Missile launch cues remain owned by the existing shot view.
+
+The first focused run (`/tmp/kras-armed-events-tests.log`) exposed the missing
+build-time initialization, GDScript errors and exit leaks despite exit code
+zero. That run is failed evidence, not a pass. After correction and expanded
+coverage, `/tmp/kras-armed-events-tests-final.log` passed 176 assertions.
+Actual controller actions now prove one fresh cue per sampled event, silence
+for duplicate frames without relying on audio debounce, a quiet reconnect
+baseline and clean round resets. Both GDScript and Node reject malformed
+event counters/positions; Node passed all 93 tests with the actual Godot
+capture under `/tmp/kras-armed-events-tests-final-saves/armed-world.json`.
+The capture reports 60 course checkpoints and 20 crates, matching the authored
+race builder; room binding must use the real course, not the older synthetic
+64-checkpoint validator fixture. Sampled counters do not guarantee delivery
+of every same-kind sound between snapshots or across reconnect gaps.
+The complete gate passed in `kras-party-check.2M3MUd`: 295 scripts compiled,
+332 resources/zero inventory issues, all 19,656 assertions (195.5 wall-clock
+seconds), the separate unchanged three-lap race and 39 stability matches with
+zero failures. These are headless/local checks, not iPhone frame-rate,
+temperature, battery or Internet qualification.
+
+This completes weapon feedback preparation but not room qualification. Sabaq
+remains outside the public/development room allowlists until course/lap and
+tournament routing plus independent-process race/reconnect tests are ready.
+It is not production online support, a device performance result, a Railway
+deployment or an Apple upload.
+
 ### Armed-race world adapter preparation
 
 The `sabaq_sawarikh` snapshot adapter now shares Kart's authoritative lap,

@@ -28,7 +28,10 @@ export function validKartWorld(data, count, expectedCheckpoints = 0) {
 export function validArmedRaceWorld(data, count, expectedCheckpoints = 0, crateCount = 20) {
   const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
-  if (!object(data, 6) || !validKartWorld(data.race, count, expectedCheckpoints)
+  const events = ['pickup', 'boost', 'shield', 'drop', 'explode', 'hit', 'block', 'respawn'];
+  if (!object(data, 7) || !validKartWorld(data.race, count, expectedCheckpoints)
+    || !object(data.events, events.length) || !events.every(kind => object(data.events[kind], 2)
+      && integer(data.events[kind].sequence, 0, 1000000) && vector(data.events[kind].position))
     || !['held', 'shields'].every(k => Array.isArray(data[k]) && data[k].length === count)
     || !data.held.every(v => integer(v, 0, 4))
     || !data.shields.every(v => Number.isFinite(v) && v >= 0 && v <= 6)
