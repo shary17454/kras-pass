@@ -14,7 +14,8 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-Online supports seven explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
+The development allowlist contains nine explicitly adapted rulesets; verification
+limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
 replicates normal/heavy balls, launch generations and keeper charges; the guest
@@ -28,8 +29,10 @@ drop and held-time scoring remain host-only. Its configured arenas are
 `star_meadow` and `gem_hollow`; see the verification limits below.
 `tag_hunt` on `star_meadow` / `paint_grid` replicates the hunter and handover
 grace; guests do not perform contact detection or free-time scoring.
+`paint_grid` and `mnatiq` replicate all 169 tile owners on `paint_grid`;
+capture, enclosed-region rewards and recounting remain host-only.
 Optional random power-ups remain disabled in online beta configurations.
-The other 32 games are not
+The other 30 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -38,7 +41,7 @@ advance the tournament. The configured points table is validated server-side.
 Final ties run short contender-only matches. Other players retain their slots
 as spectators. At most three tie-breaks are allowed; persistent ties produce
 shared champions, not an arbitrary slot-based winner. Cup tournaments also
-have a bounded regular-round limit. These are seven-game beta tournaments, not
+have a bounded regular-round limit. These are limited beta tournaments, not
 39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
@@ -480,10 +483,32 @@ slots indexed by the authored tile coordinates. It does not send arbitrary
 materials or run guest capture/recount logic. Tests check every coordinate
 against the fixed protocol layout, so an arena size change requires an explicit
 adapter update. `/tmp/kras-paint-replica-final.log` passed 722 assertions. All
-six server world-validator tests passed. Neither game is room-enabled yet:
-room routing, multi-engine matches/tournaments and device QA remain. Mukharrib
+six server world-validator tests passed. Development room routing now includes
+both games; this does not enable production online play. Mukharrib
 also needs its drone and warning-state adapter; tile ownership alone is not
 sufficient to enable that game online.
+
+- `/tmp/kras-paint-room-compile.log`: all 234 scripts compile.
+- Server suite: 35 tests passed, including both paint rulesets rejecting missing,
+  undersized, oversized, fractional and out-of-roster ownership updates.
+- `kras-network-smoke-dEbU8k`: Paint Grid two-human/two-bot and four-human
+  matches passed, including transport recovery, tile-owner comparison and final
+  score agreement. Guests received 1087-1107 world snapshots. The test logged
+  late `not_joined` input rejections after room closure, not during gameplay.
+  Its server event-loop maximum was 3173 ms and initial loading frame gaps were
+  about 36 seconds. This is functional evidence, not performance acceptance.
+- `kras-network-smoke-PbVgDu`: Mnatiq two-human/two-bot and four-human matches
+  passed with ownership, reconnect and score agreement. Guests received
+  1087-1107 snapshots; server event-loop maximum was 2322 ms. This is also
+  functional evidence only; the post-close input rejections occurred again.
+- `/tmp/kras-paint-visual-final.log`: 726 assertions passed with the desktop
+  compatibility renderer. Both `/tmp/kras-paint-guest-paint_grid.png` and
+  `/tmp/kras-paint-guest-mnatiq.png` were inspected at 1280x720: roster colors
+  reach the tile materials. These synthetic ownership fixtures are not complete
+  gameplay, portrait-layout or iPhone QA. The first capture attempt failed on
+  a test variable's inferred type; an explicit String fixed it before this run.
+- Both games' tournament runs and real-device latency/performance checks are
+  still pending at this checkpoint.
 
 ## Expansion checklist per game
 

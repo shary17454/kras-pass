@@ -56,6 +56,17 @@ func run(t: TestHarness, host: Node) -> void:
 		replica.render(scene, 0.1)
 		t.equal(tile.owner_slot, -1, "reset clears guest ownership")
 		t.equal(tile._mesh.material_override.albedo_color, neutral, "reset restores neutral appearance")
+		if DisplayServer.get_name() != "headless":
+			for arg in OS.get_cmdline_user_args():
+				if arg.begins_with("--capture-paint="):
+					for index in Paint.TILE_COUNT:
+						packet.world.owners[index] = index % 4
+					t.ok(replica.accept(packet, 4, id), "accept visual ownership fixture")
+					replica.render(scene, 0.1)
+					await host.get_tree().process_frame
+					await RenderingServer.frame_post_draw
+					var path: String = arg.trim_prefix("--capture-paint=") + "-" + id + ".png"
+					t.equal(host.get_viewport().get_texture().get_image().save_png(path), OK, "save paint evidence")
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame

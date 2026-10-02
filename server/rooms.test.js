@@ -108,6 +108,28 @@ test('tag match requires bounded authoritative hunter role', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('paint games relay complete ownership and reject invalid grids', () => {
+  for (const game of ['paint_grid', 'mnatiq']) {
+    const {host, client} = fixture();
+    const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+    const config = {game, arena: 'paint_grid', rounds: 2, bots: true, difficulty: 1};
+    assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'star_meadow'}}), /invalid_config/);
+    host.send({op: 'configure', config});
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /invalid_snapshot/);
+    const data = snapshot(); data.world = {owners: Array(169).fill(-1)};
+    data.world.owners[168] = 3;
+    host.send({op: 'snapshot', epoch, tick: 1, data});
+    assert.deepEqual(guest.last('snapshot').data.world, data.world);
+    for (const owners of [Array(168).fill(-1), Array(170).fill(-1), Array(169).fill(4), Array(169).fill(0.5)]) {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world: {owners}}}), /invalid_snapshot/);
+      assert.equal(guest.last('snapshot').tick, 1);
+    }
+  }
+});
+
 test('collection games reject absent or wrong-kind world state', () => {
   for (const [game, arena, kind] of [['gem_grab', 'gem_hollow', 'gem'], ['star_rush', 'star_meadow', 'star']]) {
     const {host, client} = fixture();

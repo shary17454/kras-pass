@@ -176,6 +176,11 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id in ["paint_grid", "mnatiq"]:
+			var angle := float(Time.get_ticks_msec() - started_at) / 1800.0 + slot * PI / 2.0
+			var target: Vector3 = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * 7.0
+			var direction: Vector3 = target - game.ctx.fighters[slot].global_position
+			movement = Vector2(direction.x, direction.z).limit_length()
 		if game_id == "tag_hunt":
 			var direction: Vector3 = game.arena.global_position - game.ctx.fighters[slot].global_position
 			movement = Vector2(direction.x, direction.z).limit_length()
@@ -310,6 +315,21 @@ func _finished(result: MatchResult) -> void:
 		if world_snapshots < 5 or game.controller.hunter() != int(world.get("hunter", -2)) \
 				or absf(game.controller.handover_grace() - float(world.get("grace", -1))) > 0.001:
 			_fail("hunter role presentation diverged")
+			return
+	if not host and game_id in ["paint_grid", "mnatiq"]:
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		var painted := false
+		if world_snapshots < 5 or world.get("owners", []).size() != 169:
+			_fail("missing paint world")
+			return
+		for tile: ArenaTile in game.controller._tiles:
+			var index := (tile.grid_x + 6) * 13 + tile.grid_z + 6
+			if tile.owner_slot != int(world.owners[index]):
+				_fail("paint ownership diverged")
+				return
+			painted = painted or tile.owner_slot >= 0
+		if not painted:
+			_fail("paint match never claimed a tile")
 			return
 	if host and Net._inputs.size() < count - 1:
 		_fail("missing remote inputs")
