@@ -12,6 +12,7 @@ const CRATE_PERIOD := 3.6
 const SLAG_LIFE := 6.0
 const SLAG_DAMAGE := 120.0
 const STOMP_PERIOD := 5.0
+const FeedingPlan = preload("res://src/ai/forge_feeding_plan.gd")
 
 var _crate_timer := 2.0
 var _stomp_timer := STOMP_PERIOD
@@ -191,7 +192,20 @@ func on_phase_changed(_new_phase: int) -> void:
 				func(pos: Vector3, radius: float): strike(pos, radius, 22.0))
 
 
-## Bots go for hot slag first, then crates to make more of it.
+func feeding_plan(position: Vector3) -> Dictionary:
+	var arena := ctx.arena as Arena
+	if arena == null:
+		return {}
+	var slag: Array = []
+	var crates: Array = []
+	for item in _slag:
+		if is_instance_valid(item.node): slag.append(item.node.global_position)
+	for item in _crates:
+		if is_instance_valid(item): crates.append(item.global_position)
+	return FeedingPlan.build(position, arena.global_position, arena.current_radius, slag, crates)
+
+
+## The generic weak-point view remains available for UI and other consumers.
 func weak_points() -> Array:
 	var out: Array = []
 	for s in _slag:

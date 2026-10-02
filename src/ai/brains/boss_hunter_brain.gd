@@ -25,6 +25,17 @@ func decide(delta: float) -> void:
 				maybe_dash(1.3)
 				return
 
+	if controller.has_method("feeding_plan"):
+		var plan: Dictionary = controller.call("feeding_plan", me.global_position)
+		if plan.is_empty():
+			steer_to(ctx.arena_center(), 0.6)
+		else:
+			steer_to(plan.target, 0.65 if plan.hot else 1.0)
+			if plan.attack and rng.randf() < attack_chance:
+				press(Btn.ATTACK)
+		keep_off_edge(1.2)
+		return
+
 	if not controller.has_method("weak_points"):
 		super.decide(delta)
 		return

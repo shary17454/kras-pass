@@ -57,22 +57,25 @@ const tournament = process.argv.includes('--tournament');
 const duoTiebreak = process.argv.includes('--duo-tiebreak');
 const raceTiebreak = process.argv.includes('--race-tiebreak');
 const siegeTiebreak = process.argv.includes('--siege-tiebreak');
+const forgeTiebreak = process.argv.includes('--forge-tiebreak');
 const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
 assert.ok(ONLINE_GAMES.includes(game));
 assert.ok(!duoTiebreak || (tournament && game === 'duo_clash'));
 assert.ok(!raceTiebreak || (tournament && ['kart_sprint', 'sabaq_sawarikh'].includes(game)));
 assert.ok(!siegeTiebreak || (tournament && game === 'base_siege'));
+assert.ok(!forgeTiebreak || (tournament && game === 'boss_forge'));
 const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
 assert.ok(!raceTiebreak || selectedHumans === undefined || selectedHumans === '4');
 assert.ok(!siegeTiebreak || selectedHumans === undefined || selectedHumans === '4');
+assert.ok(!forgeTiebreak || selectedHumans === undefined || selectedHumans === '4');
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
 try {
-  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak || raceTiebreak || siegeTiebreak ? [4] : [2, 4])) {
+  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak || raceTiebreak || siegeTiebreak || forgeTiebreak ? [4] : [2, 4])) {
     let resolveRoom;
     const roomCode = new Promise(resolve => { resolveRoom = resolve; });
     function peer(index, code = '') {
@@ -83,7 +86,8 @@ try {
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
         ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : []),
-        ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : [])],
+        ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : []),
+        ...(forgeTiebreak ? ['--forge-tiebreak'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});
       children.push(child);
       let output = '', roomAnnounced = false;
@@ -94,7 +98,8 @@ try {
       };
       child.stdout.on('data', collect); child.stderr.on('data', collect);
       return new Promise((resolve, reject) => {
-        const deadline = game === 'sabaq_sawarikh' ? (tournament ? 960000 : 660000) : (tournament ? 360000 : 180000);
+        const deadline = game === 'sabaq_sawarikh' ? (tournament ? 960000 : 660000)
+          : game === 'boss_forge' ? (tournament ? 800000 : 450000) : (tournament ? 360000 : 180000);
         const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, deadline);
         child.on('error', reject);
         child.on('exit', async code => {
@@ -136,6 +141,12 @@ try {
     }
     if (siegeTiebreak) {
       assert.ok(results[0].matches > 3, 'a Siege final must actually run');
+      assert.deepEqual(results[0].tournament.points, [3, 3, 3, 3]);
+      assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
+      assert.ok(results[0].tournament.tie_attempts > 0);
+    }
+    if (forgeTiebreak) {
+      assert.ok(results[0].matches > 3, 'a Forge final must actually run');
       assert.deepEqual(results[0].tournament.points, [3, 3, 3, 3]);
       assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
       assert.ok(results[0].tournament.tie_attempts > 0);

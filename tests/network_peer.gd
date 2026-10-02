@@ -23,6 +23,9 @@ var requested_game_id := ""
 var duo_tiebreak := false
 var race_tiebreak := false
 var siege_tiebreak := false
+var forge_tiebreak := false
+var forge_final_cups: Array = []
+var observed_forge_final := false
 var observed_kart_final := false
 var kart_final_cups: Array = []
 var observed_duo_final := false
@@ -106,6 +109,10 @@ var siege_via_center := true
 var siege_route_round := -1
 var siege_hits_by_round := {}
 var siege_destruction_by_round := {}
+var forge_damage_by_round := {}
+var forge_slag_by_round := {}
+var forge_strike_by_round := {}
+var forge_defeat_by_round := {}
 
 
 func _process(_delta: float) -> void:
@@ -142,6 +149,14 @@ func _process(_delta: float) -> void:
 			for base in game.controller._bases:
 				bases.append({"slot": base.slot, "position": str(base.node.global_position), "health": base.health, "hits": base.hits})
 			print("NETWORK_SIEGE=" + JSON.stringify({"fighters": fighters, "bases": bases, "view": game.controller.presentation_only}))
+		if game_id == "boss_forge" and is_instance_valid(game):
+			var fighters: Array = []
+			for fighter in game.ctx.fighters:
+				fighters.append({"slot": fighter.slot, "position": str(fighter.global_position),
+					"velocity": str(fighter.velocity), "attack": fighter.is_attacking(), "control": fighter.control_enabled})
+			print("NETWORK_FORGE=" + JSON.stringify({"round": game._round_index, "fighters": fighters,
+				"world": _forge_world(), "damage_rounds": forge_damage_by_round.keys(),
+				"slag_rounds": forge_slag_by_round.keys(), "strike_rounds": forge_strike_by_round.keys()}))
 		if game_id == "crate_relay" and is_instance_valid(game):
 			var players: Array = []
 			for fighter in game.ctx.fighters:
@@ -182,6 +197,7 @@ func _ready() -> void:
 		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg == "--siege-tiebreak": siege_tiebreak = true
+		if arg == "--forge-tiebreak": forge_tiebreak = true
 		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
@@ -202,7 +218,7 @@ func _ready() -> void:
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
-	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (300 if tournament_mode else 150)
+	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id == "boss_forge" else (300 if tournament_mode else 150)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
@@ -235,7 +251,7 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
-			if duo_tiebreak or race_tiebreak or siege_tiebreak:
+			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
 		return
@@ -298,6 +314,15 @@ func _start(cfg: MatchConfig) -> void:
 		siege_route_round = -1
 		siege_hits_by_round.clear()
 		siege_destruction_by_round.clear()
+	if game_id == "boss_forge":
+		cfg.duration_override = 0.0 if cfg.rule("online_contenders", []).is_empty() else 20.0
+		if not cfg.rule("online_contenders", []).is_empty():
+			observed_forge_final = true
+			if forge_final_cups.is_empty(): forge_final_cups = Net.tournament.get("cups", []).duplicate()
+		forge_damage_by_round.clear()
+		forge_slag_by_round.clear()
+		forge_strike_by_round.clear()
+		forge_defeat_by_round.clear()
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
@@ -382,6 +407,16 @@ func _physics_process(_delta: float) -> void:
 			observed_siege_destroyed = observed_siege_destroyed or float(base.health) <= 0.0
 			if int(base.hits) > 0: siege_hits_by_round[game._round_index] = true
 			if float(base.health) <= 0.0: siege_destruction_by_round[game._round_index] = true
+	if game_id == "boss_forge":
+		var world: Dictionary = _forge_world()
+		if int(world.get("boss", {}).get("damage", 0)) > 0:
+			forge_damage_by_round[game._round_index] = true
+		if int(world.get("boss", {}).get("strike", 0)) > 0:
+			forge_strike_by_round[game._round_index] = true
+		if not world.get("slag", []).is_empty():
+			forge_slag_by_round[game._round_index] = true
+		if bool(world.get("boss", {}).get("defeated", false)):
+			forge_defeat_by_round[game._round_index] = true
 	if game_id in ["turret_duel", "tank_arena"]:
 		var adapter = load("res://src/net/tank_replica.gd" if game_id == "tank_arena" else "res://src/net/turret_replica.gd")
 		var world: Dictionary = adapter.capture(game.controller) if host else game._network_replica.target.get("world", {})
@@ -511,6 +546,23 @@ func _physics_process(_delta: float) -> void:
 			if absf(diff) > 2.3 and fighter.speed_ratio() < 0.15:
 				movement = Vector2(clampf(diff * 1.8, -1.0, 1.0), 0.85)
 		var buttons := 0
+		if game_id == "boss_forge":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			var world := _forge_world()
+			var groups: Array = []
+			for kind in ["slag", "crates"]:
+				var points: Array = []
+				for row in world.get(kind, []):
+					points.append(Vector3(float(row.position[0]), float(row.position[1]), float(row.position[2])))
+				groups.append(points)
+			var plan: Dictionary = load("res://src/ai/forge_feeding_plan.gd").build(fighter.global_position,
+				game.ctx.arena_center(), game.arena.current_radius, groups[0], groups[1])
+			var target: Vector3 = plan.get("target", game.ctx.arena_center())
+			var direction := target - fighter.global_position
+			direction.y = 0.0
+			movement = Vector2(direction.x, direction.z).limit_length(0.65 if plan.get("hot", false) else 1.0)
+			if plan.get("attack", false) and (Time.get_ticks_msec() - started_at) % 500 < 120:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "sabaq_sawarikh" and (Time.get_ticks_msec() - started_at) % 600 < 150:
 			buttons = InputFrame.Btn.ATTACK
 		if game_id == "base_siege":
@@ -797,6 +849,10 @@ func _echo_movement(slot: int) -> Vector2:
 	return Vector2(target.x - position.x, target.z - position.z).limit_length()
 
 
+func _forge_world() -> Dictionary:
+	return load("res://src/net/forge_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+
+
 func _finished(result: MatchResult) -> void:
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
@@ -811,6 +867,24 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "boss_forge":
+		for round in range(game._round_index + 1):
+			if not forge_damage_by_round.has(round) or not forge_slag_by_round.has(round) or not forge_strike_by_round.has(round):
+				_fail("forge round %d lacks real intake damage, crate break or strike" % round)
+				return
+			if contenders.is_empty() and not forge_defeat_by_round.has(round):
+				_fail("forge round %d did not defeat the real boss within authored duration" % round)
+				return
+		if not host:
+			var world := _forge_world()
+			if world_snapshots < 5 or world.is_empty() or not game.controller.presentation_only:
+				_fail("forge world missing or guest remained authoritative")
+				return
+			for frame in 30: game._network_replica.render(game, 0.016)
+			if not game.controller._crates.is_empty() or not game.controller._slag.is_empty() or not game.controller._telegraphs.is_empty() \
+					or absf(game.controller.boss_health - float(world.boss.health)) > 0.001:
+				_fail("forge guest simulated physical objects or diverged from health")
+				return
 	if game_id == "base_siege":
 		if not observed_siege_hit or not observed_siege_destroyed:
 			_fail("siege hit/destruction evidence missing")
@@ -1286,6 +1360,14 @@ func _finished(result: MatchResult) -> void:
 				and int(Net.tournament.cups[slot]) == int(siege_final_cups[slot]) and int(Net.tournament.awards[slot]) == 0
 		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
 			_fail("siege final did not run or changed tournament awards")
+			return
+	if forge_tiebreak:
+		var totals_unchanged := observed_forge_final and forge_final_cups.size() == 4
+		for slot in 4:
+			totals_unchanged = totals_unchanged and int(Net.tournament.points[slot]) == 3 \
+				and int(Net.tournament.cups[slot]) == int(forge_final_cups[slot]) and int(Net.tournament.awards[slot]) == 0
+		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
+			_fail("forge final did not run or changed tournament awards")
 			return
 	if race_tiebreak:
 		var totals_unchanged := observed_kart_final and kart_final_cups.size() == 4

@@ -2,7 +2,68 @@
 
 ## Implemented boundary
 
-### Forge development room contracts (pending driving qualification)
+### Forge real-input driving and AI feeding
+
+Forge bots now approach visible crates/slag from the side opposite the
+intake and attack only when the blow points inward. Unreachable slag beyond
+the arena margin is ignored in favor of reachable crates. A shared pure
+geometry planner uses only object positions, arena geometry and the fighter
+position, not hidden velocities, future spawns, score or health. The other
+boss brains retain their existing weak-point path. The planner passed 43
+focused assertions (`/tmp/kras-forge-feeding-plan.log`), including every
+approach angle, sideways/inside/out-of-reach rejection and lost-slag fallback.
+This does not qualify all AI perception restrictions or character balance.
+
+The independent-process smoke uses normal virtual movement/attack inputs
+only. It requires real crate breaking, slag, intake damage and strikes in
+every internal round, and real boss defeat within the authored 150-second
+duration in ordinary matches. Guests must retain inert physical object lists,
+presentation-only authority and matching boss health. It also exercises guest
+reconnect and lost host-result transport. No body teleport, health override,
+damage call or fabricated score is used by this driving fixture.
+
+The initial runs `kras-network-smoke-rRbSNT` and `kras-network-smoke-qtCnVA`
+failed intake damage in round zero; scores were `[0,0,0,0]` and `[70,0,0,0]`.
+Read-only diagnostics showed live crates/strikes, outward-moving slag and
+fighters chasing it against the wall. These runs accidentally inherited the
+generic 15-second smoke duration, not the authored 150 seconds. The first
+post-planner run `kras-network-smoke-EyThQO` also used 15 seconds: it passed
+both human/Bot and four-human configurations, but is only short-fixture
+evidence. These failures and the duration mistake are retained, not relabeled
+as product-duration qualification.
+
+The corrected `kras-network-smoke-ZcK9zI` passed two original-duration internal
+rounds for both two humans/two bots and four humans, including real boss
+defeat in every round. Matching scores were `[751,735,217,216]` and
+`[892,323,300,388]`; guests received 1,969 and 2,183-to-2,202 world snapshots.
+The independent four-human tournament `kras-network-smoke-7qOofK` passed
+three real matches plus an actual 20-second final, with final scores
+`[331,0,0,215]`, champion slot zero, one tie attempt, points `[3,3,3,3]`,
+unchanged cups `[2,0,0,1]` and final awards `[0,0,0,0]`. Guests received
+3,642-to-3,661 snapshots. Uniform ordinary-round points force the final but
+do not fabricate the actual game results.
+
+Server event-loop maxima were 998 ms in the ordinary run and 1,035 ms in
+the tournament: unresolved performance failures. The ordinary timing report
+records a 897.9 ms scheduler delay with only 0.12 ms of measured process CPU
+in that interval; this does not establish the cause or eliminate scheduling
+or gameplay latency risks. Neither run is Internet/device/battery/thermal
+or Linux qualification. Forge now has a CI network scenario, including its
+forced final (37 scenarios: core plus 36 development games). YAML and all
+embedded Bash syntax passed locally; a successful external CI run is still
+required. Production online remains disabled. No Railway deployment,
+archive, upload or Apple review submission has occurred in this work.
+
+The final local gate `kras-party-check.b1vNgn` compiled 302 scripts, audited
+339 resources with zero inventory issues, passed 20,367 assertions in 136.5
+wall-clock seconds, completed the unchanged real three-lap regression and
+passed all 39 stability matches. Node passed 105/105 with zero skips using
+the three fresh captures from that gate
+(`/tmp/kras-forge-driving-server-tests.log`). The intentional failed-write
+save fixture remains the only expected error-log entry, not a product save
+failure. These results do not settle the observed scheduler stalls.
+
+### Forge development room contracts checkpoint
 
 Both room allowlists now include `boss_forge` on its authored `crate_yard`
 arena. The server applies `validForgeWorld` before relaying host snapshots.
@@ -27,12 +88,10 @@ three-lap race and passed 39 stability matches. Its save-error log is the
 intentional failed-write/retry fixture (`test_save.gd::_failed_write`), not
 an unexpected runtime failure. No script, parse or leak failure was found.
 
-There are now 36 development games, with Colossus, Dreadnought and Sovereign
-still excluded. Independent-process Forge matches, real crate/slag feeding
-in every internal round, four-human and human/Bot play, guest presentation,
-reconnect and actual tournament final remain unqualified. The CI network
-matrix still has 35 games plus the core job; Forge must not be counted as
-a qualified network scenario until its real-input smoke fixture passes.
+There are 36 development games, with Colossus, Dreadnought and Sovereign
+still excluded. At this checkpoint independent-process matches and the
+actual tournament final were unqualified; the later real-input section
+above records current functional results and the remaining performance risk.
 Production online remains disabled. This is not Railway deployment,
 physical-device QA, an archive, an upload or an Apple review submission.
 

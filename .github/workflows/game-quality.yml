@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm, duel_pit, bumper_bowl, duo_clash, drift_floes, turret_duel, tank_arena, scrap_karts, fawda, kart_sprint, sabaq_sawarikh, base_siege]
+        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm, duel_pit, bumper_bowl, duo_clash, drift_floes, turret_duel, tank_arena, scrap_karts, fawda, kart_sprint, sabaq_sawarikh, base_siege, boss_forge]
     env:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
@@ -84,6 +84,9 @@ jobs:
           fi
           if [ "$GAME_ID" = base_siege ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --siege-tiebreak --humans=4 2>&1 | tee "$RUNNER_TEMP/kras-network-siege-final.stdout"
+          fi
+          if [ "$GAME_ID" = boss_forge ]; then
+            node network-smoke.js --game="$GAME_ID" --tournament --forge-tiebreak --humans=4 2>&1 | tee "$RUNNER_TEMP/kras-network-forge-final.stdout"
           fi
       - name: Compile, content, regression and cleanup checks
         if: matrix.scenario == 'core'
