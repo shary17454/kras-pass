@@ -38,6 +38,17 @@ func run(t: TestHarness, host: Node) -> void:
 	t.near(scene.ctx.fighters[1].top_speed, game._base_speed[1] * game.HUNTER_SPEED, 0.001, "role bonus not compounded by repeated snapshots")
 	t.equal(game._free_accum, accum, "guest does not advance free-time scoring")
 	t.equal(scene.ctx.scores[0] + scene.ctx.scores[1], 0, "guest does not award tags or survival points")
+	if DisplayServer.get_name() != "headless":
+		t.ok(is_instance_valid(game._mark), "graphical guest shows hunter marker")
+		var mark: Node3D = game._mark
+		replica.render(scene, 0.1)
+		t.equal(game._mark, mark, "unchanged role reuses marker")
+		t.ok(mark.global_position.is_equal_approx(scene.ctx.fighters[1].global_position + Vector3(0, 2.35, 0)), "marker follows hunter")
+		for arg in OS.get_cmdline_user_args():
+			if arg.begins_with("--capture-tag="):
+				await host.get_tree().process_frame
+				await RenderingServer.frame_post_draw
+				t.equal(host.get_viewport().get_texture().get_image().save_png(arg.trim_prefix("--capture-tag=")), OK, "save hunter evidence")
 	packet.world.hunter = -1
 	packet.world.grace = 0
 	t.ok(replica.accept(packet, 4, "tag_hunt"), "accept cleared role")

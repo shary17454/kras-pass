@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-Online supports six explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
+Online supports seven explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
 replicates normal/heavy balls, launch generations and keeper charges; the guest
@@ -26,8 +26,10 @@ only the host advances capture progress or awards points.
 `relic_hold` presents the loose relic or its carrier exclusively; pickup,
 drop and held-time scoring remain host-only. Its configured arenas are
 `star_meadow` and `gem_hollow`; see the verification limits below.
+`tag_hunt` on `star_meadow` / `paint_grid` replicates the hunter and handover
+grace; guests do not perform contact detection or free-time scoring.
 Optional random power-ups remain disabled in online beta configurations.
-The other 33 games are not
+The other 32 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -36,7 +38,7 @@ advance the tournament. The configured points table is validated server-side.
 Final ties run short contender-only matches. Other players retain their slots
 as spectators. At most three tie-breaks are allowed; persistent ties produce
 shared champions, not an arbitrary slot-based winner. Cup tournaments also
-have a bounded regular-round limit. These are six-game beta tournaments, not
+have a bounded regular-round limit. These are seven-game beta tournaments, not
 39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
@@ -435,15 +437,36 @@ warnings. That lifecycle fix preceded the network adapter below.
 - The new CI scenario covers ordinary matches and tournaments. Mobile rendering
   and production latency remain unverified. Production online remains disabled.
 
-## Prepared Tag Hunt adapter (not room-enabled)
+## Tag Hunt adapter and room integration
 
 The shared replica can now present the hunter role and handover grace without
 contact detection or scoring. Repeated snapshots cannot compound the role's
 speed bonus, and clearing the role restores the original speed and marker.
 `/tmp/kras-tag-replica-unit.log` passed 26 assertions; all five server world-state
-validator tests also passed. Room routing, actual network matches, tournaments
-and graphical/device QA are still required before adding Tag Hunt to either
-online allowlist. The currently enabled beta remains six games.
+validator tests also passed before room integration.
+
+- Room-level validation now requires a valid hunter world. Server tests: 33
+  passed. `/tmp/kras-tag-room-compile.log`: 231 scripts compiled.
+- `kras-network-smoke-LfHts1`: two-round matches passed for two humans/two bots
+  and four humans on `star_meadow`, with reconnect and dropped-result recovery.
+  All peers observed an in-round hunter handover and agreed on `[36,36,10,16]`
+  and `[34,38,10,13]`. Guests checked the hunter and grace against the latest
+  authoritative snapshot and received over 1,000 world snapshots. This is not
+  a balance benchmark; the fixture deliberately brings players together.
+- `/tmp/kras-tag-visual.log`: 30 graphical assertions passed without leak
+  warnings. `/tmp/kras-tag-hunter.png` was visually inspected for the marker
+  and hunter HUD. This is desktop OpenGL compatibility rendering, not iOS QA.
+- The CI matrix includes ordinary and tournament Tag Hunt scenarios. Its
+  tournament, second arena and physical-device/network performance still need
+  verification. Production online remains disabled.
+
+## Completed five-adapter CI baseline
+
+[CI 36960797391](https://github.com/shary17454/kras-pass/actions/runs/36960797391)
+passed all six jobs for `63b10c626bfc3a832d07fa7a9db3804173bb9e74`, including
+Zone Hold ordinary matches and tournaments. Core quality recorded 228 scripts,
+12,618 assertions and 117 stability matches with zero failures. That source
+predates the relic/tag network adapters; their results must be tracked separately.
 
 ## Expansion checklist per game
 

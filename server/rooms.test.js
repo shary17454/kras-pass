@@ -92,6 +92,22 @@ test('relic match requires world state and bounds carrier to roster', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('tag match requires bounded authoritative hunter role', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'tag_hunt', arena: 'star_meadow', rounds: 2, bots: true, difficulty: 1}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /invalid_snapshot/);
+  const data = snapshot(); data.world = {hunter: 1, grace: 1.3};
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.hunter = 4;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('collection games reject absent or wrong-kind world state', () => {
   for (const [game, arena, kind] of [['gem_grab', 'gem_hollow', 'gem'], ['star_rush', 'star_meadow', 'star']]) {
     const {host, client} = fixture();

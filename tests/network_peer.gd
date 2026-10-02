@@ -24,6 +24,9 @@ var observed_collection_score := false
 var observed_zone_score := false
 var observed_relic_holder := false
 var observed_relic_score := false
+var observed_tag_change := false
+var last_hunter := -1
+var hunter_round := -1
 var observed_carrying := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
@@ -137,6 +140,8 @@ func _start(cfg: MatchConfig) -> void:
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
+	last_hunter = -1
+	hunter_round = -1
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
@@ -162,9 +167,18 @@ func _physics_process(_delta: float) -> void:
 		observed_relic_holder = observed_relic_holder or game.controller.holder() >= 0
 		for score in game.ctx.scores:
 			observed_relic_score = observed_relic_score or score > 0
+	if game_id == "tag_hunt":
+		var hunter: int = game.controller.hunter()
+		if hunter_round == game._round_index and last_hunter >= 0 and hunter >= 0 and hunter != last_hunter:
+			observed_tag_change = true
+		last_hunter = hunter
+		hunter_round = game._round_index
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "tag_hunt":
+			var direction: Vector3 = game.arena.global_position - game.ctx.fighters[slot].global_position
+			movement = Vector2(direction.x, direction.z).limit_length()
 		if game_id == "relic_hold":
 			var position: Vector3 = game.ctx.fighters[slot].global_position
 			var target: Vector3 = game.controller.relic_position()
@@ -291,6 +305,12 @@ func _finished(result: MatchResult) -> void:
 			if game.ctx.fighters[i].carrying != (1 if i == int(world.holder) else 0):
 				_fail("relic carrier state diverged")
 				return
+	if not host and game_id == "tag_hunt":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or game.controller.hunter() != int(world.get("hunter", -2)) \
+				or absf(game.controller.handover_grace() - float(world.get("grace", -1))) > 0.001:
+			_fail("hunter role presentation diverged")
+			return
 	if host and Net._inputs.size() < count - 1:
 		_fail("missing remote inputs")
 		return
@@ -309,6 +329,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "relic_hold" and (not observed_relic_holder or not observed_relic_score):
 		_fail("relic finished without observed ownership and scoring")
+		return
+	if game_id == "tag_hunt" and not observed_tag_change:
+		_fail("match never transferred hunter role during a round")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
