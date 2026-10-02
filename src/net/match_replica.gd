@@ -17,6 +17,7 @@ const HurdleReplica = preload("res://src/net/hurdle_replica.gd")
 const TideReplica = preload("res://src/net/tide_replica.gd")
 const SweeperReplica = preload("res://src/net/sweeper_replica.gd")
 const DuelReplica = preload("res://src/net/duel_replica.gd")
+const BumperReplica = preload("res://src/net/bumper_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -37,6 +38,7 @@ var _draw: RefCounted
 var _echo: RefCounted
 var _crates: Node3D
 var _hurdle: RefCounted
+var _bumper: RefCounted
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -64,6 +66,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = SweeperReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "duel_pit":
 		packet["world"] = DuelReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "bumper_bowl":
+		packet["world"] = BumperReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -117,6 +121,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "duel_pit":
 		if not DuelReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "bumper_bowl":
+		if not BumperReplica.valid(data.get("world")):
 			return false
 	elif game_id == "magnet_court":
 		if not MagnetReplica.valid(data.get("world"), count):
@@ -245,6 +252,12 @@ func render(scene: Node, delta: float) -> void:
 		SweeperReplica.render(scene.controller, target.world)
 	elif scene.config.minigame_id == "duel_pit":
 		DuelReplica.render(scene.controller, target.world)
+	elif scene.config.minigame_id == "bumper_bowl":
+		if _bumper == null:
+			_bumper = BumperReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_bumper.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
 	elif scene.config.minigame_id == "hurdle_dash":
 		if _hurdle == null:
 			_hurdle = HurdleReplica.new()

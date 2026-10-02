@@ -190,6 +190,18 @@ export function validDuelWorld(data, count) {
     && data.damage.every(value => Number.isFinite(value) && value >= 0 && value <= 10000);
 }
 
+export function validBumperWorld(data) {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 2
+    && Array.isArray(data.hits) && data.hits.length === 5
+    && data.hits.every(value => Number.isInteger(value) && value >= 0 && value <= 1000000)
+    && Array.isArray(data.scales) && data.scales.length === 5
+    && data.scales.every(scale => Array.isArray(scale) && scale.length === 3
+      && scale.every((value, axis) => Number.isFinite(value)
+        && value >= (axis === 1 ? .8 : 1) - .00001
+        && value <= (axis === 1 ? 1 : 1.25) + .00001));
+}
+
 export function validGoalGuardWorld(data, count, extraBalls = 0) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count

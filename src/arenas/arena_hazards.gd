@@ -68,6 +68,7 @@ class Bumper extends Node3D:
 	var _cooldowns := {}
 	var _mesh: Node3D
 	var _bounce_tween: Tween
+	var hit_serial := 0
 
 	func build(color: Color, radius: float) -> void:
 		_mesh = MeshFactory.cylinder(radius, 1.5, color, 0.6)
@@ -113,6 +114,7 @@ class Bumper extends Node3D:
 			var dir: Vector3 = body.global_position - global_position
 			dir.y = 0.0
 			body.take_hit(-1, dir.normalized(), power, 0.0, true)
+			hit_serial += 1
 			AudioManager.play_sfx("bounce", global_position)
 			play_feedback()
 
@@ -128,6 +130,7 @@ class Bumper extends Node3D:
 
 	func reset() -> void:
 		_cooldowns.clear()
+		hit_serial = 0
 		if _bounce_tween != null and _bounce_tween.is_valid():
 			_bounce_tween.kill()
 		_bounce_tween = null

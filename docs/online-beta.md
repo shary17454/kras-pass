@@ -2,6 +2,27 @@
 
 ## Implemented boundary
 
+### Bumper Bowl snapshot adapter
+
+Host snapshots now carry the five authored bumper mesh scales and bounded
+hit serials. Godot and Node reject missing/extra fields, wrong counts,
+non-finite/coercible values and scales outside the authored squash range.
+Guests apply visual scales without ticking collision detection or awarding
+points. New hit serials trigger bounce audio once; initial/reconnect and
+new-round baselines, duplicates and stale updates do not replay old sounds.
+This is sampled presentation, not lossless collision-event delivery.
+
+`/tmp/kras-bumper-network.log`: all 52 assertions passed, including actual
+audio-pool voice advancement and duplicate suppression with audio debounce
+cleared. All 71 Node tests passed. Bumper Bowl remains outside the room
+allowlist pending independent-process matches, reconnect and tournaments.
+
+Full gate `kras-party-check.XsFti5`: 276 scripts compiled, 313 resources
+audited with zero issues, 18,671 assertions passed, race regression passed
+and all 39 stability matches passed. This includes the hazard reset repair.
+No production deployment, mobile performance qualification or App Store
+submission is established by these local headless checks.
+
 ### Bumper hazard lifecycle prerequisite
 
 Bumpers now clear per-player cooldowns and restore their visual shape at
