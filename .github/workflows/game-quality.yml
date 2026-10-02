@@ -17,12 +17,12 @@ jobs:
   godot:
     name: ${{ matrix.scenario == 'core' && 'godot' || format('network-{0}', matrix.scenario) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'kart_sprint' && 45 || 30 }}
     strategy:
       fail-fast: false
       max-parallel: 3
       matrix:
-        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm, duel_pit, bumper_bowl, duo_clash, drift_floes, turret_duel, tank_arena, scrap_karts, fawda]
+        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm, duel_pit, bumper_bowl, duo_clash, drift_floes, turret_duel, tank_arena, scrap_karts, fawda, kart_sprint, sabaq_sawarikh]
     env:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
@@ -79,6 +79,9 @@ jobs:
           if [ "$GAME_ID" = duo_clash ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --duo-tiebreak 2>&1 | tee "$RUNNER_TEMP/kras-network-team-final.stdout"
           fi
+          if [ "$GAME_ID" = kart_sprint ] || [ "$GAME_ID" = sabaq_sawarikh ]; then
+            node network-smoke.js --game="$GAME_ID" --tournament --race-tiebreak --humans=4 2>&1 | tee "$RUNNER_TEMP/kras-network-race-final.stdout"
+          fi
       - name: Compile, content, regression and cleanup checks
         if: matrix.scenario == 'core'
         env:
@@ -87,6 +90,19 @@ jobs:
         run: |
           sh tests/check_party_wrapper.sh
           sh tools/check_party.sh
+      - name: Validate server schema against actual Godot capture
+        if: matrix.scenario == 'core'
+        working-directory: server
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          captures=("$RUNNER_TEMP"/kras-party-check.*/saves-tests/armed-world.json)
+          if [ "${#captures[@]}" -ne 1 ]; then
+            echo "Expected exactly one Godot armed-race capture" >&2
+            exit 1
+          fi
+          KRAS_ARMED_WORLD_FIXTURE="${captures[0]}" npm test 2>&1 | tee "$RUNNER_TEMP/kras-server-capture-tests.stdout"
       - name: Preserve QA evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -97,9 +113,11 @@ jobs:
           path: |
             ${{ runner.temp }}/godot-import.stdout
             ${{ runner.temp }}/kras-server-tests.stdout
+            ${{ runner.temp }}/kras-server-capture-tests.stdout
             ${{ runner.temp }}/kras-network-*.stdout
             ${{ runner.temp }}/kras-network-smoke-*/*.stdout
             ${{ runner.temp }}/kras-network-smoke-*/*.log
             ${{ runner.temp }}/kras-party-check.*/*.stdout
+            ${{ runner.temp }}/kras-party-check.*/saves-tests/armed-world.json
             ${{ runner.temp }}/kras-party-check.*/saves-stability/stability.json
             build/stage0/inventory.json

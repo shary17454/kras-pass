@@ -34,6 +34,38 @@ The larger authored roads use explicit smoke observation limits of 600/900
 seconds (ordinary/tournament), with runner cleanup limits 660/960 seconds;
 actual race laps and physics are not shortened to force acceptance.
 
+The independent four-human tournament `kras-network-smoke-GfaNyT` completed
+three real three-lap matches on `pharaoh_valley`, `sinbad_coast` and
+`neon_spiral`, followed by a real one-lap final on `magma_ring`. All four
+processes agreed on final scores `[3538,3562,3148,3223]`, champion slot 2,
+points `[3,3,3,3]`, unchanged cups `[3,0,0,0]` and final awards `[0,0,0,0]`.
+The fixture deliberately uses `[1,1,1,1]` round points to exercise a final
+tie; it does not fabricate driving, checkpoint progress or race results.
+Guests received 8,051-to-8,070 world snapshots, with guest resume and host
+result-transport recovery. Together with the ordinary smoke, five courses
+have independent-process driving evidence. `frost_hairpin`, `sky_causeway`
+and `alula_rain` still need equivalent online driving qualification.
+The tournament runner reported a 714 ms maximum sampled server loop delay;
+its cause is not established. Functional success is not an acceptable
+performance result, and this delay remains an investigation item.
+
+Source `02a1396d6f3ddb645196a1c9c9c747a1d00812e8` passed the complete local
+gate in `kras-party-check.5FNlp4`: 295 scripts, 332 resources with zero
+inventory issues, 19,662 assertions in 129.9 wall-clock seconds, the separate
+unchanged three-lap race and 39 stability matches with zero failures.
+Server tests passed 95/95 with its actual Godot capture at
+`saves-tests/armed-world.json`; a plain `npm test` run instead passed 94
+and skipped that capture-dependent test, so it is not equivalent evidence.
+The headless gate does not qualify iPhone battery, thermals or frame rate.
+
+CI now includes both `kart_sprint` and `sabaq_sawarikh` alongside the other
+development games, runs ordinary and tournament sessions and a separate
+four-human one-lap final, and validates the server schema against the real
+Godot capture after the core gate. The longer race jobs have explicit 45/90
+minute observation limits. YAML and shell validation are local checks, not
+a Linux CI pass. The last inspected main-source job `37039211287` was queued
+for `02a1396`; it does not contain this subsequent workflow change.
+
 ### Armed-race sampled weapon feedback
 
 The Sabaq host now records bounded generations/positions for pickup, item
@@ -63,10 +95,9 @@ seconds), the separate unchanged three-lap race and 39 stability matches with
 zero failures. These are headless/local checks, not iPhone frame-rate,
 temperature, battery or Internet qualification.
 
-This completes weapon feedback preparation but not room qualification. Sabaq
-remains outside the public/development room allowlists until course/lap and
-tournament routing plus independent-process race/reconnect tests are ready.
-It is not production online support, a device performance result, a Railway
+At this preparation checkpoint Sabaq had not yet entered room allowlists.
+The development-room integration above supersedes that restriction, but
+does not establish production online support, device performance, a Railway
 deployment or an Apple upload.
 
 ### Armed-race world adapter preparation
@@ -97,13 +128,14 @@ Godot capture under `/tmp/kras-armed-replica-tests-final-saves/armed-world.json`
 The initial sandboxed Node run failed only on loopback listen (`EPERM`);
 the system-permission rerun passed WebSocket and all other tests.
 
-This is adapter preparation, not a qualified online game. Sabaq is still
-absent from both room allowlists. Host weapon event/audio replication, room
+At this earlier adapter checkpoint Sabaq was absent from room allowlists.
+Host weapon event/audio replication, room
 course/lap binding, tournament routing and actual multi-process race/reconnect
-qualification must be completed before enabling it. Existing missile launch
+qualification were still required before enabling it. Existing missile launch
 and Kart lap/boost cues are reused, but bomb detonation/pickup audio is not yet
-replicated. No production enablement, Railway deploy or Apple submission is
-claimed. The full test runner was not rerun after this adapter addition; the
+replicated at that checkpoint; the subsequent sections above record those
+additions and their evidence. No production enablement, Railway deploy or
+Apple submission is claimed. The full test runner was not rerun at this adapter checkpoint; the
 19,481-assertion result below belongs to the earlier finished-racer fix.
 
 ### Finished racers cannot absorb road weapons
