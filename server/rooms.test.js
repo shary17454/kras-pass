@@ -377,6 +377,28 @@ test('collection games reject absent or wrong-kind world state', () => {
   }
 });
 
+test('relay room accepts only host cargo with its authored arena', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'crate_relay', arena: 'relay_docks', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'crate_yard'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  data.world = {items: [{id: '1', kind: 'crate', position: [0, 1, 0], rotation: 0,
+    color: 'ffc46bff', size: .42, value: 1}], carrying: [0, 1, 0, 0]};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  for (const world of [undefined, {...data.world, carrying: [0, 2, 0, 0]},
+    {...data.world, items: [{...data.world.items[0], kind: 'star'}]}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+    assert.equal(guest.last('snapshot').tick, 1);
+  }
+});
+
 test('tournament snapshots follow the current game rather than the lobby default', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

@@ -190,6 +190,9 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "crate_relay" and slot >= 0:
+		observed_collection_score = observed_collection_score or game.ctx.scores[slot] > 0
+		observed_carrying = observed_carrying or game.ctx.fighters[slot].carrying > 0
 	if game_id in ["crate_smash", "lab_crates"]:
 		var world: Dictionary = load("res://src/net/crate_replica.gd").capture(game.controller, game_id == "lab_crates") if host else game._network_replica.target.get("world", {})
 		observed_crate_break = observed_crate_break or int(world.get("break_sequence", 0)) > 0
@@ -313,7 +316,7 @@ func _physics_process(_delta: float) -> void:
 			var next := current + clampf(wrapf(angle - current, -PI, PI), -0.25, 0.25)
 			var target: Vector3 = Vector3(cos(next), 0, sin(next)) * game.arena.def.radius * 0.72
 			movement = Vector2(target.x - p.x, target.z - p.z).limit_length()
-		if game_id in ["gem_grab", "star_rush"]:
+		if game_id in ["gem_grab", "star_rush", "crate_relay"]:
 			movement = _collection_movement(slot)
 			if game_id == "gem_grab" and (Time.get_ticks_msec() / 500) % 2 == 0:
 				buttons = InputFrame.Btn.JUMP
@@ -328,7 +331,7 @@ func _physics_process(_delta: float) -> void:
 func _collection_movement(slot: int) -> Vector2:
 	var fighter: Fighter = game.ctx.fighters[slot]
 	var target: Vector3 = fighter.global_position
-	if game_id == "star_rush" and fighter.carrying > 0:
+	if game_id in ["star_rush", "crate_relay"] and fighter.carrying > 0:
 		target = game.controller.base_position(slot)
 	else:
 		var candidates: Array = []
@@ -344,6 +347,11 @@ func _collection_movement(slot: int) -> Vector2:
 			if distance < nearest:
 				nearest = distance
 				target = position
+	if game_id == "crate_relay":
+		for step in range(1, 11):
+			if not game.arena.is_inside(fighter.global_position.lerp(target, step / 10.0), 0.65):
+				target = game.arena.global_position
+				break
 	var direction := target - fighter.global_position
 	return Vector2(direction.x, direction.z).limit_length()
 
@@ -514,7 +522,7 @@ func _finished(result: MatchResult) -> void:
 				if int(game.controller._held.get(game.controller.balls[i].get_instance_id(), -1)) != int(world.held[i]):
 					_fail("magnet ball ownership diverged")
 					return
-	if not host and game_id in ["gem_grab", "star_rush"]:
+	if not host and game_id in ["gem_grab", "star_rush", "crate_relay"]:
 		var view = game._network_replica._collectibles
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or not is_instance_valid(view) or view.views.size() != world.get("items", []).size():
@@ -527,6 +535,11 @@ func _finished(result: MatchResult) -> void:
 		if game.ctx.fighters[Net.local_slot()].carrying != int(world.carrying[Net.local_slot()]):
 			_fail("carrying state diverged")
 			return
+		if game_id == "crate_relay":
+			for slot in game.ctx.player_count():
+				if game.controller._carry_marks.has(slot) != (int(world.carrying[slot]) > 0):
+					_fail("relay cargo visual diverged")
+					return
 	if not host and game_id == "zone_hold":
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty():
@@ -590,11 +603,11 @@ func _finished(result: MatchResult) -> void:
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
 		return
-	if game_id in ["gem_grab", "star_rush"] and not observed_collection_score:
+	if game_id in ["gem_grab", "star_rush", "crate_relay"] and not observed_collection_score:
 		_fail("collection finished without any scoring")
 		return
-	if game_id == "star_rush" and not observed_carrying:
-		_fail("star carrying was never observed")
+	if game_id in ["star_rush", "crate_relay"] and not observed_carrying:
+		_fail("carrying was never observed")
 		return
 	if game_id == "zone_hold" and not observed_zone_score:
 		_fail("zone finished without capture scoring")

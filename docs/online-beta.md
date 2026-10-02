@@ -2,6 +2,35 @@
 
 ## Implemented boundary
 
+### Crate Relay room integration
+
+Development rooms now allow `crate_relay` only on `relay_docks`. The server
+requires bounded host-owned crate/carrying snapshots and rejects guest
+publication, wrong arenas and invalid cargo. All 58 server tests passed.
+The CI matrix includes Relay, but a matrix definition is not a passing run.
+
+Independent Godot processes exercised 2 humans plus 2 bots and 4 humans.
+Each human had to carry a crate and earn delivery points. Scripted input
+uses visible pickups and routes via the center if a straight path leaves
+the cross-shaped floor. Guests compare pickup identities/transforms and
+carried visuals against host snapshots, rather than running pickup rules.
+
+- Ordinary matches `kras-network-smoke-LTCN5U`: both passed, scores
+  `[27,6,6,12]` and `[18,12,12,12]`, 1,088-1,107 guest snapshots,
+  maximum local server event-loop delay 71 ms.
+- Tournaments `kras-network-smoke-lDQYgT`: three matches in each case,
+  standings `[10,8,11,8]` / `[8,11,8,9]`, champion slots 2 / 1,
+  1,665-1,684 guest snapshots, maximum local event-loop delay 59 ms.
+
+Both test modes exercised guest reconnect and host result transport loss.
+No final tournament tie occurred. No script, network-failure, parse,
+axis-normalization or leaked-object reports appeared in these logs.
+These are local headless tests, not Internet, physical-device performance,
+visual QA or production deployment approval. Production online is unchanged.
+Full gate `kras-party-check.B06uGA`: 262 scripts compiled, 299 resources
+audited with zero issues, 18,341 assertions passed, race regression passed,
+and all 39 stability matches passed.
+
 ### Crate Relay snapshot adapter
 
 Relay now reuses the existing collectible reconciler for host-owned crate
@@ -14,8 +43,8 @@ and carrying values of zero or one. Node and Godot enforce those bounds.
 `/tmp/kras-relay-network.log`: all 99 collection-network assertions passed
 across Gem Grab, Star Rush and Crate Relay, including collider-free replicas,
 carried visuals, observer removal, malformed payloads and score neutrality.
-The server suite passed all 57 tests. Relay remains absent from room
-allowlists pending independent-process match and tournament testing.
+The server suite at that adapter step passed all 57 tests. Room integration
+and independent-process evidence are recorded above.
 Full gate `kras-party-check.fI21yO`: 262 scripts compiled, 299 resources
 audited with zero issues, 18,341 assertions passed, race regression passed
 and 39 stability matches completed without failure.
@@ -54,8 +83,8 @@ Full gate `kras-party-check.wZkXOL`: 262 scripts compiled, 299 resources
 audited with zero issues, 18,306 assertions passed, race regression passed,
 and all 39 stability matches passed. No script errors, leaked-object reports
 or axis-normalization errors appeared in the test output.
-Crate Relay remains excluded from room allowlists until its world adapter
-and engine network tests pass. These headless checks are not device QA.
+These geometry and lifecycle headless checks are not device QA. Subsequent
+world-adapter and room evidence is recorded above.
 
 ### Crate and lab room integration
 
@@ -200,7 +229,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty explicitly adapted rulesets; verification
+The development allowlist contains twenty-one explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
