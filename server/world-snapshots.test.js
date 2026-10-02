@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld} from './world-snapshots.js';
+
+test('tag world bounds role and handover grace without coercing JSON types', () => {
+  assert.ok(validTagWorld({hunter: 3, grace: 1.3}, 4));
+  assert.ok(validTagWorld({hunter: -1, grace: 0}, 2));
+  assert.equal(validTagWorld({hunter: 3, grace: 1}, 3), false);
+  for (const hunter of [-2, 4, .5, true, '1', NaN]) assert.equal(validTagWorld({hunter, grace: 1}, 4), false);
+  for (const grace of [-1, 2, true, '1', Infinity]) assert.equal(validTagWorld({hunter: 0, grace}, 4), false);
+  for (const data of [null, {}, [], {hunter: 0}, {grace: 1}]) assert.equal(validTagWorld(data, 4), false);
+});
 
 test('relic ownership and loose-item representation are mutually exclusive', () => {
   const item = {id: '123', kind: 'gem', position: [0, 1, 0], rotation: 0, color: 'ffd15cff', size: .6, value: 1};

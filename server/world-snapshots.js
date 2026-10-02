@@ -1,6 +1,12 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validTagWorld(data, count) {
+  return Number.isInteger(count) && count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
+    && Number.isInteger(data.hunter) && data.hunter >= -1 && data.hunter < count
+    && Number.isFinite(data.grace) && data.grace >= 0 && data.grace <= 1.31;
+}
+
 export function validZoneWorld(data) {
   return data != null && typeof data === 'object' && !Array.isArray(data)
     && vector(data.position) && Number.isFinite(data.radius) && data.radius >= .1 && data.radius <= 10

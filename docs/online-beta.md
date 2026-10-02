@@ -425,9 +425,25 @@ warnings. That lifecycle fix preceded the network adapter below.
   warnings. `/tmp/kras-relic-carrier.png` was visually inspected: the marker
   follows the carrier and the HUD identifies it. This was desktop OpenGL
   compatibility rendering, not physical iPhone or iPad QA.
-- The new CI scenario covers ordinary matches and tournaments. Relic tournaments,
-  `gem_hollow`, mobile rendering and production latency remain unverified at
-  this checkpoint. Production online remains disabled.
+- `kras-network-smoke-FAZK7M`: three-match relic tournaments passed for two
+  humans/two bots and four humans, using both `gem_hollow` and `star_meadow`.
+  Final points agreed across peers: `[12,6,7,10]` (champion 0) and `[9,6,12,6]`
+  (champion 2). Guests received more than 1,600 snapshots. No tie-break occurred.
+  The local server measured a maximum event-loop delay of 14,554 ms during this
+  run. This is a functional pass, not latency/performance acceptance; the stall
+  cause and physical-device performance remain unresolved.
+- The new CI scenario covers ordinary matches and tournaments. Mobile rendering
+  and production latency remain unverified. Production online remains disabled.
+
+## Prepared Tag Hunt adapter (not room-enabled)
+
+The shared replica can now present the hunter role and handover grace without
+contact detection or scoring. Repeated snapshots cannot compound the role's
+speed bonus, and clearing the role restores the original speed and marker.
+`/tmp/kras-tag-replica-unit.log` passed 26 assertions; all five server world-state
+validator tests also passed. Room routing, actual network matches, tournaments
+and graphical/device QA are still required before adding Tag Hunt to either
+online allowlist. The currently enabled beta remains six games.
 
 ## Expansion checklist per game
 
