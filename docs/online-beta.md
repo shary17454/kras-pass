@@ -3076,6 +3076,39 @@ its TCP latency tradeoff still requires real-network testing. References:
 [Godot WebSocket guide](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html),
 [ws](https://github.com/websockets/ws).
 
+## Colossus physical crater regression (2026-10-02)
+
+The opt-in carved disc floor now has direct physics coverage: raycasts inside
+and outside cuts, overlapping cuts, radius shrink, full floor removal and
+restoration. A moving CharacterBody3D stands on restored ground and falls below
+the arena fall threshold through a crater under gravity. This body fixture is
+not a complete Fighter/MatchScene fall-and-respawn integration test.
+
+The real Colossus controller fixture also checks round reset, emergency safe
+respawn and cleanup. If no sampled safe respawn remains, craters and their
+visuals are cleared before respawning at the arena center. Cleanup disables
+the carved collider immediately and restores the original floor collider and
+appearance. Normal rounds retain their permanent craters until reset or this
+exhausted-floor recovery.
+
+Evidence:
+- `/tmp/kras-crater-physics.log`: 19 focused assertions passed.
+- `/tmp/kras-crater-recovery.log`: 28 expanded assertions passed.
+- `kras-party-check.zprT5f`: 305 scripts compile; 342 resources, 21 autoloads,
+  27 routes and 8 characters report zero inventory issues; 20,408 assertions
+  pass in 104.6 seconds; the actual three-lap race and 39-match stability pass.
+  Local evidence is under the macOS TMPDIR printed by `tools/check_party.sh`.
+- The sandbox also emitted `get_system_ca_certificates` on startup; this is
+  not a clean certificate-access or distribution-signing qualification.
+
+Still pending: actual four-player boss winnability and AI approach validation,
+carve rebuild performance, physical iPhone/iPad graphics and fall recovery,
+and a Colossus online world adapter. The existing BossHunter danger margin and
+attack threshold need review with real holes before claiming bot balance.
+This does not add Colossus to the online allowlist or qualify it as READY.
+No Railway deployment, archive, signing, upload or Apple review was performed
+as part of this regression pass.
+
 ## Structure
 
 ```text

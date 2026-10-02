@@ -212,9 +212,15 @@ func safe_respawn_position(slot: int) -> Vector3:
 			point.y = preferred.y
 			if arena.is_inside(point, 1.0):
 				return point
-	return preferred
+	# Exhausted ground must not trap a respawning player in an endless fall.
+	_clear_craters()
+	var fallback := arena.global_position
+	fallback.y = preferred.y
+	return fallback
 
 
 func cleanup() -> void:
 	_clear_craters()
+	if ctx != null and ctx.arena is Arena:
+		ctx.arena.disable_crater_floor()
 	super.cleanup()

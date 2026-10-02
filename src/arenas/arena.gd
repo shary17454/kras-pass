@@ -1144,6 +1144,16 @@ func reset_craters() -> void:
 		_crater_floor.reset()
 
 
+func disable_crater_floor() -> void:
+	if not is_instance_valid(_crater_floor):
+		return
+	_crater_floor._body.collision_layer = 0
+	_crater_floor.queue_free()
+	_crater_floor = null
+	_floor_mesh.visible = true
+	(_floor_mesh.get_parent() as StaticBody3D).collision_layer = 1
+
+
 func _on_radius_changed(r: float) -> void:
 	current_radius = r
 	if is_instance_valid(_crater_floor):
