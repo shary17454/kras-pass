@@ -36,6 +36,7 @@ test('private codes, public discovery, four players, no leaked tokens', () => {
   const browser = client(); browser.send({op: 'list'});
   assert.deepEqual(browser.last('rooms').rooms, []);
   guests[0].send({op: 'leave'}); browser.send({op: 'list'});
+  assert.doesNotThrow(() => guests[0].send({op: 'leave'}));
   assert.equal(browser.last('rooms').rooms.length, 1);
   const privateHost = client(); privateHost.send({op: 'create', capacity: 2, public: false});
   browser.send({op: 'list'}); assert.equal(browser.last('rooms').rooms.length, 1);
@@ -68,6 +69,12 @@ test('host controls, readiness invalidation, load barrier, authoritative results
   assert.throws(() => guest.send({op: 'result', epoch, scores: [99, 0, 0, 0]}), /host_only/);
   host.send({op: 'result', epoch, scores: [1, 2, 3, 4]});
   assert.deepEqual(guest.last('result').scores, [1, 2, 3, 4]);
+  const forwarded = host.messages.filter(m => m.op === 'input').length;
+  guest.send({op: 'input', epoch, sequence: 2, axes: [1, 0, 0, 0], bits: 4});
+  assert.equal(host.messages.filter(m => m.op === 'input').length, forwarded);
+  host.send({op: 'snapshot', epoch, tick: 2, data: snapshot()});
+  assert.equal(guest.last('snapshot').tick, 1);
+  assert.throws(() => guest.send({op: 'input', epoch: epoch + 1, sequence: 3, axes: [0, 0, 0, 0], bits: 0}), /invalid_state/);
   assert.throws(() => host.send({op: 'result', epoch, scores: [1, 2, 3, 4]}), /invalid_result/);
   host.send({op: 'lobby'}); assert.equal(host.c.room.state, 'lobby');
 });
@@ -167,6 +174,44 @@ test('loading and silent-authority watchdogs terminate without a result', () => 
   f.host.send({op: 'loaded', epoch: 1}); f.advance(30001);
   assert.equal(f.host.last('closed').reason, 'authority_timeout');
   assert.equal(f.host.last('result'), undefined);
+});
+
+test('online tournament keeps roster, requires ready between rounds and reconnects standings', () => {
+  const {rooms, host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {...host.c.room.config, tournament: {mode: 'points', target: 3,
+    rotation: 'random_no_repeat', points: [5, 3, 2, 1],
+    entries: [{game: 'ring_rumble', arena: 'vortex_ring'}, {game: 'ring_rumble', arena: 'storm_ring'}]}};
+  host.send({op: 'configure', config});
+  assert.throws(() => guest.send({op: 'next'}), /host_only/);
+  for (let epoch = 1; epoch <= 3; epoch++) {
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+    host.send({op: epoch === 1 ? 'start' : 'next'});
+    assert.equal(host.last('start').config.rounds, 1);
+    assert.equal(host.last('start').players[1].id, guest.c.player.id);
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    host.send({op: 'result', epoch, scores: [10, 8, 6, 2]});
+    assert.equal(host.last('result').tournament.round, epoch);
+    if (epoch < 3) assert.throws(() => host.send({op: 'next'}), /not_ready/);
+  }
+  assert.deepEqual(host.last('result').tournament.points, [15, 9, 6, 3]);
+  assert.deepEqual(host.last('result').tournament.champions, [0]);
+  assert.throws(() => host.send({op: 'next'}), /invalid_state/);
+  const token = guest.last('welcome').token;
+  rooms.disconnect(guest.c);
+  const resumed = client(); resumed.send({op: 'resume', token});
+  assert.deepEqual(resumed.last('result').tournament.champions, [0]);
+  host.send({op: 'lobby'});
+  assert.equal(host.last('room').tournament, null);
+});
+
+test('online tournament rejects unavailable games and malformed point tables', () => {
+  const {host} = fixture();
+  const t = {mode: 'points', target: 3, rotation: 'manual', points: [5, 3, 2, 1],
+    entries: [{game: 'tank_arena', arena: 'vortex_ring'}]};
+  assert.throws(() => host.send({op: 'configure', config: {...host.c.room.config, tournament: t}}), /invalid_config/);
+  t.entries[0].game = 'ring_rumble'; t.points = [1, 9, 2, 3];
+  assert.throws(() => host.send({op: 'configure', config: {...host.c.room.config, tournament: t}}), /invalid_config/);
 });
 
 test('real WebSocket four-client match and transport reconnect', async t => {

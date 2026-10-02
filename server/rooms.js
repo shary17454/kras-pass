@@ -1,4 +1,5 @@
 import {randomBytes, randomInt} from 'node:crypto';
+import {Tournament} from './tournament.js';
 
 export const PROTOCOL = 1;
 export const ONLINE_GAMES = ['ring_rumble'];
@@ -6,6 +7,21 @@ const CODE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const fail = code => { throw new Error(code); };
 const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
 const cleanName = v => typeof v === 'string' ? v.replace(/[\p{C}<>]/gu, '').trim().slice(0, 24) : '';
+
+function tournamentSettings(value) {
+  if (value == null) return null;
+  if (!['points', 'cups'].includes(value.mode) || !integer(value.target, 3, 10)
+    || !['manual', 'random_no_repeat'].includes(value.rotation)
+    || !Array.isArray(value.entries) || value.entries.length < 1 || value.entries.length > 39
+    || !Array.isArray(value.points) || value.points.length !== 4
+    || value.points.some((v, i) => !integer(v, 0, 100) || (i > 0 && v > value.points[i - 1]))) fail('invalid_config');
+  const entries = value.entries.map(e => {
+    if (!e || !ONLINE_GAMES.includes(e.game) || !['vortex_ring', 'storm_ring'].includes(e.arena)) fail('invalid_config');
+    return {game: e.game, arena: e.arena};
+  });
+  if (new Set(entries.map(e => `${e.game}:${e.arena}`)).size !== entries.length) fail('invalid_config');
+  return {mode: value.mode, target: value.target, rotation: value.rotation, entries, points: [...value.points]};
+}
 
 function validSnapshot(data, count) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
@@ -50,7 +66,7 @@ export class Rooms {
       let code;
       do { code = Array.from({length: 6}, () => CODE[randomInt(CODE.length)]).join(''); } while (this.rooms.has(code));
       const r = {code, public: m.public, capacity: m.capacity, host: 1, next: 1, players: new Map(),
-        state: 'lobby', touched: this.now(), epoch: 0, snapshot: null, result: null,
+        state: 'lobby', touched: this.now(), epoch: 0, snapshot: null, result: null, tournament: null,
         config: {game: 'ring_rumble', arena: 'vortex_ring', rounds: 3, bots: true, difficulty: 1}};
       this.rooms.set(code, r); this.join(c, r, m.name); return;
     }
@@ -62,11 +78,13 @@ export class Rooms {
       this.join(c, r, m.name); return;
     }
     const r = c.room, p = c.player;
+    if (m.op === 'leave' && !r) return;
     if (!r || !p || p.connection !== c) fail('not_joined');
     r.touched = this.now();
     if (m.op === 'leave') { this.remove(r, p, 'left'); return; }
     if (m.op === 'ready') {
-      if (r.state !== 'lobby' || typeof m.ready !== 'boolean') fail('invalid_state');
+      if (!(r.state === 'lobby' || (r.state === 'results' && r.tournament && !r.tournament.complete))
+        || typeof m.ready !== 'boolean') fail('invalid_state');
       p.ready = m.ready; this.broadcastRoom(r); return;
     }
     if (m.op === 'character') {
@@ -78,7 +96,8 @@ export class Rooms {
       const cfg = m.config;
       if (!cfg || !ONLINE_GAMES.includes(cfg.game) || !['vortex_ring', 'storm_ring'].includes(cfg.arena)
         || !integer(cfg.rounds, 1, 10) || typeof cfg.bots !== 'boolean' || !integer(cfg.difficulty, 0, 3)) fail('invalid_config');
-      r.config = {game: cfg.game, arena: cfg.arena, rounds: cfg.rounds, bots: cfg.bots, difficulty: cfg.difficulty};
+      const tournament = tournamentSettings(cfg.tournament);
+      r.config = {game: cfg.game, arena: cfg.arena, rounds: cfg.rounds, bots: cfg.bots, difficulty: cfg.difficulty, tournament};
       for (const peer of r.players.values()) peer.ready = false;
       this.broadcastRoom(r); return;
     }
@@ -91,13 +110,19 @@ export class Rooms {
       this.host(c);
       if (r.state !== 'lobby' || [...r.players.values()].some(p => !p.ready || !p.connection)) fail('not_ready');
       if (r.players.size < 2 && !r.config.bots) fail('not_enough_players');
-      r.state = 'loading'; r.loadingAt = this.now(); r.epoch++; r.seed = randomInt(1, 2147483647); r.snapshot = null; r.result = null;
       // Slots are contiguous for the shared match runtime; peer IDs stay stable.
       [...r.players.values()].forEach((p, slot) => { p.slot = slot; p.loaded = false; p.sequence = -1; });
       r.roster = [...r.players.values()].map(p => ({id: p.id, slot: p.slot, name: p.name, character: p.character}));
       const count = r.config.bots ? r.capacity : r.roster.length;
       while (r.roster.length < count) r.roster.push({id: 0, slot: r.roster.length, name: '', character: r.roster.length % 8});
-      this.broadcastRoom(r); this.broadcast(r, {op: 'start', ...this.match(r)}); return;
+      r.tournament = r.config.tournament ? new Tournament(count, r.config.tournament, randomInt(1, 2147483647)) : null;
+      this.beginRound(r); return;
+    }
+    if (m.op === 'next') {
+      this.host(c);
+      if (r.state !== 'results' || !r.tournament || r.tournament.complete) fail('invalid_state');
+      if ([...r.players.values()].some(p => !p.ready || !p.connection)) fail('not_ready');
+      this.beginRound(r); return;
     }
     if (m.op === 'loaded') {
       if (m.epoch !== r.epoch || !['loading', 'playing'].includes(r.state)) fail('invalid_state');
@@ -109,6 +134,10 @@ export class Rooms {
       return;
     }
     if (m.op === 'input') {
+      // A guest can have input in flight when the host finishes or advances.
+      // Never apply it to the results screen or to a different round.
+      if (integer(m.epoch, 1, r.epoch)
+        && (m.epoch < r.epoch || r.state === 'results')) return;
       if (r.state !== 'playing' || m.epoch !== r.epoch) fail('invalid_state');
       if (!integer(m.sequence, 0, Number.MAX_SAFE_INTEGER) || m.sequence <= p.sequence
         || !Array.isArray(m.axes) || m.axes.length !== 4 || m.axes.some(v => !Number.isFinite(v) || Math.abs(v) > 1)
@@ -119,6 +148,8 @@ export class Rooms {
     }
     if (m.op === 'snapshot') {
       this.host(c);
+      if (integer(m.epoch, 1, r.epoch)
+        && (m.epoch < r.epoch || r.state === 'results')) return;
       if (r.state !== 'playing' || m.epoch !== r.epoch) fail('invalid_state');
       if (!validSnapshot(m.data, r.roster.length) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
         || Buffer.byteLength(JSON.stringify(m.data)) > 48000) fail('invalid_snapshot');
@@ -130,12 +161,14 @@ export class Rooms {
       this.host(c);
       if (r.state !== 'playing' || m.epoch !== r.epoch || !Array.isArray(m.scores)
         || m.scores.length !== r.roster.length || m.scores.some(v => !integer(v, -1000000, 1000000))) fail('invalid_result');
-      r.state = 'results'; r.result = {op: 'result', epoch: r.epoch, scores: m.scores};
+      if (r.tournament) r.tournament.record(r.epoch, m.scores);
+      for (const peer of r.players.values()) peer.ready = false;
+      r.state = 'results'; r.result = {op: 'result', epoch: r.epoch, scores: m.scores, tournament: r.tournament?.view() ?? null};
       this.broadcast(r, r.result); this.broadcastRoom(r); return;
     }
     if (m.op === 'lobby') {
       this.host(c); if (r.state !== 'results') fail('invalid_state');
-      r.state = 'lobby'; r.snapshot = null; r.result = null;
+      r.state = 'lobby'; r.snapshot = null; r.result = null; r.tournament = null;
       for (const peer of r.players.values()) peer.ready = false;
       this.broadcastRoom(r); return;
     }
@@ -143,7 +176,16 @@ export class Rooms {
   }
 
   host(c) { if (c.player.id !== c.room.host) fail('host_only'); }
-  match(r) { return {epoch: r.epoch, seed: r.seed, config: r.config, players: r.roster}; }
+  beginRound(r) {
+    r.state = 'loading'; r.loadingAt = this.now(); r.epoch++; r.seed = randomInt(1, 2147483647);
+    r.snapshot = null; r.result = null;
+    r.matchConfig = {...r.config};
+    if (r.tournament) r.matchConfig = {...r.config, ...r.tournament.next(), rounds: 1};
+    for (const p of r.players.values()) { p.loaded = false; p.sequence = -1; p.ready = false; }
+    this.broadcastRoom(r); this.broadcast(r, {op: 'start', ...this.match(r)});
+  }
+  match(r) { return {epoch: r.epoch, seed: r.seed, config: r.matchConfig, players: r.roster,
+    tournament: r.tournament?.view() ?? null}; }
   join(c, r, name) {
     const usedSlots = new Set([...r.players.values()].map(p => p.slot));
     let slot = 0;
@@ -203,6 +245,7 @@ export class Rooms {
   }
   view(r) {
     return {op: 'room', code: r.code, host: r.host, capacity: r.capacity, state: r.state, config: r.config,
+      tournament: r.tournament?.view() ?? null,
       players: [...r.players.values()].map(p => ({id: p.id, slot: p.slot, name: p.name, character: p.character,
         ready: p.ready, connected: !!p.connection}))};
   }
