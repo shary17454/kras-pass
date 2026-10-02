@@ -67,6 +67,15 @@ func run(t: TestHarness, host: Node) -> void:
 		bad.world.boost.pads[0][0] = value
 		t.ok(not replica.accept(bad, 4, "kart_sprint"), "invalid boost recharge rejected")
 	for count in [1, 2, 3, 5]: t.ok(not replica.accept(packet, count, "kart_sprint"), "wrong roster rejected")
+	bad = packet.duplicate(true)
+	bad.world.boost.pads.pop_back()
+	t.ok(not replica.accept(bad, 4, "kart_sprint"), "missing course boost pad rejected")
+	bad = packet.duplicate(true)
+	bad.world.boost.pads[0].pop_back()
+	t.ok(not replica.accept(bad, 4, "kart_sprint"), "wrong boost pad roster rejected")
+	bad = packet.duplicate(true)
+	bad.world.started[0] = 1
+	t.ok(not replica.accept(bad, 4, "kart_sprint"), "started flag cannot be a numeric boolean")
 	AudioManager.enabled = true
 	replica._last_phase = MatchPhase.P.PLAYING
 	replica._last_round = int(packet.round)
@@ -89,6 +98,15 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(guest.controller._elapsed, elapsed, "render never advances race clock")
 	t.equal(Array(guest.ctx.scores), scores, "render never awards race scores")
 	t.equal(replica._kart.rescues.size(), 1, "repeated frames do not duplicate halo nodes")
+	var position: Vector3 = guest.ctx.fighter(0).global_position
+	bad = packet.duplicate(true)
+	bad.world.checkpoints += 1
+	bad.fighters[0].position = [321.0, 2.0, 123.0]
+	t.ok(replica.accept(bad, 4, "kart_sprint"), "standalone caller still applies schema validation")
+	replica.render(guest, 0.016)
+	t.ok(guest.ctx.fighter(0).global_position.is_equal_approx(position), "course mismatch cannot mutate fighter presentation")
+	t.equal(guest.controller._elapsed, elapsed, "course mismatch cannot mutate race clock")
+	t.ok(replica.accept(packet, 4, "kart_sprint", "circuit_loop", game._checkpoints.size()), "matching course remains usable after mismatch")
 	AudioManager.enabled = false
 	for step in game._checkpoints.size() + 1:
 		source.ctx.fighter(2).global_position = game.next_checkpoint(2)
@@ -132,6 +150,18 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(AudioManager._next_voice, (voice + 1) % AudioManager.SFX_VOICES, "round reset plays only UI go cue")
 	t.equal(guest.controller._finished, 0, "round reset clears finish count")
 	t.equal(guest.controller.boost_serial, [0, 0, 0, 0], "round reset clears sampled boost generations")
+	AudioManager.enabled = false
+	source.ctx.config.rules["party_short_race"] = true
+	source.ctx.config.rules["race_laps"] = 1
+	game.on_round_start()
+	_finish_checkpoints(game, rider)
+	packet = _packet(replica, source)
+	packet.round += 2
+	t.ok(replica.accept(packet, 4, "kart_sprint"), "host short-race rules serialize with completed result")
+	replica.render(guest, 0.016)
+	t.equal(guest.controller.laps(), 1, "guest uses host short-race lap limit instead of default three")
+	t.equal(guest.controller._finished, 1, "short-race completion restored")
+	t.equal(guest.controller.hud_value(0), "%.2f" % (game.finish_times[0] / 100.0), "short-race HUD shows host finish time")
 	source.teardown()
 	guest.teardown()
 	source.queue_free()

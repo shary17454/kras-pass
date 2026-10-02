@@ -2,6 +2,49 @@
 
 ## Implemented boundary
 
+### Kart world presentation and source verification
+
+Commit `ba6d5dd80cf173d25f760580f9b3da9e506addd9` was verified on
+`origin/main`. It includes the Kart world adapter, not Kart room enablement.
+The exact nine-field world schema carries elapsed time, finish times, laps,
+next checkpoint indices, started flags, effective lap limit, checkpoint count,
+rescue progress and boost counters/recharge. Both Godot and Node enforce
+finite bounds, roster sizes, finish/lap consistency and a four-pad layout.
+MatchScene binds the checkpoint count to its actual course before accepting a
+packet. Standalone rendering also checks course geometry before mutating any
+fighter, so a schema-valid but mismatched course cannot move guest players.
+
+Guest racers only render host state. Their original rescue halo follows the
+replicated rider and host rescue progress; it has no collision body, local
+respawn callback, boost impulse, lap advancement or clock ticking. Fresh
+sampled lap/boost cues play once, including finish cues first observed during
+ENDING. Baseline, duplicate and round-reset snapshots do not replay old cues.
+This sampled counter path is not a lossless audio/event replay stream.
+Host short-race lap limits are restored for the existing HUD rather than
+silently reverting to the guest's three-lap default.
+
+`/tmp/kras-kart-network.log` passed 110 focused assertions on the pushed source;
+`/tmp/kras-kart-world-server.log` passed all 88 Node tests. The subsequent
+`/tmp/kras-kart-network-edges.log` passed 121 assertions, adding mismatched
+course/no-mutation checks, invalid pad roster and boolean checks, and a real
+one-lap controller result restored into a separate guest scene. These fixtures
+position source riders at checkpoints to exercise rule transitions; they are
+not independent-process driving, Internet or device performance evidence.
+
+Full gate `kras-party-check.iMnBfE` on `ba6d5dd` compiled 293 scripts, audited
+330 resources with zero issues, passed 19,445 assertions, finished the existing
+physical three-lap offline race and completed all 39 stability matches with
+zero failures. The eleven additional edge assertions above ran afterward as a
+focused suite, not as part of that full-gate count. Godot emitted a macOS
+`get_system_ca_certificates` warning; the commands exited successfully, but
+this gate does not qualify production TLS or Keychain access.
+
+Kart remains excluded from development room allowlists. Its server geometry
+dispatch, selectable 3-to-10 network laps, real driving across independent
+peers, recovery/reconnect and tournament results must be qualified next.
+Production online is still disabled. No Railway deployment, signed iOS archive,
+upload or App Review submission is established by these tests or the Git push.
+
 ### Kart integration prerequisites
 
 Before adding Kart Sprint to rooms, source inspection found three actual
@@ -33,9 +76,10 @@ assertions. Real pad contact starts recharge, round start restores availability,
 and the next contact is accepted. Ordered checkpoint ticks finish the host's
 three laps without ending the race until the remote human also finishes.
 That rule-level fixture positions riders at checkpoints; it is not physical
-driving, performance or independent-process evidence. Kart remains excluded
-from room allowlists; its world adapter, actual online race, recovery visuals
-and final tournament qualification remain to be implemented and verified.
+driving, performance or independent-process evidence. At this prerequisite
+commit Kart remained excluded from room allowlists, before the world adapter
+and recovery presentation described above were implemented. Actual online
+racing and final tournament qualification remain outstanding.
 Full gate `kras-party-check.bkVDQo` compiled 291 scripts, audited 328 resources
 with zero issues, passed 19,336 assertions, passed the real three-lap race and
 completed 39 stability matches with zero failures. That physical race regression
