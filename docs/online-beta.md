@@ -3076,6 +3076,62 @@ its TCP latency tradeoff still requires real-network testing. References:
 [Godot WebSocket guide](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html),
 [ws](https://github.com/websockets/ws).
 
+## Open CI qualification failure (2026-10-02)
+
+Run `37053065343` remains pinned to
+`7f79f82e23088ff0fb7ec930126f8525270910a6`, not the crater fixes. Its completed
+`network-hurdle_dash` job `110990944822` failed the actual tournament smoke:
+epoch two, seed `1032434731`, scores `[680,658,715,99999]`, with slot three
+still unfinished. The gate correctly reports `active hurdle runner did not
+reach the finish`. The preceding epoch, seed `1148457985`, finished all four
+with scores `[695,675,1810,2525]`. This is not a clean network qualification.
+
+Artifact `11250204207` was downloaded to
+`/tmp/kras-ci-hurdle-37053065343`; the failing session is under
+`_temp/kras-network-smoke-giEmn2/`. Last reported server loop maximum is 22 ms;
+the client frame-gap maximum is 868 ms. These diagnostics do not establish the
+cause of the unfinished runner. No gate was weakened, no job was rerun or
+cancelled, and the failure is still unresolved. Preserve the seeds and actual
+logs when investigating runner AI, collision and input authority.
+
+## Colossus crater-aware retreat (2026-10-02, follow-up)
+
+The circular arena previously returned its center as an escape destination
+even when a permanent crater occupied that center. A regression reproduces
+ten failures: unsafe destination, steering toward the hole and insufficient
+body clearance along the retreat segment.
+
+Opt-in crater floors now search bounded local escape candidates, preserving
+the normal disc behavior when crater mode is absent or cleaned up. When the
+starting point has body clearance, candidate segments are rejected if they
+cross any expanded crater; endpoint ground alone is insufficient. The check
+uses the closest point on a segment rather than sparse path samples. If no
+candidate is found, the current point is returned; this is not a promise of
+global pathfinding or recovery from an already falling body.
+
+Evidence:
+- `/tmp/kras-crater-retreat-before.log`: 28 pass, 10 fail.
+- `/tmp/kras-crater-retreat-final.log`: 43 focused assertions pass, including
+  segment clearance, invalid start/end and restoration of ordinary retreat.
+- Actual four-Expert-bot authored matches, without health/damage/window or
+  duration changes in this follow-up:
+  - `/tmp/kras-colossus-retreat-seed345.log`: defeat; scores [330,220,165,110].
+    This is the seed that previously ended at health 415 without defeat.
+  - `/tmp/kras-colossus-retreat-seed9614.log`: defeat; scores [220,220,55,330].
+  - `/tmp/kras-colossus-retreat-seed172.log`: defeat; scores [220,275,165,165].
+
+`tools/check_party.sh` now gates those three authored AI matches separately.
+The full local gate `kras-party-check.2IqAw5` passes: 307 scripts compile,
+345 resources report zero inventory issues, 20,478 assertions pass in 382.8
+seconds, the actual three-lap race passes, all three Colossus seeds defeat the
+boss again, and all 39 stability matches pass. Logs are under the macOS TMPDIR
+printed by the gate. This does not resolve the separate CI Hurdle failure.
+This supersedes the earlier note that the checker was not in the required
+gate. Three seeds at Expert with these four characters do not qualify all
+characters, difficulty separation, spawn fairness, full AI perception,
+disconnected floor islands, human/device gameplay or online synchronization.
+Colossus remains excluded from online and is not marked READY by this pass.
+
 ## Colossus visible attack approach (2026-10-02)
 
 BossHunter previously fled craters within 3.8 metres while requiring a fist

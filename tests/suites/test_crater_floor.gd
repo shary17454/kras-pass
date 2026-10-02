@@ -18,6 +18,10 @@ func run(t: TestHarness, host: Node) -> void:
 		t.ok(not floor_node.has_ground(point), "ground query excludes crater")
 	for point in [Vector3(-4, 0, 0), Vector3(8, 0, 0), Vector3(0, 0, 8)]:
 		t.ok(_ground(floor_node, point), "floor outside crater remains collidable")
+	t.ok(not floor_node.path_clear(Vector3(-4, 0, 0), Vector3(8, 0, 0)), "safe endpoints cannot authorize crossing a hole")
+	t.ok(floor_node.path_clear(Vector3(-4, 0, 0), Vector3(-8, 0, 0)), "clear segment remains traversable")
+	t.ok(not floor_node.path_clear(Vector3(4, 0, 0), Vector3(-4, 0, 0)), "path with carved start is rejected")
+	t.ok(not floor_node.path_clear(Vector3(-4, 0, 0), Vector3(-18, 0, 0)), "path cannot leave arena rim")
 	floor_node.open_hole(Vector3(6, 0, 0), 3.0)
 	await host.get_tree().physics_frame
 	await host.get_tree().physics_frame
@@ -83,10 +87,18 @@ func run(t: TestHarness, host: Node) -> void:
 	game._open_crater(Vector3(4, 0, 0), 4.0)
 	scene._start_next_round()
 	t.ok(arena.is_inside(Vector3(4, 0, 0)), "real next round removes previous crater")
+	game._open_crater(Vector3.ZERO, 4.0)
+	var rim := Vector3(3.6, 0, 0)
+	var retreat := arena.retreat_point(rim)
+	t.ok(arena.is_inside(retreat, 1.0), "retreat never targets carved center")
+	t.ok(retreat.x > rim.x, "retreat moves outward from center crater")
+	for step in 8:
+		t.ok(arena.is_inside(rim.lerp(retreat, float(step + 1) / 8), 0.42), "retreat path preserves body clearance")
 	game.cleanup()
 	t.ok(arena._crater_floor == null, "cleanup releases carved floor ownership")
 	t.ok(arena._floor_mesh.visible, "cleanup restores original floor appearance")
 	t.equal(arena._floor_mesh.get_parent().collision_layer, 1, "cleanup restores original floor collision")
+	t.near(arena.retreat_point(rim).x, 0.0, 0.001, "ordinary disc retreat behavior remains unchanged after cleanup")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

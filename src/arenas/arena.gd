@@ -262,6 +262,8 @@ func center() -> Vector3:
 
 ## Safe point to steer toward when a fighter is near an edge.
 func retreat_point(pos: Vector3) -> Vector3:
+	if is_instance_valid(_crater_floor):
+		return global_position + _crater_floor.retreat_point(pos - global_position)
 	if def.shape == "ring" or def.shape == "oval":
 		var dir := Vector3(pos.x, 0, pos.z).normalized()
 		return global_position + dir * current_radius * 0.72

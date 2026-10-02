@@ -50,6 +50,44 @@ func edge_distance(point: Vector3) -> float:
 func has_ground(point: Vector3, margin := 0.0) -> bool:
 	return edge_distance(point) >= margin
 
+func path_clear(from: Vector3, to: Vector3, margin := 0.42) -> bool:
+	if not has_ground(from, margin) or not has_ground(to, margin):
+		return false
+	var start := Vector2(from.x, from.z)
+	var end := Vector2(to.x, to.z)
+	var segment := end - start
+	for hole in holes:
+		var fraction := 0.0
+		if segment.length_squared() > 0.0001:
+			fraction = clampf((hole.point - start).dot(segment) / segment.length_squared(), 0.0, 1.0)
+		if (start + segment * fraction).distance_to(hole.point) < float(hole.radius) + margin:
+			return false
+	return true
+
+func retreat_point(point: Vector3) -> Vector3:
+	var margin := minf(3.0, radius * 0.25)
+	if has_ground(point, margin):
+		return point
+	var best := point
+	var nearest := INF
+	var on_ground := has_ground(point, 0.42)
+	# Sample local escape routes instead of steering through a carved center.
+	for distance in [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]:
+		for step in 32:
+			var angle := TAU * float(step) / 32.0
+			var candidate := point + Vector3(cos(angle), 0, sin(angle)) * float(distance)
+			if not has_ground(candidate, margin):
+				continue
+			if on_ground and not path_clear(point, candidate):
+				continue
+			var cost := point.distance_squared_to(candidate)
+			if cost < nearest:
+				nearest = cost
+				best = candidate
+		if nearest < INF:
+			break
+	return best
+
 func _rebuild() -> void:
 	var cuts: Array[PackedVector2Array] = []
 	for hole in holes:
