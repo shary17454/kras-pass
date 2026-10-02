@@ -45,6 +45,23 @@ func run(t: TestHarness, host: Node) -> void:
 			t.ok(victim.alive and victim.visible, "waiting survivor returns to bowl")
 			game.on_fighter_fell(2)
 			t.equal(scene.ctx.scores[1], waiting_score + 1, "returned fighter can earn survival points again")
+			for round_index in 3:
+				var bumpers: Array = []
+				for hazard in scene.arena._hazards:
+					if hazard is ArenaHazards.Bumper:
+						bumpers.append(hazard)
+						hazard._cooldowns[0] = 0.4
+						hazard.play_feedback()
+						var previous: Tween = hazard._bounce_tween
+						hazard.play_feedback()
+						t.ok(not previous.is_valid(), "repeated bounce replaces previous visual tween")
+						hazard._mesh.scale = Vector3(1.25, 0.8, 1.25)
+				t.equal(bumpers.size(), 5, "all five authored bumpers covered")
+				scene.arena.reset_hazards()
+				for bumper in bumpers:
+					t.ok(bumper._cooldowns.is_empty(), "new round clears bumper hit immunity")
+					t.equal(bumper._mesh.scale, Vector3.ONE, "new round restores bumper shape")
+					t.ok(bumper._bounce_tween == null, "new round cancels pending visual animation")
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame

@@ -332,7 +332,7 @@ func reset_hazards() -> void:
 		if h is ArenaHazards.Sweeper:
 			h._age = 0.0
 		if h is ArenaHazards.BreakableIceBarrier or h is ArenaHazards.Snowball \
-				or h is ArenaHazards.Gust:
+				or h is ArenaHazards.Gust or h is ArenaHazards.Bumper:
 			h.reset()
 	for t in tiles:
 		if is_instance_valid(t):

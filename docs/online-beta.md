@@ -2,6 +2,14 @@
 
 ## Implemented boundary
 
+### Bumper hazard lifecycle prerequisite
+
+Bumpers now clear per-player cooldowns and restore their visual shape at
+round reset. Repeated hits replace the existing squash tween instead of
+stacking animations on the same mesh. The arena resets all five bumpers.
+`/tmp/kras-bumper-reset.log`: 94 assertions passed, including three successive
+round resets and repeated-hit tween cancellation. This is not room enablement.
+
 ### Bumper Bowl survival-score correction
 
 Match-alive players waiting offstage for respawn were incorrectly receiving

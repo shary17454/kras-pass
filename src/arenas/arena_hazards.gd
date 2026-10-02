@@ -67,6 +67,7 @@ class Bumper extends Node3D:
 	var _area: Area3D
 	var _cooldowns := {}
 	var _mesh: Node3D
+	var _bounce_tween: Tween
 
 	func build(color: Color, radius: float) -> void:
 		_mesh = MeshFactory.cylinder(radius, 1.5, color, 0.6)
@@ -113,10 +114,25 @@ class Bumper extends Node3D:
 			dir.y = 0.0
 			body.take_hit(-1, dir.normalized(), power, 0.0, true)
 			AudioManager.play_sfx("bounce", global_position)
-			if _mesh != null and is_instance_valid(_mesh):
-				var tw := _mesh.create_tween()
-				tw.tween_property(_mesh, "scale", Vector3(1.25, 0.8, 1.25), 0.06)
-				tw.tween_property(_mesh, "scale", Vector3.ONE, 0.18)
+			play_feedback()
+
+	func play_feedback() -> void:
+		if _mesh == null or not is_instance_valid(_mesh):
+			return
+		if _bounce_tween != null and _bounce_tween.is_valid():
+			_bounce_tween.kill()
+		_bounce_tween = _mesh.create_tween()
+		_bounce_tween.tween_property(_mesh, "scale", Vector3(1.25, 0.8, 1.25), 0.06)
+		_bounce_tween.tween_property(_mesh, "scale", Vector3.ONE, 0.18)
+
+
+	func reset() -> void:
+		_cooldowns.clear()
+		if _bounce_tween != null and _bounce_tween.is_valid():
+			_bounce_tween.kill()
+		_bounce_tween = null
+		if _mesh != null and is_instance_valid(_mesh):
+			_mesh.scale = Vector3.ONE
 
 
 class BreakableIceBarrier extends StaticBody3D:
