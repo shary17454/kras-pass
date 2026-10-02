@@ -115,7 +115,7 @@ func is_inside(pos: Vector3, margin: float = 0.0) -> bool:
 			var d := p.length()
 			return d <= current_radius - margin and d >= current_radius * 0.42 + margin
 		"track":
-			return absf(p.x) <= current_radius * 0.7 - margin and absf(p.y) <= track_length * 0.5
+			return absf(p.x) <= current_radius - margin and absf(p.y) <= track_length * 0.5 - margin
 		"oval":
 			var d := p.length()
 			return d <= current_radius - margin and d >= current_radius * 0.5 + margin
@@ -138,7 +138,7 @@ func edge_distance(pos: Vector3) -> float:
 			var d := p.length()
 			return minf(current_radius - d, d - current_radius * 0.45)
 		"track":
-			return current_radius * 0.7 - absf(p.x)
+			return minf(current_radius - absf(p.x), track_length * 0.5 - absf(p.y))
 		"circuit":
 			return track_width * 0.5 - _circuit_offset(pos)
 		_:

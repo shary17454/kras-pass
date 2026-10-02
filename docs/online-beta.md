@@ -2,6 +2,27 @@
 
 ## Implemented boundary
 
+### Hurdle Dash lifecycle prerequisite
+
+Straight-track queries now use the authored half-width (already stored in
+`current_radius`) and both longitudinal edges, including clearance margins.
+Hurdle finish detection requires a living active runner above the floor and
+inside the track, rather than accepting any position beyond the finish Z.
+Fall recovery is bounded to the track and remains before the finish line.
+The visible elapsed banner resets each round. Only fastest-time ties count,
+and inactive contenders neither finish nor hold the round open.
+
+`/tmp/kras-hurdle-before.log`: 14 assertions failed before the fix.
+`/tmp/kras-hurdle-after.log`: all 23 assertions passed, including immutable
+finish times, out-of-track/fallen/spectator rejection, bounded rescue and
+active-contender completion. Hurdle Dash is not online-enabled yet; its
+world adapter and independent-process tests remain required.
+Full gate `kras-party-check.KPjNfF`: 263 scripts compiled, 300 resources
+audited with zero issues, 18,363 assertions passed, race regression passed
+and all 39 stability matches passed. Before enabling race rooms, server
+tournament ranking must support lower-is-better results; its current
+comparison always favors larger scores.
+
 ### Crate Relay room integration
 
 Development rooms now allow `crate_relay` only on `relay_docks`. The server

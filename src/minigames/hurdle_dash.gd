@@ -37,6 +37,7 @@ func build() -> void:
 func on_round_start() -> void:
 	_elapsed = 0.0
 	_finished = 0
+	_banner = "0.00"
 	finish_times.fill(UNFINISHED)
 
 
@@ -50,9 +51,10 @@ func tick(delta: float) -> void:
 		if finish_times[i] != UNFINISHED:
 			continue
 		var f := ctx.fighter(i)
-		if f == null or not is_instance_valid(f):
+		if f == null or not is_instance_valid(f) or not f.alive or not ctx.is_alive(i):
 			continue
-		if f.global_position.z <= _line_z:
+		var arena := ctx.arena as Arena
+		if f.global_position.z <= _line_z and f.global_position.y >= arena.global_position.y - 0.1 and arena.is_inside(f.global_position):
 			finish_times[i] = int(round(_elapsed * 100.0))
 			_finished += 1
 			f.control_enabled = false
@@ -67,12 +69,18 @@ func tick(delta: float) -> void:
 func on_fighter_fell(slot: int) -> void:
 	var arena := ctx.arena as Arena
 	var f := ctx.fighter(slot)
-	if f != null and is_instance_valid(f) and arena != null:
-		f.respawn_at(arena.global_position + Vector3(arena.lane_x(slot), 1.4, f.global_position.z - arena.global_position.z + 2.0))
+	if f != null and is_instance_valid(f) and arena != null and ctx.is_alive(slot):
+		var z := clampf(f.global_position.z - arena.global_position.z + 2.0, arena.finish_z + 2.0, arena.start_z + 1.5)
+		f.respawn_at(arena.global_position + Vector3(arena.lane_x(slot), 1.4, z))
 
 
 func is_round_over() -> bool:
-	return ctx.early_finish or _finished >= ctx.player_count()
+	if ctx.early_finish:
+		return true
+	for slot in ctx.player_count():
+		if ctx.is_alive(slot) and finish_times[slot] == UNFINISHED:
+			return false
+	return ctx.alive_count() > 0
 
 
 func compute_scores() -> Array[int]:
@@ -80,14 +88,18 @@ func compute_scores() -> Array[int]:
 
 
 func is_tied() -> bool:
-	var seen := {}
-	for t in finish_times:
-		if t == UNFINISHED:
+	var best := UNFINISHED
+	var count := 0
+	for slot in ctx.player_count():
+		if not ctx.is_alive(slot):
 			continue
-		if seen.has(t):
-			return true
-		seen[t] = true
-	return false
+		var time := finish_times[slot]
+		if time < best:
+			best = time
+			count = 1
+		elif time == best:
+			count += 1
+	return count > 1
 
 
 func hud_value(slot: int) -> String:
