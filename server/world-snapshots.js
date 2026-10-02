@@ -167,6 +167,13 @@ export function validRelicWorld(data, count) {
     && validCollectionWorld({items: data.items, carrying: Array(count).fill(0)}, count, 'gem');
 }
 
+export function validTideWorld(data) {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 2
+    && Number.isFinite(data.level) && Math.abs(data.level) <= 1000
+    && Number.isFinite(data.age) && data.age >= 0 && data.age <= 3600;
+}
+
 export function validGoalGuardWorld(data, count, extraBalls = 0) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count

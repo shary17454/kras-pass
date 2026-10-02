@@ -2,6 +2,25 @@
 
 ## Implemented boundary
 
+### Rising Tide snapshot adapter
+
+The shared snapshot path now supports host-owned water level and wave age.
+Guests restore the water plane and wave phase without advancing hazards,
+checking submersion or awarding points. The normal online guest loop returns
+after presentation, before arena simulation. Godot and Node validators reject
+missing/extra fields, non-finite values, coercible strings/booleans, heights
+outside +/-1,000 and ages outside 0-3,600 seconds.
+
+`/tmp/kras-tide-network.log`: 28 assertions passed, including serialized state,
+repeated rendering without simulation, and new-round water reset. All 65
+Node tests passed. This is adapter validation, not room support: Rising Tide
+remains excluded from the allowlist until independent-process matches,
+reconnect, elimination and tournament behavior have been verified.
+Full gate `kras-party-check.ZuzOJ5`: 268 scripts compiled, 305 resources
+audited with zero issues, 18,460 assertions passed, race regression passed
+and all 39 stability matches passed. This remains headless desktop evidence,
+not mobile rendering, Internet connectivity or release approval.
+
 ### Survival hazard lifecycle prerequisite
 
 Rising Tide retained the sudden-death water speed in later rounds; Sweeper
