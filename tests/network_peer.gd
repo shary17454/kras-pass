@@ -40,6 +40,7 @@ var observed_crumble_warning := false
 var observed_crumble_fall := false
 var observed_blast_fuse := false
 var observed_blast_explosion := false
+var observed_color_drop := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -175,6 +176,8 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "color_stand":
+		observed_color_drop = observed_color_drop or game.controller.is_dropping()
 	if game_id == "blast_ball":
 		var ball: GameBall = game.controller.ball
 		observed_blast_fuse = observed_blast_fuse or (ball.fuse > 0 and ball.fuse < ball.fuse_max - 0.5)
@@ -215,6 +218,12 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "color_stand":
+			var fighter: Fighter = game.ctx.fighters[slot]
+			var safe: ArenaTile = game.controller.safe_tile_near(fighter.global_position)
+			if safe != null:
+				var offset: Vector3 = safe.global_position - fighter.global_position
+				movement = Vector2(offset.x, offset.z).limit_length()
 		if game_id == "blast_ball":
 			var angle := float(Time.get_ticks_msec() - started_at) / 2400.0 + slot * PI / 2.0
 			var target: Vector3 = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * 3.0
@@ -307,6 +316,22 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id == "color_stand":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty():
+			_fail("missing color world")
+			return
+		if game.controller._called != int(world.called) or game.controller._stage != int(world.stage) \
+				or absf(game.controller._timer - float(world.timer)) > 0.001:
+			_fail("color call diverged")
+			return
+		for i in game.arena.tiles.size():
+			var tile: ArenaTile = game.arena.tiles[i]
+			if tile.tag != game.controller.COLOR_NAMES[int(world.colors[i])] \
+					or tile.state != int(world.tiles[i][0]) or absf(tile.position.y - float(world.tiles[i][2])) > 0.001 \
+					or tile.collision_layer != 0:
+				_fail("color floor diverged")
+				return
 	if not host and game_id == "blast_ball":
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		var ball: GameBall = game.controller.ball
@@ -471,6 +496,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "blast_ball" and (not observed_blast_fuse or not observed_blast_explosion):
 		_fail("blast fuse/explosion observation missing: fuse=%s explosion=%s sequence=%s" % [observed_blast_fuse, observed_blast_explosion, game.controller.explosion_sequence])
+		return
+	if game_id == "color_stand" and not observed_color_drop:
+		_fail("color floor never dropped")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

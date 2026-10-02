@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains fifteen explicitly adapted rulesets; verification
+The development allowlist contains sixteen explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -44,8 +44,10 @@ timer, local height and monotonic collapse count. Guests never advance floor
 physics or emit gameplay collapse signals; sound events are freshness-gated.
 `blast_ball` on `ember_pit` replicates the explosive ball, fuse, launch identity
 and sequenced explosion feedback. Elimination and rearming stay on the host.
+`color_stand` on `color_floor` adds the 121-tile palette, called color, floor
+states, phase timers and call/drop cues. Guests never choose a new color.
 Optional random power-ups remain disabled in online beta configurations.
-The other 24 games are not
+The other 23 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -856,6 +858,35 @@ to preserve the original 60 Hz blend.
 
 ## Expansion checklist per game
 
+### Color Stand room integration
+
+Both client/server room allowlists include `color_stand` only on `color_floor`.
+Snapshots require complete `validColorWorld` data and host ownership. The
+multi-engine harness verifies the called color, stage/timer, every tile's
+palette tag, height/state and disabled guest collisions, plus an observed drop.
+Scripted input seeks the nearest visibly called-color tile; it does not change
+the host's rules, timer, palette or results.
+
+- `npm test`: 48 tests passed, including room-level rejection of the wrong
+  arena, absent call data and non-host snapshot publication.
+- Ordinary run `kras-network-smoke-kvWMwO`: two-human/two-AI and four-human
+  cases passed, with guest reconnect and host result-transport loss. Scores
+  agreed at [16, 16, 6, 6] and [16, 16, 16, 16]. Guests received 1088-1107
+  world snapshots, and the local server loop maximum was 63 ms. Scripted
+  safe-tile input is a protocol test, not a balance or human-playability study.
+- Tournament run `kras-network-smoke-9wJ5g6` passed six matches per case:
+  three regular matches plus all three bounded tie-break attempts. Two-human
+  standings [12, 12, 5, 4] ended with shared champions [0, 1]; four-human
+  standings [9, 9, 9, 9] ended with shared champions [0, 1, 2, 3]. All clients
+  agreed, including reconnects and spectator handling. Guests received
+  3279-3298 world snapshots; local server loop maximum was 61 ms.
+- Full gate `kras-party-check.REVpk0`: 250 scripts compiled, 287 resources
+  audited with zero issues, 17,460 assertions passed, real three-lap race
+  regression passed and 39 stability matches completed with zero failures.
+- Production is not enabled by this room allowlist change; physical-device
+  and Internet conditions remain unverified. Replicated-floor orientation
+  captures remain pending; previous Color Stand captures used local state.
+
 ### Color Stand snapshot adapter
 
 `color_replica.gd` captures the authored 121-tile quilt, palette index per tile,
@@ -867,7 +898,8 @@ palette without advancing floor physics, countdowns or scoring.
 Monotonic call/drop sequences gate countdown/whistle feedback. First snapshots,
 repeated snapshots and reconnect gaps cannot replay old cues. The shared match
 dispatcher validates Color Stand state before applying it. The server has a
-matching `validColorWorld` validator, not yet wired into room acceptance.
+matching `validColorWorld` validator. Room integration is recorded above;
+at the adapter-only commit this was not wired into room acceptance.
 
 - `/tmp/kras-color-replica.log`: 430 assertions passed for JSON round-trip,
   missing/malformed fields, palette bounds, complete floor, host target,
@@ -877,7 +909,7 @@ matching `validColorWorld` validator, not yet wired into room acceptance.
 - Full gate `kras-party-check.88gtJ5`: 250 scripts compiled, 287 resources
   audited with zero issues, 17,460 assertions passed, real three-lap race
   regression passed and 39 stability matches completed with zero failures.
-- Color Stand is still excluded from online room allowlists. Remaining work:
+- At the adapter-only commit Color Stand was excluded from room allowlists. Remaining work then:
   room integration, multi-engine ordinary/tournament tests, reconnect state
   agreement and presentation captures from the replicated floor.
 

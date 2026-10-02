@@ -81,6 +81,27 @@ test('blast room rejects missing fuse, invalid arena and non-host snapshots', ()
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('color room requires host-owned palette and called color', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'color_stand', arena: 'color_floor', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'paint_grid'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  data.world = {tiles: Array.from({length: 121}, () => [0, 0, 0, 0]), colors: Array(121).fill(2),
+    called: 2, stage: 0, timer: 2.4, call_sequence: 1, drop_sequence: 0};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}));
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  delete data.world.called;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('crumble room relays only complete host-owned floor state', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
