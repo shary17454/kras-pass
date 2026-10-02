@@ -54,6 +54,8 @@ func boss_think(delta: float) -> void:
 	if _core != null and is_instance_valid(_core):
 		_core.scale = Vector3.ONE * (1.0 + 0.08 * sin(float(Time.get_ticks_msec()) * 0.004))
 	_tick_orbs(delta)
+	if boss_defeated:
+		return
 	if _recover > 0.0:
 		_recover -= delta
 		_check_core_hits()
@@ -66,7 +68,14 @@ func boss_think(delta: float) -> void:
 		1:
 			_siege(delta)
 		_:
-			_collapse(delta)
+			# Collapse stays vulnerable, but a held swing is still one hit.
+			for slot in _hit_window.keys():
+				var fighter := ctx.fighter(int(slot))
+				if fighter == null or not is_instance_valid(fighter) or not fighter.is_attacking():
+					_hit_window.erase(slot)
+			_check_core_hits()
+			if not boss_defeated:
+				_collapse(delta)
 
 
 # --- phase I ---------------------------------------------------------------

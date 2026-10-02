@@ -2,6 +2,49 @@
 
 ## Implemented boundary
 
+### Sovereign collapse winnability repair (offline regression)
+
+The original final phase advertised a permanently exposed core through
+`weak_points`, but `boss_think` checked core strikes only during recovery.
+Once the transition recovery expired, collapse could become unwinnable.
+`/tmp/kras-sovereign-collapse-before.log` reproduced this with 10 passing
+assertions and four failures: health remained 400 instead of dropping to
+340, no defeat/finish signal and no attacking-player credit. The repair
+checks core hits during collapse and releases a player's hit latch only
+after that player's swing ends. Pursuit/recovery and Siege shielding remain
+unchanged. It does not grant repeated damage for a single held swing.
+
+The initial repaired fixture passed 14 assertions, but a stricter lethal-hit
+test (`/tmp/kras-sovereign-terminal-before.log`) then found nine new warning
+callbacks created after defeat when the collapse timer expired in the same
+frame. The controller now stops after orb damage defeats the boss and avoids
+starting collapse after a lethal core strike. The final focused fixture
+(`/tmp/kras-sovereign-terminal-after.log`) passed 15 assertions, including
+core vulnerability after recovery, phase-one armor, phase-two shield,
+one score per swing, legitimate core-hit defeat, cleared warnings and actual
+next-round reset.
+
+This is a controlled regression with fixture positions and public damage
+calls to enter the target phase, not a full human/AI fight or network test.
+Sovereign remains excluded from online rooms and has no qualified network
+presentation adapter. The preceding source's Linux CI run `37053065343`
+targets `7f79f82e23088ff0fb7ec930126f8525270910a6`, not this repair; it remains
+live and must not be replaced or counted as validation of the new source.
+No archive, Railway deployment or Apple review submission is implied.
+
+The complete final-source gate `kras-party-check.x08Ym4` passed 303 compiled
+scripts, 340 resources with zero inventory issues, 20,381 assertions, the
+unchanged actual three-lap regression and all 39 stability matches. Node
+passed 105/105 with zero skips using this gate's fresh captures
+(`/tmp/kras-sovereign-server-tests.log`). The only expected error-log entry
+is the intentional failed-write save test. Test wall time was 530.8 seconds,
+versus 103.9 in the intermediate gate before the terminal-hit assertion;
+the cause is not established and neither duration proves device FPS or
+acceptable performance. The last live CI observation showed the prior
+commit's core, Ring Rumble and Goal Guard jobs successful with the remaining
+jobs still running/queued; it is not an all-jobs success or current-source
+Linux qualification.
+
 ### Forge real-input driving and AI feeding
 
 Forge bots now approach visible crates/slag from the side opposite the

@@ -21,6 +21,7 @@ const SUITES := [
 	"res://tests/suites/test_mutators.gd",
 	"res://tests/suites/test_matches.gd",
 	"res://tests/suites/test_boss_round_reset.gd",
+	"res://tests/suites/test_sovereign_collapse.gd",
 	"res://tests/suites/test_forge_network.gd",
 	"res://tests/suites/test_forge_feeding.gd",
 	"res://tests/suites/test_quick_draw.gd",
