@@ -43,6 +43,11 @@ func _arm() -> void:
 	ball.launch(arena.global_position + Vector3(0, 0.9, 0), Vector3(cos(ang), 0, sin(ang)), 7.0)
 
 
+func on_round_start() -> void:
+	_fuse_max = Balance.num("tuning", "ball.explosive_fuse", 5.0)
+	_arm()
+
+
 func tick(delta: float) -> void:
 	if ball == null or not is_instance_valid(ball):
 		return
@@ -56,7 +61,8 @@ func tick(delta: float) -> void:
 			var to: Vector3 = f.global_position - ball.global_position
 			to.y = 0.0
 			if to.length() > 0.1:
-				ball.velocity = (ball.velocity.normalized() * 0.88 + to.normalized() * 0.12).normalized() * ball.speed
+				var turn := 1.0 - pow(0.88, maxf(delta, 0.0) * 60.0)
+				ball.velocity = ball.velocity.normalized().lerp(to.normalized(), turn).normalized() * ball.speed
 
 
 func _nearest_alive_to(p: Vector3) -> int:

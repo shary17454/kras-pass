@@ -820,6 +820,38 @@ hidden height exposed this boundary mismatch, fixed before acceptance.
   machine-absence assertion will run for every game in the next CI dispatch.
   Run `36967949347` still targets `94a5222`, before this correction.
 
+## Blast Ball lifecycle prerequisite
+
+Before adding its network adapter, tests exposed that a new round retained the
+previous fuse, attacker credit, cooldowns, position and sudden-death fuse limit.
+The shared GameBall also emitted an explosion on every subsequent tick when a
+listener did not rearm it. Launch now clears a detonation latch and refreshes
+the fuse label immediately; detonation emits once and returns before consulting
+the previous physics overlap list after a listener has rearmed the ball.
+Blast Ball round start now restores the configured fuse and launches anew.
+
+Homing also used a fixed 12 percent blend per tick, making its strength depend
+on update frequency. It now uses elapsed-time exponential response calibrated
+to preserve the original 60 Hz blend.
+
+- `/tmp/kras-blast-before.log`: nine assertions failed before the lifecycle fix.
+- `/tmp/kras-blast-homing-before.log`: both 30/60 and 60/120 Hz comparisons
+  failed before correcting steering response.
+- `/tmp/kras-blast-lifecycle-final.log`: 15 assertions passed, including a
+  rearming signal listener that must not consume old overlap contacts, renewed
+  launch identity, cooldown/credit reset and heading agreement within 0.03 rad.
+- This prerequisite does not enable Blast Ball online. Its authoritative ball,
+  fuse, explosion presentation and multi-engine verification remain required.
+- Full local gate `kras-party-check.oc9lX6`: 247 scripts compiled, 284 resources,
+  21 autoloads, 27 routes and eight characters audited with zero issues;
+  16,934 assertions, the real three-lap race regression and 39 stability
+  matches passed with zero failures. This is not physical-device performance
+  or App Store distribution evidence.
+- GitHub run `36967949347` completed successfully for all 13 jobs on
+  `94a5222dc333e0343f2582515fda27b9d8c5e12f`. It predates Sky Court,
+  Crumble Court, the machine-creation guard and this lifecycle fix; a new
+  source-pinned run is required for those changes.
+
 ## Expansion checklist per game
 
 1. Define a bounded world-state adapter for all gameplay-visible dynamic objects
