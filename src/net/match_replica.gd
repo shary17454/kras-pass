@@ -5,6 +5,7 @@ extends RefCounted
 const P := MatchPhase.P
 const GoalGuardReplica = preload("res://src/net/goal_guard_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
+const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star"}
 var _collectibles: Node3D
 var target: Dictionary = {}
@@ -25,6 +26,8 @@ func capture(scene: Node) -> Dictionary:
 		"countdown": scene._countdown_value, "radius": scene.arena.current_radius}
 	if scene.config.minigame_id == "goal_guard":
 		packet["world"] = GoalGuardReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "zone_hold":
+		packet["world"] = ZoneReplica.capture(scene.controller)
 	elif COLLECTION_GAMES.has(scene.config.minigame_id):
 		var carrying: Array = []
 		for fighter in scene.ctx.fighters:
@@ -38,6 +41,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 		return false
 	if game_id == "goal_guard":
 		if not GoalGuardReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "zone_hold":
+		if not ZoneReplica.valid(data.get("world")):
 			return false
 	elif COLLECTION_GAMES.has(game_id):
 		var world: Variant = data.get("world")
@@ -106,6 +112,8 @@ func render(scene: Node, delta: float) -> void:
 		scene.ctx.alive[i] = bool(target.alive[i])
 	if scene.config.minigame_id == "goal_guard":
 		GoalGuardReplica.render(scene.controller, target.world, delta, snap)
+	elif scene.config.minigame_id == "zone_hold":
+		ZoneReplica.render(scene.controller, target.world)
 	elif COLLECTION_GAMES.has(scene.config.minigame_id):
 		if not is_instance_valid(_collectibles):
 			scene.controller.cleanup()

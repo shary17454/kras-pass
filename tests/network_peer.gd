@@ -21,6 +21,7 @@ var tournament_mode := false
 var game_id := "ring_rumble"
 var world_snapshots := 0
 var observed_collection_score := false
+var observed_zone_score := false
 var observed_carrying := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
@@ -152,9 +153,20 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "zone_hold":
+		for score in game.ctx.scores:
+			observed_zone_score = observed_zone_score or score > 0
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "zone_hold":
+			var p: Vector3 = game.ctx.fighters[slot].global_position - game.arena.global_position
+			var zone: Vector3 = game.controller.zone_position - game.arena.global_position
+			var angle := atan2(zone.z, zone.x) + slot * 0.9
+			var current := atan2(p.z, p.x)
+			var next := current + clampf(wrapf(angle - current, -PI, PI), -0.25, 0.25)
+			var target: Vector3 = Vector3(cos(next), 0, sin(next)) * game.arena.def.radius * 0.72
+			movement = Vector2(target.x - p.x, target.z - p.z).limit_length()
 		if game_id in ["gem_grab", "star_rush"]:
 			movement = _collection_movement(slot)
 			if game_id == "gem_grab" and (Time.get_ticks_msec() / 500) % 2 == 0:
@@ -232,6 +244,17 @@ func _finished(result: MatchResult) -> void:
 		if game.ctx.fighters[Net.local_slot()].carrying != int(world.carrying[Net.local_slot()]):
 			_fail("carrying state diverged")
 			return
+	if not host and game_id == "zone_hold":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty():
+			_fail("missing zone world")
+			return
+		var position := Vector3(world.position[0], world.position[1], world.position[2])
+		if game.controller._marker.global_position.distance_to(position) > 0.01 \
+				or absf(game.controller.zone_radius - float(world.radius)) > 0.001 \
+				or game.controller._ring_color.to_html() != world.color:
+			_fail("zone presentation diverged")
+			return
 	if disconnected_once and not restored:
 		_fail("identity not restored")
 		return
@@ -247,6 +270,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "star_rush" and not observed_carrying:
 		_fail("star carrying was never observed")
+		return
+	if game_id == "zone_hold" and not observed_zone_score:
+		_fail("zone finished without capture scoring")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld} from './world-snapshots.js';
+
+test('zone world rejects malformed or unbounded presentation state', () => {
+  const make = () => ({position: [3, 0, -4], radius: 3.4, color: 'ff5f6dff'});
+  assert.ok(validZoneWorld(JSON.parse(JSON.stringify(make()))));
+  for (const data of [null, [], {}, {position: [0, 0, 0]}]) assert.equal(validZoneWorld(data), false);
+  for (const [key, values] of Object.entries({position: [[1, 2], [NaN, 0, 0], [10001, 0, 0]],
+    radius: [0, 11, Infinity, '3', true], color: ['red', '0xffffff', 'zzzzzzzz']})) {
+    for (const value of values) assert.equal(validZoneWorld({...make(), [key]: value}), false, key);
+  }
+});
 
 const world = () => ({charges: [1, .5, 0, 1], balls: [{position: [0, .9, 0],
   velocity: [9, 0, 0], generation: 1, heavy: false}]});

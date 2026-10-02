@@ -14,15 +14,17 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-Online supports four explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
+Online supports five explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
 replicates normal/heavy balls, launch generations and keeper charges; the guest
 does not tick ball physics or evaluate goals. `gem_grab` uses `gem_hollow` /
 `glass_terrace`, and `star_rush` uses `star_meadow`. Both share the bounded,
 stable-ID collectible presenter; carried star counts come from the host too.
+`zone_hold` on `dune_ring` replicates capture position, radius and ring color;
+only the host advances capture progress or awards points.
 Optional random power-ups remain disabled in online beta configurations.
-The other 35 games are not
+The other 34 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -31,7 +33,7 @@ advance the tournament. The configured points table is validated server-side.
 Final ties run short contender-only matches. Other players retain their slots
 as spectators. At most three tie-breaks are allowed; persistent ties produce
 shared champions, not an arbitrary slot-based winner. Cup tournaments also
-have a bounded regular-round limit. These are four-game beta tournaments, not
+have a bounded regular-round limit. These are five-game beta tournaments, not
 39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
@@ -347,7 +349,7 @@ oversized payloads are rejected before updating visible state.
   This is not evidence for the later collection changes. The new CI matrix
   separately checks core quality and each of the four online adapters.
 
-Production remains disabled. Another 35 minigames need world adapters, and
+Production remains disabled. Other minigames still need world adapters, and
 guest pickup/deposit sound events and physical-device QA remain outstanding.
 No iOS archive, upload or App Review submission is represented by these tests.
 
@@ -357,10 +359,29 @@ Zone Hold now scales its visible capture marker when sudden death shrinks the
 scoring radius, and restores both at round start. Fractional capture points are
 cleared between rounds. Unchanged ownership no longer reassigns the cached ring
 material every tick. `/tmp/kras-zone-hold.log` passed 15 assertions covering
-contested scoring, visual/rule agreement and repeatable round reset. This does
-not add Zone Hold to the online allowlist. `/tmp/kras-zone-replay.log` also
+contested scoring, visual/rule agreement and repeatable round reset. That
+lifecycle fix preceded the network adapter below. `/tmp/kras-zone-replay.log` also
 passed 71 replay assertions, including an actual Zone Hold recording/playback
 with matching scores and placements.
+
+## Capture-zone network verification
+
+- `/tmp/kras-zone-network-unit.log`: 35 assertions passed, including visual
+  radius/ownership updates, invalid snapshot rejection and no guest scoring.
+- `/tmp/kras-zone-network-compile.log`: 227 scripts compiled after fixing an
+  inferred-type error in the new network test's steering fixture. The first
+  network attempt (`kras-network-smoke-duYKIf`) failed before starting a match
+  and is not counted as passing evidence.
+- Server tests: 29 passed, including authoritative capture-world validation.
+- `kras-network-smoke-wLRJs3`: ordinary two-round matches passed for two
+  humans/two bots and four humans, including guest reconnect and lost-host-result
+  recovery. Scores agreed: `[9,0,0,3]` and `[17,0,0,0]` respectively. Guests
+  received over 1,000 world snapshots and checked capture presentation against
+  authority. Steering is deliberately arranged to exercise capture scoring,
+  not a character or spawn balance benchmark.
+- CI now includes ordinary and tournament Zone Hold scenarios. The tournament
+  scenario, device rendering and production-network QA are not yet verified
+  for this adapter.
 
 ## Expansion checklist per game
 

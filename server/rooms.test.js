@@ -60,6 +60,22 @@ test('goal guard enforces its arena and complete world snapshots', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('zone hold requires host capture state and rejects malformed updates', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'zone_hold', arena: 'dune_ring', rounds: 2, bots: true, difficulty: 1}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /invalid_snapshot/);
+  const data = snapshot(); data.world = {position: [4, 0, 3], radius: 2.04, color: 'ff5f6dff'};
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.radius = 0;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('collection games reject absent or wrong-kind world state', () => {
   for (const [game, arena, kind] of [['gem_grab', 'gem_hollow', 'gem'], ['star_rush', 'star_meadow', 'star']]) {
     const {host, client} = fixture();

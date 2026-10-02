@@ -43,6 +43,37 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(scene.ctx.scores[0], 0, "fractional points cannot carry across rounds")
 	game.tick(0.8)
 	t.equal(scene.ctx.scores[0], 1, "a full uncontested second awards one point")
+	var replica = load("res://src/net/match_replica.gd").new()
+	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	t.ok(replica.accept(packet, 4, "zone_hold"), "zone world survives JSON round trip")
+	for field in ["position", "radius", "color"]:
+		var bad := packet.duplicate(true)
+		bad.world.erase(field)
+		t.ok(not replica.accept(bad, 4, "zone_hold"), "reject missing zone " + field)
+	for radius in [0, 11, INF, "3", true]:
+		var bad := packet.duplicate(true)
+		bad.world.radius = radius
+		t.ok(not replica.accept(bad, 4, "zone_hold"), "reject invalid radius")
+	for color in ["red", "0xffffff", "zzzzzzzz"]:
+		var bad := packet.duplicate(true)
+		bad.world.color = color
+		t.ok(not replica.accept(bad, 4, "zone_hold"), "reject invalid color")
+	var bad := packet.duplicate(true)
+	bad.world.position[0] = INF
+	t.ok(not replica.accept(bad, 4, "zone_hold"), "reject invalid position")
+	t.equal(replica.target, packet, "invalid state preserves last valid snapshot")
+	packet.world.position = [5, 0, 6]
+	packet.world.radius = 2.04
+	packet.world.color = game.CONTESTED_COLOR.to_html()
+	t.ok(replica.accept(packet, 4, "zone_hold"), "accept changed capture state")
+	var accum: Array = game._accum.duplicate()
+	for i in 10:
+		replica.render(scene, 0.1)
+	t.equal(game._marker.global_position, Vector3(5, 0, 6), "guest marker follows authority")
+	t.near(game._marker.scale.x, 0.6, 0.001, "guest renders reduced capture radius")
+	t.equal(game._ring_color, game.CONTESTED_COLOR, "guest renders contested ownership")
+	t.equal(game._accum, accum, "guest rendering never advances capture progress")
+	t.equal(scene.ctx.scores[0], 1, "guest rendering never awards score")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

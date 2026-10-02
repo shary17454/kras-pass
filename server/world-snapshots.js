@@ -1,6 +1,12 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validZoneWorld(data) {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && vector(data.position) && Number.isFinite(data.radius) && data.radius >= .1 && data.radius <= 10
+    && typeof data.color === 'string' && /^[0-9a-fA-F]{8}$/.test(data.color);
+}
+
 export function validGoalGuardWorld(data, count) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count

@@ -1,11 +1,11 @@
 import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
-import {validGoalGuardWorld, validCollectionWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
 export const ONLINE_ARENAS = Object.freeze({ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
-  gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow']});
+  gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring']});
 export const ONLINE_GAMES = Object.keys(ONLINE_ARENAS);
 const CODE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const fail = code => { throw new Error(code); };
@@ -30,6 +30,7 @@ function tournamentSettings(value) {
 function validSnapshot(data, count, game) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
   if (game === 'goal_guard' && !validGoalGuardWorld(data.world, count)) return false;
+  if (game === 'zone_hold' && !validZoneWorld(data.world)) return false;
   if (['gem_grab', 'star_rush'].includes(game) && !validCollectionWorld(data.world, count, game === 'gem_grab' ? 'gem' : 'star')) return false;
   if (!['fighters', 'scores', 'alive'].every(key => Array.isArray(data[key]) && data[key].length === count)) return false;
   if (!integer(data.phase, 0, 11) || !integer(data.round, 0, 9) || !integer(data.countdown, 0, 10)
