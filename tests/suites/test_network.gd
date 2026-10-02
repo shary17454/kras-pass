@@ -93,6 +93,17 @@ func run(t: TestHarness) -> void:
 	t.equal(race_cfg.rounds, 3, "match rounds and race laps remain independent")
 	Net.match_data.config.erase("race_laps")
 	t.equal(Net.make_match_config().rule("race_laps", 0), 3, "older race configuration defaults to three laps")
+	Net.match_data.config.game = "sabaq_sawarikh"
+	Net.match_data.config.arena = "dune_circuit"
+	Net.match_data.config.race_laps = 10
+	t.equal(Net.make_match_config().rule("race_laps", 0), 10, "armed race preserves host lap selection")
+	Net.match_data["tournament"] = {"contenders": [0, 2]}
+	var armed_final := Net.make_match_config()
+	t.equal(armed_final.rule("race_laps", 0), 1, "armed race final uses one lap")
+	t.ok(armed_final.rule("party_short_race", false), "armed race final permits short lap count")
+	t.equal(armed_final.rule("maximum_duration", 0), 120.0, "armed race final has a driving safety deadline")
+	t.equal(armed_final.rule("online_contenders", []), [0, 2], "armed race spectators retain stable roster slots")
+	t.equal(Net.ONLINE_ARENAS.sabaq_sawarikh.size(), 8, "armed race exposes its eight authored courses")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
 	var frame := InputFrame.new()
 	frame.bits = 4

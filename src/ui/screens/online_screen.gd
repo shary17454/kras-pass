@@ -196,7 +196,7 @@ func _host_settings() -> void:
 		Net.set_lobby_config(cfg))
 	row.add_child(bots)
 	body.add_child(row)
-	if selected_game == "kart_sprint":
+	if selected_game in ["kart_sprint", "sabaq_sawarikh"]:
 		var laps := UIKit.option(["3", "4", "5", "6", "7", "8", "9", "10"], int(cfg.get("race_laps", 3)) - 3)
 		laps.name = "OnlineLapSelect"
 		laps.item_selected.connect(func(index):

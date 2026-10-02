@@ -93,6 +93,8 @@ var result_drop: ResultDropTransport
 var _last_frame_ms := 0
 var _max_frame_gap_ms := 0
 var _next_diagnostic_ms := 0
+var observed_armed_pickup := false
+var observed_armed_weapon := false
 
 
 func _process(_delta: float) -> void:
@@ -111,7 +113,7 @@ func _process(_delta: float) -> void:
 			for fighter in game.ctx.fighters:
 				runners.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity), "can_jump": fighter.can_jump, "control": fighter.control_enabled, "finish": game.controller.finish_times[fighter.slot]})
 			print("NETWORK_HURDLES=" + JSON.stringify(runners))
-		if game_id == "kart_sprint" and is_instance_valid(game):
+		if game_id in ["kart_sprint", "sabaq_sawarikh"] and is_instance_valid(game):
 			var racers: Array = []
 			for fighter in game.ctx.fighters:
 				racers.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity),
@@ -178,7 +180,8 @@ func _ready() -> void:
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
-	get_tree().create_timer(300 if tournament_mode else 150).timeout.connect(func(): _fail("timeout"))
+	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (300 if tournament_mode else 150)
+	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
 	else:
@@ -200,7 +203,7 @@ func _room() -> void:
 		configured = true
 		var cfg := Net.lobby_config.duplicate(true)
 		cfg["rounds"] = 2
-		if game_id == "kart_sprint": cfg["race_laps"] = 3
+		if game_id in ["kart_sprint", "sabaq_sawarikh"]: cfg["race_laps"] = 3
 		if game_id != "ring_rumble":
 			cfg["game"] = game_id
 			cfg["arena"] = Net.ONLINE_ARENAS[game_id][0]
@@ -264,9 +267,11 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
 		fawda_arenas_seen[cfg.arena_id] = true
-	if game_id == "kart_sprint":
+	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 		observed_kart_boost = false
 		observed_kart_rescue = false
+		observed_armed_pickup = false
+		observed_armed_weapon = false
 		if not cfg.rule("online_contenders", []).is_empty():
 			observed_kart_final = true
 			if kart_final_cups.is_empty(): kart_final_cups = Net.tournament.get("cups", []).duplicate()
@@ -312,8 +317,13 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
-	if game_id == "kart_sprint":
+	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 		var world: Dictionary = load("res://src/net/kart_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+		if game_id == "sabaq_sawarikh":
+			var armed: Dictionary = load("res://src/net/armed_race_replica.gd").capture(game.controller) if host else world
+			observed_armed_pickup = observed_armed_pickup or int(armed.get("events", {}).get("pickup", {}).get("sequence", 0)) > 0
+			observed_armed_weapon = observed_armed_weapon or not armed.get("shots", []).is_empty() or not armed.get("bombs", []).is_empty()
+			world = armed.get("race", {})
 		for serial in world.get("boost", {}).get("serial", []):
 			observed_kart_boost = observed_kart_boost or int(serial) > 0
 		for progress in world.get("recovery", []):
@@ -444,11 +454,11 @@ func _physics_process(_delta: float) -> void:
 		hunter_round = game._round_index
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
-		if game_id == "kart_sprint":
+		if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var target: Vector3 = game.controller.next_checkpoint(slot)
 			# Drive off the edge through normal input, then use the real rescue.
-			if slot == 0 and game.controller._elapsed >= 2.0 and game.controller._elapsed < 5.0:
+			if game_id == "kart_sprint" and slot == 0 and game.controller._elapsed >= 2.0 and game.controller._elapsed < 5.0:
 				target = fighter.global_position.normalized() * 40.0
 			var direction := target - fighter.global_position
 			var diff := wrapf(atan2(direction.x, direction.z) - atan2(fighter.facing.x, fighter.facing.z), -PI, PI)
@@ -456,6 +466,8 @@ func _physics_process(_delta: float) -> void:
 			if absf(diff) > 2.3 and fighter.speed_ratio() < 0.15:
 				movement = Vector2(clampf(diff * 1.8, -1.0, 1.0), 0.85)
 		var buttons := 0
+		if game_id == "sabaq_sawarikh" and (Time.get_ticks_msec() - started_at) % 600 < 150:
+			buttons = InputFrame.Btn.ATTACK
 		if game_id == "fawda":
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var target: Vector3 = game.arena.global_position
@@ -727,9 +739,12 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
-	if game_id == "kart_sprint":
-		if contenders.is_empty() and (not observed_kart_boost or not observed_kart_rescue):
+	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
+		if contenders.is_empty() and (not observed_kart_boost or (game_id == "kart_sprint" and not observed_kart_rescue)):
 			_fail("physical race boost/rescue evidence missing: %s %s" % [observed_kart_boost, observed_kart_rescue])
+			return
+		if game_id == "sabaq_sawarikh" and contenders.is_empty() and (not observed_armed_pickup or not observed_armed_weapon):
+			_fail("armed race pickup/weapon evidence missing")
 			return
 		for slot in count:
 			if not contenders.is_empty() and not contenders.has(slot): continue
@@ -738,6 +753,11 @@ func _finished(result: MatchResult) -> void:
 				return
 		if not host:
 			var world: Dictionary = game._network_replica.target.get("world", {})
+			if game_id == "sabaq_sawarikh":
+				if not game.controller._bombs.is_empty() or not game.controller._missiles.is_empty():
+					_fail("guest simulated live race weapons")
+					return
+				world = world.get("race", {})
 			if world.is_empty() or not game.controller._recoveries.is_empty():
 				_fail("race world missing or guest ran live rescue rules")
 				return

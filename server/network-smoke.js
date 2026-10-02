@@ -54,7 +54,7 @@ const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
 assert.ok(ONLINE_GAMES.includes(game));
 assert.ok(!duoTiebreak || (tournament && game === 'duo_clash'));
-assert.ok(!raceTiebreak || (tournament && game === 'kart_sprint'));
+assert.ok(!raceTiebreak || (tournament && ['kart_sprint', 'sabaq_sawarikh'].includes(game)));
 const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
@@ -85,7 +85,8 @@ try {
       };
       child.stdout.on('data', collect); child.stderr.on('data', collect);
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, tournament ? 360000 : 180000);
+        const deadline = game === 'sabaq_sawarikh' ? (tournament ? 960000 : 660000) : (tournament ? 360000 : 180000);
+        const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, deadline);
         child.on('error', reject);
         child.on('exit', async code => {
           clearTimeout(timer); await writeFile(join(out, `${name}.stdout`), output);

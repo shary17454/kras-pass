@@ -2,6 +2,38 @@
 
 ## Implemented boundary
 
+### Armed-race development-room integration (experimental)
+
+This supersedes the earlier preparation-only/excluded notes below. Both
+development allowlists now include Sabaq on all eight authored courses. Host
+configuration exposes 3-to-10 laps independently of match rounds; tournament
+finals use one lap and a 120-second safety deadline. Room validation binds
+the host world to 60 course checkpoints, 20 crates and the current lap rule.
+Clients cannot submit snapshots/results or replace weapon/event state.
+Production online remains disabled; no Railway deployment is implied.
+
+Node passed 95 tests, including each course at 3/7/10 laps, invalid geometry,
+missing events, non-host authority, identity-preserving resume, unfinished
+score aggregation and a separate one-lap final without additional points or
+cups. These room-model fixtures do not drive actual karts.
+`/tmp/kras-armed-room-routing.log` passed 64 Godot assertions and
+`/tmp/kras-armed-room-compile.log` compiled all 295 scripts.
+
+The independent-process smoke `kras-network-smoke-jTBYVc` passed four human
+players on `dune_circuit`, seed `443020368`, two ordinary three-lap rounds:
+matching aggregate scores `[17360,17802,18256,18164]`, 3,969-to-3,988 guest
+snapshots, actual boost/crate/weapon observations, guest disconnect/resume
+and host-result transport recovery. `kras-network-smoke-zcPrHO` separately
+passed two humans plus two bots with scores
+`[17381,17380,1999974725,1999974221]`, 3,781 guest snapshots and both recovery
+paths. Bot unfinished progress remains represented by the intended large
+score encoding; it cannot block completed human racers.
+Sampled server loop delays reached 91 ms and 58 ms respectively. These are
+functional local-network results, not Internet or device performance passes.
+The larger authored roads use explicit smoke observation limits of 600/900
+seconds (ordinary/tournament), with runner cleanup limits 660/960 seconds;
+actual race laps and physics are not shortened to force acceptance.
+
 ### Armed-race sampled weapon feedback
 
 The Sabaq host now records bounded generations/positions for pickup, item

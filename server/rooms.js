@@ -2,11 +2,11 @@ import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
 import {validResultScore} from './game-scoring.js';
-import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld, validKartWorld} from './world-snapshots.js';
+import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld, validKartWorld, validArmedRaceWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
-export const ONLINE_ARENAS = Object.freeze({kart_sprint: ['circuit_loop'], fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
+export const ONLINE_ARENAS = Object.freeze({sabaq_sawarikh: ['dune_circuit', 'neon_spiral', 'frost_hairpin', 'magma_ring', 'sky_causeway', 'alula_rain', 'sinbad_coast', 'pharaoh_valley'], kart_sprint: ['circuit_loop'], fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
   gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],
   paint_grid: ['paint_grid'], mnatiq: ['paint_grid'], mukharrib: ['paint_grid'], magnet_court: ['quad_court'], storm_heart: ['quad_court'], sky_court: ['quad_court'], crumble_court: ['crumble_court'], blast_ball: ['ember_pit'], color_stand: ['color_floor'], quick_draw: ['draw_stage'], symbol_echo: ['echo_hall'],
@@ -38,6 +38,7 @@ function tournamentSettings(value) {
 function validSnapshot(data, count, game, arena, raceLaps = 3) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
   if (game === 'kart_sprint' && (!validKartWorld(data.world, count, 8) || data.world.laps !== raceLaps)) return false;
+  if (game === 'sabaq_sawarikh' && (!validArmedRaceWorld(data.world, count, 60) || data.world.race.laps !== raceLaps)) return false;
   if (game === 'goal_guard' && !validGoalGuardWorld(data.world, count)) return false;
   if (game === 'magnet_court' && !validMagnetWorld(data.world, count)) return false;
   if (game === 'storm_heart' && !validStormWorld(data.world, count)) return false;
@@ -153,7 +154,7 @@ export class Rooms {
         || (cfg.race_laps !== undefined && !integer(cfg.race_laps, 3, 10))) fail('invalid_config');
       const tournament = tournamentSettings(cfg.tournament);
       r.config = {game: cfg.game, arena: cfg.arena, rounds: cfg.rounds, bots: cfg.bots, difficulty: cfg.difficulty, tournament};
-      if (cfg.game === 'kart_sprint' || cfg.race_laps !== undefined) r.config.race_laps = cfg.race_laps ?? 3;
+      if (['kart_sprint', 'sabaq_sawarikh'].includes(cfg.game) || cfg.race_laps !== undefined) r.config.race_laps = cfg.race_laps ?? 3;
       for (const peer of r.players.values()) peer.ready = false;
       this.broadcastRoom(r); return;
     }

@@ -500,6 +500,78 @@ test('kart tournament final snapshots use one lap instead of the lobby lap limit
   assert.equal(guest.last('snapshot').data.world.laps, 1);
 });
 
+const armedWorld = laps => ({race: {elapsed: 0, times: Array(4).fill(1000000000), lap: [0, 0, 0, 0],
+  next: [0, 0, 0, 0], started: Array(4).fill(false), laps, checkpoints: 60,
+  recovery: Array(4).fill(-1), boost: {serial: [0, 0, 0, 0], pads: Array.from({length: 4}, () => [0, 0, 0, 0])}},
+held: [1, 2, 3, 4], shields: [0, 0, 0, 2], crates: Array.from({length: 20}, () => ({cooldown: 0, rotation: 0})),
+bombs: [{id: '12', position: [0, 1, 0], owner: 0, arm: .55, life: 9}],
+shots: [{id: '13', generation: 1, position: [0, 1, 0], direction: [1, 0, 0], shooter: 1}],
+events: Object.fromEntries(['pickup', 'boost', 'shield', 'drop', 'explode', 'hit', 'block', 'respawn']
+  .map(kind => [kind, {sequence: 1, position: [0, 1, 0]}]))});
+
+test('armed race rooms bind all authored courses, host laps and resumed weapon state', () => {
+  for (const arena of ['dune_circuit', 'neon_spiral', 'frost_hairpin', 'magma_ring', 'sky_causeway', 'alula_rain', 'sinbad_coast', 'pharaoh_valley']) {
+    for (const laps of [3, 7, 10]) {
+      const {rooms, host, client} = fixture();
+      const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+      const config = {game: 'sabaq_sawarikh', arena, rounds: 2, bots: true, difficulty: 1, race_laps: laps};
+      assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'circuit_loop'}}), /invalid_config/);
+      host.send({op: 'configure', config});
+      assert.equal(guest.last('room').config.race_laps, laps);
+      host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+      const epoch = host.last('start').epoch;
+      host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+      const data = {...snapshot(), world: armedWorld(laps)};
+      assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+      host.send({op: 'snapshot', epoch, tick: 1, data});
+      for (const world of [undefined, {...data.world, events: {}},
+        {...data.world, race: {...data.world.race, checkpoints: 64}},
+        {...data.world, race: {...data.world.race, laps: laps === 10 ? 9 : laps + 1}}]) {
+        assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+        assert.equal(guest.last('snapshot').tick, 1);
+      }
+      const token = guest.last('welcome').token;
+      const id = guest.c.player.id;
+      rooms.disconnect(guest.c);
+      const resumed = client(); resumed.send({op: 'resume', token});
+      assert.equal(resumed.last('welcome').id, id);
+      assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+      assert.equal(resumed.last('start').config.arena, arena);
+      assert.equal(resumed.last('start').config.race_laps, laps);
+      assert.throws(() => resumed.send({op: 'result', epoch, scores: [1, 2, 3, 4]}), /host_only/);
+      host.send({op: 'result', epoch, scores: [2468, 1999999800, 2000000000, 1999999900]});
+      assert.deepEqual(resumed.last('result').scores, [2468, 1999999800, 2000000000, 1999999900]);
+    }
+  }
+});
+
+test('armed race tournament final binds one lap and cannot award extra cups', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'sabaq_sawarikh', arena: 'dune_circuit', rounds: 1,
+    race_laps: 7, bots: true, difficulty: 1, tournament: {mode: 'points', target: 3, rotation: 'manual',
+      points: [1, 1, 1, 1], entries: [{game: 'sabaq_sawarikh', arena: 'dune_circuit'}]}}});
+  for (let round = 0; round < 3; round++) {
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+    host.send({op: round === 0 ? 'start' : 'next'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    host.send({op: 'result', epoch, scores: [1000, 2000, 3000, 4000]});
+  }
+  const cups = [...host.last('room').tournament.cups];
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'next'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = {...snapshot(), world: armedWorld(1)};
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: {...data, world: armedWorld(7)}}), /invalid_snapshot/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  host.send({op: 'result', epoch, scores: [4000, 3000, 2000, 1000]});
+  assert.deepEqual(host.last('room').tournament.cups, cups);
+  assert.deepEqual(host.last('room').tournament.points, [3, 3, 3, 3]);
+  assert.equal(host.last('room').tournament.complete, true);
+  assert.deepEqual(host.last('room').tournament.champions, [3]);
+});
+
 test('fawda rooms require bounded host bomb state on both maps and preserve it on resume', () => {
   for (const arena of ['vortex_ring', 'storm_ring']) {
     const {rooms, host, client} = fixture();
