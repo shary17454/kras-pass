@@ -418,6 +418,27 @@ test('bumper rooms require five bounded host-owned barriers', () => {
   }
 });
 
+test('turret rooms require host-owned launch generations and combat meters', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'turret_duel', arena: 'iron_flats', rounds: 1, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'duel_pit'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot(); data.world = {cooldowns: [0, .9, 0, 0], damage: [0, 14, 0, 0],
+    shots: [{id: '20', generation: 1, shooter: 0, position: [0, 1, 0], direction: [1, 0, 0]}]};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  for (const world of [undefined, {...data.world, damage: [-1, 0, 0, 0]}, {...data.world, cooldowns: []},
+    {...data.world, shots: [{...data.world.shots[0], generation: 0}]}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+    assert.equal(guest.last('snapshot').tick, 1);
+  }
+});
+
 test('floe rooms require bounded host-owned platforms on each authored arena', () => {
   for (const arena of ['vortex_ring', 'storm_ring']) {
     const {host, client} = fixture();

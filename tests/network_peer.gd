@@ -28,6 +28,9 @@ var floe_arenas_seen := {}
 var floe_start_positions: Array = []
 var observed_floe_moved := false
 var observed_floe_fall := false
+var observed_turret_shot := false
+var observed_turret_damage := false
+var observed_turret_score := false
 var observed_duo_score := false
 var observed_duo_life_loss := false
 var observed_duo_damage := false
@@ -205,6 +208,8 @@ func _start(cfg: MatchConfig) -> void:
 		floe_arenas_seen[cfg.arena_id] = true
 	if game_id == "bumper_bowl":
 		cfg.duration_override = 35.0
+	if game_id == "turret_duel":
+		cfg.duration_override = 25.0
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		cfg.duration_override = 20.0
 		observed_duo_final = true
@@ -247,6 +252,13 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "turret_duel":
+		var world: Dictionary = load("res://src/net/turret_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+		observed_turret_shot = observed_turret_shot or not world.get("shots", []).is_empty()
+		for value in world.get("damage", []):
+			observed_turret_damage = observed_turret_damage or float(value) > 0.0
+		for score in game.ctx.scores:
+			observed_turret_score = observed_turret_score or score > 0
 	if game_id == "drift_floes":
 		if floe_start_positions.is_empty():
 			for floe in game.controller._floes:
@@ -352,6 +364,26 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "turret_duel":
+			var fighter: Fighter = game.ctx.fighters[slot]
+			var target: Vector3 = game.arena.global_position
+			var distance := INF
+			for other in game.ctx.fighters:
+				if other.slot != slot and other.alive and other.visible:
+					var d: float = fighter.global_position.distance_squared_to(other.global_position)
+					if d < distance:
+						distance = d
+						target = other.global_position
+			var to := target - fighter.global_position
+			to.y = 0.0
+			var desired := atan2(to.x, to.z)
+			var current := atan2(fighter.facing.x, fighter.facing.z)
+			var diff := wrapf(desired - current, -PI, PI)
+			movement = Vector2(-clampf(diff * 1.8, -1.0, 1.0), -maxf(0.25, 1.0 - absf(diff) / PI))
+			if to.length() < 8.0:
+				movement.y = -0.2
+			if fighter.facing.normalized().dot(to.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "drift_floes":
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var age := float(Time.get_ticks_msec() - started_at) * 0.001
@@ -553,6 +585,27 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "turret_duel" and not host:
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		var view = game._network_replica._turret
+		if world_snapshots < 5 or world.is_empty() or not is_instance_valid(view) or not game.controller._shots.is_empty():
+			_fail("missing turret world or guest simulated its own shots")
+			return
+		for frame in 30:
+			game._network_replica.render(game, 0.016)
+		if view.shots.size() != world.shots.size():
+			_fail("turret projectile count diverged")
+			return
+		for row in world.shots:
+			var key: String = row.id + ":" + str(int(row.generation))
+			var p: Array = row.position
+			if not view.shots.has(key) or view.shots[key].global_position.distance_to(Vector3(p[0], p[1], p[2])) > 0.001:
+				_fail("turret launch generation or position diverged")
+				return
+		for slot in game.ctx.player_count():
+			if absf(game.controller._cooldowns[slot] - float(world.cooldowns[slot])) > 0.001 or absf(game.ctx.fighter(slot).damage_percent - float(world.damage[slot])) > 0.001:
+				_fail("turret cooldown or damage diverged")
+				return
 	if game_id == "drift_floes":
 		if not observed_floe_moved or not observed_floe_fall:
 			_fail("moving floe/fall evidence missing")
@@ -879,6 +932,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "zone_hold" and not observed_zone_score:
 		_fail("zone finished without capture scoring")
+		return
+	if game_id == "turret_duel" and (not observed_turret_shot or not observed_turret_damage or not observed_turret_score):
+		_fail("turret shot/damage/score evidence missing: %s %s %s" % [observed_turret_shot, observed_turret_damage, observed_turret_score])
 		return
 	if game_id == "sweeper_storm" and not observed_sweeper_hit:
 		_fail("no sweeper collision feedback observed")
