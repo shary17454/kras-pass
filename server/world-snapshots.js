@@ -1,6 +1,14 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validSkyWorld(data, count) {
+  return validGoalGuardWorld(data, count)
+    && Object.entries({bank: 1, warning: 1.2, tilting: 4, cycle: 9}).every(([key, limit]) => Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= limit)
+    && Number.isInteger(data.engine) && data.engine >= -1 && data.engine <= 3
+    && ['warning_sequence', 'tilt_sequence'].every(key => Number.isInteger(data[key]) && data[key] >= 0 && data[key] <= 1000000)
+    && (data.engine >= 0 || (data.bank === 0 && data.warning === 0 && data.tilting === 0));
+}
+
 export function validStormWorld(data, count) {
   return validGoalGuardWorld(data, count, 2)
     && Number.isFinite(data.rotor) && data.rotor >= 0 && data.rotor <= Math.PI * 2

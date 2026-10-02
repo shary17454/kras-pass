@@ -1,6 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld} from './world-snapshots.js';
+
+test('sky world bounds tilt and warning state with no arbitrary transforms', () => {
+  const make = () => ({balls: [{position: [0, .9, 0], velocity: [9, 0, 0], generation: 1, heavy: false}],
+    charges: [1, 1], engine: 3, bank: 1, warning: 0, tilting: 4, cycle: 9, warning_sequence: 2, tilt_sequence: 1});
+  assert.ok(validSkyWorld(make(), 2));
+  assert.ok(validSkyWorld({...make(), engine: -1, bank: 0, tilting: 0}, 2));
+  assert.equal(validSkyWorld({...make(), engine: -1}, 2), false);
+  for (const field of Object.keys(make())) {
+    const data = make(); delete data[field];
+    assert.equal(validSkyWorld(data, 2), false, field);
+  }
+  for (const [key, values] of Object.entries({engine: [-2, 4, .5, true], bank: [-1, 1.1, NaN], warning: [-1, 1.3, '1'],
+    tilting: [-1, 5, Infinity], cycle: [-1, 10, null], warning_sequence: [-1, .5, true], tilt_sequence: [-1, 1000001]})) {
+    for (const value of values) assert.equal(validSkyWorld({...make(), [key]: value}, 2), false, key);
+  }
+});
 
 test('storm world allows two extra balls but requires turbine state and bounded events', () => {
   for (const count of [2, 3, 4]) {

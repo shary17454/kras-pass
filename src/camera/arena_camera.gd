@@ -117,13 +117,7 @@ func _process(delta: float) -> void:
 	var sensitivity := float(UserSettings.get_value("camera_sensitivity"))
 	if mode == Mode.COURT and arena != null:
 		_intro_left = 0.0
-		projection = Camera3D.PROJECTION_ORTHOGONAL
-		var diameter := arena.def.radius * 2.0 + 2.8
-		var aspect := view.x / maxf(view.y, 1.0)
-		# Fixed north-up framing keeps every goal visible and movement predictable.
-		size = diameter if aspect < 1.0 else maxf(diameter / aspect, diameter * 1.12)
-		global_position = arena.global_position + Vector3(0, 30, 17)
-		look_at(arena.global_position, Vector3.UP)
+		_frame_court(view)
 		return
 	if _intro_left > 0.0:
 		_tick_intro(delta)
@@ -151,6 +145,30 @@ func _process(delta: float) -> void:
 	_shake = maxf(0.0, _shake - _shake_decay * delta)
 	_noise_t += delta * 34.0
 	_apply(clampf(_follow_lerp * sensitivity * delta, 0.0, 1.0), delta)
+
+
+func _frame_court(view: Vector2) -> void:
+	projection = Camera3D.PROJECTION_ORTHOGONAL
+	var aspect := view.x / maxf(view.y, 1.0)
+	var top := 0.05
+	if shared_hud_bottom.is_valid():
+		top = clampf((float(shared_hud_bottom.call()) + 20.0) / view.y, 0.05, 0.70)
+	var bottom := 0.95
+	if shared_touch_count > 1:
+		bottom = TouchSource.party_region(view, 0, shared_touch_count).position.y / view.y - 0.02
+	elif shared_touch_count == 1:
+		bottom = 0.76 if view.x < view.y else 0.80
+	var centre := arena.global_position
+	global_position = centre + Vector3(0, 30, 17)
+	look_at(centre, Vector3.UP)
+	# Fit the projected court, including banking and keeper height, inside the
+	# HUD/control safe area instead of centring it behind the portrait scoreboard.
+	var diameter := arena.def.radius * 2.0 + 2.8
+	var projected_height := diameter * absf(global_basis.y.z) + 4.0 * absf(global_basis.y.y)
+	var world_height := maxf(diameter / (aspect * 0.92), projected_height / maxf(0.10, bottom - top))
+	size = world_height * aspect if view.x < view.y else world_height
+	global_position += global_basis.y * (((top + bottom) * 0.5 - 0.5) * world_height)
+	focus = centre
 
 
 func _frame_shared_world(delta: float, view: Vector2) -> void:

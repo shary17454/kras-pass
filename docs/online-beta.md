@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twelve explicitly adapted rulesets; verification
+The development allowlist contains thirteen explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -37,8 +37,10 @@ by ball slot, never by engine instance ID. Guests do not simulate attraction,
 release, recharge or goals.
 `storm_heart` on the same court adds turbine rotation, windup and volley timers,
 two additional ball slots, and sequenced warning/volley feedback.
+`sky_court` adds the selected engine, bank amount, warning/tilt timers and
+sequenced feedback. Guests present the tilted surface without applying forces.
 Optional random power-ups remain disabled in online beta configurations.
-The other 27 games are not
+The other 26 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -580,8 +582,12 @@ Hunt. This is not evidence for the later paint or Saboteur commits or a release.
 The newer run `36965027879`, source
 `b80576dc01db01c380ddb3a105434d342eba6e7b`, has a successful core job
 `110706801891`: 236 scripts, 13,662 assertions, and 117 stability matches with
-zero failures. Its networking matrix is still in progress at this checkpoint.
+zero failures. All eleven jobs completed successfully.
 This core result covers paint and Saboteur, but predates the Magnet changes.
+The matrix includes all ten rulesets' ordinary and tournament network checks.
+A new run `36967949347`
+uses source `94a5222dc333e0343f2582515fda27b9d8c5e12f` and includes Magnet and
+Storm; it was verified queued, not completed. Neither run covers Sky changes.
 
 ## Magnet Court adapter and capture physics
 
@@ -666,6 +672,72 @@ second stick without removing attack or dash.
   assertions after these changes, including Goal Guard, Magnet, replay and
   full-length race regression cases. Device acceptance remains pending.
   The development CI matrix includes this ruleset. Production remains off.
+
+## Sky Court lifecycle and tilted-world replication
+
+Platform banking and engine pulses now advance with the match simulation, not
+independent tweens. Pause freezes them and restart/cleanup level the arena
+immediately. Slope acceleration updates retained ball speed, so the next ball
+tick cannot discard it. Court markings, keeper paddles, engines and ball height
+follow the tilted plane instead of clipping through the floor. Authored mesh
+transforms are reused without cumulative transformation drift.
+
+The network adapter extends the shared ball presenter with bounded bank, engine
+index, warning/tilt/cycle timers and monotonic event sequences. The guest never
+advances those timers or applies slope impulses. Invalid state is rejected at
+both client and room boundaries; first, repeated, reconnected and next-round
+snapshots cannot replay historical tilt feedback. The game now uses keeper
+controls, retaining movement, attack and dash without an unused aim stick.
+
+- `/tmp/kras-sky-surface.log`: 41 lifecycle/surface assertions passed, including
+  pause, immediate reset, 30/60/120 Hz banking, retained speed and cleanup.
+- `/tmp/kras-sky-network-unit.log`: 244 state/replication assertions passed.
+- `/tmp/kras-sky-surface-visual.log`: 248 graphical assertions passed.
+  `/tmp/kras-sky-surface.png` was inspected after correcting floor/marking
+  alignment. A prior capture showed a background-triggered pause overlay; the
+  fixture now resumes before capture. This is desktop QA, not device approval.
+- All 42 server tests passed, including sky-specific room rejection checks.
+- `/tmp/kras-sky-import.log`: import completed. `/tmp/kras-sky-compile.log`:
+  all 243 scripts compiled.
+- `kras-network-smoke-tY9qAU`: ordinary matches passed with two humans/two bots
+  and four humans, including observed warning/banking, reconnect and matching
+  results. Guests received 1088-1107 snapshots. The server event-loop maximum
+  was 52 ms; this is not a device FPS or Internet-latency certification.
+- A subsequent geometric regression (`/tmp/kras-sky-slope-direction-before.log`)
+  failed: the visual slope rose in the force direction. The rotation axis was
+  corrected and every authored direction is now covered. The initial network
+  and graphical results above predate that correction; they are not final
+  acceptance evidence for the corrected physics.
+- Post-correction tournament `kras-network-smoke-ojwis6` passed three matches
+  with two humans/two bots and four humans, including reconnect and agreed
+  standings. Points were [6, 7, 9, 13] and [8, 6, 11, 9]; neither required a
+  final tie-break. Guests received 1665-1684 snapshots; server loop maximum
+  was 38 ms. A late input after room closure was rejected as `not_joined`.
+- Portrait inspection then found the upper keeper behind the HUD. Shared
+  COURT framing now fits the projected court below the measured HUD and above
+  default touch areas, preserving north-up orientation. Regression projections
+  cover both orientations and zero through four touch players.
+- `/tmp/kras-sky-camera-tests.log`: 202 assertions passed (the unprivileged
+  macOS run also logged a system-CA access warning; not an application test
+  failure). `/tmp/kras-sky-camera-portrait.log` and
+  `/tmp/kras-sky-camera-landscape.log`: 260 graphical assertions passed each.
+  Both corresponding PNGs were inspected; all keepers are clear of the HUD.
+  These are desktop fixtures, not physical-iPhone touch/performance approval.
+- Final local quality gate `kras-party-check.fQzKhW` passed: 243 scripts compiled,
+  280 resources/21 autoloads/27 routes/eight characters audited with zero issues,
+  14,268 assertions, the real three-lap race regression, and 39 stability matches
+  with zero failures. The gate also rejects runtime/leak diagnostics.
+  The save suite deliberately logged a failed temporary-file write during
+  `failed write stays dirty and can be retried`; that injected failure passed
+  its retry/preservation assertions, rather than being an unexplained error.
+- Final-source ordinary-network rerun `kras-network-smoke-gVm7OM` passed with
+  two humans/two bots and four humans, including host/guest reconnect, warning
+  and tilt observation and identical results. Scores were [16, 17, 20, 20]
+  and [18, 12, 22, 10]; guests received 1088-1107 snapshots. Server loop
+  maximum was 51 ms, not an iPhone rendering-performance measurement.
+- Physical-device acceptance remains pending; production deployment is still
+  disabled. CI run `36967949347` belongs to the preceding Storm Heart commit
+  `94a5222dc333e0343f2582515fda27b9d8c5e12f`, not this Sky Court revision.
 
 ## Expansion checklist per game
 

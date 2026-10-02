@@ -60,6 +60,23 @@ test('goal guard enforces its arena and complete world snapshots', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('sky room requires bounded bank and warning state', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'sky_court', arena: 'quad_court', rounds: 2, bots: true, difficulty: 1}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot(); data.world = {charges: [1, 1, 1, 1], balls: [{position: [0, .9, 0], velocity: [9, 0, 0], heavy: false, generation: 1}]};
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  Object.assign(data.world, {engine: 2, bank: .5, warning: 0, tilting: 3.7, cycle: 9, warning_sequence: 1, tilt_sequence: 1});
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.bank = 1.1;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('storm room relays turbine state and rejects missing or excessive state', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

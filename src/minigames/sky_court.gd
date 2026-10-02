@@ -21,6 +21,11 @@ var _warn := 0.0
 var _tilting := 0.0
 var _down := Vector3.ZERO
 var _engines: Array = []
+var _bank := 0.0
+var _warning_engine := -1
+var _warning_sequence := 0
+var _tilt_sequence := 0
+var _court_transforms := {}
 
 
 func build() -> void:
@@ -28,6 +33,9 @@ func build() -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
+	for child in get_children():
+		if child is MeshInstance3D and not paddles.has(child):
+			_court_transforms[child] = arena.global_transform.affine_inverse() * child.global_transform
 	var r := arena.def.radius * 0.82
 	for i in 4:
 		var corner := Vector3(r * (1 if i % 2 == 0 else -1), -0.9, r * (1 if i < 2 else -1))
@@ -36,6 +44,7 @@ func build() -> void:
 		engine.rotation.x = PI
 		ctx.world_root.add_child(engine)
 		_engines.append(engine)
+		_court_transforms[engine] = arena.global_transform.affine_inverse() * engine.global_transform
 
 
 func on_round_start() -> void:
@@ -43,11 +52,16 @@ func on_round_start() -> void:
 	_cycle = TILT_PERIOD
 	_warn = 0.0
 	_tilting = 0.0
-	_level_out()
+	_reset_platform()
 
 
 func tick(delta: float) -> void:
 	super.tick(delta)
+	_tick_hazard(delta)
+	_tick_platform(delta)
+
+
+func _tick_hazard(delta: float) -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -68,31 +82,82 @@ func tick(delta: float) -> void:
 		_warn = TILT_WARN
 		# Telegraph: the doomed engine sputters before the deck goes over.
 		var idx := ctx.rng.randi_range(0, 3)
-		_down = Vector3(1 if idx % 2 == 0 else -1, 0, 1 if idx < 2 else -1).normalized()
-		if idx < _engines.size() and is_instance_valid(_engines[idx]):
-			var tw: Tween = _engines[idx].create_tween()
-			tw.set_loops(3)
-			tw.tween_property(_engines[idx], "scale", Vector3(0.7, 0.7, 0.7), 0.18)
-			tw.tween_property(_engines[idx], "scale", Vector3.ONE, 0.18)
-		AudioManager.play_sfx("wrong", arena.global_position)
+		_warning_engine = idx
+		_down = engine_direction(idx)
+		_warning_sequence += 1
+		present_warning()
 
 
-func _start_tilt(arena: Arena) -> void:
+func _start_tilt(_arena: Arena) -> void:
 	_tilting = TILT_TIME
-	var axis := Vector3(-_down.z, 0, _down.x).normalized()
-	var tw := arena.create_tween()
-	tw.tween_property(arena, "quaternion",
-		Quaternion(axis, TILT_ANGLE), 0.5).set_trans(Tween.TRANS_CUBIC)
+	_tilt_sequence += 1
+	present_tilt()
+
+
+func present_warning() -> void:
+	AudioManager.play_sfx("wrong", ctx.arena_center())
+
+
+func present_tilt() -> void:
 	EventBus.shake(0.3, 0.4)
-	AudioManager.play_sfx("explode", arena.global_position)
+	AudioManager.play_sfx("explode", ctx.arena_center())
+
+
+static func engine_direction(index: int) -> Vector3:
+	if index < 0:
+		return Vector3.ZERO
+	return Vector3(1 if index % 2 == 0 else -1, 0, 1 if index < 2 else -1).normalized()
 
 
 func _level_out() -> void:
+	_tilting = 0.0
+
+
+func _reset_platform() -> void:
+	_bank = 0.0
+	_down = Vector3.ZERO
+	_warning_engine = -1
+	_tick_platform(0.0)
+
+
+func _tick_platform(delta: float) -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
-	var tw := arena.create_tween()
-	tw.tween_property(arena, "quaternion", Quaternion.IDENTITY, 0.6).set_trans(Tween.TRANS_CUBIC)
+	# Advance only with match simulation: pause and replay do not use wall time.
+	var target := 1.0 if _tilting > 0.0 else 0.0
+	_bank = move_toward(_bank, target, delta / (0.5 if target > 0 else 0.6))
+	var axis := Vector3(_down.z, 0, -_down.x).normalized()
+	var eased := _bank * _bank * (3.0 - 2.0 * _bank)
+	arena.quaternion = Quaternion(axis, TILT_ANGLE * eased) if axis.length_squared() > 0.5 else Quaternion.IDENTITY
+	for mesh in _court_transforms:
+		if is_instance_valid(mesh):
+			mesh.global_transform = arena.global_transform * _court_transforms[mesh]
+	for ball: GameBall in balls:
+		if is_instance_valid(ball):
+			ball._height = _surface_height(ball.global_position) + 0.9
+			ball.global_position.y = ball._height
+	for slot in ctx.player_count():
+		var fighter := ctx.fighter(slot)
+		if is_instance_valid(fighter) and fighter.alive:
+			fighter.global_position.y = _surface_height(fighter.global_position) + 0.9
+			paddles[slot].global_position.y = _surface_height(paddles[slot].global_position) + 0.9
+			paddles[slot].quaternion = arena.quaternion * Quaternion(Vector3.UP, PI * 0.5 if side_for(slot) < 2 else 0.0)
+	for i in _engines.size():
+		if not is_instance_valid(_engines[i]):
+			continue
+		var size := 1.0
+		if i == _warning_engine and _warn > 0:
+			var elapsed := minf(TILT_WARN - _warn, 1.08)
+			var phase := fposmod(elapsed / 0.36, 1.0)
+			size -= 0.3 * (1.0 - absf(phase * 2.0 - 1.0))
+		_engines[i].scale = Vector3.ONE * size
+
+
+func _surface_height(point: Vector3) -> float:
+	var normal: Vector3 = ctx.arena.global_basis.y
+	var origin: Vector3 = ctx.arena.global_position
+	return origin.y - (normal.x * (point.x - origin.x) + normal.z * (point.z - origin.z)) / normal.y
 
 
 ## The slope is a force, not a visual: balls and keepers both accelerate
@@ -100,7 +165,8 @@ func _level_out() -> void:
 func _apply_slope(delta: float) -> void:
 	for b in balls:
 		if is_instance_valid(b):
-			b.velocity += _down * TILT_PULL * delta
+			b.velocity = (b.velocity + _down * TILT_PULL * delta).limit_length(b.max_speed)
+			b.speed = b.velocity.length()
 	for i in ctx.player_count():
 		var f := ctx.fighter(i)
 		if f != null and is_instance_valid(f) and ctx.is_alive(i):
@@ -115,8 +181,11 @@ func hud_banner() -> String:
 
 func cleanup() -> void:
 	super.cleanup()
-	_level_out()
+	_tilting = 0.0
+	_warn = 0.0
+	_reset_platform()
 	for e in _engines:
 		if is_instance_valid(e):
 			e.queue_free()
 	_engines.clear()
+	_court_transforms.clear()
