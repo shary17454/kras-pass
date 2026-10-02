@@ -20,10 +20,15 @@ export class Tournament {
     this.bag = [];
     this.lastEpoch = -1;
     this.current = null;
+    this.tiebreakEntry = null;
   }
 
   next() {
     if (this.complete) throw new Error('tournament_complete');
+    if (this.contenders.length && this.tiebreakEntry) {
+      this.current = this.tiebreakEntry;
+      return {...this.current};
+    }
     if (this.rotation === 'manual') {
       this.current = this.entries[this.round % this.entries.length];
     } else {
@@ -71,7 +76,11 @@ export class Tournament {
       const values = this.mode === 'cups' ? this.cups : this.points;
       const leaders = values.flatMap((v, i) => v === Math.max(...values) ? [i] : []);
       if (leaders.length === 1) this.finish(leaders);
-      else this.contenders = leaders;
+      else {
+        this.contenders = leaders;
+        // Partners need an individual final because friendly fire is disabled.
+        if (this.current.game === 'duo_clash') this.tiebreakEntry = {game: 'duel_pit', arena: 'duel_pit'};
+      }
     }
   }
 

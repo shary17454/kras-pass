@@ -18,6 +18,7 @@ const TideReplica = preload("res://src/net/tide_replica.gd")
 const SweeperReplica = preload("res://src/net/sweeper_replica.gd")
 const DuelReplica = preload("res://src/net/duel_replica.gd")
 const BumperReplica = preload("res://src/net/bumper_replica.gd")
+const DuoReplica = preload("res://src/net/duo_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -39,6 +40,7 @@ var _echo: RefCounted
 var _crates: Node3D
 var _hurdle: RefCounted
 var _bumper: RefCounted
+var _duo: RefCounted
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -68,6 +70,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = DuelReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "bumper_bowl":
 		packet["world"] = BumperReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "duo_clash":
+		packet["world"] = DuoReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "magnet_court":
 		packet["world"] = MagnetReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "storm_heart":
@@ -104,7 +108,7 @@ func capture(scene: Node) -> Dictionary:
 	return packet
 
 
-func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bool:
+func accept(data: Dictionary, count: int, game_id: String = "ring_rumble", arena_id := "") -> bool:
 	if count < 2 or count > 4:
 		return false
 	if game_id == "goal_guard":
@@ -124,6 +128,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "bumper_bowl":
 		if not BumperReplica.valid(data.get("world")):
+			return false
+	elif game_id == "duo_clash":
+		if not DuoReplica.valid(data.get("world"), count, arena_id):
 			return false
 	elif game_id == "magnet_court":
 		if not MagnetReplica.valid(data.get("world"), count):
@@ -257,6 +264,12 @@ func render(scene: Node, delta: float) -> void:
 			_bumper = BumperReplica.new()
 		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
 		_bumper.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
+	elif scene.config.minigame_id == "duo_clash":
+		if _duo == null:
+			_duo = DuoReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_duo.render(scene.controller, target.world, int(target.round), fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "hurdle_dash":
 		if _hurdle == null:

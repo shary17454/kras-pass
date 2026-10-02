@@ -31,6 +31,22 @@ test('race tiebreak ignores faster spectators and awards no extra points', () =>
   assert.deepEqual(t.points, before);
 });
 
+test('duo teammates settle a tournament tie in an individual duel', () => {
+  const t = new Tournament(4, settings({target: 1, entries: [{game: 'duo_clash', arena: 'sweeper_ring'}]}), 1);
+  t.next(); t.record(1, [30, 0, 30, 0]);
+  assert.deepEqual(t.contenders, [0, 2]);
+  const points = [...t.points], cups = [...t.cups];
+  assert.deepEqual(t.next(), {game: 'duel_pit', arena: 'duel_pit'});
+  t.record(2, [3, 99, 3, 99]);
+  assert.deepEqual(t.next(), {game: 'duel_pit', arena: 'duel_pit'});
+  t.record(3, [1, 99, 2, 99]);
+  assert.deepEqual(t.champions, [2]);
+  assert.deepEqual(t.points, points);
+  assert.deepEqual(t.cups, cups);
+  assert.deepEqual(t.lastAwards, [0, 0, 0, 0]);
+  assert.deepEqual(t.entries, [{game: 'duo_clash', arena: 'sweeper_ring'}]);
+});
+
 test('catalogue ranking rejects unknown games and cannot be supplied by clients', () => {
   for (const id of ['hurdle_dash', 'kart_sprint', 'sabaq_sawarikh']) assert.equal(higherIsBetter(id), false);
   for (const id of ['ring_rumble', 'crate_relay', 'tank_arena']) assert.equal(higherIsBetter(id), true);

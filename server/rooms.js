@@ -1,7 +1,7 @@
 import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
-import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld} from './world-snapshots.js';
+import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
@@ -9,7 +9,7 @@ export const ONLINE_ARENAS = Object.freeze({ring_rumble: ['vortex_ring', 'storm_
   gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],
   paint_grid: ['paint_grid'], mnatiq: ['paint_grid'], mukharrib: ['paint_grid'], magnet_court: ['quad_court'], storm_heart: ['quad_court'], sky_court: ['quad_court'], crumble_court: ['crumble_court'], blast_ball: ['ember_pit'], color_stand: ['color_floor'], quick_draw: ['draw_stage'], symbol_echo: ['echo_hall'],
-  crate_smash: ['crate_yard'], lab_crates: ['crate_yard'], crate_relay: ['relay_docks'], hurdle_dash: ['hurdle_track'], rising_tide: ['tide_spire'], sweeper_storm: ['sweeper_ring'], duel_pit: ['duel_pit'], bumper_bowl: ['bumper_bowl']});
+  crate_smash: ['crate_yard'], lab_crates: ['crate_yard'], crate_relay: ['relay_docks'], hurdle_dash: ['hurdle_track'], rising_tide: ['tide_spire'], sweeper_storm: ['sweeper_ring'], duel_pit: ['duel_pit'], bumper_bowl: ['bumper_bowl'], duo_clash: ['sweeper_ring', 'bumper_bowl']});
 export const ONLINE_GAMES = Object.keys(ONLINE_ARENAS);
 const CODE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const fail = code => { throw new Error(code); };
@@ -34,7 +34,7 @@ function tournamentSettings(value) {
   return {mode: value.mode, target: value.target, rotation: value.rotation, entries, points: [...value.points]};
 }
 
-function validSnapshot(data, count, game) {
+function validSnapshot(data, count, game, arena) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
   if (game === 'goal_guard' && !validGoalGuardWorld(data.world, count)) return false;
   if (game === 'magnet_court' && !validMagnetWorld(data.world, count)) return false;
@@ -58,6 +58,7 @@ function validSnapshot(data, count, game) {
   if (game === 'sweeper_storm' && !validSweeperWorld(data.world)) return false;
   if (game === 'duel_pit' && !validDuelWorld(data.world, count)) return false;
   if (game === 'bumper_bowl' && !validBumperWorld(data.world)) return false;
+  if (game === 'duo_clash' && !validDuoWorld(data.world, count, arena)) return false;
   if (!['fighters', 'scores', 'alive'].every(key => Array.isArray(data[key]) && data[key].length === count)) return false;
   if (!integer(data.phase, 0, 11) || !integer(data.round, 0, 9) || !integer(data.countdown, 0, 10)
     || !Number.isFinite(data.radius) || data.radius < .1 || data.radius > 1000
@@ -187,7 +188,7 @@ export class Rooms {
       if (integer(m.epoch, 1, r.epoch)
         && (m.epoch < r.epoch || r.state === 'results')) return;
       if (r.state !== 'playing' || m.epoch !== r.epoch) fail('invalid_state');
-      if (!validSnapshot(m.data, r.roster.length, r.matchConfig.game) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
+      if (!validSnapshot(m.data, r.roster.length, r.matchConfig.game, r.matchConfig.arena) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
         || Buffer.byteLength(JSON.stringify(m.data)) > 48000) fail('invalid_snapshot');
       r.snapshot = {op: 'snapshot', epoch: r.epoch, tick: m.tick, data: m.data};
       r.authoritySeen = this.now();

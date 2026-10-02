@@ -43,14 +43,16 @@ service.rooms.close = (room, reason) => {
 };
 const children = [];
 const tournament = process.argv.includes('--tournament');
+const duoTiebreak = process.argv.includes('--duo-tiebreak');
 const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
-assert.ok(['ring_rumble', 'goal_guard', 'gem_grab', 'star_rush', 'zone_hold', 'relic_hold', 'tag_hunt', 'paint_grid', 'mnatiq', 'mukharrib', 'magnet_court', 'storm_heart', 'sky_court', 'crumble_court', 'blast_ball', 'color_stand', 'quick_draw', 'symbol_echo', 'crate_smash', 'lab_crates', 'crate_relay', 'hurdle_dash', 'rising_tide', 'sweeper_storm', 'duel_pit', 'bumper_bowl'].includes(game));
+assert.ok(['ring_rumble', 'goal_guard', 'gem_grab', 'star_rush', 'zone_hold', 'relic_hold', 'tag_hunt', 'paint_grid', 'mnatiq', 'mukharrib', 'magnet_court', 'storm_heart', 'sky_court', 'crumble_court', 'blast_ball', 'color_stand', 'quick_draw', 'symbol_echo', 'crate_smash', 'lab_crates', 'crate_relay', 'hurdle_dash', 'rising_tide', 'sweeper_storm', 'duel_pit', 'bumper_bowl', 'duo_clash'].includes(game));
+assert.ok(!duoTiebreak || (tournament && game === 'duo_clash'));
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
 try {
-  for (const humans of [2, 4]) {
+  for (const humans of duoTiebreak ? [4] : [2, 4]) {
     let resolveRoom;
     const roomCode = new Promise(resolve => { resolveRoom = resolve; });
     function peer(index, code = '') {
@@ -60,7 +62,7 @@ try {
         `--test-data-dir=${join(out, `${name}-save`)}`, `--humans=${humans}`,
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
-        ...(tournament ? ['--tournament'] : [])],
+        ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});
       children.push(child);
       let output = '', roomAnnounced = false;
@@ -97,6 +99,12 @@ try {
         assert.equal(result.tournament.complete, true);
         assert.deepEqual(result.tournament, results[0].tournament);
       }
+    }
+    if (duoTiebreak) {
+      assert.ok(results[0].matches > 3, 'an individual tiebreak must actually run');
+      assert.deepEqual(results[0].tournament.points, [3, 3, 3, 3]);
+      assert.deepEqual(results[0].tournament.awards, [0, 0, 0, 0]);
+      assert.ok(results[0].tournament.tie_attempts > 0);
     }
     console.log(JSON.stringify({humans, status: 'PASS', results}));
   }

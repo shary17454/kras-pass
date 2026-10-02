@@ -2,6 +2,34 @@
 
 ## Implemented boundary
 
+### Duo Clash integration (verification in progress)
+
+Development rooms accept both authored team arenas: `sweeper_ring` and
+`bumper_bowl`. World snapshots include two team totals, per-slot lives/damage
+and the selected arena's existing hazard presentation. Both Godot and Node
+bind hazard state to the selected arena and reject malformed scores, rosters,
+life counts and alternate hazard payloads. Presentation never awards points
+or schedules respawns. All 101 focused Godot assertions and 75 Node tests
+passed. The CI matrix includes the game; this is not an external CI result.
+
+Ordinary run `kras-network-smoke-edZCRV` passed for 2 humans plus 2 bots and
+4 humans on `sweeper_ring`. Aggregate two-round scores were
+`[114,93,111,91]` / `[163,103,164,102]`, guest snapshots 830-1,031,
+maximum local server loop delay 34 ms. Every peer observed team scoring,
+life loss and damage. Guest HUD, lives/damage and hazard transforms matched
+the host; guest identity recovery and interrupted host result transport
+passed. Logs contained no script, parse, network-failure, normalization or
+object-leak errors. Tournament and second-arena verification remain pending.
+
+Team-tournament finalists cannot duel under friendly-fire protection.
+The server therefore selects `duel_pit` for tied Duo Clash finalists,
+retains it for successive tie attempts and preserves the original points,
+cups and playlist. The new Node test failed before this change and passed
+afterward, including a tie between slots 0 and 2 and spectator exclusion.
+Local tournaments already use their existing individual Quick Draw final.
+Production online remains disabled; local headless transport tests do not
+establish physical-device performance or Internet qualification.
+
 ### Duo Clash scoring prerequisite
 
 The common arena out-handler already credits personal knockouts. Duo Clash

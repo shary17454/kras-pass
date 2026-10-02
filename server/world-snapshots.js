@@ -202,6 +202,18 @@ export function validBumperWorld(data) {
         && value <= (axis === 1 ? 1 : 1.25) + .00001));
 }
 
+export function validDuoWorld(data, count, arena = '') {
+  return data != null && typeof data === 'object' && !Array.isArray(data)
+    && Object.keys(data).length === 5
+    && validDuelWorld({lives: data.lives, damage: data.damage}, count)
+    && data.lives.every(life => life <= 2)
+    && Array.isArray(data.team_scores) && data.team_scores.length === 2
+    && data.team_scores.every(score => Number.isInteger(score) && score >= 0 && score <= 100000)
+    && ['sweeper_ring', 'bumper_bowl'].includes(data.arena)
+    && (arena === '' || data.arena === arena)
+    && (data.arena === 'sweeper_ring' ? validSweeperWorld(data.hazards) : validBumperWorld(data.hazards));
+}
+
 export function validGoalGuardWorld(data, count, extraBalls = 0) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count

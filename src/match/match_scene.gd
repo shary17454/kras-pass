@@ -1183,7 +1183,7 @@ func _online() -> bool:
 
 func _network_snapshot(data: Dictionary) -> void:
 	if ctx != null:
-		_network_replica.accept(data, config.player_count(), config.minigame_id)
+		_network_replica.accept(data, config.player_count(), config.minigame_id, config.arena_id)
 
 
 func _network_result(values: Array) -> void:

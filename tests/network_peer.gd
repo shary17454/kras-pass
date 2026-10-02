@@ -19,6 +19,14 @@ var initial_positions: Array[Vector3] = []
 var moved := false
 var tournament_mode := false
 var game_id := "ring_rumble"
+var requested_game_id := ""
+var duo_tiebreak := false
+var observed_duo_final := false
+var duo_final_cups: Array = []
+var duo_arenas_seen := {}
+var observed_duo_score := false
+var observed_duo_life_loss := false
+var observed_duo_damage := false
 var world_snapshots := 0
 var observed_sweeper_hit := false
 var observed_duel_damage := false
@@ -105,9 +113,11 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
+		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
+	requested_game_id = game_id
 	if host and "--drop-host-result" in OS.get_cmdline_user_args():
 		result_drop = ResultDropTransport.new()
 		result_drop.delegate = Net.transport
@@ -155,6 +165,8 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
+			if duo_tiebreak:
+				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
 		return
 	if host and int(Net.lobby_config.get("rounds", 0)) != 2:
@@ -172,6 +184,9 @@ func _start(cfg: MatchConfig) -> void:
 	if game != null:
 		_fail("duplicate match")
 		return
+	game_id = cfg.minigame_id
+	if game_id == "duo_clash":
+		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
 	if game_id == "hurdle_dash":
 		cfg.duration_override = 35.0
@@ -179,8 +194,15 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 45.0
 	if game_id == "duel_pit":
 		cfg.duration_override = 35.0
+	if game_id == "duo_clash":
+		cfg.duration_override = 35.0
 	if game_id == "bumper_bowl":
 		cfg.duration_override = 35.0
+	if requested_game_id == "duo_clash" and game_id == "duel_pit":
+		cfg.duration_override = 20.0
+		observed_duo_final = true
+		if duo_final_cups.is_empty():
+			duo_final_cups = Net.tournament.get("cups", []).duplicate()
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -193,6 +215,11 @@ func _start(cfg: MatchConfig) -> void:
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
+	if requested_game_id == "duo_clash" and game_id == "duel_pit":
+		for fighter in game.ctx.fighters:
+			if not fighter.teammates.is_empty():
+				_fail("individual team tiebreak retained friendly-fire protection")
+				return
 	if host and game_id == "sweeper_storm" and not EventBus.player_hit.is_connected(_on_sweeper_hit):
 		EventBus.player_hit.connect(_on_sweeper_hit)
 	if game.machine != null or game.ctx.machine != null:
@@ -212,6 +239,11 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "duo_clash":
+		for slot in game.ctx.player_count():
+			observed_duo_score = observed_duo_score or game.controller.team_score(slot % 2) > 0
+			observed_duo_life_loss = observed_duo_life_loss or game.controller.lives(slot) < 2
+			observed_duo_damage = observed_duo_damage or game.ctx.fighter(slot).damage_percent > 0.0
 	if game_id == "bumper_bowl":
 		var world: Dictionary = load("res://src/net/bumper_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
 		for serial in world.get("hits", []):
@@ -317,11 +349,13 @@ func _physics_process(_delta: float) -> void:
 			movement = Vector2(target.x - fighter.global_position.x, target.z - fighter.global_position.z).limit_length()
 			if (Time.get_ticks_msec() - started_at) % 1400 < 180:
 				buttons = InputFrame.Btn.DASH
-		if game_id == "duel_pit":
+		if game_id in ["duel_pit", "duo_clash"]:
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var target: Vector3 = game.arena.global_position
 			var distance := INF
 			for other in game.ctx.fighters:
+				if game_id == "duo_clash" and other.slot % 2 == slot % 2:
+					continue
 				if other.slot != slot and other.alive and other.visible:
 					var d: float = fighter.global_position.distance_squared_to(other.global_position)
 					if d < distance:
@@ -496,6 +530,31 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "duo_clash" and not host:
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty() or world.arena != game.config.arena_id:
+			_fail("missing or wrong-arena duo world")
+			return
+		for slot in game.ctx.player_count():
+			if game.controller.lives(slot) != int(world.lives[slot]) or game.controller.team_score(slot % 2) != int(world.team_scores[slot % 2]) or absf(game.ctx.fighter(slot).damage_percent - float(world.damage[slot])) > 0.001:
+				_fail("duo HUD diverged from host")
+				return
+		var index := 0
+		for hazard in game.arena._hazards:
+			if hazard is ArenaHazards.Sweeper:
+				if absf(angle_difference(hazard.rotation.y, float(world.hazards.angles[index]))) > 0.001:
+					_fail("duo sweeper transform diverged")
+					return
+				index += 1
+			elif hazard is ArenaHazards.Bumper:
+				var s: Array = world.hazards.scales[index]
+				if not hazard._mesh.scale.is_equal_approx(Vector3(s[0], s[1], s[2])):
+					_fail("duo bumper transform diverged")
+					return
+				index += 1
+		if index != (3 if game.config.arena_id == "sweeper_ring" else 5):
+			_fail("missing duo arena hazards")
+			return
 	if game_id == "bumper_bowl" and not host:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty():
@@ -781,9 +840,19 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "bumper_bowl" and (not observed_bumper_hit or not observed_bumper_respawn):
 		_fail("bumper collision/respawn evidence missing: %s %s" % [observed_bumper_hit, observed_bumper_respawn])
 		return
-	if game_id == "duel_pit" and (not observed_duel_damage or not observed_duel_life_loss or not observed_duel_respawn):
+	if game_id == "duel_pit" and requested_game_id != "duo_clash" and (not observed_duel_damage or not observed_duel_life_loss or not observed_duel_respawn):
 		_fail("duel combat/life/respawn evidence missing: %s %s %s" % [observed_duel_damage, observed_duel_life_loss, observed_duel_respawn])
 		return
+	if requested_game_id == "duo_clash":
+		if not observed_duo_score or not observed_duo_life_loss or not observed_duo_damage:
+			_fail("duo team score/life/damage evidence missing")
+			return
+		if tournament_mode and duo_arenas_seen.size() != 2:
+			_fail("duo tournament did not visit both authored arenas")
+			return
+		if duo_tiebreak and (not observed_duo_final or Net.tournament.get("cups", []) != duo_final_cups or Net.tournament.get("points", []) != [3, 3, 3, 3]):
+			_fail("duo final did not run or changed points/cups")
+			return
 	if game_id == "relic_hold" and (not observed_relic_holder or not observed_relic_score):
 		_fail("relic finished without observed ownership and scoring")
 		return
