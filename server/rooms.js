@@ -2,12 +2,12 @@ import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
 import {validResultScore} from './game-scoring.js';
-import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld, validKartWorld, validArmedRaceWorld, validSiegeWorld, validForgeWorld} from './world-snapshots.js';
+import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld, validKartWorld, validArmedRaceWorld, validSiegeWorld, validForgeWorld, validDreadnoughtWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
 export const ONLINE_ARENAS = Object.freeze({sabaq_sawarikh: ['dune_circuit', 'neon_spiral', 'frost_hairpin', 'magma_ring', 'sky_causeway', 'alula_rain', 'sinbad_coast', 'pharaoh_valley'], kart_sprint: ['circuit_loop'], fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
-  boss_forge: ['crate_yard'], base_siege: ['iron_flats', 'crate_yard'], gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
+  boss_dreadnought: ['iron_flats'], boss_forge: ['crate_yard'], base_siege: ['iron_flats', 'crate_yard'], gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],
   paint_grid: ['paint_grid'], mnatiq: ['paint_grid'], mukharrib: ['paint_grid'], magnet_court: ['quad_court'], storm_heart: ['quad_court'], sky_court: ['quad_court'], crumble_court: ['crumble_court'], blast_ball: ['ember_pit'], color_stand: ['color_floor'], quick_draw: ['draw_stage'], symbol_echo: ['echo_hall'],
   crate_smash: ['crate_yard'], lab_crates: ['crate_yard'], crate_relay: ['relay_docks'], hurdle_dash: ['hurdle_track'], rising_tide: ['tide_spire'], sweeper_storm: ['sweeper_ring'], duel_pit: ['duel_pit'], bumper_bowl: ['bumper_bowl'], duo_clash: ['sweeper_ring', 'bumper_bowl'], drift_floes: ['vortex_ring', 'storm_ring'], turret_duel: ['iron_flats']});
@@ -41,6 +41,7 @@ function validSnapshot(data, count, game, arena, raceLaps = 3) {
   if (game === 'sabaq_sawarikh' && (!validArmedRaceWorld(data.world, count, 60) || data.world.race.laps !== raceLaps)) return false;
   if (game === 'base_siege' && !validSiegeWorld(data.world, count)) return false;
   if (game === 'boss_forge' && !validForgeWorld(data.world, count)) return false;
+  if (game === 'boss_dreadnought' && !validDreadnoughtWorld(data.world, count)) return false;
   if (game === 'goal_guard' && !validGoalGuardWorld(data.world, count)) return false;
   if (game === 'magnet_court' && !validMagnetWorld(data.world, count)) return false;
   if (game === 'storm_heart' && !validStormWorld(data.world, count)) return false;

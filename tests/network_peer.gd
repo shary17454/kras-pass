@@ -113,6 +113,9 @@ var forge_damage_by_round := {}
 var forge_slag_by_round := {}
 var forge_strike_by_round := {}
 var forge_defeat_by_round := {}
+var dread_damage_by_round := {}
+var dread_shot_by_round := {}
+var dread_defeat_by_round := {}
 
 
 func _process(_delta: float) -> void:
@@ -218,7 +221,7 @@ func _ready() -> void:
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
-	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id == "boss_forge" else (300 if tournament_mode else 150)
+	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id in ["boss_forge", "boss_dreadnought"] else (300 if tournament_mode else 150)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
@@ -323,6 +326,10 @@ func _start(cfg: MatchConfig) -> void:
 		forge_slag_by_round.clear()
 		forge_strike_by_round.clear()
 		forge_defeat_by_round.clear()
+	if game_id == "boss_dreadnought":
+		dread_damage_by_round.clear()
+		dread_shot_by_round.clear()
+		dread_defeat_by_round.clear()
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
@@ -417,6 +424,11 @@ func _physics_process(_delta: float) -> void:
 			forge_slag_by_round[game._round_index] = true
 		if bool(world.get("boss", {}).get("defeated", false)):
 			forge_defeat_by_round[game._round_index] = true
+	if game_id == "boss_dreadnought":
+		var world := _dread_world()
+		if int(world.get("boss", {}).get("damage", 0)) > 0: dread_damage_by_round[game._round_index] = true
+		if not world.get("shots", []).is_empty(): dread_shot_by_round[game._round_index] = true
+		if world.get("boss", {}).get("defeated", false): dread_defeat_by_round[game._round_index] = true
 	if game_id in ["turret_duel", "tank_arena"]:
 		var adapter = load("res://src/net/tank_replica.gd" if game_id == "tank_arena" else "res://src/net/turret_replica.gd")
 		var world: Dictionary = adapter.capture(game.controller) if host else game._network_replica.target.get("world", {})
@@ -546,6 +558,28 @@ func _physics_process(_delta: float) -> void:
 			if absf(diff) > 2.3 and fighter.speed_ratio() < 0.15:
 				movement = Vector2(clampf(diff * 1.8, -1.0, 1.0), 0.85)
 		var buttons := 0
+		if game_id == "boss_dreadnought":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			var world := _dread_world()
+			var boss: Dictionary = world.get("boss", {})
+			if boss.has("position") and boss.has("rotation"):
+				var center := Vector3(boss.position[0], boss.position[1], boss.position[2])
+				var back := Vector3(-sin(float(boss.rotation[1])), 0, -cos(float(boss.rotation[1])))
+				var target := center + back * 4.5
+				for warning in world.get("warnings", []):
+					var point := Vector3(warning.position[0], warning.position[1], warning.position[2])
+					if Vector2(point.x - fighter.global_position.x, point.z - fighter.global_position.z).length() < float(warning.radius) + 0.8:
+						var away := fighter.global_position - point
+						away.y = 0.0
+						target = fighter.global_position + (away.normalized() if away.length() > 0.1 else back) * 5.0
+						break
+				var direction := target - fighter.global_position
+				direction.y = 0.0
+				movement = Vector2(direction.x, direction.z).limit_length()
+				var vent := center + back * 3.6
+				if Vector2(vent.x - fighter.global_position.x, vent.z - fighter.global_position.z).length() < 2.7 \
+					and (Time.get_ticks_msec() - started_at) % 500 < 120:
+					buttons = InputFrame.Btn.ATTACK
 		if game_id == "boss_forge":
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var world := _forge_world()
@@ -853,6 +887,10 @@ func _forge_world() -> Dictionary:
 	return load("res://src/net/forge_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
 
 
+func _dread_world() -> Dictionary:
+	return load("res://src/net/dreadnought_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+
+
 func _finished(result: MatchResult) -> void:
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
@@ -867,6 +905,22 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "boss_dreadnought":
+		for round in range(game._round_index + 1):
+			if not dread_damage_by_round.has(round) or not dread_shot_by_round.has(round) \
+				or (contenders.is_empty() and not dread_defeat_by_round.has(round)):
+				_fail("dreadnought round %d lacks actual damage, shells or boss defeat" % round)
+				return
+		if not host:
+			var world := _dread_world()
+			if world_snapshots < 5 or world.is_empty() or not game.controller.presentation_only:
+				_fail("dreadnought world missing or guest remained authoritative")
+				return
+			for frame in 30: game._network_replica.render(game, 0.016)
+			if not game.controller._mines.is_empty() or not game.controller._shots.is_empty() or not game.controller._telegraphs.is_empty() \
+				or absf(game.controller.boss_health - float(world.boss.health)) > 0.001:
+				_fail("dreadnought guest simulated objects or diverged from health")
+				return
 	if game_id == "boss_forge":
 		for round in range(game._round_index + 1):
 			if not forge_damage_by_round.has(round) or not forge_slag_by_round.has(round) or not forge_strike_by_round.has(round):
