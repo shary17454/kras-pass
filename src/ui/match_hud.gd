@@ -452,7 +452,7 @@ func tick(delta: float) -> void:
 	_accum = 0.0
 	_refresh_chips()
 	var banner := controller.hud_banner() if controller != null else ""
-	if banner != _banner_label.text and banner != "":
+	if banner != _banner_label.text:
 		_banner_label.text = banner
 
 

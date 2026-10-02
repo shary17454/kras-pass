@@ -54,11 +54,35 @@ func run(t: TestHarness, host: Node) -> void:
 	tile.queue_free()
 	await host.get_tree().process_frame
 	var cfg := MatchConfig.build("color_stand", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 102)
+	var capture_path := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--capture-color="):
+			capture_path = arg.trim_prefix("--capture-color=")
+	if not capture_path.is_empty():
+		cfg.players[0].is_human = true
+		cfg.players[0].device_type = 2
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	host.add_child(scene)
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	var original_locale := Loc.locale
+	var names := {"ar": ["الأحمر", "الأخضر", "الأصفر", "الأزرق"], "en": ["Red", "Green", "Yellow", "Blue"]}
+	for locale in ["ar", "en"]:
+		Loc.set_locale(locale)
+		for index in 4:
+			game._called = index
+			game._stage = game.Stage.CALL
+			t.ok(game.hud_banner().contains(names[locale][index]), "human prompt names the same color used by AI in " + locale)
+			scene.hud.tick(1.0)
+			t.ok(scene.hud._banner_label.text.contains(names[locale][index]), "HUD displays called color in " + locale)
+	game._stage = game.Stage.DROP
+	scene.hud.tick(1.0)
+	t.equal(scene.hud._banner_label.text, Loc.t("hud.hurry"), "drop replaces the color call")
+	game._stage = game.Stage.RESTORE
+	scene.hud.tick(1.0)
+	t.equal(scene.hud._banner_label.text, "", "restore clears stale hurry instruction")
+	Loc.set_locale(original_locale)
 	game._round_no = 10
 	game._drop()
 	game.on_round_start()
@@ -67,6 +91,25 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(game._timer > 2.0, "new color round restores full reaction time")
 	for floor_tile: ArenaTile in scene.arena.tiles:
 		t.ok(floor_tile.is_standable() and floor_tile.get_collision_layer_value(1), "new color round restores every floor tile")
+	if not capture_path.is_empty() and DisplayServer.get_name() != "headless":
+		scene.phase = MatchPhase.P.PLAYING
+		scene.ctx.phase = scene.phase
+		scene.ctx.time_left = 42
+		scene.hud.set_time(42, 5)
+		scene.hud.show_rules(false)
+		scene.hud.show_hints(true)
+		for source in scene.touch_sources:
+			source.show()
+		game._called = 2
+		game._timer = 2.4
+		scene.hud.tick(1.0)
+		scene.camera._intro_left = 0
+		await host.get_tree().create_timer(1.2).timeout
+		if scene._pause_menu != null or scene._paused:
+			scene._toggle_pause()
+		await host.get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		t.equal(host.get_viewport().get_texture().get_image().save_png(capture_path), OK, "save color call fixture")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

@@ -856,6 +856,33 @@ to preserve the original 60 Hz blend.
 
 ## Expansion checklist per game
 
+### Color Stand readability prerequisite
+
+Reviewing the next candidate found that the HUD displayed only the game title
+and timer, never the chosen color. The AI could read `called_tag`, but humans
+could not learn that choice from the prompt. The HUD also kept the previous
+nonempty banner when a controller intentionally returned an empty string.
+
+The call now uses localized color names (all four in Arabic/English) and the
+remaining timer. Shared HUD refresh accepts an empty banner, clearing the
+expired hurry instruction during floor restoration.
+
+- `/tmp/kras-color-call-before.log`: 17 assertions failed, covering missing
+  color names in both languages and the stale restoration banner.
+- `/tmp/kras-color-call-after.log`: 160 assertions passed after correction.
+- Full gate `kras-party-check.8kVdKP`: 248 scripts compiled, 285 resources
+  audited with zero issues, 17,031 assertions passed, real three-lap race
+  regression passed and 39 stability matches completed with zero failures.
+- `/tmp/kras-color-portrait.png` (540x960) and
+  `/tmp/kras-color-landscape.png` (960x540) were inspected. Both show the
+  called yellow color, time, four players, complete floor and touch movement.
+  Their corresponding logs each passed 161 assertions. These are static
+  desktop QA fixtures, not evidence of an online match or device performance.
+- Color Stand remains excluded from online rooms until its tile palette,
+  collapse states, called color and phase timers are authoritatively replicated
+  and tested across connected engines. Naming colors does not yet provide
+  non-color tile symbols for color-vision accessibility.
+
 ### Blast Ball room integration
 
 Both room and client allowlists now permit only `ember_pit` for Blast Ball.

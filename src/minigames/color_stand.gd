@@ -97,7 +97,7 @@ func _score_survivors() -> void:
 func hud_banner() -> String:
 	match _stage:
 		Stage.CALL:
-			return "%s  %.1f" % [Loc.t("game.color_stand.name"), maxf(0.0, _timer)]
+			return Loc.t("game.color_stand.call", {"color": Loc.t("game.color_stand.color." + called_tag()), "time": "%.1f" % maxf(0.0, _timer)})
 		Stage.DROP:
 			return Loc.t("hud.hurry")
 	return ""
