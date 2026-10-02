@@ -109,6 +109,8 @@ func is_inside(pos: Vector3, margin: float = 0.0) -> bool:
 		"square", "grid", "tiles":
 			var r := current_radius - margin
 			return absf(p.x) <= r and absf(p.y) <= r
+		"cross":
+			return _cross_edge_distance(p) >= margin
 		"ring":
 			var d := p.length()
 			return d <= current_radius - margin and d >= current_radius * 0.42 + margin
@@ -130,6 +132,8 @@ func edge_distance(pos: Vector3) -> float:
 	match def.shape:
 		"square", "grid", "tiles":
 			return current_radius - maxf(absf(p.x), absf(p.y))
+		"cross":
+			return _cross_edge_distance(p)
 		"ring", "oval":
 			var d := p.length()
 			return minf(current_radius - d, d - current_radius * 0.45)
@@ -139,6 +143,23 @@ func edge_distance(pos: Vector3) -> float:
 			return track_width * 0.5 - _circuit_offset(pos)
 		_:
 			return current_radius - p.length()
+
+
+func _cross_edge_distance(point: Vector2) -> float:
+	# Only exposed edges count; the overlapping boxes' inner edges are not cliffs.
+	var p := point.abs()
+	var r: float = def.radius
+	var h := r * 0.25
+	var c := r * 0.425
+	var a := sqrt(c * c - h * h)
+	var angle := clampf(atan2(p.y, p.x), atan2(h, a), atan2(a, h))
+	var distance := p.distance_to(Vector2(cos(angle), sin(angle)) * c)
+	distance = minf(distance, p.distance_to(Vector2(r, clampf(p.y, 0.0, h))))
+	distance = minf(distance, p.distance_to(Vector2(clampf(p.x, a, r), h)))
+	distance = minf(distance, p.distance_to(Vector2(h, clampf(p.y, a, r))))
+	distance = minf(distance, p.distance_to(Vector2(clampf(p.x, 0.0, h), r)))
+	var inside := (p.x <= r and p.y <= h) or (p.y <= r and p.x <= h) or p.length() <= c
+	return distance if inside else -distance
 
 
 ## Grip under a point: 1.0 on plain floor, lower on a slick patch. The spec asks

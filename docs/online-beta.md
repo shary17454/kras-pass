@@ -24,11 +24,20 @@ Full gate `kras-party-check.ZwR2Xu`: 261 scripts compiled, 298 resources
 audited with zero issues, 18,041 assertions passed, race regression passed
 and 39 stability matches completed with zero failures.
 
-Before online integration, review cross-arena floor queries and dropped
-cargo recovery: `Arena.is_inside()` currently falls back to circular bounds
-for the authored cross-shaped floor, and a scattered crate can land beyond
-an arm. This is not yet a completed geometry/recovery fix. Crate Relay remains
-excluded from room allowlists until its world adapter and engine tests pass.
+Cross-arena queries now measure the exposed boundary of the two floor arms
+and central disc, rather than falling back to circular bounds. The signed
+distance ignores internal overlapping edges and supports cargo clearance.
+Dropped cargo returns above the reachable floor, retaining pickup grace;
+existing stranded available cargo recovers without awarding delivery points.
+`/tmp/kras-relay-floor-before.log` records the failing geometry/recovery
+regression. `/tmp/kras-relay-floor-after.log` passes 266 assertions, including
+81 physical ground raycasts compared with the authored shape and queries.
+Full gate `kras-party-check.wZkXOL`: 262 scripts compiled, 299 resources
+audited with zero issues, 18,306 assertions passed, race regression passed,
+and all 39 stability matches passed. No script errors, leaked-object reports
+or axis-normalization errors appeared in the test output.
+Crate Relay remains excluded from room allowlists until its world adapter
+and engine network tests pass. These headless checks are not device QA.
 
 ### Crate and lab room integration
 

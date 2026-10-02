@@ -74,8 +74,11 @@ func _spawn_crate() -> void:
 
 
 func tick(delta: float) -> void:
+	var arena := ctx.arena as Arena
 	for item in _items:
 		if is_instance_valid(item):
+			if item.available and (not arena.is_inside(item.global_position, 0.6) or not is_equal_approx(item._base_y, arena.global_position.y + 1.0)):
+				_recover_crate(item)
 			item.tick(delta)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
@@ -170,9 +173,20 @@ func _drop(slot: int, by_slot: int) -> void:
 		item.taken.connect(_on_taken)
 	item.add_to_group("pickups")
 	item.scatter_from(f.global_position, slot, ctx.rng)
+	_recover_crate(item)
 	if not _items.has(item):
 		_items.append(item)
 	AudioManager.play_sfx("crate_break", f.global_position)
+
+
+func _recover_crate(item: Collectible) -> void:
+	var arena := ctx.arena as Arena
+	var position := item.global_position
+	if not arena.is_inside(position, 0.6):
+		position = arena.global_position
+	position.y = arena.global_position.y + 1.0
+	# place preserves the dropper's grace period and does not award delivery points.
+	item.place(position)
 
 
 func is_round_over() -> bool:
