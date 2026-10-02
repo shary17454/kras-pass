@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains fourteen explicitly adapted rulesets; verification
+The development allowlist contains fifteen explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -42,8 +42,10 @@ sequenced feedback. Guests present the tilted surface without applying forces.
 `crumble_court` replicates all 113 authored tiles: phase, warning/fall/respawn
 timer, local height and monotonic collapse count. Guests never advance floor
 physics or emit gameplay collapse signals; sound events are freshness-gated.
+`blast_ball` on `ember_pit` replicates the explosive ball, fuse, launch identity
+and sequenced explosion feedback. Elimination and rearming stay on the host.
 Optional random power-ups remain disabled in online beta configurations.
-The other 25 games are not
+The other 24 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -854,6 +856,37 @@ to preserve the original 60 Hz blend.
 
 ## Expansion checklist per game
 
+### Blast Ball room integration
+
+Both room and client allowlists now permit only `ember_pit` for Blast Ball.
+Room snapshots require `validBlastWorld` and retain host-only publication.
+The engine harness and CI matrix include this ruleset, with assertions that a
+decreasing fuse and an actual explosion occurred, and that guest fuse,
+detonation, launch identity and collision mask agree with the final host state.
+
+- `npm test`: 46 tests passed, including room-level missing-fuse rejection,
+  incorrect-arena rejection, non-host snapshot denial and valid relay.
+- Initial ordinary run `kras-network-smoke-oxaGdn` failed the explosion
+  observation gate: fixed diagonal scripted inputs exited the arena too early.
+  No gameplay fuse was shortened to make the test pass. Scripted humans now
+  steer around an inner ring, allowing the actual five-second fuse to expire.
+- Ordinary run `kras-network-smoke-YlbFzX` passed both two-human/two-AI and
+  four-human cases, including guest reconnect and host result-transport loss.
+  Final scores agreed: [16, 8, 11, 6] and [4, 12, 16, 16]. Guests received
+  852 and 1065-1084 world snapshots; local server loop maximum was 64 ms.
+  These scripted-input results are not a balance evaluation or mobile FPS test.
+- Tournament run `kras-network-smoke-Uvid91` passed three matches for both
+  two-human/two-AI and four-human cases, with matching final accounting and
+  reconnections. Points were [13, 7, 6, 7] (champion slot 0) and [10, 7, 11, 7]
+  (champion slot 2). Guests received 1353 and 1642-1661 world snapshots. Neither
+  final standing required sudden death in these runs. A local server event-loop
+  spike reached 143 ms; successful correctness checks do not certify latency.
+- Final gate `kras-party-check.LJvbhj`: 248 scripts compiled, 285 resources
+  audited with zero issues, 17,013 assertions passed, real three-lap race
+  regression passed and 39 stability matches completed with zero failures.
+- Orientation captures and physical-device QA remain pending for this
+  integration. Production endpoint/configuration is unchanged.
+
 ### Blast Ball adapter in development
 
 `src/net/blast_replica.gd` now captures and presents host-owned position,
@@ -866,7 +899,8 @@ ordinary movement interpolates. Exploded balls hide until the next launch.
 Explosion feedback is separated from authoritative damage. First snapshots,
 round changes and reconnect gaps suppress old feedback; repeated snapshots
 cannot replay an already consumed event. `validBlastWorld` supplies the same
-numeric/type bounds on the server, but is not yet wired into room acceptance.
+numeric/type bounds on the server. At the adapter-only commit it was not yet
+wired into room acceptance; the integration status above supersedes that limit.
 
 - `/tmp/kras-blast-replica-tests.log`: 94 assertions passed, including shared
   snapshot dispatch, malformed data rejection, unchanged scores/alive state,
@@ -877,7 +911,7 @@ numeric/type bounds on the server, but is not yet wired into room acceptance.
 - Full gate `kras-party-check.Q4Nmkc`: 248 scripts compiled, 285 resources
   audited with zero issues, 17,013 assertions passed, real three-lap race
   regression passed and 39 stability matches completed with zero failures.
-- Blast Ball remains excluded from room allowlists. Remaining acceptance:
+- At the adapter-only commit Blast Ball was excluded from room allowlists. Remaining acceptance then was:
   room-level validation, ordinary and tournament multi-engine tests with
   actual fuse/launch/explosion observations, and portrait/landscape captures.
   This work is not production activation or App Store readiness.

@@ -18,11 +18,11 @@ signal snapshot_received(data: Dictionary)
 signal online_result(scores: Array)
 
 const RoomClient = preload("res://src/net/room_client.gd")
-const ONLINE_GAMES := ["ring_rumble", "goal_guard", "gem_grab", "star_rush", "zone_hold", "relic_hold", "tag_hunt", "paint_grid", "mnatiq", "mukharrib", "magnet_court", "storm_heart", "sky_court", "crumble_court"]
+const ONLINE_GAMES := ["ring_rumble", "goal_guard", "gem_grab", "star_rush", "zone_hold", "relic_hold", "tag_hunt", "paint_grid", "mnatiq", "mukharrib", "magnet_court", "storm_heart", "sky_court", "crumble_court", "blast_ball"]
 const ONLINE_ARENAS := {"ring_rumble": ["vortex_ring", "storm_ring"], "goal_guard": ["quad_court"],
 	"gem_grab": ["gem_hollow", "glass_terrace"], "star_rush": ["star_meadow"], "zone_hold": ["dune_ring"],
 	"relic_hold": ["star_meadow", "gem_hollow"], "tag_hunt": ["star_meadow", "paint_grid"],
-	"paint_grid": ["paint_grid"], "mnatiq": ["paint_grid"], "mukharrib": ["paint_grid"], "magnet_court": ["quad_court"], "storm_heart": ["quad_court"], "sky_court": ["quad_court"], "crumble_court": ["crumble_court"]}
+	"paint_grid": ["paint_grid"], "mnatiq": ["paint_grid"], "mukharrib": ["paint_grid"], "magnet_court": ["quad_court"], "storm_heart": ["quad_court"], "sky_court": ["quad_court"], "crumble_court": ["crumble_court"], "blast_ball": ["ember_pit"]}
 var transport: Node
 var endpoint := ""
 var room_state := ""

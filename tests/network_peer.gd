@@ -38,6 +38,8 @@ var observed_sky_warning := false
 var observed_sky_tilt := false
 var observed_crumble_warning := false
 var observed_crumble_fall := false
+var observed_blast_fuse := false
+var observed_blast_explosion := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -173,6 +175,11 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "blast_ball":
+		var ball: GameBall = game.controller.ball
+		observed_blast_fuse = observed_blast_fuse or (ball.fuse > 0 and ball.fuse < ball.fuse_max - 0.5)
+		var sequence: int = game.controller.explosion_sequence if host else int(game._network_replica.target.get("world", {}).get("explosion_sequence", 0))
+		observed_blast_explosion = observed_blast_explosion or sequence > 0
 	if game_id == "crumble_court":
 		for tile: ArenaTile in game.arena.tiles:
 			observed_crumble_warning = observed_crumble_warning or tile.state == ArenaTile.State.WARNING
@@ -208,6 +215,11 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "blast_ball":
+			var angle := float(Time.get_ticks_msec() - started_at) / 2400.0 + slot * PI / 2.0
+			var target: Vector3 = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * 3.0
+			var direction: Vector3 = target - game.ctx.fighters[slot].global_position
+			movement = Vector2(direction.x, direction.z).limit_length()
 		if game_id == "magnet_court":
 			var position: Vector3 = game.ctx.fighters[slot].global_position
 			var nearest: GameBall = null
@@ -295,6 +307,16 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id == "blast_ball":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		var ball: GameBall = game.controller.ball
+		if world_snapshots < 5 or world.is_empty():
+			_fail("missing blast world")
+			return
+		if absf(ball.fuse - float(world.fuse)) > 0.001 or ball.launch_generation != int(world.generation) \
+				or ball.detonated != bool(world.detonated) or ball.collision_mask != 0:
+			_fail("blast ball presentation diverged")
+			return
 	if not host and game_id == "crumble_court":
 		var rows: Array = game._network_replica.target.get("world", {}).get("tiles", [])
 		if world_snapshots < 5 or rows.size() != game.arena.tiles.size():
@@ -446,6 +468,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "crumble_court" and (not observed_crumble_warning or not observed_crumble_fall):
 		_fail("crumble court never warned and collapsed")
+		return
+	if game_id == "blast_ball" and (not observed_blast_fuse or not observed_blast_explosion):
+		_fail("blast fuse/explosion observation missing: fuse=%s explosion=%s sequence=%s" % [observed_blast_fuse, observed_blast_explosion, game.controller.explosion_sequence])
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

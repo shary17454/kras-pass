@@ -60,6 +60,27 @@ test('goal guard enforces its arena and complete world snapshots', () => {
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('blast room rejects missing fuse, invalid arena and non-host snapshots', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'blast_ball', arena: 'ember_pit', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'quad_court'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  data.world = {position: [0, .9, 0], velocity: [7, 0, 0], generation: 2, fuse: 4, fuse_max: 5,
+    detonated: false, explosion_sequence: 1, explosion_position: [2, .9, 3]};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}));
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  delete data.world.fuse;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('crumble room relays only complete host-owned floor state', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
