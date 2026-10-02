@@ -76,3 +76,73 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+	await _network_replica(t, host)
+
+
+func _network_replica(t: TestHarness, host: Node) -> void:
+	t.test("host ball snapshots render without guest scoring or simulation")
+	var cfg := MatchConfig.build("goal_guard", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 73)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	game.tick(0.0)
+	game._spawn_ball(true)
+	game.charges[0] = 0.25
+	game.balls[0].global_position = Vector3(2, 0.9, 3)
+	var replica = preload("res://src/net/match_replica.gd").new()
+	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	t.ok(replica.accept(packet, 4, "goal_guard"), "world survives JSON transport")
+	for invalid_world in [null, {}, {"balls": [], "charges": [1, 1, 1, 1]}]:
+		var invalid := packet.duplicate(true)
+		invalid.world = invalid_world
+		t.ok(not replica.accept(invalid, 4, "goal_guard"), "reject missing world state")
+	for invalid_charge in [-0.1, 1.1, NAN, "1"]:
+		var invalid := packet.duplicate(true)
+		invalid.world.charges[0] = invalid_charge
+		t.ok(not replica.accept(invalid, 4, "goal_guard"), "reject invalid charge")
+	for invalid_generation in [-1, 0.5, 1000001, INF]:
+		var invalid := packet.duplicate(true)
+		invalid.world.balls[0].generation = invalid_generation
+		t.ok(not replica.accept(invalid, 4, "goal_guard"), "reject invalid launch generation")
+	var invalid := packet.duplicate(true)
+	invalid.world.balls[0].position[0] = NAN
+	t.ok(not replica.accept(invalid, 4, "goal_guard"), "reject non-finite ball position")
+	invalid = packet.duplicate(true)
+	for i in 4:
+		invalid.world.balls.append(packet.world.balls[0].duplicate(true))
+	t.ok(not replica.accept(invalid, 4, "goal_guard"), "bound replicated ball count")
+	t.ok(not replica.accept(packet, 4, "unknown"), "unsupported games cannot silently use player-only snapshots")
+	game.on_round_start()
+	replica.render(scene, 1.0 / 60.0)
+	t.equal(game.balls.size(), 2, "guest creates host-owned balls")
+	t.ok(game.balls[1].heavy, "heavy ball appearance restored")
+	t.near(game.charges[0], 0.25, 0.001, "host charge restored")
+	t.equal(game.balls[0].global_position, Vector3(2, 0.9, 3), "first snapshot snaps ball to host")
+	var before_scores: Array = Array(scene.ctx.scores)
+	for i in 60:
+		replica.render(scene, 1.0 / 60.0)
+	t.equal(Array(scene.ctx.scores), before_scores, "presentation never scores or simulates goals")
+	t.equal(game.balls[0].global_position, Vector3(2, 0.9, 3), "no independent guest ball simulation")
+	for ball: GameBall in game.balls:
+		t.ok(not ball.is_monitoring() and ball.collision_layer == 0 and ball.collision_mask == 0, "replica collision disabled")
+	packet.world.balls[0].generation += 1
+	packet.world.balls[0].position = [0, 0.9, 0]
+	t.ok(replica.accept(packet, 4, "goal_guard"), "accept host relaunch")
+	replica.render(scene, 0.001)
+	t.equal(game.balls[0].global_position, Vector3(0, 0.9, 0), "goal relaunch teleports instead of sliding")
+	packet.world.balls.resize(1)
+	packet.round += 1
+	packet.fighters[1].alive = false
+	packet.fighters[1].visible = false
+	t.ok(replica.accept(packet, 4, "goal_guard"), "accept next round")
+	replica.render(scene, 0.001)
+	t.equal(game.balls.size(), 1, "round reset removes excess replica balls")
+	t.ok(not game.paddles[1].visible, "eliminated keeper shield hidden")
+	game.ctx.config.rules["online_contenders"] = [0, 2]
+	game.on_round_start()
+	t.equal(Array(scene.ctx.scores), [12, 0, 12, 0], "spectators cannot win a keeper tiebreak or lose goal points")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame

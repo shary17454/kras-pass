@@ -40,6 +40,40 @@ function fixture() {
   return {rooms, host, client, advance: ms => { now += ms; rooms.sweep(); }};
 }
 
+test('goal guard enforces its arena and complete world snapshots', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'goal_guard', arena: 'quad_court', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'vortex_ring'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /invalid_snapshot/);
+  const data = snapshot();
+  data.world = {charges: [1, 1, 1, 1], balls: [{position: [0, .9, 0], velocity: [9, 0, 0], heavy: false, generation: 1}]};
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.balls[0].generation = -1;
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
+test('tournament snapshots follow the current game rather than the lobby default', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'ring_rumble', arena: 'vortex_ring', rounds: 1,
+    bots: true, difficulty: 1, tournament: {mode: 'points', target: 3, rotation: 'manual',
+      points: [5, 3, 2, 1], entries: [{game: 'goal_guard', arena: 'quad_court'}]}}});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  assert.equal(host.last('start').config.game, 'goal_guard');
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /invalid_snapshot/);
+});
+
 test('private codes, public discovery, four players, no leaked tokens', () => {
   const {rooms, host, client} = fixture();
   const code = host.c.room.code;

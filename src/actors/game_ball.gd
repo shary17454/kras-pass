@@ -27,6 +27,7 @@ var fuse := 0.0
 var fuse_max := 5.0
 var last_toucher := -1
 var goals_enabled := false
+var launch_generation := 0
 var arena_center := Vector3.ZERO
 
 var _mesh: Node3D
@@ -75,6 +76,7 @@ func configure(color: Color, r: float, is_heavy: bool = false, is_explosive: boo
 
 
 func launch(from: Vector3, direction: Vector3, start_speed: float) -> void:
+	launch_generation += 1
 	global_position = from
 	_height = from.y
 	speed = start_speed

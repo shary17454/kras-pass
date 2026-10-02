@@ -14,19 +14,20 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-Online currently exposes **only the explicit push-arena beta ruleset**:
-`ring_rumble`, `vortex_ring` / `storm_ring`, without machine drops, random
-power-ups or bombs. Offline Ring Rumble is unchanged. This avoids presenting
-unreplicated hazards/items as if they worked remotely. The other 38 games are
-not online-enabled. The room service now supports points/cups tournaments for
-these two arenas, with stable rosters, readiness between matches, seeded
+Online supports two explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
+/ `storm_ring`, without machine drops, random power-ups or bombs, and
+`goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
+replicates normal/heavy balls, launch generations and keeper charges; the guest
+does not tick ball physics or evaluate goals. The other 37 games are not
+online-enabled. The room service supports points/cups tournaments for
+these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
 advance the tournament. The configured points table is validated server-side.
 
 Final ties run short contender-only matches. Other players retain their slots
 as spectators. At most three tie-breaks are allowed; persistent ties produce
 shared champions, not an arbitrary slot-based winner. Cup tournaments also
-have a bounded regular-round limit. These are push-arena tournaments, not
+have a bounded regular-round limit. These are two-game beta tournaments, not
 39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
@@ -287,8 +288,35 @@ snapshot bounds passed 52 focused assertions using
 `/tmp/kras-snapshot-validation-final.log`, including malformed scalar values,
 unsupported roster sizes, last-valid-state preservation, and JSON numeric
 round trips. macOS sandbox CA-certificate lookup reported its environment error;
-the focused suite itself exited zero. Full CI on these follow-up changes remains
-required before release.
+the focused suite itself exited zero. Follow-up CI run
+[36956121783](https://github.com/shary17454/kras-pass/actions/runs/36956121783)
+passed for `e17f5eec4f59095cf1ded01e3227f6fcbd54be8d`: 12,454 assertions and
+117 stability matches with zero failures, plus the real-network scenarios.
+That run predates the Goal Guard adapter below.
+
+## Goal Guard adapter verification
+
+- `/tmp/kras-goal-replica-final2.log`: 120 focused assertions passed, including
+  JSON validation, normal/heavy appearance, launch teleportation, round reset,
+  spectator scores, and no guest ball simulation or scoring.
+- `/tmp/kras-goal-compile.log`: all 223 scripts compiled.
+- Server tests: 25 passed, including game-specific world validation and a
+  tournament whose current game differs from the lobby default.
+- `kras-network-smoke-65T0fU`: ordinary two-human/bot and four-human matches
+  passed, with reconnect and lost host-result recovery. This used short rounds.
+- `kras-network-smoke-OHeS55`: three-match tournaments passed for both player
+  configurations using 15-second rounds. Each guest received more than 1,600
+  world snapshots; ball presentation and final scores/standings agreed.
+  Neither random tournament required a tie-break; spectator scoring is covered
+  by the focused fixture, not claimed as a real-network tie-break result.
+- `/tmp/kras-goal-online-ui.log`: rendered Arabic lobby/results fixtures passed
+  at 1080x1920 and 1920x1080. Captures were visually inspected. These are desktop
+  fixtures, not iPhone performance tests.
+
+The CI workflow now repeats both ordinary and tournament Goal Guard scenarios.
+Production deployment, real-device latency/audio QA and the remaining 37 world
+adapters are still outstanding. Guest collision/goal sound events are not yet
+replicated; phase/countdown cues are shared by the existing match adapter.
 
 ## Expansion checklist per game
 
@@ -320,7 +348,8 @@ server/
 src/net/
   net_service.gd       # local + online session coordinator
   room_client.gd       # Godot WebSocket transport
-  match_replica.gd     # presentation-only push-arena adapter
+  match_replica.gd     # shared player/phase state and world adapter dispatch
+  goal_guard_replica.gd # bounded ball/charge presentation, no guest simulation
 tests/
   network_peer.gd      # actual match client used by the smoke test
   suites/test_network.gd

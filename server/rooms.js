@@ -1,9 +1,11 @@
 import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
+import {validGoalGuardWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
-export const ONLINE_GAMES = ['ring_rumble'];
+export const ONLINE_ARENAS = Object.freeze({ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court']});
+export const ONLINE_GAMES = Object.keys(ONLINE_ARENAS);
 const CODE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const fail = code => { throw new Error(code); };
 const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
@@ -17,15 +19,16 @@ function tournamentSettings(value) {
     || !Array.isArray(value.points) || value.points.length !== 4
     || value.points.some((v, i) => !integer(v, 0, 100) || (i > 0 && v > value.points[i - 1]))) fail('invalid_config');
   const entries = value.entries.map(e => {
-    if (!e || !ONLINE_GAMES.includes(e.game) || !['vortex_ring', 'storm_ring'].includes(e.arena)) fail('invalid_config');
+    if (!e || !ONLINE_GAMES.includes(e.game) || !ONLINE_ARENAS[e.game].includes(e.arena)) fail('invalid_config');
     return {game: e.game, arena: e.arena};
   });
   if (new Set(entries.map(e => `${e.game}:${e.arena}`)).size !== entries.length) fail('invalid_config');
   return {mode: value.mode, target: value.target, rotation: value.rotation, entries, points: [...value.points]};
 }
 
-function validSnapshot(data, count) {
+function validSnapshot(data, count, game) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  if (game === 'goal_guard' && !validGoalGuardWorld(data.world, count)) return false;
   if (!['fighters', 'scores', 'alive'].every(key => Array.isArray(data[key]) && data[key].length === count)) return false;
   if (!integer(data.phase, 0, 11) || !integer(data.round, 0, 9) || !integer(data.countdown, 0, 10)
     || !Number.isFinite(data.radius) || data.radius < .1 || data.radius > 1000
@@ -95,7 +98,7 @@ export class Rooms {
     if (m.op === 'configure') {
       this.host(c); if (r.state !== 'lobby') fail('invalid_state');
       const cfg = m.config;
-      if (!cfg || !ONLINE_GAMES.includes(cfg.game) || !['vortex_ring', 'storm_ring'].includes(cfg.arena)
+      if (!cfg || !ONLINE_GAMES.includes(cfg.game) || !ONLINE_ARENAS[cfg.game].includes(cfg.arena)
         || !integer(cfg.rounds, 1, 10) || typeof cfg.bots !== 'boolean' || !integer(cfg.difficulty, 0, 3)) fail('invalid_config');
       const tournament = tournamentSettings(cfg.tournament);
       r.config = {game: cfg.game, arena: cfg.arena, rounds: cfg.rounds, bots: cfg.bots, difficulty: cfg.difficulty, tournament};
@@ -152,7 +155,7 @@ export class Rooms {
       if (integer(m.epoch, 1, r.epoch)
         && (m.epoch < r.epoch || r.state === 'results')) return;
       if (r.state !== 'playing' || m.epoch !== r.epoch) fail('invalid_state');
-      if (!validSnapshot(m.data, r.roster.length) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
+      if (!validSnapshot(m.data, r.roster.length, r.matchConfig.game) || !integer(m.tick, 0, Number.MAX_SAFE_INTEGER) || m.tick <= (r.snapshot?.tick ?? -1)
         || Buffer.byteLength(JSON.stringify(m.data)) > 48000) fail('invalid_snapshot');
       r.snapshot = {op: 'snapshot', epoch: r.epoch, tick: m.tick, data: m.data};
       r.authoritySeen = this.now();

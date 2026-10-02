@@ -229,10 +229,11 @@ func _relaunch(ball: GameBall) -> void:
 
 func on_round_start() -> void:
 	_spawn_timer = 4.0
+	var contenders: Array = ctx.config.rule("online_contenders", [])
 	while balls.size() > 1:
 		balls.pop_back().queue_free()
 	for slot in ctx.player_count():
-		ctx.set_score(slot, START_SCORE)
+		ctx.set_score(slot, START_SCORE if contenders.is_empty() or contenders.has(slot) else 0)
 		if not ctx.is_alive(slot):
 			ctx.revive(slot)
 			ctx.fighter(slot).respawn_at(spawn_position(slot))

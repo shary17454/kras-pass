@@ -42,6 +42,7 @@ service.rooms.close = (room, reason) => {
 };
 const children = [];
 const tournament = process.argv.includes('--tournament');
+const game = process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble';
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
@@ -54,6 +55,7 @@ try {
       const child = spawn(process.env.GODOT_BIN || 'godot', ['--headless', '--path', root,
         '--log-file', join(out, `${name}.log`), 'tests/network_peer.tscn', '--',
         `--test-data-dir=${join(out, `${name}-save`)}`, `--humans=${humans}`,
+        `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
         ...(tournament ? ['--tournament'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});

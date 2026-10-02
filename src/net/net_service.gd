@@ -18,7 +18,8 @@ signal snapshot_received(data: Dictionary)
 signal online_result(scores: Array)
 
 const RoomClient = preload("res://src/net/room_client.gd")
-const ONLINE_GAMES := ["ring_rumble"]
+const ONLINE_GAMES := ["ring_rumble", "goal_guard"]
+const ONLINE_ARENAS := {"ring_rumble": ["vortex_ring", "storm_ring"], "goal_guard": ["quad_court"]}
 var transport: Node
 var endpoint := ""
 var room_state := ""
@@ -316,7 +317,7 @@ func make_match_config() -> MatchConfig:
 	cfg.seed = int(match_data.seed)
 	# The initial online ruleset excludes unreplicated machine drops/power-ups.
 	cfg.allow_powerups = false
-	cfg.rules["online_push"] = true
+	cfg.rules["online_push"] = cfg.minigame_id == "ring_rumble"
 	var standings: Dictionary = match_data.get("tournament") if match_data.get("tournament") is Dictionary else {}
 	if not standings.get("contenders", []).is_empty():
 		var contenders: Array[int] = []

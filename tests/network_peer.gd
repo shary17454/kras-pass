@@ -18,6 +18,8 @@ var completed := false
 var initial_positions: Array[Vector3] = []
 var moved := false
 var tournament_mode := false
+var game_id := "ring_rumble"
+var world_snapshots := 0
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -59,6 +61,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
+		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
 	if host and "--drop-host-result" in OS.get_cmdline_user_args():
@@ -71,7 +74,9 @@ func _ready() -> void:
 		Net.transport = result_drop
 	Net.room_updated.connect(_room)
 	Net.match_start_requested.connect(_start)
-	Net.snapshot_received.connect(func(_data): snapshots += 1)
+	Net.snapshot_received.connect(func(data):
+		snapshots += 1
+		if data.get("world") is Dictionary: world_snapshots += 1)
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
@@ -97,9 +102,14 @@ func _room() -> void:
 		configured = true
 		var cfg := Net.lobby_config.duplicate(true)
 		cfg["rounds"] = 2
+		if game_id == "goal_guard":
+			cfg["game"] = game_id
+			cfg["arena"] = "quad_court"
 		if tournament_mode:
 			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat", "points": [5, 3, 2, 1],
 				"entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
+			if game_id == "goal_guard":
+				cfg["tournament"]["entries"] = [{"game": game_id, "arena": "quad_court"}]
 		Net.set_lobby_config(cfg)
 		return
 	if host and int(Net.lobby_config.get("rounds", 0)) != 2:
@@ -117,7 +127,7 @@ func _start(cfg: MatchConfig) -> void:
 	if game != null:
 		_fail("duplicate match")
 		return
-	cfg.duration_override = 4.0
+	cfg.duration_override = 15.0 if game_id == "goal_guard" else 4.0
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -156,6 +166,21 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id == "goal_guard" and (world_snapshots < 5 or game.controller.balls.is_empty()):
+		_fail("missing goal world")
+		return
+	if not host and game_id == "goal_guard":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if game.controller.balls.size() != world.get("balls", []).size():
+			_fail("replica ball count diverged")
+			return
+		for i in game.controller.balls.size():
+			var ball: GameBall = game.controller.balls[i]
+			var row: Dictionary = world.balls[i]
+			var position := Vector3(row.position[0], row.position[1], row.position[2])
+			if ball.global_position.distance_to(position) > 1.0 or ball.heavy != bool(row.heavy):
+				_fail("replica ball presentation diverged")
+				return
 	if disconnected_once and not restored:
 		_fail("identity not restored")
 		return
@@ -169,7 +194,7 @@ func _finished(result: MatchResult) -> void:
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
-		"matches": finished_matches, "tournament": Net.tournament}))
+		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots}))
 	call_deferred("_finish_cleanup")
 
 

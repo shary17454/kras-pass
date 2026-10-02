@@ -18,6 +18,10 @@ func _ready() -> void:
 	Net.lobby_config = {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 3, "bots": true, "difficulty": 1}
 	Net.lobby_config["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat",
 		"points": [5, 3, 2, 1], "entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
+	if "--goal-guard" in OS.get_cmdline_user_args():
+		Net.lobby_config.game = "goal_guard"
+		Net.lobby_config.arena = "quad_court"
+		Net.lobby_config.tournament.entries = [{"game": "goal_guard", "arena": "quad_court"}]
 	for i in 4:
 		Net.peers[i + 1] = {"id": i + 1, "slot": i, "name": "P%d" % (i + 1), "ready": true, "connected": true, "character": i}
 	for dimensions in [Vector2i(1920, 1080), Vector2i(1080, 1920)]:
@@ -29,6 +33,14 @@ func _ready() -> void:
 		screen.setup({})
 		await get_tree().create_timer(0.8).timeout
 		await RenderingServer.frame_post_draw
+		var game_select := screen.find_child("OnlineGameSelect", true, false) as OptionButton
+		var arena_select := screen.find_child("OnlineArenaSelect", true, false) as OptionButton
+		if game_select == null or arena_select == null or game_select.item_count != Net.ONLINE_GAMES.size() \
+				or Net.ONLINE_GAMES[game_select.selected] != Net.lobby_config.game \
+				or arena_select.item_count != Net.ONLINE_ARENAS[Net.lobby_config.game].size():
+			push_error("ONLINE_UI_FAIL=game/arena selection mismatch")
+			get_tree().quit(1)
+			return
 		var path := "/tmp/kras-online-ui-%dx%d.png" % [dimensions.x, dimensions.y]
 		get_viewport().get_texture().get_image().save_png(path)
 		print("ONLINE_UI_SCREENSHOT=" + path)
@@ -36,8 +48,8 @@ func _ready() -> void:
 		await get_tree().process_frame
 		var cfg := MatchConfig.new()
 		cfg.context = MatchConfig.Context.ONLINE
-		cfg.minigame_id = "ring_rumble"
-		cfg.arena_id = "vortex_ring"
+		cfg.minigame_id = Net.lobby_config.game
+		cfg.arena_id = Net.lobby_config.arena
 		for i in 4:
 			var player := PlayerConfig.new()
 			player.slot = i

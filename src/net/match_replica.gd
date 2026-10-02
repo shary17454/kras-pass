@@ -1,8 +1,9 @@
 extends RefCounted
-## Presentation-only snapshots for the online push variant. Clients never tick
-## rules, collisions, scores or eliminations. Other games require their own
-## world-state adapter before they can enter Net.ONLINE_GAMES.
+## Shared presentation-only player snapshots with explicit game-world adapters.
+## Clients never tick rules, collisions, scores or eliminations. Each additional
+## game needs a world-state adapter before it enters Net.ONLINE_GAMES.
 const P := MatchPhase.P
+const GoalGuardReplica = preload("res://src/net/goal_guard_replica.gd")
 var target: Dictionary = {}
 var received_at := 0
 var _last_phase := -1
@@ -16,13 +17,21 @@ func capture(scene: Node) -> Dictionary:
 		fighters.append({"position": _vec(f.global_position), "velocity": _vec(f.velocity),
 			"facing": _vec(f.facing), "health": f.health, "visible": f.visible,
 			"alive": f.alive, "dash": f._dash_time, "attack": f._attack_time, "stun": f._stun})
-	return {"fighters": fighters, "scores": Array(scene.ctx.scores), "alive": Array(scene.ctx.alive),
+	var packet := {"fighters": fighters, "scores": Array(scene.ctx.scores), "alive": Array(scene.ctx.alive),
 		"time": scene.ctx.time_left, "phase": scene.phase, "round": scene._round_index,
 		"countdown": scene._countdown_value, "radius": scene.arena.current_radius}
+	if scene.config.minigame_id == "goal_guard":
+		packet["world"] = GoalGuardReplica.capture(scene.controller)
+	return packet
 
 
-func accept(data: Dictionary, count: int) -> bool:
+func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bool:
 	if count < 2 or count > 4:
+		return false
+	if game_id == "goal_guard":
+		if not GoalGuardReplica.valid(data.get("world"), count):
+			return false
+	elif game_id != "ring_rumble":
 		return false
 	for key in ["fighters", "scores", "alive"]:
 		if not data.get(key) is Array or data[key].size() != count:
@@ -78,6 +87,8 @@ func render(scene: Node, delta: float) -> void:
 		f._update_visual(delta, f.velocity)
 		scene.ctx.scores[i] = int(target.scores[i])
 		scene.ctx.alive[i] = bool(target.alive[i])
+	if scene.config.minigame_id == "goal_guard":
+		GoalGuardReplica.render(scene.controller, target.world, delta, snap)
 	scene.arena.apply_network_radius(float(target.radius))
 	scene.arena._tick_arctic_water(delta)
 	scene.ctx.time_left = float(target.time)

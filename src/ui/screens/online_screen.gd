@@ -79,7 +79,9 @@ func _browser() -> void:
 
 func _lobby() -> void:
 	_status.text = "%s: %s   %d ms" % [Loc.t("online.room_code"), Net.room_code, Net.ping_ms]
-	var variant := UIKit.label(Loc.t("online.push_variant"), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
+	var selected_game := String(Net.lobby_config.get("game", "ring_rumble"))
+	var variant := UIKit.label(Loc.t("online.push_variant") if selected_game == "ring_rumble" \
+		else Registry.minigame(selected_game).display_name(), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 	variant.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(variant)
 	if not Net.tournament.is_empty():
@@ -154,12 +156,25 @@ func _lobby() -> void:
 func _host_settings() -> void:
 	var cfg := Net.lobby_config.duplicate(true)
 	var tournament: Dictionary = cfg.get("tournament") if cfg.get("tournament") is Dictionary else {}
+	var selected_game := String(cfg.get("game", "ring_rumble"))
+	var games := UIKit.option([], 0)
+	games.name = "OnlineGameSelect"
+	for id in Net.ONLINE_GAMES:
+		games.add_item(Registry.minigame(id).display_name())
+	games.select(Net.ONLINE_GAMES.find(selected_game))
+	games.item_selected.connect(func(index):
+		cfg["game"] = Net.ONLINE_GAMES[index]
+		cfg["arena"] = Net.ONLINE_ARENAS[cfg.game][0]
+		if not tournament.is_empty():
+			cfg["tournament"]["entries"] = _arena_entries(cfg.game) if tournament.rotation == "random_no_repeat" \
+				else [{"game": cfg.game, "arena": cfg.arena}]
+		Net.set_lobby_config(cfg))
+	body.add_child(games)
 	var mode := UIKit.option([Loc.t("online.single"), Loc.t("tournament.points"), Loc.t("tournament.cups")],
 		0 if tournament.is_empty() else (1 if tournament.mode == "points" else 2))
 	mode.item_selected.connect(func(index):
 		cfg["tournament"] = null if index == 0 else {"mode": "points" if index == 1 else "cups", "target": 3,
-			"rotation": "random_no_repeat", "points": [5, 3, 2, 1], "entries": [
-				{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
+			"rotation": "random_no_repeat", "points": [5, 3, 2, 1], "entries": _arena_entries(selected_game)}
 		Net.set_lobby_config(cfg))
 	body.add_child(mode)
 	var row := UIKit.hbox(12)
@@ -190,25 +205,33 @@ func _host_settings() -> void:
 		Net.set_lobby_config(cfg))
 	body.add_child(difficulty)
 	var arenas := UIKit.option([], 0)
-	for id in ["vortex_ring", "storm_ring"]:
+	arenas.name = "OnlineArenaSelect"
+	var arena_ids: Array = Net.ONLINE_ARENAS[selected_game]
+	for id in arena_ids:
 		arenas.add_item(Registry.arena(id).display_name())
-	arenas.select(0 if cfg.get("arena") == "vortex_ring" else 1)
+	arenas.select(arena_ids.find(cfg.get("arena")))
 	arenas.item_selected.connect(func(index):
-		cfg["arena"] = ["vortex_ring", "storm_ring"][index]
+		cfg["arena"] = arena_ids[index]
 		if not tournament.is_empty() and tournament.rotation == "manual":
-			cfg["tournament"]["entries"] = [{"game": "ring_rumble", "arena": cfg.arena}]
+			cfg["tournament"]["entries"] = [{"game": selected_game, "arena": cfg.arena}]
 		Net.set_lobby_config(cfg))
 	body.add_child(arenas)
 	if not tournament.is_empty():
 		var rotate := UIKit.checkbox(Loc.t("online.rotate_arenas"), tournament.rotation == "random_no_repeat")
 		rotate.toggled.connect(func(value):
 			cfg["tournament"]["rotation"] = "random_no_repeat" if value else "manual"
-			cfg["tournament"]["entries"] = [
-				{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]
+			cfg["tournament"]["entries"] = _arena_entries(selected_game)
 			if not value:
-				cfg["tournament"]["entries"] = [{"game": "ring_rumble", "arena": cfg.arena}]
+				cfg["tournament"]["entries"] = [{"game": selected_game, "arena": cfg.arena}]
 			Net.set_lobby_config(cfg))
 		body.add_child(rotate)
+
+
+func _arena_entries(game_id: String) -> Array:
+	var entries: Array = []
+	for arena_id in Net.ONLINE_ARENAS[game_id]:
+		entries.append({"game": game_id, "arena": arena_id})
+	return entries
 
 
 func go_back() -> void:
