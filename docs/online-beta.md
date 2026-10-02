@@ -2,6 +2,46 @@
 
 ## Implemented boundary
 
+### Fawda bomb adapter preparation
+
+Fawda now assigns round-local monotonic bomb identities and records sampled
+drop, pickup, throw and explosion counters with their most recent positions.
+The host's visible bomb rows include identity, position, velocity, remaining
+fuse, holder and last thrower. Both Godot and Node validate an exact bounded
+schema: at most four live bombs, unique positive identities, valid roster
+indices, no two bombs bound to one holder, five-second fuse bounds, carrying
+flags and all four event types. Carrying and holder fields are individually
+bounded rather than enforcing an invariant that could reject a legitimate
+one-tick dropped-by-hit transition before the host releases its holder.
+
+Bomb mesh/wick construction and fuse visual updates are shared with the
+existing offline game. Explosion presentation is separated from blast damage.
+Guest views have no collision bodies and never tick a fuse, drop a bomb, handle
+pickup/throw input or award eliminations. Fresh events play their matching
+sounds once; baseline/duplicate/stale bomb events do not replay. Snapshot
+sampling can merge multiple same-kind events and does not claim a lossless
+impact-audio stream. New rounds discard previous bomb views before reusing IDs.
+
+`/tmp/kras-fawda-network-final.log` passed 130 focused assertions, including an
+actual drop, pickup, attack-input throw, in-flight update and detonation from
+the real controller, rendered into a separate scene after JSON serialization.
+The fixture checks carrying/HUD state, wick scaling, host trajectory, removal,
+no guest damage or score changes, duplicate/stale sound suppression and round
+identity reuse. `/tmp/kras-fawda-network.log` retained one failed fixture
+assertion that counted the round's separate UI go cue as bomb feedback. The
+test now explicitly requires that go cue, without muting it in product code.
+`/tmp/kras-fawda-network-fixed.log` passed the earlier 114-assertion fixture;
+the final expanded fixture passed 130. All 84 Node tests passed, recorded in
+`/tmp/kras-fawda-server-tests.log`.
+
+Fawda is not yet in client/server room allowlists. Independent-process matches,
+tournaments, authored-map acceptance, Internet and physical-device behavior
+remain unqualified. Production online remains disabled. Full gate
+`kras-party-check.nIHgkC` compiled 290 scripts, audited 327 resources with zero
+issues, passed 19,321 assertions, passed the real three-lap race and completed
+39 stability matches with zero failures. Its headless results do not establish
+device audio/rendering quality or the complete product's release readiness.
+
 ### Scrap collision adapter and room preparation
 
 `scrap_karts` now replicates the host's health, maximum health, collision serial,

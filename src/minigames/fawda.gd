@@ -17,6 +17,8 @@ const MAX_LIVE := 4
 
 var _bombs: Array = []
 var _drop_timer := 2.0
+var bomb_serial := 0
+var bomb_events := {}
 
 
 func configure() -> void:
@@ -28,12 +30,26 @@ func build() -> void:
 	super.build()
 	_bombs.clear()
 	_drop_timer = 2.0
+	_reset_feedback()
 
 
 func on_round_start() -> void:
 	super.on_round_start()
 	_clear_bombs()
 	_drop_timer = 2.0
+	_reset_feedback()
+
+
+func _reset_feedback() -> void:
+	bomb_serial = 0
+	bomb_events.clear()
+	for kind in ["drop", "pickup", "throw", "explode"]:
+		bomb_events[kind] = {"sequence": 0, "position": Vector3.ZERO}
+
+
+func _feedback(kind: String, position: Vector3) -> void:
+	bomb_events[kind].sequence += 1
+	bomb_events[kind].position = position
 
 
 func tick(delta: float) -> void:
@@ -46,21 +62,38 @@ func tick(delta: float) -> void:
 	_read_throws()
 
 
-func _drop_bomb() -> void:
-	var arena := ctx.arena as Arena
-	if arena == null:
-		return
+static func make_bomb_visual() -> Dictionary:
 	var node := Node3D.new()
 	node.add_child(MeshFactory.sphere(0.55, Color("#2b2438"), 0.2))
 	var wick := MeshFactory.cylinder(0.07, 0.5, Color("#ff8a3d"), 2.4, 8)
 	wick.position.y = 0.6
 	node.add_child(wick)
+	return {"node": node, "wick": wick}
+
+
+static func update_bomb_visual(visual: Dictionary, fuse: float) -> void:
+	var t := clampf(fuse / FUSE_TIME, 0.0, 1.0)
+	var wick: Node3D = visual.wick
+	if is_instance_valid(wick):
+		wick.scale.y = maxf(0.05, t)
+		wick.position.y = 0.35 + 0.25 * t
+	visual.node.scale = Vector3.ONE * (1.0 + 0.12 * sin(fuse * lerpf(22.0, 6.0, t)))
+
+
+func _drop_bomb() -> void:
+	var arena := ctx.arena as Arena
+	if arena == null:
+		return
+	var visual := make_bomb_visual()
+	var node: Node3D = visual.node
 	ctx.world_root.add_child(node)
 	var ang := ctx.rng.randf() * TAU
 	var r := sqrt(ctx.rng.randf()) * arena.current_radius * 0.7
 	node.global_position = arena.global_position + Vector3(cos(ang) * r, 0.6, sin(ang) * r)
-	_bombs.append({"node": node, "fuse": FUSE_TIME, "held": -1, "thrower": -1,
-		"vel": Vector3.ZERO, "wick": wick})
+	bomb_serial += 1
+	_bombs.append({"id": bomb_serial, "node": node, "fuse": FUSE_TIME, "held": -1, "thrower": -1,
+		"vel": Vector3.ZERO, "wick": visual.wick})
+	_feedback("drop", node.global_position)
 	AudioManager.play_sfx("tick", node.global_position, 0.7)
 
 
@@ -76,12 +109,7 @@ func _tick_bombs(delta: float) -> void:
 		b["fuse"] = float(b["fuse"]) - delta
 		# The wick shortens and the whole bomb pulses faster as the fuse burns,
 		# so "how long have I got" is answerable at a glance from across the ring.
-		var t: float = clampf(float(b["fuse"]) / FUSE_TIME, 0.0, 1.0)
-		var wick: Node3D = b["wick"]
-		if is_instance_valid(wick):
-			wick.scale.y = maxf(0.05, t)
-			wick.position.y = 0.35 + 0.25 * t
-		node.scale = Vector3.ONE * (1.0 + 0.12 * sin(float(b["fuse"]) * lerpf(22.0, 6.0, t)))
+		update_bomb_visual(b, float(b["fuse"]))
 		if float(b["fuse"]) <= 0.0:
 			_detonate(idx)
 			idx -= 1
@@ -150,6 +178,7 @@ func _try_pickup(b: Dictionary, node: Node3D) -> void:
 		f.carrying = 1
 		b["held"] = i
 		b["thrower"] = i
+		_feedback("pickup", node.global_position)
 		AudioManager.play_sfx("pickup", node.global_position)
 		return
 
@@ -168,6 +197,7 @@ func _read_throws() -> void:
 		b["held"] = -1
 		b["thrower"] = holder
 		b["vel"] = f.facing.normalized() * 17.0
+		_feedback("throw", f.global_position)
 		AudioManager.play_sfx("swing", f.global_position)
 
 
@@ -183,11 +213,8 @@ func _detonate(index: int) -> void:
 		if carrier != null and is_instance_valid(carrier):
 			carrier.carrying = 0
 	node.queue_free()
-	var burst := MeshFactory.burst(Color("#ff8a3d"), 20, 3.4)
-	ctx.world_root.add_child(burst)
-	burst.global_position = pos
-	AudioManager.play_sfx("explode", pos)
-	EventBus.shake(0.7, 0.4)
+	_feedback("explode", pos)
+	present_bomb_explosion(pos)
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
 			continue
@@ -204,6 +231,14 @@ func _detonate(index: int) -> void:
 		var by: int = thrower if thrower != i else -1
 		f.take_hit(by, away.normalized() if d > 0.1 else Vector3.FORWARD,
 			BLAST_POWER * (1.0 - d / BLAST_RADIUS * 0.55), 0.0, true)
+
+
+func present_bomb_explosion(pos: Vector3) -> void:
+	var burst := MeshFactory.burst(Color("#ff8a3d"), 20, 3.4)
+	ctx.world_root.add_child(burst)
+	burst.global_position = pos
+	AudioManager.play_sfx("explode", pos)
+	EventBus.shake(0.7, 0.4)
 
 
 func _clear_bombs() -> void:

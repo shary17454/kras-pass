@@ -1,6 +1,26 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validFawdaWorld(data, count) {
+  const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  if (!integer(count, 2, 4) || !object(data, 3) || !Array.isArray(data.bombs) || data.bombs.length > 4
+    || !Array.isArray(data.carrying) || data.carrying.length !== count
+    || !data.carrying.every(v => integer(v, 0, 1)) || !object(data.events, 4)) return false;
+  const ids = new Set(), holders = new Set();
+  for (const b of data.bombs) {
+    if (!object(b, 6) || !integer(b.id, 1, 1000000) || ids.has(b.id)
+      || !vector(b.position) || !vector(b.velocity) || !Number.isFinite(b.fuse) || b.fuse < 0 || b.fuse > 5
+      || !integer(b.held, -1, count - 1) || !integer(b.thrower, -1, count - 1)) return false;
+    ids.add(b.id);
+    if (b.held >= 0) { if (holders.has(b.held)) return false; holders.add(b.held); }
+  }
+  return ['drop', 'pickup', 'throw', 'explode'].every(kind => {
+    const event = data.events[kind];
+    return object(event, 2) && integer(event.sequence, 0, 1000000) && vector(event.position);
+  });
+}
+
 export function validScrapWorld(data, count) {
   const serial = value => Number.isInteger(value) && value >= 0 && value <= 1000000;
   return Number.isInteger(count) && count >= 2 && count <= 4
