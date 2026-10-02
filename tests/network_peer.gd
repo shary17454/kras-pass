@@ -22,6 +22,8 @@ var game_id := "ring_rumble"
 var world_snapshots := 0
 var observed_collection_score := false
 var observed_zone_score := false
+var observed_relic_holder := false
+var observed_relic_score := false
 var observed_carrying := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
@@ -156,9 +158,25 @@ func _physics_process(_delta: float) -> void:
 	if game_id == "zone_hold":
 		for score in game.ctx.scores:
 			observed_zone_score = observed_zone_score or score > 0
+	if game_id == "relic_hold":
+		observed_relic_holder = observed_relic_holder or game.controller.holder() >= 0
+		for score in game.ctx.scores:
+			observed_relic_score = observed_relic_score or score > 0
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "relic_hold":
+			var position: Vector3 = game.ctx.fighters[slot].global_position
+			var target: Vector3 = game.controller.relic_position()
+			if not host and game.controller.holder() < 0 and is_instance_valid(game._network_replica._relic):
+				var views: Dictionary = game._network_replica._relic.items.views
+				if not views.is_empty():
+					target = views.values()[0].global_position
+			if game.controller.holder() == slot:
+				target = game.arena.global_position + Vector3(cos(slot + 1.0), 0, sin(slot + 1.0)) * 5.0
+			elif game.controller.holder() >= 0:
+				buttons = InputFrame.Btn.ATTACK
+			movement = Vector2(target.x - position.x, target.z - position.z).limit_length()
 		if game_id == "zone_hold":
 			var p: Vector3 = game.ctx.fighters[slot].global_position - game.arena.global_position
 			var zone: Vector3 = game.controller.zone_position - game.arena.global_position
@@ -258,6 +276,21 @@ func _finished(result: MatchResult) -> void:
 	if disconnected_once and not restored:
 		_fail("identity not restored")
 		return
+	if not host and game_id == "relic_hold":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		var view = game._network_replica._relic
+		if world_snapshots < 5 or not is_instance_valid(view) or game.controller.holder() != int(world.get("holder", -2)) \
+				or view.items.views.size() != world.get("items", []).size():
+			_fail("relic world diverged")
+			return
+		for row in world.items:
+			if not view.items.views.has(row.id) or view.items.views[row.id].global_position.distance_to(Vector3(row.position[0], row.position[1], row.position[2])) > 0.1:
+				_fail("loose relic presentation diverged")
+				return
+		for i in game.ctx.player_count():
+			if game.ctx.fighters[i].carrying != (1 if i == int(world.holder) else 0):
+				_fail("relic carrier state diverged")
+				return
 	if host and Net._inputs.size() < count - 1:
 		_fail("missing remote inputs")
 		return
@@ -273,6 +306,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "zone_hold" and not observed_zone_score:
 		_fail("zone finished without capture scoring")
+		return
+	if game_id == "relic_hold" and (not observed_relic_holder or not observed_relic_score):
+		_fail("relic finished without observed ownership and scoring")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

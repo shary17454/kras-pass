@@ -6,8 +6,10 @@ const P := MatchPhase.P
 const GoalGuardReplica = preload("res://src/net/goal_guard_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
+const RelicReplica = preload("res://src/net/relic_replica.gd")
 const COLLECTION_GAMES := {"gem_grab": "gem", "star_rush": "star"}
 var _collectibles: Node3D
+var _relic: Node3D
 var target: Dictionary = {}
 var received_at := 0
 var _last_phase := -1
@@ -28,6 +30,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = GoalGuardReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "zone_hold":
 		packet["world"] = ZoneReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "relic_hold":
+		packet["world"] = RelicReplica.capture(scene.controller)
 	elif COLLECTION_GAMES.has(scene.config.minigame_id):
 		var carrying: Array = []
 		for fighter in scene.ctx.fighters:
@@ -44,6 +48,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "zone_hold":
 		if not ZoneReplica.valid(data.get("world")):
+			return false
+	elif game_id == "relic_hold":
+		if not RelicReplica.valid(data.get("world"), count):
 			return false
 	elif COLLECTION_GAMES.has(game_id):
 		var world: Variant = data.get("world")
@@ -114,6 +121,11 @@ func render(scene: Node, delta: float) -> void:
 		GoalGuardReplica.render(scene.controller, target.world, delta, snap)
 	elif scene.config.minigame_id == "zone_hold":
 		ZoneReplica.render(scene.controller, target.world)
+	elif scene.config.minigame_id == "relic_hold":
+		if not is_instance_valid(_relic):
+			_relic = RelicReplica.new()
+			scene.ctx.world_root.add_child(_relic)
+		_relic.render(scene.controller, target.world, delta)
 	elif COLLECTION_GAMES.has(scene.config.minigame_id):
 		if not is_instance_valid(_collectibles):
 			scene.controller.cleanup()

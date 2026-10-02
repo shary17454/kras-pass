@@ -1,6 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld} from './world-snapshots.js';
+
+test('relic ownership and loose-item representation are mutually exclusive', () => {
+  const item = {id: '123', kind: 'gem', position: [0, 1, 0], rotation: 0, color: 'ffd15cff', size: .6, value: 1};
+  assert.ok(validRelicWorld({holder: -1, items: [item]}, 4));
+  assert.ok(validRelicWorld({holder: -1, items: []}, 4));
+  assert.ok(validRelicWorld({holder: 3, items: []}, 4));
+  for (const count of [1, 2.5, 5, '4', NaN]) assert.equal(validRelicWorld({holder: -1, items: []}, count), false);
+  assert.equal(validRelicWorld({holder: 3, items: []}, 3), false);
+  assert.equal(validRelicWorld({holder: 0, items: [item]}, 4), false);
+  assert.equal(validRelicWorld({holder: -1, items: [item, {...item, id: '124'}]}, 4), false);
+  for (const holder of [-2, 4, .5, '1', true, Infinity]) {
+    assert.equal(validRelicWorld({holder, items: []}, 4), false);
+  }
+  for (const data of [null, [], {}, {holder: -1}, {holder: 0, items: [{...item, kind: 'crate'}]}]) {
+    assert.equal(validRelicWorld(data, 4), false);
+  }
+});
 
 test('zone world rejects malformed or unbounded presentation state', () => {
   const make = () => ({position: [3, 0, -4], radius: 3.4, color: 'ff5f6dff'});

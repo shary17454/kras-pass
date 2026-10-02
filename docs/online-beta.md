@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-Online supports five explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
+Online supports six explicitly adapted rulesets: `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
 replicates normal/heavy balls, launch generations and keeper charges; the guest
@@ -23,8 +23,11 @@ does not tick ball physics or evaluate goals. `gem_grab` uses `gem_hollow` /
 stable-ID collectible presenter; carried star counts come from the host too.
 `zone_hold` on `dune_ring` replicates capture position, radius and ring color;
 only the host advances capture progress or awards points.
+`relic_hold` presents the loose relic or its carrier exclusively; pickup,
+drop and held-time scoring remain host-only. Its configured arenas are
+`star_meadow` and `gem_hollow`; see the verification limits below.
 Optional random power-ups remain disabled in online beta configurations.
-The other 34 games are not
+The other 33 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -33,7 +36,7 @@ advance the tournament. The configured points table is validated server-side.
 Final ties run short contender-only matches. Other players retain their slots
 as spectators. At most three tie-breaks are allowed; persistent ties produce
 shared champions, not an arbitrary slot-based winner. Cup tournaments also
-have a bounded regular-round limit. These are five-game beta tournaments, not
+have a bounded regular-round limit. These are six-game beta tournaments, not
 39-game online tournaments.
 
 Clients render host snapshots at 20 Hz with smoothing; they send input at
@@ -404,7 +407,27 @@ when a round starts or the controller cleans up. Carrying and fractional score
 are cleared; repeated callbacks do not duplicate the relic. Dropping also uses
 the declared attack permission rather than forcing attacks on unconditionally.
 `/tmp/kras-relic-round-reset.log` passed 15 assertions without resource-leak
-warnings. This fixes local lifecycle behavior; Relic Hold is not online-enabled.
+warnings. That lifecycle fix preceded the network adapter below.
+
+## Relic Hold network verification
+
+- `/tmp/kras-relic-replica-unit.log`: 45 assertions passed for loose/held state,
+  malformed ownership, drop, respawn delay, no guest colliders/scoring, and
+  stable visual reuse.
+- `/tmp/kras-relic-replica-compile.log`: 229 scripts compiled.
+- Server tests: 31 passed after integrating room-level relic validation.
+  Four world-validator tests also passed after rejecting fractional roster sizes.
+- `kras-network-smoke-m0vrgW`: two-round matches on `star_meadow` passed with
+  two humans/two bots and four humans, including reconnect and dropped-result
+  recovery. All peers agreed on `[28,0,0,4]` and `[34,0,0,0]`; guests received
+  over 1,000 snapshots and checked holder, carrying and loose-item presentation.
+- `/tmp/kras-relic-visual.log`: 49 graphical assertions passed, with no leak
+  warnings. `/tmp/kras-relic-carrier.png` was visually inspected: the marker
+  follows the carrier and the HUD identifies it. This was desktop OpenGL
+  compatibility rendering, not physical iPhone or iPad QA.
+- The new CI scenario covers ordinary matches and tournaments. Relic tournaments,
+  `gem_hollow`, mobile rendering and production latency remain unverified at
+  this checkpoint. Production online remains disabled.
 
 ## Expansion checklist per game
 

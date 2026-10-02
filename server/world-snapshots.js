@@ -7,6 +7,14 @@ export function validZoneWorld(data) {
     && typeof data.color === 'string' && /^[0-9a-fA-F]{8}$/.test(data.color);
 }
 
+export function validRelicWorld(data, count) {
+  return Number.isInteger(count) && count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
+    && Number.isInteger(data.holder) && data.holder >= -1 && data.holder < count
+    && Array.isArray(data.items) && data.items.length <= 1
+    && (data.holder < 0 || data.items.length === 0)
+    && validCollectionWorld({items: data.items, carrying: Array(count).fill(0)}, count, 'gem');
+}
+
 export function validGoalGuardWorld(data, count) {
   return count >= 2 && count <= 4 && data != null && typeof data === 'object' && !Array.isArray(data)
     && Array.isArray(data.charges) && data.charges.length === count
