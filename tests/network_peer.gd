@@ -96,6 +96,13 @@ func _process(_delta: float) -> void:
 			for fighter in game.ctx.fighters:
 				runners.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity), "can_jump": fighter.can_jump, "control": fighter.control_enabled, "finish": game.controller.finish_times[fighter.slot]})
 			print("NETWORK_HURDLES=" + JSON.stringify(runners))
+		if game_id == "crate_relay" and is_instance_valid(game):
+			var players: Array = []
+			for fighter in game.ctx.fighters:
+				players.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity),
+					"carrying": fighter.carrying, "score": game.ctx.scores[fighter.slot], "control": fighter.control_enabled})
+			print("NETWORK_RELAY=" + JSON.stringify({"slot": Net.local_slot(), "players": players,
+				"movement": str(_collection_movement(Net.local_slot())) if Net.local_slot() >= 0 else "none"}))
 
 class ResultDropTransport extends Node:
 	var delegate: Node
@@ -925,7 +932,7 @@ func _finished(result: MatchResult) -> void:
 		_fail("floe tournament did not visit both arenas")
 		return
 	if game_id in ["gem_grab", "star_rush", "crate_relay"] and not observed_collection_score:
-		_fail("collection finished without any scoring")
+		_fail("collection scoring observation missing: slot=%s scores=%s carrying_seen=%s" % [Net.local_slot(), result.scores, observed_carrying])
 		return
 	if game_id in ["star_rush", "crate_relay"] and not observed_carrying:
 		_fail("carrying was never observed")
