@@ -122,6 +122,28 @@ test('blast room rejects missing fuse, invalid arena and non-host snapshots', ()
   assert.equal(guest.last('snapshot').tick, 1);
 });
 
+test('echo room accepts only host public cues and consistent progress', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'symbol_echo', arena: 'echo_hall', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'draw_stage'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
+  data.world = {stage: 0, serial: 1, length: 3, pad: 2, step: 0, flash_left: .2,
+    progress: [0, 0, 0, 0], mistakes: [0, 0, 0, 0], finished: [],
+    flash_sequence: 1, correct_sequence: 0, wrong_sequence: 0, finish_sequence: 0};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}));
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  data.world.sequence = [2, 3, 4];
+  assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data}), /invalid_snapshot/);
+  assert.equal(guest.last('snapshot').tick, 1);
+});
+
 test('draw room relays host decisions and rejects hidden timing or client authority', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

@@ -43,6 +43,11 @@ var observed_blast_explosion := false
 var observed_color_drop := false
 var observed_draw_signal := false
 var observed_draw_response := false
+var observed_echo_cue := false
+var observed_echo_score := false
+var echo_serial := -1
+var echo_cues := {}
+var echo_leaving := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -157,6 +162,9 @@ func _start(cfg: MatchConfig) -> void:
 	moved = false
 	last_hunter = -1
 	hunter_round = -1
+	echo_serial = -1
+	echo_cues.clear()
+	echo_leaving = false
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
@@ -178,6 +186,18 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "symbol_echo":
+		var serial: int = game.controller.sequence_serial()
+		if serial != echo_serial:
+			echo_serial = serial
+			echo_cues.clear()
+			echo_leaving = false
+		var symbol: int = game.controller.visible_symbol()
+		if symbol >= 0:
+			echo_cues[game.controller.visible_step()] = symbol
+			observed_echo_cue = true
+		if slot >= 0:
+			observed_echo_score = observed_echo_score or game.ctx.scores[slot] > 0
 	if game_id == "quick_draw":
 		observed_draw_signal = observed_draw_signal or game.controller.is_signalled()
 		observed_draw_response = observed_draw_response or game.controller._order.has(slot)
@@ -223,6 +243,8 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "symbol_echo":
+			movement = _echo_movement(slot)
 		if game_id == "quick_draw":
 			movement = Vector2.ZERO
 			if game.controller.is_signalled() and not game.controller.is_locked(slot) and not game.controller._order.has(slot):
@@ -311,6 +333,22 @@ func _collection_movement(slot: int) -> Vector2:
 	return Vector2(direction.x, direction.z).limit_length()
 
 
+func _echo_movement(slot: int) -> Vector2:
+	var position: Vector3 = game.ctx.fighters[slot].global_position
+	var center: Vector3 = game.ctx.arena_center()
+	var target := center
+	var progress: int = game.controller.progress_of(slot)
+	if echo_leaving and Vector2(position.x - center.x, position.z - center.z).length() < 1.5:
+		echo_leaving = false
+	if game.controller.accepts_sequence_input() and echo_cues.has(progress):
+		var pad: int = echo_cues[progress]
+		if game.controller.current_pad(slot) == pad:
+			echo_leaving = true
+		if not echo_leaving:
+			target = game.controller.pad_position(pad)
+	return Vector2(target.x - position.x, target.z - position.z).limit_length()
+
+
 func _finished(result: MatchResult) -> void:
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
@@ -325,6 +363,18 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id == "symbol_echo":
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty() or world.has("sequence") or not game.controller._sequence.is_empty():
+			_fail("missing echo state or private answers retained")
+			return
+		if game.controller._stage != int(world.stage) or game.controller.sequence_serial() != int(world.serial):
+			_fail("echo phase diverged")
+			return
+		for player_slot in world.progress.size():
+			if game.controller.progress_of(player_slot) != int(world.progress[player_slot]) or game.controller.mistakes_of(player_slot) != int(world.mistakes[player_slot]):
+				_fail("echo progress diverged")
+				return
 	if not host and game_id == "quick_draw":
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty() or world.has("timer") or world.has("signal_age"):
@@ -527,6 +577,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "quick_draw" and (not observed_draw_signal or not observed_draw_response):
 		_fail("draw never signalled or accepted this player's response")
+		return
+	if game_id == "symbol_echo" and (not observed_echo_cue or not observed_echo_score):
+		_fail("echo never displayed a cue or accepted this player's observed answer")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

@@ -2,7 +2,7 @@
 
 ## Implemented boundary
 
-### Symbol Echo adapter preparation
+### Symbol Echo room integration
 
 `symbol_echo` now has a bounded presentation adapter and matching Node/Godot
 world validators. It publishes the currently visible pad/step, public sequence
@@ -12,8 +12,8 @@ presentation discards its locally generated sequence and cannot score or tick
 the host rules. This is payload minimization, not a cryptographic secrecy or
 anti-cheat guarantee: the broader protocol still shares deterministic seeds.
 
-The game remains excluded from the online room allowlists until real
-multi-process ordinary/tournament matches and reconnect observations pass.
+The development room allowlists now include `symbol_echo` on `echo_hall`.
+Ordinary and tournament multi-process matches passed, including reconnect.
 Adapter tests cover malformed/missing/extra fields, inconsistent finishers,
 JSON round trips, repeated symbols, score/timer immutability and stale-audio
 suppression. `/tmp/kras-echo-network.log`: 120 assertions passed. Server tests:
@@ -23,6 +23,29 @@ Full gate `kras-party-check.30MKH5`: 257 scripts compiled, 294 resources audited
 with zero issues, 17,793 assertions passed, the three-lap race regression
 passed and all 39 stability matches completed with zero failures. This is
 desktop headless coverage, not iPhone performance or App Store approval.
+
+Room integration evidence:
+- Server tests: 54 passed, including host-only publication, invalid-arena
+  rejection and rejection of an extra private-answer field.
+- `kras-network-smoke-66fCC1`: ordinary 2-human/2-bot and 4-human matches passed.
+  Every human observed a cue and received points for an observed answer;
+  guest presentation matched authoritative phase/progress/mistakes. Results
+  were `[14,10,3,14]` and `[4,14,26,21]`. Guests received 1,087-1,107 snapshots.
+- `kras-network-smoke-EZS8Qo`: both tournament configurations passed. The
+  2-human tournament ran three regular rounds and three contender-only tie
+  rounds, finishing with points `[10,10,7,9]` and champion slot 0. The 4-human
+  tournament completed three rounds with `[4,9,15,5]` and champion slot 2.
+  Guest state and tournament accounting matched; reconnect and interrupted
+  host result delivery were exercised. Guests received 1,665-3,279 snapshots.
+- Maximum measured local server event-loop delay was 57 ms in ordinary
+  matches and 101 ms in the tournament. This is diagnostic data, not a network
+  latency, mobile frame-rate or competitive fairness certification.
+- Scripted input remembers only displayed cues; it does not read
+  `expected_pad()` or the private sequence. These are desktop headless engine
+  instances, not four physical devices. Production remains disabled.
+- Final integration gate `kras-party-check.W35Gbc`: 257 scripts compiled,
+  294 resources audited with zero issues, 17,793 assertions passed, race
+  regression passed and 39 stability matches completed with zero failures.
 
 The existing local match runtime remains authoritative on the host device.
 The Node service authenticates **connection ownership**, not Apple accounts,
@@ -36,7 +59,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains seventeen explicitly adapted rulesets; verification
+The development allowlist contains eighteen explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -71,8 +94,10 @@ states, phase timers and call/drop cues. Guests never choose a new color.
 `quick_draw` on `draw_stage` adds visible prompt state and accepted responses,
 without exposing the hidden wait countdown. Reaction latency is not compensated;
 the local scripted test exhibits host advantage and is not a balance approval.
+`symbol_echo` on `echo_hall` presents visible memory cues and authoritative
+progress without running a second scoring simulation on guests.
 Optional random power-ups remain disabled in online beta configurations.
-The other 22 games are not
+The other 21 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -966,7 +991,7 @@ cannot award it again on another input scan.
 - Full gate `kras-party-check.UJkgBy`: 254 scripts compiled, 291 resources
   audited with zero issues, 17,625 assertions passed, race regression passed
   and 39 stability matches completed with zero failures.
-- Symbol Echo is still offline-only. Its future adapter must reveal only the
+- At this lifecycle-repair commit Symbol Echo was offline-only. Its future adapter had to reveal only the
   currently shown symbol, not the secret sequence. At this lifecycle commit
   AI still queried the expected pad with recall errors. The subsequent observed
   memory repair is recorded below.
