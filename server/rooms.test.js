@@ -40,6 +40,47 @@ function fixture() {
   return {rooms, host, client, advance: ms => { now += ms; rooms.sweep(); }};
 }
 
+test('closed-room inputs drain briefly without granting authority to detached clients', () => {
+  const {rooms, host, client, advance} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const outsider = client();
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const input = {op: 'input', epoch, sequence: 1, axes: [0, 0, 0, 0], bits: 4};
+  guest.send(input);
+  const messageCount = host.messages.length;
+  host.send({op: 'leave'});
+  assert.equal(rooms.rooms.size, 0);
+  assert.equal(rooms.sessions.size, 0);
+  const afterClose = host.messages.length;
+  assert.ok(afterClose > messageCount);
+  assert.doesNotThrow(() => guest.send({...input, sequence: 2}));
+  assert.equal(host.messages.length, afterClose, 'late input is discarded, not forwarded');
+  assert.throws(() => outsider.send(input), /not_joined/);
+  assert.throws(() => guest.send({...input, epoch: epoch + 1}), /not_joined/);
+  assert.throws(() => guest.send({...input, axes: [NaN, 0, 0, 0]}), /not_joined/);
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data: snapshot()}), /not_joined/);
+  assert.throws(() => guest.send({op: 'result', epoch, scores: [0, 0, 0, 0]}), /not_joined/);
+  advance(1000);
+  assert.throws(() => guest.send({...input, sequence: 3}), /not_joined/);
+});
+
+test('joining another room clears the closed-room input drain allowance', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  host.send({op: 'leave'});
+  guest.send({op: 'create', capacity: 4, public: true, name: 'New Host'});
+  assert.throws(() => guest.send({op: 'input', epoch, sequence: 1, axes: [0, 0, 0, 0], bits: 4}), /invalid_state/);
+  guest.send({op: 'leave'});
+  assert.throws(() => guest.send({op: 'input', epoch, sequence: 2, axes: [0, 0, 0, 0], bits: 4}), /not_joined/);
+});
+
 test('goal guard enforces its arena and complete world snapshots', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
@@ -491,7 +532,7 @@ test('online tournament rejects unavailable games and malformed point tables', (
   assert.throws(() => host.send({op: 'configure', config: {...host.c.room.config, tournament: t}}), /invalid_config/);
 });
 
-test('real WebSocket four-client match and transport reconnect', async t => {
+test('real WebSocket match, reconnect and closed-room input drain', async t => {
   const server = createServer();
   const multiplayer = attachMultiplayer(server, {enabled: true});
   const sockets = [];
@@ -535,4 +576,12 @@ test('real WebSocket four-client match and transport reconnect', async t => {
   returned.send({op: 'resume', token}); assert.equal((await welcome).id, 3); await restored;
   const done = returned.wait('result'); host.send({op: 'result', epoch, scores: [4, 3, 2, 1]});
   assert.deepEqual((await done).scores, [4, 3, 2, 1]);
+  const closed = returned.wait('closed'); host.send({op: 'leave'}); await closed;
+  const drained = returned.wait('pong');
+  returned.send({op: 'input', epoch, sequence: 2, axes: [.5, 0, 0, 0], bits: 8});
+  returned.send({op: 'ping', stamp: 42});
+  assert.equal((await drained).stamp, 42);
+  assert.deepEqual(returned.messages.filter(m => m.op === 'error'), []);
+  assert.equal(multiplayer.rooms.rooms.size, 0);
+  assert.equal(multiplayer.rooms.sessions.size, 0);
 });

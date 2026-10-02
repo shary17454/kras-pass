@@ -918,14 +918,31 @@ and false-start locks. It does not assert movement for this stationary game.
   and agreed on final points [15, 9, 4, 5] and [15, 8, 6, 5], champion slot 0.
   Guests received 1665-1684 world snapshots; loop maximum was 45 ms. Two
   in-flight inputs were rejected as `not_joined` after the four-human room
-  closed; clients completed successfully, but close-time protocol noise
-  remains to be addressed. This run did not exercise a final tie-break.
+  closed; clients completed successfully. The subsequent bounded input-drain
+  fix is recorded below. This run did not exercise a final tie-break.
 - Full gate `kras-party-check.OM0eAT`: 253 scripts compiled, 290 resources
   audited with zero issues, 17,590 assertions passed, race regression passed
   and 39 stability matches completed with zero failures.
 - The scripted immediate-response results show host transport advantage.
   Same-tick tie scoring does not solve Internet latency; this remains a
   development-only ruleset, not production or ranked-play approval.
+
+### Closed-room input drain
+
+Closing a played room now records a one-second, connection-local retired epoch.
+Well-formed inputs for that closed epoch (or an earlier epoch in that room) are
+discarded, never forwarded. Unknown connections, malformed inputs, future
+epochs, snapshots and results remain rejected. Join/resume clear this marker;
+closing a lobby that never played does not create an allowance. The existing
+transport rate limits still apply, and session tokens are still removed.
+
+- A regression test first reproduced `not_joined` for an in-flight input.
+- `npm test`: 52 tests passed after the fix. Tests cover timeout, outsiders,
+  malformed inputs, forbidden authority, no forwarding and another room.
+- The real WebSocket integration test now closes a four-client match after
+  reconnect, sends an old input followed by a ping barrier, and verifies no
+  error message, room or session remains. Godot gameplay code is unchanged by
+  this server-only repair; no new full Godot run is claimed for it.
 
 ### Quick Draw adapter verification
 

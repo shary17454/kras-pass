@@ -12,6 +12,9 @@ export const ONLINE_GAMES = Object.keys(ONLINE_ARENAS);
 const CODE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const fail = code => { throw new Error(code); };
 const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+const validInput = m => integer(m.sequence, 0, Number.MAX_SAFE_INTEGER)
+  && Array.isArray(m.axes) && m.axes.length === 4
+  && m.axes.every(v => Number.isFinite(v) && Math.abs(v) <= 1) && integer(m.bits, 0, 31);
 const cleanName = v => typeof v === 'string' ? v.replace(/[\p{C}<>]/gu, '').trim().slice(0, 24) : '';
 
 function tournamentSettings(value) {
@@ -65,7 +68,7 @@ export class Rooms {
     this.rooms = new Map(); this.sessions = new Map();
   }
 
-  connect(send) { return {send, room: null, player: null}; }
+  connect(send) { return {send, room: null, player: null, retiredMatch: null}; }
 
   handle(connection, message) {
     if (!message || typeof message !== 'object' || Array.isArray(message)) fail('invalid_request');
@@ -99,6 +102,11 @@ export class Rooms {
     }
     const r = c.room, p = c.player;
     if (m.op === 'leave' && !r) return;
+    // Drain only well-formed input already in flight on this room's connection.
+    // This short-lived marker conveys no membership, forwarding or authority.
+    if (!r && !p && m.op === 'input' && c.retiredMatch
+      && this.now() < c.retiredMatch.until && integer(m.epoch, 1, c.retiredMatch.epoch)
+      && validInput(m)) return;
     if (!r || !p || p.connection !== c) fail('not_joined');
     r.touched = this.now();
     if (m.op === 'leave') { this.remove(r, p, 'left'); return; }
@@ -159,9 +167,7 @@ export class Rooms {
       if (integer(m.epoch, 1, r.epoch)
         && (m.epoch < r.epoch || r.state === 'results')) return;
       if (r.state !== 'playing' || m.epoch !== r.epoch) fail('invalid_state');
-      if (!integer(m.sequence, 0, Number.MAX_SAFE_INTEGER) || m.sequence <= p.sequence
-        || !Array.isArray(m.axes) || m.axes.length !== 4 || m.axes.some(v => !Number.isFinite(v) || Math.abs(v) > 1)
-        || !integer(m.bits, 0, 31)) fail('invalid_input');
+      if (!validInput(m) || m.sequence <= p.sequence) fail('invalid_input');
       p.sequence = m.sequence;
       r.players.get(r.host)?.connection?.send({op: 'input', id: p.id, slot: p.slot,
         epoch: r.epoch, sequence: m.sequence, axes: m.axes, bits: m.bits}); return;
@@ -212,6 +218,7 @@ export class Rooms {
     while (usedSlots.has(slot)) slot++;
     const p = {id: r.next++, slot, name: cleanName(name) || 'Player', character: 0,
       ready: false, loaded: false, sequence: -1, connection: c, token: randomBytes(32).toString('base64url'), expires: 0};
+    c.retiredMatch = null;
     c.room = r; c.player = p; r.players.set(p.id, p); this.sessions.set(p.token, {r, p});
     c.send({op: 'welcome', id: p.id, token: p.token}); this.broadcastRoom(r);
   }
@@ -222,6 +229,7 @@ export class Rooms {
     if (session.p.connection) fail('session_active');
     if (session.p.expires <= this.now()) fail('session_expired');
     const {r, p} = session; p.connection = c; p.expires = 0; c.room = r; c.player = p;
+    c.retiredMatch = null;
     if (p.id === r.host && r.state === 'playing') r.authoritySeen = this.now();
     c.send({op: 'welcome', id: p.id, token: p.token}); this.broadcastRoom(r);
     if (r.state !== 'lobby') c.send({op: 'start', ...this.match(r)});
@@ -247,7 +255,10 @@ export class Rooms {
     this.broadcast(r, {op: 'closed', reason});
     for (const p of r.players.values()) {
       this.sessions.delete(p.token);
-      if (p.connection) { p.connection.room = null; p.connection.player = null; }
+      if (p.connection) {
+        p.connection.retiredMatch = r.epoch > 0 ? {epoch: r.epoch, until: this.now() + 1000} : null;
+        p.connection.room = null; p.connection.player = null;
+      }
     }
     this.rooms.delete(r.code);
   }
