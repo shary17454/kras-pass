@@ -58,6 +58,45 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.queue_free()
 	await host.get_tree().process_frame
 	await _check_finished_collision(t, host)
+	await _check_finished_weapons(t, host)
+
+
+func _check_finished_weapons(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("sabaq_sawarikh", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 119)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	for rider in scene.ctx.fighters: rider.set_physics_process(false)
+	var game: Node = scene.controller
+	for slot in 4: scene.ctx.fighter(slot).global_position = Vector3(100 + slot * 10, 20, 100)
+	var finished: Fighter = scene.ctx.fighter(0)
+	_finish_checkpoints(game, finished)
+	t.ok(game.finish_times[0] != game.UNFINISHED, "weapon fixture finishes through ordered race checkpoints")
+	t.ok(game.rival_ahead(1) != 0, "missile targeting ignores the already finished leader")
+	game.shielded[0] = 6.0
+	var old_velocity: Vector3 = finished.velocity
+	var old_hits: int = int(scene.ctx.details[1].get("hits", 0))
+	game._spin_out(0, 1, Vector3.RIGHT)
+	t.near(game.shielded[0], 6.0, 0.001, "completed racer cannot consume a shield on weapon contact")
+	game.shielded[0] = 0.0
+	game._spin_out(0, 1, Vector3.RIGHT)
+	t.equal(finished.velocity, old_velocity, "completed racer cannot receive weapon knockback")
+	t.equal(int(scene.ctx.details[1].get("hits", 0)), old_hits, "completed racer cannot grant weapon hit credit")
+	game._drop_bomb(1, scene.ctx.fighter(1))
+	var bomb: Dictionary = game._bombs.back()
+	bomb.arm = 0.0
+	finished.global_position = bomb.pos
+	scene.ctx.fighter(1).global_position += Vector3.RIGHT * 20.0
+	game._tick_bombs(0.01)
+	t.equal(game._bombs.size(), 1, "completed racer cannot trigger an armed road bomb")
+	scene.ctx.fighter(2).global_position = bomb.pos
+	game._tick_bombs(0.01)
+	t.equal(game._bombs.size(), 0, "unfinished racer still triggers the armed road bomb")
+	t.ok(int(scene.ctx.details[2].get("spun", 0)) > 0, "road bomb still penalizes the unfinished racer")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _check_finished_collision(t: TestHarness, host: Node) -> void:

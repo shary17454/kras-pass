@@ -275,7 +275,7 @@ func _tick_bombs(delta: float) -> void:
 				if s == int(b["owner"]) and float(b["arm"]) > -0.9:
 					continue
 				var f := ctx.fighter(s)
-				if f == null or not is_instance_valid(f) or not ctx.is_alive(s):
+				if f == null or not is_instance_valid(f) or not ctx.is_alive(s) or finish_times[s] != UNFINISHED:
 					continue
 				var to: Vector3 = f.global_position - b["pos"]
 				to.y = 0.0
@@ -299,7 +299,7 @@ func _detonate(bomb: Dictionary, owner: int) -> void:
 	AudioManager.play_sfx("explode", pos)
 	for s in ctx.fighters.size():
 		var f := ctx.fighter(s)
-		if f == null or not is_instance_valid(f) or not ctx.is_alive(s):
+		if f == null or not is_instance_valid(f) or not ctx.is_alive(s) or finish_times[s] != UNFINISHED:
 			continue
 		var to: Vector3 = f.global_position - pos
 		to.y = 0.0
@@ -339,7 +339,7 @@ func rival_ahead(slot: int) -> int:
 	var best := -1
 	var best_gap := 1 << 30
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or finish_times[i] != UNFINISHED:
 			continue
 		var gap := _progress_of(i) - mine
 		if gap > 0 and gap < best_gap:
@@ -349,7 +349,7 @@ func rival_ahead(slot: int) -> int:
 		return best
 	# Nobody ahead: the leader's missile chases whoever is closest behind.
 	for i in ctx.fighters.size():
-		if i != slot and ctx.is_alive(i):
+		if i != slot and ctx.is_alive(i) and finish_times[i] == UNFINISHED:
 			return i
 	return -1
 
@@ -374,7 +374,7 @@ func _on_missile_hit(p: Projectile, shooter: int, victim: int) -> void:
 ## One shared punishment for every weapon, so the player learns a single rule:
 ## being hit costs you a moment, never the race.
 func _spin_out(slot: int, by_slot: int, push: Vector3) -> void:
-	if is_recovering(slot):
+	if is_recovering(slot) or finish_times[slot] != UNFINISHED:
 		return
 	if shielded[slot] > 0.0:
 		shielded[slot] = 0.0

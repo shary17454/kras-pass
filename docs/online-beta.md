@@ -2,6 +2,33 @@
 
 ## Implemented boundary
 
+### Finished racers cannot absorb road weapons
+
+After `fe136deaac251a6a73e26327f0fcc582fc0bc55c`, the inherited Sabaq
+weapon controller was checked before network migration. Completed racers
+remained logically alive, so missile target selection could choose them and
+their parked bodies could trigger an armed road bomb. They could also consume
+a shield after a late weapon contact. Finished racers now neither attract new
+missile targets nor trigger bombs, receive blast/spin punishment or grant hit
+credit. Unfinished racers still use the original weapon rules and penalties.
+
+The initial regression in `/tmp/kras-race-weapons-before.log` reported 31
+passes and three failures. `/tmp/kras-race-weapons-after.log` passed 35
+assertions, including unshielded finished-racer immunity and a real bomb
+trigger against an unfinished racer. These are controller fixtures using
+ordered checkpoints, not Internet or physical-device qualification.
+`/tmp/kras-race-weapons-compile.log` compiled all 293 scripts.
+The separate real four-bot driving test in
+`/tmp/kras-race-weapons-driving.log` passed the unchanged three-lap race in
+145.43 simulated seconds, with crates, hits and off-track recovery active.
+The native macOS certificate-store lookup emitted an error during headless
+startup; the above processes nevertheless exited zero. This does not verify
+TLS access, Apple signing, or online Sabaq support, which remains excluded.
+The complete Godot test runner subsequently passed all 19,481 assertions in
+462.0 wall-clock seconds (`/tmp/kras-race-weapons-all-tests.log`), including
+the existing real three-lap tests on every configured race course. This run
+is not a new repeated stability, physical-device or Internet qualification.
+
 ### Seeded Kart tournament and finished-racer collision
 
 Source `3c26b94bf4a4f2da4685f53cddc6676f68943e33` introduced an internal
