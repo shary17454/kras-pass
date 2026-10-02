@@ -33,6 +33,8 @@ var observed_turret_damage := false
 var observed_turret_score := false
 var observed_tank_armor := false
 var observed_tank_inventory := false
+var observed_scrap_ram := false
+var observed_scrap_damage := false
 var tank_arenas_seen := {}
 var tank_route := PackedVector3Array()
 var tank_route_target := Vector3.INF
@@ -237,6 +239,10 @@ func _start(cfg: MatchConfig) -> void:
 		observed_turret_shot = false
 		observed_tank_armor = false
 		observed_tank_inventory = false
+	if game_id == "scrap_karts":
+		cfg.duration_override = 30.0
+		observed_scrap_ram = false
+		observed_scrap_damage = false
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		cfg.duration_override = 20.0
 		observed_duo_final = true
@@ -279,6 +285,10 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "scrap_karts":
+		observed_scrap_ram = observed_scrap_ram or game.controller.ram_serial > 0
+		for health in game.controller.health:
+			observed_scrap_damage = observed_scrap_damage or float(health) < game.controller._max_health
 	if game_id in ["turret_duel", "tank_arena"]:
 		var adapter = load("res://src/net/tank_replica.gd" if game_id == "tank_arena" else "res://src/net/turret_replica.gd")
 		var world: Dictionary = adapter.capture(game.controller) if host else game._network_replica.target.get("world", {})
@@ -397,7 +407,7 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
-		if game_id in ["turret_duel", "tank_arena"]:
+		if game_id in ["turret_duel", "tank_arena", "scrap_karts"]:
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var target: Vector3 = game.arena.global_position
 			var distance := INF
@@ -428,7 +438,7 @@ func _physics_process(_delta: float) -> void:
 			if to.length() < 8.0 and game_id == "turret_duel":
 				movement.y = -0.2
 			if fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
-				buttons = InputFrame.Btn.ATTACK
+				buttons = InputFrame.Btn.DASH if game_id == "scrap_karts" else InputFrame.Btn.ATTACK
 		if game_id == "drift_floes":
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var age := float(Time.get_ticks_msec() - started_at) * 0.001
@@ -639,6 +649,24 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "scrap_karts":
+		if not observed_scrap_ram or not observed_scrap_damage:
+			_fail("scrap collision/damage evidence missing: %s %s" % [observed_scrap_ram, observed_scrap_damage])
+			return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world_snapshots < 5 or world.is_empty() or not game.controller._hit_cooldown.is_empty():
+				_fail("scrap world missing or guest resolved its own collision")
+				return
+			for frame in 30:
+				game._network_replica.render(game, 0.016)
+			if game.controller.ram_serial != int(world.ram):
+				_fail("scrap impact baseline diverged")
+				return
+			for slot in game.ctx.player_count():
+				if absf(game.controller.health[slot] - float(world.health[slot])) > 0.001 or game.controller.wrecks[slot] != int(world.wrecks[slot]):
+					_fail("scrap health or wreck baseline diverged")
+					return
 	if game_id in ["turret_duel", "tank_arena"] and not host:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		var view = game._network_replica._tank if game_id == "tank_arena" else game._network_replica._turret

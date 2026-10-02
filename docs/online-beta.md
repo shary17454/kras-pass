@@ -2,6 +2,82 @@
 
 ## Implemented boundary
 
+### Scrap collision adapter and room preparation
+
+`scrap_karts` now replicates the host's health, maximum health, collision serial,
+last collision position and per-player wreck count. Godot and Node validate an
+exact five-field schema. A wreck is limited to one per player per round and
+requires zero health. Guests update the existing health bars without resolving
+contacts, assigning damage or awarding eliminations. Fresh collision/wreck
+feedback plays once; duplicate, baseline and stale/reconnect frames remain
+quiet. Collision feedback is sampled at snapshot frequency, not a lossless
+stream of every impact.
+
+Round start now clears `_hit_cooldown`, preventing a contact from the previous
+round suppressing the same pair's first contact in the next round. The focused
+test uses actual controller contacts and destruction before rendering their
+JSON-round-tripped state. `/tmp/kras-scrap-network-final.log` passed 75 assertions.
+The earlier `/tmp/kras-scrap-network.log` failed on inferred baseline typing and
+aborted before fixture cleanup; its leak warnings are retained as failed-run
+evidence, not successful qualification. Explicit boolean typing fixed the parse
+failure, and the final focused run completed without those leak warnings.
+
+Before room integration, `kras-party-check.vAhrTU` compiled 288 scripts, audited
+325 resources with zero issues, passed 19,192 assertions, passed the real
+three-lap regression and completed 39 stability matches without failure.
+This headless gate does not prove mobile graphics performance.
+
+Development rooms accept only the authored `scrap_yard` arena. The room contract
+rejects an unrelated arena, missing/extra world fields, excessive health,
+contradictory wreck health, negative serials and non-finite positions. Guests
+cannot send snapshots/results. Real Rooms disconnect/resume preserves the same
+identity, arena and health/impact baseline. All 83 Node tests passed, recorded in
+`/tmp/kras-scrap-room-contract.log`. Client development-room allowlists now also
+include Scrap; production online remains disabled.
+
+CI run `37009902360` on `10911cff4773e437ed5d1a584d33a75770880719` is terminal
+cancelled: 19 jobs succeeded and 11 were cancelled, including crate relay.
+The workflow has `cancel-in-progress: true`. The newer main-source run
+`37016043902` on `6b226ca7c513903aeb3cbb6335df3374382805e0` was queued when
+checked. Neither run proves the earlier Linux crate-relay failure resolved.
+
+The first independent-process Scrap attempt, `kras-network-smoke-KJmISj`,
+failed its final fixture array comparison after reaching results and reconnect.
+`/tmp/kras-json-array-probe.log` reproduces Godot's unequal comparison between
+`Array[int]` and a JSON-deserialized array of floating-point numbers despite
+equal numeric values. The fixture now compares each wreck counter explicitly
+as an integer, as it already does for tank inventory. No product state, damage,
+scores or acceptance requirements were altered to bypass the failure.
+
+The corrected ordinary fixture, `kras-network-smoke-3R4AXr`, passed both
+two-human-plus-bots and four-human rosters. Real drive/boost inputs caused
+accepted rams and reduced health. Every guest's final health, wreck counters
+and impact serial matched its authoritative baseline, with no guest contact
+cooldowns. The two-human scores were `[12,36,6,10]`, and four-human scores were
+`[14,20,18,12]`. Guests received 754 to 816 world snapshots. Guest identity
+resume and the deliberately dropped host result both recovered. The local
+server's maximum observed loop delay was 70 ms; this is not Internet latency
+or device FPS.
+
+Tournament fixture `kras-network-smoke-ZBOJLE` passed both rosters. The two-human
+roster completed three matches with points `[10,13,6,4]`, cups `[1,2,0,0]` and
+champion 1. Four humans tied at points `[12,6,12,3]` after three matches, then
+completed one actual contender-only tiebreak with champion 0. The tiebreak
+awarded no extra tournament points; final cups were `[2,0,2,0]`. Each match
+resets the fixture's collision/damage observation flags, so a previous game's
+contact cannot satisfy the next game's requirement. Guests received 1,310 to
+2,218 snapshots, retained their identity on resume, and never populated local
+contact cooldowns. The maximum local server-loop delay was 100 ms. This does
+not qualify physical-device performance, Internet behavior, ranked anti-cheat,
+complete impact audio or all other mini games.
+
+Post-integration gate `kras-party-check.wJeVdE` passed: 288 scripts compiled,
+325 resources audited with zero issues, 19,192 assertions, the real three-lap
+race and 39 stability matches with zero failures. CI now includes the Scrap
+ordinary/tournament scenario, but no Linux CI result for this new integration
+has been claimed. There are 31 development-room games; the remaining eight
+are Fawda, Kart Sprint, the four bosses, Sabaq Sawarikh and Base Siege.
+
 ### Armed ATV snapshot adapter
 
 The `tank_arena` adapter reuses Turret Duel's pooled-launch presentation and

@@ -1,11 +1,11 @@
 import {randomBytes, randomInt} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {Tournament} from './tournament.js';
-import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld} from './world-snapshots.js';
+import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
 export const PROTOCOL = 1;
-export const ONLINE_ARENAS = Object.freeze({tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
+export const ONLINE_ARENAS = Object.freeze({scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
   gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],
   paint_grid: ['paint_grid'], mnatiq: ['paint_grid'], mukharrib: ['paint_grid'], magnet_court: ['quad_court'], storm_heart: ['quad_court'], sky_court: ['quad_court'], crumble_court: ['crumble_court'], blast_ball: ['ember_pit'], color_stand: ['color_floor'], quick_draw: ['draw_stage'], symbol_echo: ['echo_hall'],
@@ -62,6 +62,7 @@ function validSnapshot(data, count, game, arena) {
   if (game === 'drift_floes' && !validFloeWorld(data.world)) return false;
   if (game === 'turret_duel' && !validTurretWorld(data.world, count)) return false;
   if (game === 'tank_arena' && !validTankWorld(data.world, count)) return false;
+  if (game === 'scrap_karts' && !validScrapWorld(data.world, count)) return false;
   if (!['fighters', 'scores', 'alive'].every(key => Array.isArray(data[key]) && data[key].length === count)) return false;
   if (!integer(data.phase, 0, 11) || !integer(data.round, 0, 9) || !integer(data.countdown, 0, 10)
     || !Number.isFinite(data.radius) || data.radius < .1 || data.radius > 1000

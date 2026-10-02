@@ -418,6 +418,38 @@ test('bumper rooms require five bounded host-owned barriers', () => {
   }
 });
 
+test('scrap rooms validate host health and preserve collision baseline on resume', () => {
+  const {rooms, host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'scrap_karts', arena: 'scrap_yard', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'tank_foundry'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot();
+  data.world = {health: [100, 72, 0, 100], maximum: 100, ram: 3,
+    position: [2, 1, -3], wrecks: [0, 0, 1, 0]};
+  data.alive[2] = false; data.fighters[2].alive = false; data.fighters[2].visible = false;
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  for (const world of [undefined, {...data.world, health: [101, 72, 0, 100]},
+    {...data.world, wrecks: [1, 0, 1, 0]}, {...data.world, ram: -1},
+    {...data.world, position: [0, Infinity, 0]}, {...data.world, extra: 1}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+    assert.equal(guest.last('snapshot').tick, 1);
+  }
+  const token = guest.last('welcome').token;
+  const id = guest.c.player.id;
+  rooms.disconnect(guest.c);
+  const resumed = client(); resumed.send({op: 'resume', token});
+  assert.equal(resumed.last('welcome').id, id);
+  assert.equal(resumed.last('start').config.arena, 'scrap_yard');
+  assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+  assert.throws(() => resumed.send({op: 'result', epoch, scores: [9, 0, 0, 0]}), /host_only/);
+});
+
 test('ATV rooms require host-owned armor ammo crates and shell generations on each map', () => {
   for (const arena of ['tank_foundry', 'tank_oasis', 'tank_frost']) {
     const {rooms, host, client} = fixture();
