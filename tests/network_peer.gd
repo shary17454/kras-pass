@@ -36,6 +36,8 @@ var observed_storm_warning := false
 var observed_storm_volley := false
 var observed_sky_warning := false
 var observed_sky_tilt := false
+var observed_crumble_warning := false
+var observed_crumble_fall := false
 var finished_matches := 0
 var result_drop: ResultDropTransport
 var _last_frame_ms := 0
@@ -153,6 +155,9 @@ func _start(cfg: MatchConfig) -> void:
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
+	if game.machine != null or game.ctx.machine != null:
+		_fail("unreplicated hover machine created in online match")
+		return
 	for fighter in game.ctx.fighters:
 		initial_positions.append(fighter.global_position)
 	InputRouter.assign_virtual(Net.local_slot())
@@ -168,6 +173,10 @@ func _physics_process(_delta: float) -> void:
 		for fighter in game.ctx.fighters:
 			observed_carrying = observed_carrying or fighter.carrying > 0
 	var slot := Net.local_slot()
+	if game_id == "crumble_court":
+		for tile: ArenaTile in game.arena.tiles:
+			observed_crumble_warning = observed_crumble_warning or tile.state == ArenaTile.State.WARNING
+			observed_crumble_fall = observed_crumble_fall or tile.state in [ArenaTile.State.FALLING, ArenaTile.State.GONE]
 	if game_id == "sky_court":
 		observed_sky_warning = observed_sky_warning or game.controller._warn > 0
 		observed_sky_tilt = observed_sky_tilt or game.controller._bank > 0.5
@@ -286,6 +295,16 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if not host and game_id == "crumble_court":
+		var rows: Array = game._network_replica.target.get("world", {}).get("tiles", [])
+		if world_snapshots < 5 or rows.size() != game.arena.tiles.size():
+			_fail("missing crumble world")
+			return
+		for i in rows.size():
+			var tile: ArenaTile = game.arena.tiles[i]
+			if tile.state != int(rows[i][0]) or absf(tile.position.y - float(rows[i][2])) > 0.001:
+				_fail("crumble floor presentation diverged")
+				return
 	if not host and game_id in ["goal_guard", "magnet_court", "storm_heart", "sky_court"] and (world_snapshots < 5 or game.controller.balls.is_empty()):
 		_fail("missing goal world")
 		return
@@ -424,6 +443,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "sky_court" and (not observed_sky_warning or not observed_sky_tilt):
 		_fail("sky court never warned and tilted")
+		return
+	if game_id == "crumble_court" and (not observed_crumble_warning or not observed_crumble_fall):
+		_fail("crumble court never warned and collapsed")
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,

@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld} from './world-snapshots.js';
+import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld} from './world-snapshots.js';
+
+test('crumble requires every authored tile with bounded phases and event counters', () => {
+  const make = () => ({tiles: Array.from({length: 113}, () => [0, 0, 0, 0])});
+  assert.ok(validCrumbleWorld(make()));
+  for (const row of [[1, .5, 0, 1], [2, 1, -5, 1], [3, 5, -12, 1]]) {
+    const data = make(); data.tiles[0] = row; assert.ok(validCrumbleWorld(data));
+  }
+  for (const value of [null, {}, [], {tiles: []}, {tiles: Array(114).fill([0, 0, 0, 0])}]) assert.equal(validCrumbleWorld(value), false);
+  for (let field = 0; field < 4; field++) {
+    for (const value of [null, true, '1', Infinity, NaN, -100, 1000001]) {
+      const data = make(); data.tiles[0][field] = value;
+      assert.equal(validCrumbleWorld(data), false);
+    }
+  }
+  for (const row of [[0, 1, 0, 0], [0, 0, -1, 0], [1, 1, 0, 0], [1, .5, -1, 0], [1.5, 0, 0, 0], [2, 0, -1, .5]]) {
+    const data = make(); data.tiles[0] = row; assert.equal(validCrumbleWorld(data), false);
+  }
+});
 
 test('sky world bounds tilt and warning state with no arbitrary transforms', () => {
   const make = () => ({balls: [{position: [0, .9, 0], velocity: [9, 0, 0], generation: 1, heavy: false}],

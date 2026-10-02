@@ -7,6 +7,7 @@ const GoalGuardReplica = preload("res://src/net/goal_guard_replica.gd")
 const MagnetReplica = preload("res://src/net/magnet_replica.gd")
 const StormReplica = preload("res://src/net/storm_replica.gd")
 const SkyReplica = preload("res://src/net/sky_replica.gd")
+const CrumbleReplica = preload("res://src/net/crumble_replica.gd")
 const CollectibleReplica = preload("res://src/net/collectible_replica.gd")
 const ZoneReplica = preload("res://src/net/zone_replica.gd")
 const RelicReplica = preload("res://src/net/relic_replica.gd")
@@ -20,6 +21,7 @@ var _relic: Node3D
 var _saboteur: RefCounted
 var _storm: RefCounted
 var _sky: RefCounted
+var _crumble: RefCounted
 var _event_received_at := 0
 var target: Dictionary = {}
 var received_at := 0
@@ -45,6 +47,8 @@ func capture(scene: Node) -> Dictionary:
 		packet["world"] = StormReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "sky_court":
 		packet["world"] = SkyReplica.capture(scene.controller)
+	elif scene.config.minigame_id == "crumble_court":
+		packet["world"] = CrumbleReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "zone_hold":
 		packet["world"] = ZoneReplica.capture(scene.controller)
 	elif scene.config.minigame_id == "relic_hold":
@@ -77,6 +81,9 @@ func accept(data: Dictionary, count: int, game_id: String = "ring_rumble") -> bo
 			return false
 	elif game_id == "sky_court":
 		if not SkyReplica.valid(data.get("world"), count):
+			return false
+	elif game_id == "crumble_court":
+		if not CrumbleReplica.valid(data.get("world")):
 			return false
 	elif game_id == "zone_hold":
 		if not ZoneReplica.valid(data.get("world")):
@@ -170,6 +177,12 @@ func render(scene: Node, delta: float) -> void:
 		_event_received_at = received_at
 	elif scene.config.minigame_id == "zone_hold":
 		ZoneReplica.render(scene.controller, target.world)
+	elif scene.config.minigame_id == "crumble_court":
+		if _crumble == null:
+			_crumble = CrumbleReplica.new()
+		var fresh := _event_received_at > 0 and received_at - _event_received_at <= 1000
+		_crumble.render(scene.controller, target.world, fresh and not snap and int(target.phase) in [P.PLAYING, P.SUDDEN_DEATH])
+		_event_received_at = received_at
 	elif scene.config.minigame_id == "sky_court":
 		if _sky == null:
 			_sky = SkyReplica.new()

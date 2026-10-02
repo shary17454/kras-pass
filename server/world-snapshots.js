@@ -1,6 +1,16 @@
 const finite = value => Number.isFinite(value) && Math.abs(value) <= 10000;
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(finite);
 
+export function validCrumbleWorld(data) {
+  return !!data && Array.isArray(data.tiles) && data.tiles.length === 113
+    && data.tiles.every(row => Array.isArray(row) && row.length === 4 && row.every(Number.isFinite)
+      && Number.isInteger(row[0]) && row[0] >= 0 && row[0] <= 3
+      && row[1] >= 0 && row[1] <= 10 && row[2] >= -32 && row[2] <= 0
+      && Number.isInteger(row[3]) && row[3] >= 0 && row[3] <= 1000000
+      && (row[0] !== 0 || (row[1] === 0 && row[2] === 0))
+      && (row[0] !== 1 || (row[1] <= .9 && row[2] === 0)));
+}
+
 export function validSkyWorld(data, count) {
   return validGoalGuardWorld(data, count)
     && Object.entries({bank: 1, warning: 1.2, tilting: 4, cycle: 9}).every(([key, limit]) => Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= limit)

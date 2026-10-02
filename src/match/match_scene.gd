@@ -199,7 +199,7 @@ func _build() -> void:
 	controller.setup(ctx)
 	powerups.setup(ctx)
 	# The hover machine delivers through PowerUpSystem, so it goes on after it.
-	if controller.uses_machine():
+	if controller.uses_machine() and not _online():
 		machine = HoverMachine.new()
 		machine.name = "HoverMachine"
 		world.add_child(machine)

@@ -23,6 +23,7 @@ var _timer := 0.0
 var _home_y := 0.0
 var _size := 2.0
 var _warning_material: StandardMaterial3D
+var collapse_sequence := 0
 
 
 func build(size: float, thickness: float, color: Color) -> void:
@@ -72,6 +73,7 @@ func force_collapse() -> void:
 		return
 	state = State.FALLING
 	_timer = 0.0
+	collapse_sequence += 1
 	set_collision_layer_value(1, false)
 	collapsed.emit(self)
 

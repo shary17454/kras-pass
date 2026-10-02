@@ -14,7 +14,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains thirteen explicitly adapted rulesets; verification
+The development allowlist contains fourteen explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard
@@ -39,8 +39,11 @@ release, recharge or goals.
 two additional ball slots, and sequenced warning/volley feedback.
 `sky_court` adds the selected engine, bank amount, warning/tilt timers and
 sequenced feedback. Guests present the tilted surface without applying forces.
+`crumble_court` replicates all 113 authored tiles: phase, warning/fall/respawn
+timer, local height and monotonic collapse count. Guests never advance floor
+physics or emit gameplay collapse signals; sound events are freshness-gated.
 Optional random power-ups remain disabled in online beta configurations.
-The other 26 games are not
+The other 25 games are not
 online-enabled. The room service supports points/cups tournaments for
 these supported arenas, with stable rosters, readiness between matches, seeded
 no-repeat rotation, and server-owned cumulative accounting. Only the host can
@@ -764,8 +767,58 @@ at round start instead of resuming the previous round's drop phase.
   281 resources audited with zero issues, 14,409 assertions, the real three-lap
   race regression and 39 stability matches with zero failures. These are
   desktop/headless checks, not physical-device performance certification.
-- These changes do not enable Crumble Court or Color Stand online. Their
-  floor-state adapters and multi-engine checks are still required.
+- That prerequisite commit did not enable either game online. Crumble Court's
+  subsequent adapter is described below; Color Stand remains offline-only.
+
+## Crumble Court world adapter
+
+The canonical tile ordering is checked against every authored coordinate for
+two, three and four players. Both server and client reject missing tiles,
+nonfinite/coerced numbers, fractional phases/event counters, out-of-bounds
+heights and inconsistent solid/warning rows. Hidden tiles have a canonical
+height, rather than transmitting arbitrary overshoot after a long tick.
+The initial unit fixture deliberately used a two-second fall tick; its -60 m
+hidden height exposed this boundary mismatch, fixed before acceptance.
+
+- `/tmp/kras-crumble-unit-final.log`: 2509 assertions passed before the final
+  online-scene fixture change. Node server tests: 44 passed.
+- `kras-network-smoke-ouGSBG`: ordinary matches passed for two humans/two bots
+  and four humans with real floor warning/fall, reconnect and matching results.
+  Scores were [6, 10, 10, 14] and [4, 8, 12, 16]; guests received 667-700
+  snapshots. Server loop maximum was 41 ms, not an iPhone FPS claim.
+- Initial portrait/landscape desktop fixtures passed 2514 assertions each,
+  but visibly included the hover machine. Investigation found the online
+  runtime disabled ambient power-ups yet still constructed the machine,
+  whose direct delivery bypassed that toggle. Previous claims above that
+  machine drops were excluded were therefore too strong for those revisions.
+  The shared match builder now omits the machine only in online context;
+  offline behavior remains. Every real network peer now rejects a scene with
+  a machine, so all adapted games exercise this invariant in subsequent CI.
+- The initial ordinary-network and graphical evidence predates that runtime
+  correction. The graphical fixture now uses online context with a stub
+  transport rather than an offline scene.
+- Post-correction tournament `kras-network-smoke-7EDCle` passed three matches
+  with two humans/two bots and four humans. Both finished with [3, 6, 9, 15]
+  points and no final tie-break. Guests received 1049-1075 snapshots and the
+  server loop maximum was 47 ms. This scripted input test is not balance QA.
+- `/tmp/kras-crumble-online-portrait-final.log` and
+  `/tmp/kras-crumble-online-landscape-final.log`: 2518 assertions passed each.
+  Corresponding PNGs were inspected with all four players and mixed floor
+  phases visible. A prior online fixture capture had a local pause menu from
+  window focus changes; the fixture now closes and checks that menu explicitly.
+  These are desktop fixtures, not iPhone/iPad approval or live Internet QA.
+- Final-source ordinary rerun `kras-network-smoke-qYFu7I` passed both rosters,
+  including the new machine-absence invariant, warning/fall observation,
+  reconnect and identical results. Scores were [4, 8, 14, 14] and
+  [4, 8, 12, 16]; guests received 681-715 snapshots, server loop maximum 38 ms.
+- Full local gate `kras-party-check.ItWpFi` passed: 246 scripts compiled,
+  283 resources/21 autoloads/27 routes/eight characters with zero audit issues,
+  16,920 assertions, the real three-lap race regression, and 39 stability
+  matches with zero failures. The offline machine tests also still pass.
+- Production online stays disabled; physical-device, Internet and new-source
+  multi-engine checks for the other games remain release gates. The shared
+  machine-absence assertion will run for every game in the next CI dispatch.
+  Run `36967949347` still targets `94a5222`, before this correction.
 
 ## Expansion checklist per game
 
