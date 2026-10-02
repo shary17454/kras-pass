@@ -399,6 +399,24 @@ test('relay room accepts only host cargo with its authored arena', () => {
   }
 });
 
+test('duel rooms validate host lives and damage', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'duel_pit', arena: 'duel_pit', rounds: 1, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'sweeper_ring'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = snapshot(); data.world = {lives: [3, 2, 1, 0], damage: [0, 9, 18, 0]};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  for (const world of [undefined, {...data.world, lives: [4, 2, 1, 0]}, {...data.world, damage: [-1, 0, 0, 0]}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+  }
+});
+
 test('sweeper rooms require all three host-owned arm angles', () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

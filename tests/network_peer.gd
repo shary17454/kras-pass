@@ -21,6 +21,9 @@ var tournament_mode := false
 var game_id := "ring_rumble"
 var world_snapshots := 0
 var observed_sweeper_hit := false
+var observed_duel_damage := false
+var observed_duel_life_loss := false
+var observed_duel_respawn := false
 var observed_collection_score := false
 var observed_zone_score := false
 var observed_relic_holder := false
@@ -171,6 +174,8 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 35.0
 	if game_id == "rising_tide":
 		cfg.duration_override = 45.0
+	if game_id == "duel_pit":
+		cfg.duration_override = 35.0
 	cfg.sudden_death = false
 	initial_positions.clear()
 	moved = false
@@ -201,6 +206,12 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "duel_pit":
+		for fighter in game.ctx.fighters:
+			var lives: int = game.controller.lives(fighter.slot)
+			observed_duel_damage = observed_duel_damage or fighter.damage_percent > 0.0
+			observed_duel_life_loss = observed_duel_life_loss or lives < 3
+			observed_duel_respawn = observed_duel_respawn or (lives > 0 and lives < 3 and fighter.alive and fighter.visible)
 	if not host and game_id == "sweeper_storm":
 		for fighter in game.ctx.fighters:
 			observed_sweeper_hit = observed_sweeper_hit or fighter._stun > 0.0
@@ -277,6 +288,19 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "duel_pit":
+			var fighter: Fighter = game.ctx.fighters[slot]
+			var target: Vector3 = game.arena.global_position
+			var distance := INF
+			for other in game.ctx.fighters:
+				if other.slot != slot and other.alive and other.visible:
+					var d: float = fighter.global_position.distance_squared_to(other.global_position)
+					if d < distance:
+						distance = d
+						target = other.global_position
+			movement = Vector2(target.x - fighter.global_position.x, target.z - fighter.global_position.z).limit_length()
+			if (Time.get_ticks_msec() - started_at) % 700 < 180:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "rising_tide":
 			# Circle on the base platform so rising water, not running off, ends the round.
 			var fighter: Fighter = game.ctx.fighters[slot]
@@ -443,6 +467,15 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "duel_pit" and not host:
+		var world: Dictionary = game._network_replica.target.get("world", {})
+		if world_snapshots < 5 or world.is_empty():
+			_fail("missing duel world")
+			return
+		for slot in game.ctx.player_count():
+			if game.controller.lives(slot) != int(world.lives[slot]) or absf(game.ctx.fighter(slot).damage_percent - float(world.damage[slot])) > 0.001:
+				_fail("duel lives or damage diverged")
+				return
 	if game_id == "sweeper_storm":
 		var angles: Array = []
 		for hazard in game.arena._hazards:
@@ -699,6 +732,9 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id == "sweeper_storm" and not observed_sweeper_hit:
 		_fail("no sweeper collision feedback observed")
+		return
+	if game_id == "duel_pit" and (not observed_duel_damage or not observed_duel_life_loss or not observed_duel_respawn):
+		_fail("duel combat/life/respawn evidence missing: %s %s %s" % [observed_duel_damage, observed_duel_life_loss, observed_duel_respawn])
 		return
 	if game_id == "relic_hold" and (not observed_relic_holder or not observed_relic_score):
 		_fail("relic finished without observed ownership and scoring")

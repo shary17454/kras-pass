@@ -2,6 +2,35 @@
 
 ## Implemented boundary
 
+### Duel Pit room integration
+
+Development rooms now allow `duel_pit` only on its authored `duel_pit` arena.
+The server requires bounded host lives/damage and rejects guest publication,
+wrong arenas and invalid world fields. All 70 Node tests passed. The CI matrix
+includes Duel Pit; this is not itself a passing CI result.
+
+Ordinary independent-process matches `kras-network-smoke-JuROSs` passed for
+2 humans plus 2 bots and 4 humans. Aggregate scores were `[27,16,4,13]` and
+`[16,18,2,5]`, guest snapshots 1,256-1,686, maximum local server event-loop
+delay 38 ms. Both modes recovered guest identity and interrupted host result
+transport. Scripted humans approach opponents and pulse attack; every peer
+must observe damage, life loss and a returned living fighter with fewer than
+three lives. Guests compare HUD damage/lives against host snapshots. These
+checks are local headless evidence, not mobile or Internet qualification.
+
+Tournament run `kras-network-smoke-SzHsCn` passed three matches for each
+roster. Points were `[6,5,13,10]` / `[15,6,8,7]`, champion slot 2 / 0,
+with 2,197-2,559 guest snapshots and maximum local server loop delay 53 ms.
+Host and designated guest reconnect passed, as did actual damage, life loss,
+respawn and host/guest world agreement checks. No final tie occurred. Logs
+contained no script, parse, network-failure, normalization or object-leak
+errors. Production online remains disabled.
+
+Full gate `kras-party-check.Fncpr6`: 274 scripts compiled, 311 resources
+audited with zero issues, 18,553 assertions passed, race regression passed,
+and all 39 stability matches passed. Physical-device and Internet testing
+remain separate release requirements.
+
 ### Duel Pit snapshot adapter
 
 Duel snapshots now include per-slot lives and accumulated damage for the
@@ -13,8 +42,8 @@ respawns. New-round snapshots restore lives and clear damage.
 
 `/tmp/kras-duel-network.log`: all 39 assertions passed, including the visible
 damage text and idempotent repeated rendering. All 69 Node tests passed.
-Duel Pit is not yet room-enabled: independent-process combat, respawn,
-reconnect and tournament validation remain required.
+This adapter-only checkpoint preceded room enablement and the independent
+combat, respawn, reconnect and tournament checks documented above.
 Full gate `kras-party-check.CnwV0b`: 274 scripts compiled, 311 resources
 audited with zero issues, 18,553 assertions passed, race regression passed
 and all 39 stability matches passed. This is desktop headless evidence, not
@@ -514,7 +543,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-four explicitly adapted rulesets; verification
+The development allowlist contains twenty-five explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard

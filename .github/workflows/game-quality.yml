@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm]
+        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm, duel_pit]
     env:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
