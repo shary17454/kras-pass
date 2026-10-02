@@ -418,6 +418,27 @@ test('bumper rooms require five bounded host-owned barriers', () => {
   }
 });
 
+test('floe rooms require bounded host-owned platforms on each authored arena', () => {
+  for (const arena of ['vortex_ring', 'storm_ring']) {
+    const {host, client} = fixture();
+    const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+    const config = {game: 'drift_floes', arena, rounds: 1, bots: true, difficulty: 1};
+    assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'duel_pit'}}), /invalid_config/);
+    host.send({op: 'configure', config});
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    const data = snapshot(); data.world = {age: 1, positions: [[1, -.13, 2], [3, -.13, 4], [5, -.13, 6]]};
+    assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+    host.send({op: 'snapshot', epoch, tick: 1, data});
+    assert.deepEqual(guest.last('snapshot').data.world, data.world);
+    for (const world of [undefined, {...data.world, age: -1}, {...data.world, positions: []}, {...data.world, extra: 1}]) {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+      assert.equal(guest.last('snapshot').tick, 1);
+    }
+  }
+});
+
 test('duo rooms bind team snapshots to each authored arena', () => {
   for (const arena of ['sweeper_ring', 'bumper_bowl']) {
     const {host, client} = fixture();

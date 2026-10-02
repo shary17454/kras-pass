@@ -2,6 +2,41 @@
 
 ## Implemented boundary
 
+### Drift Floes rooms
+
+Development rooms now accept `drift_floes` only on `vortex_ring` and
+`storm_ring`. The server requires bounded host-only platform snapshots and
+rejects invalid arena selections or malformed/missing world payloads. All
+77 Node tests passed, including both arenas and denial of guest publication.
+
+Independent-process run `kras-network-smoke-Hf4LTG` passed for 2 humans plus
+2 bots and 4 humans on `vortex_ring`. Aggregate scores were `[12,12,18,12]`
+/ `[6,12,12,14]`. Guests received 855-1,328 snapshots. All peers observed
+moving platforms and falls; guests converged to host platform transforms
+and motion age with collision/physics synchronization disabled. Guest
+identity recovery and interrupted host result delivery passed. Logs had no
+script, parse, network-failure, normalization or object-leak errors.
+Maximum local server event-loop delay was 166 ms; this is not a phone frame
+rate or Internet-latency measurement.
+
+Tournament run `kras-network-smoke-kgPKDl` passed for both rosters and visited
+both authored arenas in each. The 2-human/2-bot roster completed three regular
+matches plus a real tiebreak: points `[5,4,12,12]`, cups `[0,0,2,2]`, champion
+slot 2, final awards `[0,0,0,0]`. Both human spectators remained inactive in
+the bot final; their lack of movement in that final is intentional. The
+4-human roster completed three matches: points `[4,5,11,13]`, cups
+`[0,0,1,2]`, champion slot 3. Guests received 1,059-2,821 snapshots, with a
+maximum local server loop delay of 79 ms. Host/guest identity recovery,
+world-presentation comparison and final tournament agreement passed. Logs
+had no script, parse, network-failure, normalization or object-leak errors.
+Production online remains disabled; Internet/device qualification is pending.
+
+Full integration gate `kras-party-check.tx6bmB` compiled 281 scripts, audited
+318 resources with zero issues, passed 18,850 assertions, passed the three-lap
+race regression and completed all 39 stability matches without failure.
+The development allowlist now contains 28 games; 11 other games still need
+their own network integration and independent-process acceptance.
+
 ### Drift Floes lifecycle and snapshot adapter
 
 The moving plates previously retained sudden-death speed multipliers and
@@ -23,9 +58,9 @@ Full gate `kras-party-check.EdrXr7` compiled 281 scripts, audited 318 resources
 with zero issues, passed 18,850 assertions, passed the three-lap race
 regression and completed all 39 stability matches without failure.
 
-This is an adapter checkpoint only: `drift_floes` is not yet in the room
-allowlist. Independent-process matches/tournaments, reconnect and device QA
-remain required. Production online remains disabled.
+This adapter checkpoint preceded the room integration above. Its unit tests
+alone do not establish independent-process transport or device quality.
+Production online remains disabled.
 
 ### Duo Clash integration
 
@@ -717,7 +752,7 @@ Public discovery and six-character private codes use real WebSockets at
 AI. The lobby has character selection, readiness, host kick, arena, difficulty
 and 1-10 rounds. Local input remains keyboard, gamepad or touch.
 
-The development allowlist contains twenty-seven explicitly adapted rulesets; verification
+The development allowlist contains twenty-eight explicitly adapted rulesets; verification
 limits for each are recorded below. These include `ring_rumble` on `vortex_ring`
 / `storm_ring`, without machine drops, random power-ups or bombs, and
 `goal_guard` on `quad_court`. Offline Ring Rumble is unchanged. Goal Guard

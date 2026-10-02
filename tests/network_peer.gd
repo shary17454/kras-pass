@@ -24,6 +24,10 @@ var duo_tiebreak := false
 var observed_duo_final := false
 var duo_final_cups: Array = []
 var duo_arenas_seen := {}
+var floe_arenas_seen := {}
+var floe_start_positions: Array = []
+var observed_floe_moved := false
+var observed_floe_fall := false
 var observed_duo_score := false
 var observed_duo_life_loss := false
 var observed_duo_damage := false
@@ -196,6 +200,9 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 35.0
 	if game_id == "duo_clash":
 		cfg.duration_override = 35.0
+	if game_id == "drift_floes":
+		cfg.duration_override = 25.0
+		floe_arenas_seen[cfg.arena_id] = true
 	if game_id == "bumper_bowl":
 		cfg.duration_override = 35.0
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
@@ -205,6 +212,7 @@ func _start(cfg: MatchConfig) -> void:
 			duo_final_cups = Net.tournament.get("cups", []).duplicate()
 	cfg.sudden_death = false
 	initial_positions.clear()
+	floe_start_positions.clear()
 	moved = false
 	last_hunter = -1
 	hunter_round = -1
@@ -239,6 +247,14 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "drift_floes":
+		if floe_start_positions.is_empty():
+			for floe in game.controller._floes:
+				floe_start_positions.append(floe.body.global_position)
+		if game.controller._time > 1.0:
+			for index in 3:
+				observed_floe_moved = observed_floe_moved or game.controller._floes[index].body.global_position.distance_to(floe_start_positions[index]) > 0.1
+		observed_floe_fall = observed_floe_fall or game.ctx.alive.has(false)
 	if game_id == "duo_clash":
 		for slot in game.ctx.player_count():
 			observed_duo_score = observed_duo_score or game.controller.team_score(slot % 2) > 0
@@ -336,6 +352,13 @@ func _physics_process(_delta: float) -> void:
 	if slot >= 0:
 		var movement := Vector2(0.2, -0.2)
 		var buttons := 0
+		if game_id == "drift_floes":
+			var fighter: Fighter = game.ctx.fighters[slot]
+			var age := float(Time.get_ticks_msec() - started_at) * 0.001
+			var radius := 3.0 if fmod(age, 15.0) < 8.0 else 20.0
+			var angle := age * 0.4 + slot * TAU / 4.0
+			var target: Vector3 = game.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * radius
+			movement = Vector2(target.x - fighter.global_position.x, target.z - fighter.global_position.z).limit_length()
 		if game_id == "bumper_bowl":
 			var fighter: Fighter = game.ctx.fighters[slot]
 			var bumpers: Array = []
@@ -530,6 +553,26 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "drift_floes":
+		if not observed_floe_moved or not observed_floe_fall:
+			_fail("moving floe/fall evidence missing")
+			return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world_snapshots < 5 or world.is_empty():
+				_fail("missing moving floe snapshots")
+				return
+			for frame in 30:
+				game._network_replica.render(game, 0.016)
+			for index in 3:
+				var body: AnimatableBody3D = game.controller._floes[index].body
+				var p: Array = world.positions[index]
+				if body.global_position.distance_to(Vector3(p[0], p[1], p[2])) > 0.001 or body.sync_to_physics or body.collision_layer != 0:
+					_fail("guest floe transform/physics diverged")
+					return
+			if absf(game.controller._time - float(world.age)) > 0.001:
+				_fail("guest floe clock diverged")
+				return
 	if game_id == "duo_clash" and not host:
 		var world: Dictionary = game._network_replica.target.get("world", {})
 		if world_snapshots < 5 or world.is_empty() or world.arena != game.config.arena_id:
@@ -824,6 +867,9 @@ func _finished(result: MatchResult) -> void:
 	finished_matches += 1
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
+		return
+	if requested_game_id == "drift_floes" and tournament_mode and floe_arenas_seen.size() != 2:
+		_fail("floe tournament did not visit both arenas")
 		return
 	if game_id in ["gem_grab", "star_rush", "crate_relay"] and not observed_collection_score:
 		_fail("collection finished without any scoring")
