@@ -40,10 +40,24 @@ The earlier `kras-party-check.f7j1dk` gate failed the two audio-fixture
 assertions described above and was not accepted as passing evidence.
 
 This is adapter preparation, not independent room acceptance. `tank_arena`
-is still excluded from online room allowlists. Real-process matches, tournament
+is still excluded from the Godot client's online room allowlist. Real-process matches, tournament
 and reconnect tests across its authored maps are required next. Physical-device
 and Internet qualification, sampled-event limitations and impact/collection
 sound parity remain unresolved. Production online remains disabled.
+
+The development server now recognizes only the three authored ATV arenas:
+`tank_foundry`, `tank_oasis` and `tank_frost`. Its snapshot dispatch uses the
+existing exact `validTankWorld` validator rather than accepting fighter-only
+frames. The room-contract regression exercises each arena, rejects an unrelated
+arena, missing world state, invalid armor, inconsistent ammunition, missing
+crates, zero launch generations and a non-sticky shell with a sticky fuse.
+Guests cannot publish snapshots or results. A real Rooms disconnect/resume
+restores the same identity, arena and authoritative inventory baseline without
+directly modifying room internals. All 81 Node tests passed; their full output
+is preserved in `/tmp/kras-tank-room-contract.log`. This server-side
+preparation does not enable ATV selection in the Godot client or qualify it for
+production; the client allowlist and CI scenario remain intentionally unchanged
+until independent-process gameplay tests are added and exercised.
 
 ### Outstanding CI collection acceptance
 
