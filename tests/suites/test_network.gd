@@ -104,6 +104,11 @@ func run(t: TestHarness) -> void:
 	t.equal(armed_final.rule("maximum_duration", 0), 120.0, "armed race final has a driving safety deadline")
 	t.equal(armed_final.rule("online_contenders", []), [0, 2], "armed race spectators retain stable roster slots")
 	t.equal(Net.ONLINE_ARENAS.sabaq_sawarikh.size(), 8, "armed race exposes its eight authored courses")
+	Net.match_data.config.game = "base_siege"
+	Net.match_data.config.arena = "iron_flats"
+	t.equal(Net.make_match_config().minigame_id, "base_siege", "siege uses shared online match configuration")
+	t.equal(Net.make_match_config().rule("online_contenders", []), [0, 2], "siege final preserves contender roster")
+	t.equal(Net.ONLINE_ARENAS.base_siege, ["iron_flats", "crate_yard"], "siege supports both original arenas")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
 	var frame := InputFrame.new()
 	frame.bits = 4

@@ -22,6 +22,7 @@ var game_id := "ring_rumble"
 var requested_game_id := ""
 var duo_tiebreak := false
 var race_tiebreak := false
+var siege_tiebreak := false
 var observed_kart_final := false
 var kart_final_cups: Array = []
 var observed_duo_final := false
@@ -95,6 +96,16 @@ var _max_frame_gap_ms := 0
 var _next_diagnostic_ms := 0
 var observed_armed_pickup := false
 var observed_armed_weapon := false
+var observed_siege_hit := false
+var observed_siege_destroyed := false
+var siege_arenas_seen := {}
+var observed_siege_final := false
+var siege_final_cups: Array = []
+var siege_target_slot := -1
+var siege_via_center := true
+var siege_route_round := -1
+var siege_hits_by_round := {}
+var siege_destruction_by_round := {}
 
 
 func _process(_delta: float) -> void:
@@ -121,6 +132,16 @@ func _process(_delta: float) -> void:
 					"lap": game.controller.lap[fighter.slot], "next": game.controller._next_cp[fighter.slot],
 					"finish": game.controller.finish_times[fighter.slot]})
 			print("NETWORK_KART=" + JSON.stringify({"round": game._round_index, "elapsed": game.controller._elapsed, "racers": racers}))
+		if game_id == "base_siege" and is_instance_valid(game):
+			var fighters: Array = []
+			for fighter in game.ctx.fighters:
+				fighters.append({"slot": fighter.slot, "position": str(fighter.global_position), "velocity": str(fighter.velocity),
+					"facing": str(fighter.facing), "control": fighter.control_enabled, "attack": fighter.can_attack,
+					"callback": fighter.attacked.is_connected(game.controller._on_attacked)})
+			var bases: Array = []
+			for base in game.controller._bases:
+				bases.append({"slot": base.slot, "position": str(base.node.global_position), "health": base.health, "hits": base.hits})
+			print("NETWORK_SIEGE=" + JSON.stringify({"fighters": fighters, "bases": bases, "view": game.controller.presentation_only}))
 		if game_id == "crate_relay" and is_instance_valid(game):
 			var players: Array = []
 			for fighter in game.ctx.fighters:
@@ -160,6 +181,7 @@ func _ready() -> void:
 		if arg == "--tournament": tournament_mode = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg == "--race-tiebreak": race_tiebreak = true
+		if arg == "--siege-tiebreak": siege_tiebreak = true
 		if arg.begins_with("--game="): game_id = arg.trim_prefix("--game=")
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
@@ -213,7 +235,7 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
-			if duo_tiebreak or race_tiebreak:
+			if duo_tiebreak or race_tiebreak or siege_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
 		return
@@ -263,6 +285,19 @@ func _start(cfg: MatchConfig) -> void:
 		cfg.duration_override = 30.0
 		observed_scrap_ram = false
 		observed_scrap_damage = false
+	if game_id == "base_siege":
+		cfg.duration_override = 45.0 if cfg.rule("online_contenders", []).is_empty() else 20.0
+		if not cfg.rule("online_contenders", []).is_empty():
+			observed_siege_final = true
+			if siege_final_cups.is_empty(): siege_final_cups = Net.tournament.get("cups", []).duplicate()
+		observed_siege_hit = false
+		observed_siege_destroyed = false
+		siege_arenas_seen[cfg.arena_id] = true
+		siege_target_slot = -1
+		siege_via_center = true
+		siege_route_round = -1
+		siege_hits_by_round.clear()
+		siege_destruction_by_round.clear()
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
@@ -337,6 +372,16 @@ func _physics_process(_delta: float) -> void:
 		observed_scrap_ram = observed_scrap_ram or game.controller.ram_serial > 0
 		for health in game.controller.health:
 			observed_scrap_damage = observed_scrap_damage or float(health) < game.controller._max_health
+	if game_id == "base_siege":
+		if siege_route_round != game._round_index:
+			siege_route_round = game._round_index
+			siege_target_slot = -1
+			siege_via_center = true
+		for base in game.controller._bases:
+			observed_siege_hit = observed_siege_hit or int(base.hits) > 0
+			observed_siege_destroyed = observed_siege_destroyed or float(base.health) <= 0.0
+			if int(base.hits) > 0: siege_hits_by_round[game._round_index] = true
+			if float(base.health) <= 0.0: siege_destruction_by_round[game._round_index] = true
 	if game_id in ["turret_duel", "tank_arena"]:
 		var adapter = load("res://src/net/tank_replica.gd" if game_id == "tank_arena" else "res://src/net/turret_replica.gd")
 		var world: Dictionary = adapter.capture(game.controller) if host else game._network_replica.target.get("world", {})
@@ -468,6 +513,33 @@ func _physics_process(_delta: float) -> void:
 		var buttons := 0
 		if game_id == "sabaq_sawarikh" and (Time.get_ticks_msec() - started_at) % 600 < 150:
 			buttons = InputFrame.Btn.ATTACK
+		if game_id == "base_siege":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			if siege_target_slot < 0 or not game.ctx.is_alive(siege_target_slot) or game.controller.base_health(siege_target_slot) <= 0.0:
+				siege_target_slot = -1
+				siege_via_center = true
+				var nearest := INF
+				for other in game.ctx.player_count():
+					if other == slot or not game.ctx.is_alive(other) or game.controller.base_health(other) <= 0.0:
+						continue
+					var position: Vector3 = game.controller.base_position(other)
+					var distance: float = fighter.global_position.distance_squared_to(position)
+					if distance < nearest:
+						nearest = distance
+						siege_target_slot = other
+			var target: Vector3 = game.controller.base_position(siege_target_slot) if siege_target_slot >= 0 else fighter.global_position
+			var center: Vector3 = game.ctx.arena_center()
+			if Vector2(fighter.global_position.x - center.x, fighter.global_position.z - center.z).length() <= 1.5:
+				siege_via_center = false
+			# The authored pillars obstruct the straight diagonal to a rival base.
+			var waypoint: Vector3 = center if siege_via_center else target
+			var direction := waypoint - fighter.global_position
+			direction.y = 0.0
+			movement = Vector2(direction.x, direction.z).limit_length()
+			var aim := target - fighter.global_position
+			aim.y = 0.0
+			if aim.length() <= 3.5 and fighter.facing.dot(aim.normalized()) > 0.3 and (Time.get_ticks_msec() - started_at) % 500 < 120:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "fawda":
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var target: Vector3 = game.arena.global_position
@@ -739,6 +811,27 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "base_siege":
+		if not observed_siege_hit or not observed_siege_destroyed:
+			_fail("siege hit/destruction evidence missing")
+			return
+		for round in range(game._round_index + 1):
+			if not siege_hits_by_round.has(round) or not siege_destruction_by_round.has(round):
+				_fail("siege round %d had no real damage/destruction" % round)
+				return
+		if not host:
+			var world: Dictionary = game._network_replica.target.get("world", {})
+			if world_snapshots < 5 or world.is_empty() or not game.controller.presentation_only:
+				_fail("siege world missing or guest remained authoritative")
+				return
+			for frame in 30: game._network_replica.render(game, 0.016)
+			for slot in game.ctx.player_count():
+				var base: Dictionary = game.controller._bases[slot]
+				var row: Dictionary = world.bases[slot]
+				if base.body.collision_layer != 0 or absf(base.health - float(row.health)) > 0.001 \
+					or base.hits != int(row.hits) or base.node.visible != (float(row.health) > 0.0):
+					_fail("siege crystal baseline or collision diverged")
+					return
 	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 		if contenders.is_empty() and (not observed_kart_boost or (game_id == "kart_sprint" and not observed_kart_rescue)):
 			_fail("physical race boost/rescue evidence missing: %s %s" % [observed_kart_boost, observed_kart_rescue])
@@ -1183,6 +1276,17 @@ func _finished(result: MatchResult) -> void:
 	if requested_game_id == "fawda" and tournament_mode and fawda_arenas_seen.size() != 2:
 		_fail("fawda tournament did not visit both authored arenas")
 		return
+	if requested_game_id == "base_siege" and tournament_mode and siege_arenas_seen.size() != 2:
+		_fail("siege tournament did not visit both authored arenas")
+		return
+	if siege_tiebreak:
+		var totals_unchanged := observed_siege_final and siege_final_cups.size() == 4
+		for slot in 4:
+			totals_unchanged = totals_unchanged and int(Net.tournament.points[slot]) == 3 \
+				and int(Net.tournament.cups[slot]) == int(siege_final_cups[slot]) and int(Net.tournament.awards[slot]) == 0
+		if not totals_unchanged or int(Net.tournament.tie_attempts) == 0:
+			_fail("siege final did not run or changed tournament awards")
+			return
 	if race_tiebreak:
 		var totals_unchanged := observed_kart_final and kart_final_cups.size() == 4
 		for slot in 4:

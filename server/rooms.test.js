@@ -11,6 +11,71 @@ const snapshot = () => ({phase: 4, round: 0, countdown: 0, radius: 10, time: 50,
   fighters: Array.from({length: 4}, () => ({position: [0, 0, 0], velocity: [0, 0, 0],
     facing: [0, 0, 1], health: 100, dash: 0, attack: 0, stun: 0, visible: true, alive: true}))});
 
+test('siege rooms bind both arenas and preserve host crystal state on resume', () => {
+  for (const arena of ['iron_flats', 'crate_yard']) {
+    const {rooms, host, client} = fixture();
+    const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+    const config = {game: 'base_siege', arena, rounds: 2, bots: true, difficulty: 1};
+    assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'vortex_ring'}}), /invalid_config/);
+    host.send({op: 'configure', config});
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+    const epoch = host.last('start').epoch;
+    host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+    const data = {...snapshot(), world: {bases: Array.from({length: 4}, () =>
+      ({health: 78, cooldown: .3, rotation: 0, height: 1.35, hits: 2}))}};
+    assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+    host.send({op: 'snapshot', epoch, tick: 1, data});
+    for (const world of [undefined, {bases: []}, {...data.world, extra: 1},
+      {bases: data.world.bases.map(base => ({...base, health: 101}))}]) {
+      assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+      assert.equal(guest.last('snapshot').tick, 1);
+    }
+    const token = guest.last('welcome').token, id = guest.c.player.id;
+    rooms.disconnect(guest.c);
+    const resumed = client(); resumed.send({op: 'resume', token});
+    assert.equal(resumed.last('welcome').id, id);
+    assert.equal(resumed.last('start').config.arena, arena);
+    assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+    assert.throws(() => resumed.send({op: 'result', epoch, scores: [1, 2, 3, 4]}), /host_only/);
+    host.send({op: 'result', epoch, scores: [2, 1, 0, 8]});
+    assert.deepEqual(resumed.last('result').scores, [2, 1, 0, 8]);
+  }
+});
+
+test('siege tournament rotates both arenas and final awards no extra points or cups', () => {
+  const {host, client} = fixture({seed: () => 443020368});
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  host.send({op: 'configure', config: {game: 'base_siege', arena: 'iron_flats', rounds: 1, bots: true, difficulty: 1,
+    tournament: {mode: 'points', target: 3, rotation: 'random_no_repeat', points: [1, 1, 1, 1],
+      entries: ['iron_flats', 'crate_yard'].map(arena => ({game: 'base_siege', arena}))}}});
+  const arenas = new Set();
+  for (let round = 0; round < 3; round++) {
+    host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+    host.send({op: round === 0 ? 'start' : 'next'});
+    const start = host.last('start'); arenas.add(start.config.arena);
+    assert.equal(start.config.game, 'base_siege');
+    host.send({op: 'loaded', epoch: start.epoch}); guest.send({op: 'loaded', epoch: start.epoch});
+    host.send({op: 'result', epoch: start.epoch, scores: [4, 4, 4, 4]});
+  }
+  assert.equal(arenas.size, 2);
+  const cups = [...host.last('room').tournament.cups];
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'next'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  assert.deepEqual(host.last('start').tournament.contenders, [0, 1, 2, 3]);
+  const data = {...snapshot(), world: {bases: Array.from({length: 4}, () =>
+    ({health: 78, cooldown: .3, rotation: 0, height: 1.35, hits: 2}))}};
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  assert.deepEqual(guest.last('snapshot').data.world, data.world);
+  host.send({op: 'result', epoch, scores: [0, 0, 13, 0]});
+  const standings = host.last('room').tournament;
+  assert.deepEqual(standings.cups, cups);
+  assert.deepEqual(standings.points, [3, 3, 3, 3]);
+  assert.deepEqual(standings.awards, [0, 0, 0, 0]);
+  assert.deepEqual(standings.champions, [2]);
+  assert.equal(standings.complete, true);
+});
+
 test('wall clock adjustments cannot expire a live room', () => {
   const original = Date.now;
   let wall = original();

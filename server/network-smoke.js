@@ -50,20 +50,23 @@ const children = [];
 const tournament = process.argv.includes('--tournament');
 const duoTiebreak = process.argv.includes('--duo-tiebreak');
 const raceTiebreak = process.argv.includes('--race-tiebreak');
+const siegeTiebreak = process.argv.includes('--siege-tiebreak');
 const game = process.argv.find(arg => arg.startsWith('--game='))?.slice(7)
   ?? (process.argv.includes('--goal-guard') ? 'goal_guard' : 'ring_rumble');
 assert.ok(ONLINE_GAMES.includes(game));
 assert.ok(!duoTiebreak || (tournament && game === 'duo_clash'));
 assert.ok(!raceTiebreak || (tournament && ['kart_sprint', 'sabaq_sawarikh'].includes(game)));
+assert.ok(!siegeTiebreak || (tournament && game === 'base_siege'));
 const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
 assert.ok(!raceTiebreak || selectedHumans === undefined || selectedHumans === '4');
+assert.ok(!siegeTiebreak || selectedHumans === undefined || selectedHumans === '4');
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
 try {
-  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak || raceTiebreak ? [4] : [2, 4])) {
+  for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak || raceTiebreak || siegeTiebreak ? [4] : [2, 4])) {
     let resolveRoom;
     const roomCode = new Promise(resolve => { resolveRoom = resolve; });
     function peer(index, code = '') {
@@ -74,7 +77,7 @@ try {
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
         ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : []),
-        ...(raceTiebreak ? ['--race-tiebreak'] : [])],
+        ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : [])],
       {env: {...process.env, KRAS_MULTIPLAYER_URL: url}, stdio: ['ignore', 'pipe', 'pipe']});
       children.push(child);
       let output = '', roomAnnounced = false;
