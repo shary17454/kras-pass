@@ -165,6 +165,9 @@ func _incoming_arm(arena: Arena, pos: Vector3) -> Dictionary:
 		var omega: float = sample["omega"]
 		if absf(omega) < 0.001:
 			continue
+		# Estimate the present angle only from observed motion, not scheduling.
+		var age := clampf(_time - float(_history_times[idx]), 0.0, reaction_time + HISTORY_SAMPLE_INTERVAL)
+		arm = arm.rotated(Vector3.UP, omega * age * clampf(prediction, 0.0, 1.0))
 		# `angle_to` is unsigned, so the previous reading treated an arm that
 		# had just swept past as exactly as dangerous as one bearing down — and
 		# because a higher tier watches a wider window, it panicked *more*. The
