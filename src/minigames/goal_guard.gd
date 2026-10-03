@@ -16,6 +16,7 @@ var paddles: Array[Node3D] = []
 var charges: Array[float] = []
 const NORMALS := [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]
 const PADDLE_HALF := 1.75
+const PADDLE_OFFSET := 0.8
 
 
 func side_for(slot: int) -> int:
@@ -133,6 +134,10 @@ func _spawn_ball(is_heavy: bool = false) -> void:
 	balls.append(b)
 
 
+func keeper_contact_offset(ball_radius: float) -> float:
+	return PADDLE_OFFSET + maxf(0.0, ball_radius)
+
+
 func tick(delta: float) -> void:
 	var arena := ctx.arena as Arena
 	for slot in ctx.player_count():
@@ -148,7 +153,7 @@ func tick(delta: float) -> void:
 		f.global_position = arena.global_position - n * (arena.def.radius - 2.2) + tangent * along + Vector3.UP * maxf(local.y, 0.9)
 		f.facing = n
 		charges[slot] = minf(1.0, charges[slot] + delta * 0.18)
-		paddles[slot].global_position = f.global_position + n * 0.8
+		paddles[slot].global_position = f.global_position + n * PADDLE_OFFSET
 		paddles[slot].rotation.y = PI * 0.5 if side < 2 else 0.0
 		paddles[slot].scale.x = 1.25 if f.is_attacking() else 1.0
 	for b in balls:

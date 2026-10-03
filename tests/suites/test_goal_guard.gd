@@ -106,9 +106,12 @@ func _test_keeper_interception(t: TestHarness, scene: Node) -> void:
 		var axis: Vector3 = brain._goal_axis
 		var pos: Vector3 = brain._goal_pos + normal * 8.0 - axis * 2.0
 		var vel: Vector3 = -normal * 8.0 + axis * 6.0
-		brain.observed = {"position": pos, "velocity": vel}
+		brain.observed = {"position": pos, "velocity": vel, "radius": brain.ball.visible_radius()}
+		var paddle: Vector3 = scene.controller.paddles[slot].global_position
+		var contact_time: float = ((paddle - pos).dot(normal) + brain.ball.radius) / vel.dot(normal)
+		var contact_lane: float = (pos + vel * contact_time - brain._goal_pos).dot(axis)
 		brain.decide(0.1)
-		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis * 4.0), "intercept predicts the one-second crossing, not a fixed short horizon")
+		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis * contact_lane), "intercept predicts sphere contact at the shield, not the player centre")
 		brain.observed.velocity = normal * 8.0 + axis * 6.0
 		brain.decide(0.1)
 		t.ok(brain.target.is_equal_approx(brain._goal_pos - axis * 2.0), "departing ball does not produce a backwards-time crossing")
@@ -126,9 +129,11 @@ func _test_keeper_interception(t: TestHarness, scene: Node) -> void:
 		brain.prediction = 1.0
 		brain.risk = 1.0
 		brain.observed = {"position": brain._goal_pos + normal * 2.0 - axis * 0.5,
-			"velocity": -normal * 8.0 + axis * 6.0}
+			"velocity": -normal * 8.0 + axis * 6.0, "radius": brain.ball.visible_radius()}
+		contact_time = ((paddle - Vector3(brain.observed.position)).dot(normal) + brain.ball.radius) / vel.dot(normal)
+		contact_lane = (Vector3(brain.observed.position) + vel * contact_time - brain._goal_pos).dot(axis)
 		brain.decide(0.1)
-		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis), "nearby ball never draws keeper off its physically constrained lane")
+		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis * contact_lane), "nearby sphere contact never draws keeper off its physically constrained lane")
 		brain.controller = null
 
 

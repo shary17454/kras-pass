@@ -76,6 +76,16 @@ func configure(color: Color, r: float, is_heavy: bool = false, is_explosive: boo
 		_label.visible = false
 
 
+func visible_radius() -> float:
+	if not is_instance_valid(_mesh) or _mesh.is_queued_for_deletion() or not _mesh.is_visible_in_tree():
+		return 0.0
+	for child in _mesh.get_children():
+		if child is MeshInstance3D and child.mesh is SphereMesh and child.is_visible_in_tree():
+			var scale_size: Vector3 = child.global_basis.get_scale().abs()
+			return child.mesh.radius * maxf(scale_size.x, maxf(scale_size.y, scale_size.z))
+	return 0.0
+
+
 func launch(from: Vector3, direction: Vector3, start_speed: float) -> void:
 	launch_generation += 1
 	detonated = false

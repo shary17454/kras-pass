@@ -766,26 +766,37 @@ func _test_ball_delay(t: TestHarness, scene: Node) -> void:
 	balls[1].fuse = 999.0
 	keeper._time = 0.6
 	keeper._record_history()
+	balls[1].radius = 999.0
+	t.near(balls[1].visible_radius(), 0.5, 0.0001, "rendered sphere size does not expose private physics radius")
 	balls[1]._label.text = "1.0"
 	keeper._time = 0.7
 	keeper._record_history()
+	balls[1].configure(Color.WHITE, 0.9, false, true)
 	keeper._time = 0.8
 	t.equal(keeper.perceive_ball(balls[1]).get("fuse"), 4.0, "ball fuse comes from the delayed displayed label, not its private timer")
+	t.near(float(keeper.perceive_ball(balls[1]).get("radius", -1.0)), 0.5, 0.0001, "ball size uses delayed rendered geometry, not private or future radius")
 	balls[1]._label.hide()
 	keeper._time = 0.9
 	keeper._record_history()
 	keeper._time = 1.2
 	t.equal(keeper.perceive_ball(balls[1]).get("fuse"), -1.0, "hidden fuse label does not reveal a timer")
+	t.near(float(keeper.perceive_ball(balls[1]).get("radius", -1.0)), 0.9, 0.0001, "changed visible sphere size becomes available after reaction delay")
+	balls[1]._mesh.hide()
+	keeper._time = 1.21
+	keeper._record_history()
+	keeper._time = 1.5
+	t.equal(keeper.perceive_ball(balls[1]).get("radius"), 0.0, "hidden sphere does not reveal its size")
+	balls[1]._mesh.show()
 	balls[1].hide()
 	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "hidden ball cannot return an actionable old observation")
 	balls[1].show()
 	balls[1].launch(Vector3(8, 1, 0), Vector3.FORWARD, 9.0)
 	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "relaunch cannot reuse the preceding trajectory")
-	keeper._time = 1.3
-	keeper._record_history()
-	keeper._time = 1.4
-	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "relaunch also waits for reaction delay")
 	keeper._time = 1.6
+	keeper._record_history()
+	keeper._time = 1.7
+	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "relaunch also waits for reaction delay")
+	keeper._time = 1.9
 	t.equal(keeper.perceive_ball(balls[1]).get("velocity"), Vector3.ZERO, "relaunch does not infer velocity from teleport distance")
 	keeper.on_round_start()
 	t.equal(keeper._history_balls.size(), 0, "round restart discards ball observations")

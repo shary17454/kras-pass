@@ -230,6 +230,7 @@ func _ball_snapshot(previous: int) -> Dictionary:
 		if can_observe(ball._label):
 			fuse = ball._label.text.to_float()
 		snapshot[id] = {"position": position, "velocity": velocity, "fuse": fuse,
+			"radius": ball.visible_radius(),
 			"generation": ball.launch_generation}
 	return snapshot
 

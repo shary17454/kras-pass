@@ -37,11 +37,14 @@ func decide(_delta: float) -> void:
 	var position: Vector3 = observed["position"]
 	var velocity: Vector3 = observed["velocity"]
 
-	# Predict arrival at the defensive line from delayed observations only.
+	# Sphere contact occurs ahead of the player's lane, at the shield.
+	var contact_plane := _goal_pos
+	if controller.has_method("keeper_contact_offset"):
+		contact_plane += _goal_normal * controller.keeper_contact_offset(float(observed.get("radius", 0.0)))
 	var lead := 0.0
 	var normal_speed := velocity.dot(_goal_normal)
 	if absf(normal_speed) > 0.001:
-		var arrival := (_goal_pos - position).dot(_goal_normal) / normal_speed
+		var arrival := (contact_plane - position).dot(_goal_normal) / normal_speed
 		if arrival > 0.0:
 			lead = lerpf(minf(0.05, arrival), minf(arrival, 3.0), prediction)
 	var future: Vector3 = position + velocity * lead

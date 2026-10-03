@@ -34,7 +34,7 @@ func run(t: TestHarness, host: Node) -> void:
 		var axis: Vector3 = brain._goal_axis
 		var position: Vector3 = brain._goal_pos + normal * 8.0 - axis * 6.0 + Vector3.UP * 0.9
 		var velocity: Vector3 = -normal * 8.0 + axis * 16.0
-		brain.observed = {"position": position, "velocity": velocity, "radius": brain.ball.radius}
+		brain.observed = {"position": position, "velocity": velocity, "radius": brain.ball.visible_radius()}
 		# Actual contact geometry is independent of the AI's prediction formula.
 		var paddle: Vector3 = game.paddles[slot].global_position
 		var arrival: float = ((paddle - position).dot(normal) + brain.ball.radius) / velocity.dot(normal)
