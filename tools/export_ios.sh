@@ -10,8 +10,14 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mkdir -p "$ROOT/build"
-OUT="$(mktemp -d "$ROOT/build/ios-export.XXXXXX")"
 TARGET="${1:-device}"
+case "$TARGET" in device|simulator|project) ;; *) echo "Unknown export target: $TARGET" >&2; exit 1 ;; esac
+OUT="${KRAS_IOS_EXPORT_OUT:-$(mktemp -d "$ROOT/build/ios-export.XXXXXX")}"
+mkdir -p "$OUT"
+if [[ -n "$(find "$OUT" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+	echo "Export output must be an empty directory: $OUT" >&2
+	exit 1
+fi
 GODOT="${GODOT:-godot}"
 MANIFEST="$ROOT/build/ios/KrasPass.xcodeproj/xcshareddata/xcodecloud/manifest.json"
 MANIFEST_BACKUP=""
@@ -144,6 +150,10 @@ perl -0pi -e 's/\n+\z/\n/' \
 	"$OUT/KrasPass/export_options.plist"
 
 # --- build ------------------------------------------------------------------
+if [[ "$TARGET" == "project" ]]; then
+	echo "==> Current-source iOS project exported: $OUT"
+	exit 0
+fi
 if [[ "$TARGET" == "simulator" ]]; then
 	SDK="iphonesimulator"
 	# The simulator slice of Godot's static library is x86_64-only in this
