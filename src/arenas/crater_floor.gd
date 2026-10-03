@@ -40,6 +40,23 @@ func reset() -> void:
 	holes.clear()
 	_rebuild()
 
+func use_presentation_only() -> void:
+	if not is_instance_valid(_body):
+		return
+	_mesh.reparent(self)
+	_body.collision_layer = 0
+	_body.queue_free()
+	_body = null
+	_shape = null
+
+func apply_snapshot(next_radius: float, next_holes: Array) -> void:
+	var value := maxf(RADIUS_STEP, floorf(next_radius / RADIUS_STEP) * RADIUS_STEP)
+	if is_equal_approx(radius, value) and holes == next_holes:
+		return
+	radius = value
+	holes = next_holes.duplicate(true)
+	_rebuild()
+
 func edge_distance(point: Vector3) -> float:
 	var flat := Vector2(point.x, point.z)
 	var distance := radius - flat.length()
@@ -119,10 +136,11 @@ func _rebuild() -> void:
 					points[1] = points[2]
 					points[2] = swap
 				vertices.append_array(PackedVector3Array(points))
-	var shape := ConcavePolygonShape3D.new()
-	shape.backface_collision = true
-	shape.set_faces(vertices)
-	_shape.shape = shape
+	if is_instance_valid(_shape):
+		var shape := ConcavePolygonShape3D.new()
+		shape.backface_collision = true
+		shape.set_faces(vertices)
+		_shape.shape = shape
 	var mesh := ArrayMesh.new()
 	if not vertices.is_empty():
 		var normals := PackedVector3Array()

@@ -12,6 +12,25 @@ function validBossState(b, maximum, thresholds) {
     && vector(b.strike_position) && Number.isFinite(b.strike_radius) && b.strike_radius >= 0 && b.strike_radius <= 100;
 }
 
+export function validColossusWorld(data, count) {
+  const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
+  if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 7)
+    || !validBossState(data.boss, 800, [.66, .33])
+    || !vector(data.arm_rotation) || !data.arm_rotation.every(n => Math.abs(n) <= Math.PI)
+    || !vector(data.fist_position) || !vector(data.fist_scale) || !data.fist_scale.every(n => n >= .8 && n <= 1.2)
+    || !Number.isFinite(data.exposed) || data.exposed < 0 || data.exposed > 2.4
+    || !['warnings', 'craters'].every(group => Array.isArray(data[group]) && data[group].length <= 64)) return false;
+  const ids = new Set();
+  const row = (v, size) => {
+    if (!object(v, size) || typeof v.id !== 'string' || !/^[1-9][0-9]{0,17}$/.test(v.id)
+      || ids.has(v.id) || !vector(v.position)) return false;
+    ids.add(v.id); return true;
+  };
+  return data.warnings.every(v => row(v, 5) && Number.isFinite(v.radius) && v.radius >= .25 && v.radius <= 100
+    && Number.isFinite(v.left) && Number.isFinite(v.total) && v.total > 0 && v.total <= 60 && v.left >= 0 && v.left <= v.total)
+    && data.craters.every(v => row(v, 3) && Number.isFinite(v.radius) && v.radius >= .75 && v.radius <= 100);
+}
+
 export function validSovereignWorld(data, count) {
   const object = (v, size) => v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === size;
   if (!Number.isInteger(count) || count < 2 || count > 4 || !object(data, 7)

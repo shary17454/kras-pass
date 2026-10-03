@@ -52,6 +52,7 @@ func boss_build() -> void:
 
 
 func boss_think(delta: float) -> void:
+	if presentation_only: return
 	if _exposed > 0.0:
 		_exposed -= delta
 		if _fist != null and is_instance_valid(_fist):
@@ -78,6 +79,7 @@ func boss_think(delta: float) -> void:
 
 
 func _slam() -> void:
+	if presentation_only: return
 	var target := _pick_target()
 	if target == Vector3.INF:
 		return
@@ -98,6 +100,7 @@ func _slam() -> void:
 
 ## A slam takes floor away permanently, so the ring closes as the fight runs.
 func _open_crater(pos: Vector3, radius: float) -> void:
+	if presentation_only: return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -109,6 +112,7 @@ func _open_crater(pos: Vector3, radius: float) -> void:
 
 
 func _sweep() -> void:
+	if presentation_only: return
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
@@ -122,6 +126,7 @@ func _sweep() -> void:
 
 
 func _check_arm_hits() -> void:
+	if presentation_only: return
 	if _fist == null or not is_instance_valid(_fist):
 		return
 	for i in ctx.fighters.size():
@@ -145,6 +150,7 @@ func _check_arm_hits() -> void:
 ## Making the opening contestable by everyone, rather than delivered to one
 ## player, is the change this fight still wants.
 func _pick_target() -> Vector3:
+	if presentation_only: return Vector3.INF
 	var alive: Array[int] = []
 	var arena := ctx.arena as Arena
 	for i in ctx.fighters.size():
@@ -161,6 +167,7 @@ func _pick_target() -> Vector3:
 
 
 func on_phase_changed(new_phase: int) -> void:
+	if presentation_only: return
 	if new_phase >= 2:
 		_sweep()
 
@@ -207,6 +214,7 @@ func danger_zones() -> Array:
 
 
 func boss_reset_round() -> void:
+	if presentation_only: return
 	_clear_craters()
 	_slam_timer = 2.5
 	_sweep_timer = SWEEP_PERIOD
@@ -229,6 +237,7 @@ func _clear_craters() -> void:
 
 
 func safe_respawn_position(slot: int) -> Vector3:
+	if presentation_only: return spawn_position(slot)
 	var arena := ctx.arena as Arena
 	var preferred := spawn_position(slot)
 	if arena == null or arena.is_inside(preferred, 1.0):

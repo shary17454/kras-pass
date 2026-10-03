@@ -69,6 +69,29 @@ func run(t: TestHarness, host: Node) -> void:
 		body.move_and_slide()
 	t.ok(body.global_position.y < -14.0, "gravity carries body through hole below fall threshold")
 	body.queue_free()
+	floor_node.use_presentation_only()
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.ok(floor_node._body == null and floor_node._shape == null, "presentation floor relinquishes physics ownership")
+	t.equal(floor_node._mesh.get_parent(), floor_node, "presentation mesh survives body retirement")
+	t.ok(not _ground(floor_node, Vector3.ZERO), "presentation floor creates no physical ground")
+	var snapshot: Array = [{"point": Vector2(2, 0), "radius": 1.5}]
+	floor_node.apply_snapshot(7.07, snapshot)
+	t.near(floor_node.radius, 7.0, 0.001, "presentation uses authored radius quantization")
+	t.ok(not floor_node.has_ground(Vector3(2, 0, 0)), "presentation ground query follows host crater")
+	t.ok(floor_node.has_ground(Vector3(-3, 0, 0)), "presentation retains uncut ground queries")
+	var mesh: Mesh = floor_node._mesh.mesh
+	floor_node.apply_snapshot(7.07, snapshot)
+	t.equal(floor_node._mesh.mesh, mesh, "identical snapshot does not rebuild geometry")
+	snapshot[0].radius = 4.0
+	t.near(floor_node.holes[0].radius, 1.5, 0.001, "snapshot holes are detached from caller mutations")
+	floor_node.apply_snapshot(8.0, [])
+	t.empty(floor_node.holes, "new round snapshot removes old crater geometry")
+	t.ok(floor_node.has_ground(Vector3(2, 0, 0)), "new round restores visual ground query")
+	t.ok(floor_node._mesh.mesh != mesh, "changed snapshot rebuilds visual geometry")
+	t.ok(not _ground(floor_node, Vector3.ZERO), "snapshot rebuilding never recreates collider")
+	floor_node.use_presentation_only()
+	t.ok(floor_node._body == null, "presentation conversion is idempotent")
 	floor_node.queue_free()
 	await host.get_tree().process_frame
 	await host.get_tree().process_frame
