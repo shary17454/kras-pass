@@ -210,3 +210,49 @@ pass for this follow-up. No job was manually cancelled/restarted to obtain a
 pass. Ball/object motion delay, tagged/relic/controller-specific semantics,
 occlusion, full-source regression/balance/network matrix and device/release QA
 remain unfinished. Explicit visibility guards are not proof of all AI fairness.
+
+## Delayed visible ball observations
+
+Runtime source `0e2610e553d91a69ebf6005b19f0554052799e35` adds ball snapshots to
+the shared 20 Hz, 32-slot history. Only Keeper, Magnet Keeper and Blast Ball
+brains enable ball tracking; other brains do not enumerate or collect balls.
+Snapshots contain visible position, motion inferred from consecutive observed
+positions, and the displayed fuse label, not private ball velocity/fuse.
+Consumers wait for their configured reaction delay and have no live fallback.
+Returned dictionaries cannot mutate retained observations.
+
+The launch generation is an invalidation token only: relaunching a reused ball
+invalidates its old trajectory and waits for a fresh delayed observation. It is
+not used to predict position, velocity, fuse or future outcome. This avoids
+inferring high velocity from a relaunch teleport. Ball sampling is restricted
+to this match's world subtree; hidden/queued or foreign-match balls are excluded.
+Round restart clears the history. Explicit visibility still does not model
+camera-frustum or wall occlusion.
+
+Before repair, `/tmp/kras-ball-delay-before.log` passed 85 and failed three
+assertions, demonstrating immediate response and live-motion ranking. The final
+fixture adds velocity independence, displayed/hidden fuse, mutation isolation,
+relaunch, ring wrap, non-ball opt-out and match isolation checks. Existing visible
+ball fixtures now provide real position samples rather than private velocities.
+
+Focused terminal verification:
+
+- `/tmp/kras-ball-delay-qualified.log`: 100 assertions, exit zero.
+- `/tmp/kras-ball-delay-compile-qualified.log`: all 323 scripts compile.
+- `/tmp/kras-ball-delay-goal_guard.log`: 120 assertions, exit zero.
+- `/tmp/kras-ball-delay-magnet_network.log`: 190 assertions, exit zero.
+- `/tmp/kras-ball-delay-blast_ball.log`: 94 assertions, exit zero.
+- Compared 349 tracked runtime/data/test sources and project.godot with the
+  runtime checkout: 350 files, zero mismatches, at the source commit above.
+
+Full regression finished successfully in `/tmp/kras-ball-delay-regression.log`
+with isolated storage `/tmp/kras-ball-delay-regression-save`: 21,162 assertions,
+exit zero, 1,607.6 seconds. Runtime source was frozen for that run. The log retains
+the macOS certificate retrieval warning and the intentional save-write failure
+test; neither is a failed assertion. The existing physical iPhone was listed
+as unavailable by Xcode27 devicectl; available simulator results are not physical
+battery/thermal QA. xcode-select currently points to CommandLineTools; setting
+DEVELOPER_DIR for the read-only device command used Xcode27 without changing the
+system selection. No certificate, provisioning profile or device installation
+was changed. Other object/controller perception, balance, release/game QA and
+Apple submission remain unfinished.
