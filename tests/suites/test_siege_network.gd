@@ -36,6 +36,21 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(base.health, 78.0, "real charge chips rival crystal")
 	t.equal(base.hits, 2, "charge records a separate hit generation")
 	attacker._dash_time = 0.0
+	var saved_cooldown: float = base.cooldown
+	base.cooldown = 0.0
+	source.ctx.alive[0] = false
+	attacker.attacked.emit(0)
+	t.equal(base.health, 78.0, "eliminated slot cannot damage a crystal through stale attack signal")
+	source.ctx.alive[0] = true
+	attacker.alive = false
+	attacker.attacked.emit(0)
+	t.equal(base.health, 78.0, "falling inactive body cannot score stale attack")
+	attacker._dash_time = 0.1
+	game._check_rams(base)
+	t.equal(base.health, 78.0, "inactive dash cannot damage crystal")
+	attacker.alive = true
+	attacker._dash_time = 0.0
+	base.cooldown = saved_cooldown
 	var replica := Replica.new()
 	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(source)))
 	packet.phase = MatchPhase.P.PLAYING
