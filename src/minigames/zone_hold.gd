@@ -73,7 +73,20 @@ func _pick_new_spot() -> void:
 
 
 func tick(delta: float) -> void:
-	zone_position = zone_position.move_toward(_target, 3.2 * delta)
+	var arena := ctx.arena as Arena
+	if arena != null and arena.def.shape == "ring":
+		# A chord between valid ring points can cross the lethal central hole.
+		var offset := zone_position - arena.global_position
+		var target_offset := _target - arena.global_position
+		var band := target_offset.length()
+		if band > 0.0:
+			var angle := atan2(offset.z, offset.x)
+			var target_angle := atan2(target_offset.z, target_offset.x)
+			var remaining := wrapf(target_angle - angle, -PI, PI)
+			angle += clampf(remaining, -3.2 * delta / band, 3.2 * delta / band)
+			zone_position = arena.global_position + Vector3(cos(angle) * band, 0, sin(angle) * band)
+	else:
+		zone_position = zone_position.move_toward(_target, 3.2 * delta)
 	if _marker != null and is_instance_valid(_marker):
 		_marker.global_position = zone_position
 	_move_timer -= delta

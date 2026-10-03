@@ -118,12 +118,12 @@ func is_inside(pos: Vector3, margin: float = 0.0) -> bool:
 			return _cross_edge_distance(p) >= margin
 		"ring":
 			var d := p.length()
-			return d <= current_radius - margin and d >= current_radius * 0.42 + margin
+			return d <= current_radius - margin and d >= current_radius * 0.45 + margin
 		"track":
 			return absf(p.x) <= current_radius - margin and absf(p.y) <= track_length * 0.5 - margin
 		"oval":
 			var d := p.length()
-			return d <= current_radius - margin and d >= current_radius * 0.5 + margin
+			return d <= current_radius - margin and d >= current_radius * 0.55 + margin
 		"circuit":
 			return _circuit_offset(pos) <= track_width * 0.5 - margin
 		_:
@@ -143,7 +143,8 @@ func edge_distance(pos: Vector3) -> float:
 			return _cross_edge_distance(p)
 		"ring", "oval":
 			var d := p.length()
-			return minf(current_radius - d, d - current_radius * 0.45)
+			var inner_ratio := 0.55 if def.shape == "oval" else 0.45
+			return minf(current_radius - d, d - current_radius * inner_ratio)
 		"track":
 			return minf(current_radius - absf(p.x), track_length * 0.5 - absf(p.y))
 		"circuit":
@@ -542,12 +543,14 @@ func _build_ring() -> void:
 		var a0 := TAU * i / segments
 		var mid := (def.radius + inner) * 0.5
 		var width := (def.radius - inner)
-		var seg_len := TAU * mid / segments * 1.06
+		# Cover the outer circumference too, not only the shorter centerline.
+		var seg_len := 2.0 * def.radius * tan(PI / segments) * 1.02
 		var body := _add_static_box(
 			Vector3(seg_len, def.thickness, width),
 			Vector3(cos(a0) * mid, -def.thickness * 0.5, sin(a0) * mid),
 			def.floor_color if i % 2 == 0 else def.floor_color.lightened(0.06))
-		body.rotation.y = -a0
+		# The long Z axis spans the radial band; X follows its tangent.
+		body.rotation.y = PI * 0.5 - a0
 	var rim := MeshFactory.torus(def.radius - 0.3, def.radius + 0.1, def.accent_color, 0.6)
 	rim.position = Vector3(0, 0.06, 0)
 	_static_root.add_child(rim)
@@ -627,12 +630,12 @@ func _build_oval() -> void:
 	for i in segments:
 		var a0 := TAU * i / segments
 		var mid := (def.radius + inner) * 0.5
-		var seg_len := TAU * mid / segments * 1.08
+		var seg_len := 2.0 * def.radius * tan(PI / segments) * 1.02
 		var body := _add_static_box(
 			Vector3(seg_len, def.thickness, def.radius - inner),
 			Vector3(cos(a0) * mid, -def.thickness * 0.5, sin(a0) * mid),
 			def.floor_color if i % 4 < 2 else def.floor_color.lightened(0.05))
-		body.rotation.y = -a0
+		body.rotation.y = PI * 0.5 - a0
 	checkpoints.clear()
 	var ring_mid := (def.radius + inner) * 0.5
 	for i in 8:
@@ -848,7 +851,7 @@ func _ring_wall(radius: float, h: float, segments: int) -> void:
 		var body := _add_static_box(Vector3(seg_len, h, 0.5),
 			Vector3(cos(ang) * radius, h * 0.5, sin(ang) * radius),
 			def.accent_color.darkened(0.5))
-		body.rotation.y = -ang
+		body.rotation.y = PI * 0.5 - ang
 
 
 func _add_deco_rings() -> void:
