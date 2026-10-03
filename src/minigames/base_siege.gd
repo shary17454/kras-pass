@@ -129,7 +129,7 @@ func _check_rams(base: Dictionary) -> void:
 		if i == int(base["slot"]) or not ctx.is_alive(i):
 			continue
 		var f := ctx.fighter(i)
-		if f == null or not is_instance_valid(f) or not f.is_dashing():
+		if f == null or not is_instance_valid(f) or not f.alive or not f.is_dashing():
 			continue
 		var to: Vector3 = node.global_position - f.global_position
 		to.y = 0.0
@@ -144,7 +144,7 @@ func _on_attacked(slot: int) -> void:
 	if presentation_only:
 		return
 	var f := ctx.fighter(slot)
-	if f == null or not is_instance_valid(f):
+	if f == null or not is_instance_valid(f) or not ctx.is_alive(slot) or not f.alive:
 		return
 	for base in _bases:
 		if int(base["slot"]) == slot or float(base["health"]) <= 0.0:

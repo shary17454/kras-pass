@@ -37,17 +37,32 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(base.hits, 2, "charge records a separate hit generation")
 	attacker._dash_time = 0.0
 	var saved_cooldown: float = base.cooldown
+	var saved_score: float = source.ctx.scores[0]
 	base.cooldown = 0.0
 	source.ctx.alive[0] = false
 	attacker.attacked.emit(0)
 	t.equal(base.health, 78.0, "eliminated slot cannot damage a crystal through stale attack signal")
+	t.equal(source.ctx.scores[0], saved_score, "eliminated attack cannot award points")
+	base.health = 78.0
+	base.hits = 2
+	base.cooldown = 0.0
+	source.ctx.scores[0] = saved_score
 	source.ctx.alive[0] = true
 	attacker.alive = false
 	attacker.attacked.emit(0)
 	t.equal(base.health, 78.0, "falling inactive body cannot score stale attack")
+	t.equal(source.ctx.scores[0], saved_score, "inactive attack cannot award points")
+	base.health = 78.0
+	base.hits = 2
+	base.cooldown = 0.0
+	source.ctx.scores[0] = saved_score
 	attacker._dash_time = 0.1
 	game._check_rams(base)
 	t.equal(base.health, 78.0, "inactive dash cannot damage crystal")
+	t.equal(source.ctx.scores[0], saved_score, "inactive dash cannot award points")
+	base.health = 78.0
+	base.hits = 2
+	source.ctx.scores[0] = saved_score
 	attacker.alive = true
 	attacker._dash_time = 0.0
 	base.cooldown = saved_cooldown
