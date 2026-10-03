@@ -1,0 +1,204 @@
+{
+  "games": [
+    {
+      "attempted_runs": 2,
+      "avg_duration": 75.0166666666637,
+      "avg_score": 20.375,
+      "baseline_seeds": [
+        209001,
+        209614
+      ],
+      "category": "reaction",
+      "character_bias": 0.3,
+      "character_buckets": 5,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 204921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 204921
+        }
+      ],
+      "expert_edge": 0.691358024691358,
+      "flags": [],
+      "id": "quick_draw",
+      "name": "أسرع يد",
+      "round_window": 75.0,
+      "runs": 2,
+      "sample_mode": "natural",
+      "seed_offset": 200000,
+      "severity": 0,
+      "slot_bias": 0.25,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "nabta": 1,
+        "ramla": 1
+      },
+      "wins_by_slot": [
+        1,
+        0,
+        1,
+        0
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-03T16:26:20",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 205502,
+      "flags": [],
+      "id": "quick_draw",
+      "mutated_ok": true,
+      "mutated_seed": 205501,
+      "name": "أسرع يد",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 2,
+  "sample_mode": "natural",
+  "seed_offset": 200000
+}
