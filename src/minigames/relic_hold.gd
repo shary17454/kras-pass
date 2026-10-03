@@ -44,7 +44,7 @@ func on_round_start() -> void:
 func tick(delta: float) -> void:
 	if _relic != null and is_instance_valid(_relic) and _holder < 0:
 		var loose := _relic
-		loose.tick(delta)
+		loose.tick(delta, ctx.rng)
 		# `tick` is what notices a player standing on the relic, so by the next
 		# line it may have been picked up and retired to the pool. Re-check
 		# before touching it again — this fired in the balance simulator and

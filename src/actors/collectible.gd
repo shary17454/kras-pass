@@ -79,7 +79,7 @@ func scatter_from(p: Vector3, dropper: int, rng: RandomNumberGenerator) -> void:
 	_grace = 0.7
 
 
-func tick(delta: float) -> void:
+func tick(delta: float, rng: RandomNumberGenerator = null, can_take: Callable = Callable()) -> void:
 	if not available:
 		return
 	_bob += delta
@@ -95,15 +95,39 @@ func tick(delta: float) -> void:
 		return
 	if not is_monitoring():
 		return
-	for body in get_overlapping_bodies():
-		if not (body is Fighter) or not body.alive:
+	var collector := _select_collector(get_overlapping_bodies(), rng, can_take)
+	if collector != null:
+		available = false
+		set_deferred("monitoring", false)
+		taken.emit(self, collector.slot)
+
+
+func _select_collector(bodies: Array, rng: RandomNumberGenerator = null, can_take: Callable = Callable()) -> Fighter:
+	if bodies.is_empty():
+		return null
+	var nearest := INF
+	var candidates: Array[Fighter] = []
+	for body in bodies:
+		if not is_instance_valid(body) or not (body is Fighter) or not body.alive:
 			continue
 		if _grace > 0.0 and body.slot == owner_slot:
 			continue
-		available = false
-		set_deferred("monitoring", false)
-		taken.emit(self, body.slot)
-		return
+		if can_take.is_valid() and not can_take.call(body):
+			continue
+		var distance := global_position.distance_squared_to(body.global_position)
+		if distance < nearest:
+			nearest = distance
+			candidates.clear()
+			candidates.append(body)
+		elif distance == nearest:
+			candidates.append(body)
+	if candidates.is_empty():
+		return null
+	if candidates.size() == 1:
+		return candidates[0]
+	# Physics overlap order is not a gameplay priority or a replay identity.
+	candidates.sort_custom(func(a: Fighter, b: Fighter) -> bool: return a.slot < b.slot)
+	return candidates[rng.randi_range(0, candidates.size() - 1)] if rng != null else candidates[0]
 
 
 func is_available() -> bool:
