@@ -176,3 +176,59 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.queue_free()
 	AudioManager.enabled = enabled
 	await host.get_tree().process_frame
+	await _check_final_spectators(t, host)
+
+
+func _check_final_spectators(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("base_siege", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 118)
+	cfg.rules["online_contenders"] = [0, 2]
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	cfg.context = MatchConfig.Context.ONLINE
+	scene.set_physics_process(false)
+	for fighter in scene.ctx.fighters: fighter.set_physics_process(false)
+	scene._begin_play()
+	var game: Node = scene.controller
+	for slot in [1, 3]:
+		t.ok(not scene.ctx.is_alive(slot), "final spectators are inactive")
+		t.equal(game.base_health(slot), 0.0, "spectator crystal cannot remain a scoring target")
+		t.ok(not game._bases[slot].node.visible, "spectator crystal is hidden")
+		t.equal(game._bases[slot].body.collision_layer, 0, "spectator crystal cannot obstruct final contenders")
+	var attacker: Fighter = scene.ctx.fighter(0)
+	attacker.facing = Vector3.FORWARD
+	attacker.global_position = game._bases[1].node.global_position + Vector3(0, 0, 2)
+	var before: float = scene.ctx.scores[0]
+	attacker.attacked.emit(0)
+	t.equal(scene.ctx.scores[0], before, "attacking spectator crystal cannot award points")
+	t.equal(game._bases[1].hits, 0, "spectator crystal cannot record attack feedback")
+	scene.ctx.scores[0] = before
+	game._bases[1].cooldown = 0.0
+	attacker._dash_time = 0.1
+	game._check_rams(game._bases[1])
+	t.equal(scene.ctx.scores[0], before, "ramming spectator crystal cannot award points")
+	attacker._dash_time = 0.0
+	attacker.global_position = game._bases[2].node.global_position + Vector3(0, 0, 2)
+	attacker.attacked.emit(0)
+	t.equal(game.base_health(2), 87.0, "active rival crystal still takes authored damage")
+	t.equal(scene.ctx.scores[0], before + 1.0, "active rival still awards authored hit points")
+	cfg.context = MatchConfig.Context.QUICK
+	game.on_round_start()
+	for slot in 4:
+		t.equal(game.base_health(slot), 100.0, "offline restart ignores stale online contender metadata")
+		t.ok(game._bases[slot].node.visible, "ordinary crystal visible after final")
+		t.equal(game._bases[slot].body.collision_layer, 1, "ordinary crystal restores solid cover")
+		game._bases[slot].hits = 5
+	cfg.context = MatchConfig.Context.ONLINE
+	var scores_before_reset: Array = Array(scene.ctx.scores).duplicate()
+	game.on_round_start()
+	t.equal(Array(scene.ctx.scores), scores_before_reset, "hiding spectator crystals cannot grant destruction points")
+	for slot in [1, 3]:
+		t.equal(game.base_health(slot), 0.0, "final restart does not resurrect spectator targets")
+		t.equal(game._bases[slot].hits, 0, "final restart resets spectator feedback without scoring")
+	var replica := Replica.new()
+	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
+	t.ok(replica.accept(packet, 4, "base_siege"), "actual spectator-final state remains valid for guest replication")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame

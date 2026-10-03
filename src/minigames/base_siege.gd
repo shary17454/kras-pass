@@ -43,16 +43,19 @@ func build() -> void:
 func on_round_start() -> void:
 	if presentation_only:
 		return
+	var contenders: Array = ctx.config.rule("online_contenders", []) \
+		if ctx.config.context == MatchConfig.Context.ONLINE else []
 	for base in _bases:
-		base["health"] = BASE_HEALTH
+		var active := contenders.is_empty() or contenders.has(int(base["slot"]))
+		base["health"] = BASE_HEALTH if active else 0.0
 		base["cooldown"] = 0.0
 		base["hits"] = 0
 		var node: Node3D = base["node"]
 		if is_instance_valid(node):
-			node.visible = true
+			node.visible = active
 		var body: StaticBody3D = base["body"]
 		if is_instance_valid(body):
-			body.collision_layer = 1
+			body.collision_layer = 1 if active else 0
 		_refresh_base(base)
 
 
@@ -120,7 +123,7 @@ func tick(delta: float) -> void:
 ## nothing to line up, which gives the heavy characters a way to siege that
 ## does not depend on attack timing.
 func _check_rams(base: Dictionary) -> void:
-	if presentation_only or float(base["cooldown"]) > 0.0:
+	if presentation_only or float(base["health"]) <= 0.0 or float(base["cooldown"]) > 0.0:
 		return
 	var node: Node3D = base["node"]
 	if not is_instance_valid(node):
