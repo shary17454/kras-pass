@@ -51,6 +51,7 @@ var _history_times := PackedFloat32Array()
 var _history_positions: Array[PackedVector3Array] = []
 var _history_velocities: Array[PackedVector3Array] = []
 var _history_balls: Array[Dictionary] = []
+var _first_seen_times := PackedFloat64Array()
 var _tracks_balls := false
 var _history_head := 0
 var _history_count := 0
@@ -117,6 +118,7 @@ func on_round_start() -> void:
 	_history_positions.clear()
 	_history_velocities.clear()
 	_history_balls.clear()
+	_first_seen_times.clear()
 	_history_head = 0
 	_history_count = 0
 	_history_sample_clock = 0.0
@@ -169,6 +171,9 @@ func _publish() -> void:
 # --- perception ------------------------------------------------------------
 
 func _record_history() -> void:
+	if _first_seen_times.size() != ctx.fighters.size():
+		_first_seen_times.resize(ctx.fighters.size())
+		_first_seen_times.fill(INF)
 	var positions := PackedVector3Array()
 	var velocities := PackedVector3Array()
 	positions.resize(ctx.fighters.size())
@@ -178,6 +183,7 @@ func _record_history() -> void:
 	for i in ctx.fighters.size():
 		var f := ctx.fighters[i]
 		if can_observe(f):
+			_first_seen_times[i] = minf(_first_seen_times[i], _time)
 			positions[i] = f.global_position
 			velocities[i] = f.velocity
 		else:
@@ -253,8 +259,15 @@ func _history_index(want: float) -> int:
 	return _history_head if _history_count > 0 else -1
 
 
-## Position of `target_slot` as this brain currently believes it to be: the true
-## position delayed by `reaction_time`. Never the exact live value.
+## Distinguish unknown locations from valid origin coordinates and last-seen
+## memory. New knowledge becomes actionable only after the reaction delay.
+func has_observed(target_slot: int) -> bool:
+	if target_slot < 0 or target_slot >= _first_seen_times.size():
+		return false
+	return _first_seen_times[target_slot] <= _time - reaction_time + 0.000001
+
+
+## Delayed observed position, or a visible fallback before the first sample.
 func perceive(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
 		return Vector3.ZERO

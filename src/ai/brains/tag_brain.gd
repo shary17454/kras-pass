@@ -29,7 +29,9 @@ func decide(_delta: float) -> void:
 		keep_off_edge(2.4)
 		return
 
-	if hunter < 0:
+	# Public hunter identity does not disclose an unseen location. A last-seen
+	# position remains useful memory, even after the hunter becomes hidden.
+	if hunter < 0 or not has_observed(hunter):
 		steer_to(arena.retreat_point(me.global_position))
 		return
 

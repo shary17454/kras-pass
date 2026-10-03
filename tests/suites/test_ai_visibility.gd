@@ -28,6 +28,16 @@ class RelicSteeringProbe extends "res://src/ai/brains/relic_brain.gd":
 	func steer_to(target: Vector3, _urgency: float = 1.0) -> void:
 		destination = target
 
+class TagCueProbe extends MiniGameController:
+	var hunter_slot := 1
+	func hunter() -> int:
+		return hunter_slot
+
+class TagSteeringProbe extends "res://src/ai/brains/tag_brain.gd":
+	var destination := Vector3.ZERO
+	func steer_to(target: Vector3, _urgency: float = 1.0) -> void:
+		destination = target
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI visible targets")
@@ -139,6 +149,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_bomb_states(t, scene)
 	_test_ball_delay(t, scene)
 	_test_relic(t, scene)
+	_test_tag(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
@@ -179,6 +190,64 @@ func _test_relic(t: TestHarness, scene: Node) -> void:
 	item.queue_free()
 	t.equal(brain._loose_relic(), null, "queued relic cannot become a target")
 	parent.queue_free()
+	cue.queue_free()
+
+
+func _test_tag(t: TestHarness, scene: Node) -> void:
+	var brain := TagSteeringProbe.new()
+	var cue := TagCueProbe.new()
+	scene.add_child(cue)
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.controller = cue
+	brain.reaction_time = 0.0
+	brain.edge_awareness = 0.0
+	var me: Fighter = scene.ctx.fighter(0)
+	var hunter: Fighter = scene.ctx.fighter(1)
+	me.global_position = Vector3(0, 1, 1)
+	hunter.global_position = Vector3(6, 1, 1)
+	hunter.hide()
+	brain.on_round_start()
+	brain.decide(0.0)
+	var retreat: Vector3 = scene.arena.retreat_point(me.global_position)
+	t.equal(brain.destination, retreat, "unseen hunter cannot create a phantom threat at the origin")
+	hunter.global_position = Vector3(-30, 1, 20)
+	brain.decide(0.0)
+	t.equal(brain.destination, retreat, "unseen hunter movement cannot alter the runner destination")
+	hunter.show()
+	hunter.global_position = Vector3(6, 1, 1)
+	brain._record_history()
+	brain.decide(0.0)
+	t.ok(brain.destination.x < 0.0, "runner flees a visible hunter")
+	hunter.hide()
+	brain.decide(0.0)
+	t.ok(brain.destination.x < 0.0, "runner retains legitimate last-seen hunter memory")
+	hunter.global_position = Vector3(-30, 1, 20)
+	brain._time = 0.1
+	brain._record_history()
+	brain.decide(0.0)
+	t.ok(brain.destination.x < 0.0, "hidden movement cannot change remembered threat direction")
+	cue.hunter_slot = -1
+	brain.decide(0.0)
+	t.equal(brain.destination, retreat, "absent hunter retains safe retreat behavior")
+	cue.hunter_slot = 0
+	for slot in [2, 3]:
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot * 3, 1, 1)
+	brain._time += 0.1
+	brain._record_history()
+	brain._time += 0.01
+	brain.decide(0.0)
+	t.ok(brain.destination.x > 0.0, "hunter pursues visible prey rather than a hidden rival")
+	brain.on_round_start()
+	t.ok(not brain.has_observed(1), "new round clears remembered hunter knowledge")
+	hunter.show()
+	hunter.global_position = Vector3.ZERO
+	brain.reaction_time = 0.2
+	brain._record_history()
+	t.ok(not brain.has_observed(1), "first hunter observation waits for reaction delay")
+	brain._time += 0.3
+	t.ok(brain.has_observed(1), "actual origin position is a valid delayed observation")
+	t.ok(not brain.has_observed(-1) and not brain.has_observed(4), "invalid hunter slots cannot be observed")
 	cue.queue_free()
 
 
