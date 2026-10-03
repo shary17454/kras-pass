@@ -48,6 +48,15 @@ test("existing secrets remain Railway-managed, never literal values", () => {
   for (const value of Object.values(variables)) assert.deepEqual(value, { type: "preserve" });
 });
 
+test("production domain and runtime are explicitly preserved", () => {
+  const service = api();
+  assert.deepEqual(service.networking, { serviceDomains: { "kras-pass-production.up.railway.app": { port: 8080 } } });
+  assert.equal(service.build.buildEnvironment, "V3");
+  assert.equal(service.deploy.runtime, "V2");
+  assert.equal(service.deploy.ipv6EgressEnabled, false);
+  assert.equal(service.deploy.useLegacyStacker, false);
+});
+
 test("persistent storage size, region and usage alerts are retained", () => {
   const data = spec().resources.find(resource => resource.address === "volume.kras-pass-volume");
   assert.equal(data.config.sizeMB, 5000);
