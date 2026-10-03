@@ -41,7 +41,10 @@ func run(t: TestHarness) -> void:
 			t.equal(first.seed, second.seed, "offset campaign retains mirrored seed pairing")
 		for sample in 24:
 			t.equal(sim._baseline_seed(sample), offset + 9001 + sample * 613, "baseline uses the same reproducible campaign offset")
-	for invalid in ["", "abc", "1.5", "-1", "1000000001", "999999999999999999999"]:
+	for valid in ["+00000000000000000000001000000000", "00000000000000000000001000000000"]:
+		t.ok(sim._set_seed_offset(valid), "leading zeros do not overflow a valid seed")
+		t.equal(sim.seed_offset, 1000000000, "normalized seed retains its numeric identity")
+	for invalid in ["", "abc", "1.5", "-1", "1000000001", "999999999999999999999", "-999999999999999999999"]:
 		t.ok(not sim._set_seed_offset(invalid), "malformed or out-of-range seed offset is rejected")
 		t.equal(sim.seed_offset, 1000000000, "rejected offset does not alter campaign identity")
 	sim.seed_offset = 0
@@ -107,3 +110,38 @@ func _boss_outcomes(t: TestHarness, sim: Node) -> void:
 	t.equal(sim._boss_outcome(result), "unknown", "aborted outcome cannot establish objective completion")
 	t.equal(sim._severity(["boss outcome evidence incomplete"]), 2, "missing objective proof blocks qualification")
 	t.equal(sim._severity(["boss never defeated in baseline sample"]), 1, "zero observed defeats require balance investigation")
+	t.equal(sim._severity(["boss difficulty outcome evidence incomplete"]), 2, "missing difficulty objectives block qualification")
+	t.equal(sim._severity(["boss smoke outcome evidence incomplete"]), 2, "missing smoke objectives block qualification")
+	result.finished_naturally = true
+	t.equal(sim._boss_outcome(result, "boss_forge"), "unknown", "another game's result cannot prove the selected objective")
+	for boss_id in ["boss_forge", "boss_colossus", "boss_dreadnought", "boss_sovereign"]:
+		var def := Registry.minigame(boss_id)
+		var local_result := result.duplicate(true) as MatchResult
+		local_result.minigame_id = boss_id
+		for orientation in 2:
+			var cfg: MatchConfig = sim._difficulty_configuration(def, orientation)
+			var sample: Dictionary = sim._difficulty_sample(cfg, local_result)
+			t.equal(sample["seed"], cfg.seed, "difficulty outcome retains configured world seed")
+			t.equal(sample["character"], cfg.players[0].character_id, "difficulty outcome retains character identity")
+			t.equal(sample["expert_slots"], [0, 1] if orientation == 0 else [2, 3], "difficulty outcome retains mirrored expert orientation")
+			t.equal(sample["boss_outcome"], "survived", "natural deadline is explicitly not boss defeat")
+			t.ok(sample["completed"], "natural deadline remains a completed match")
+			var missing: Dictionary = sim._difficulty_sample(cfg, null)
+			t.equal(missing["boss_outcome"], "unknown", "missing result cannot prove boss objective")
+			t.ok(not missing["completed"], "missing match retains completion failure")
+	var ordinary: MatchConfig = sim._difficulty_configuration(Registry.minigame("ring_rumble"), 0)
+	t.ok(not sim._difficulty_sample(ordinary, result).has("boss_outcome"), "ordinary games do not acquire a fake boss objective")
+	var boss_row := {
+		"runs": 2, "boss_outcomes": [], "boss_defeated_runs": 2, "boss_unknown_runs": 0,
+		"difficulty_attempted": 2, "difficulty_completed": 2,
+		"difficulty_samples": [{"boss_outcome": "defeated"}, {"boss_outcome": "survived"}],
+		"tie_rate": 0.0, "slot_bias": 0.0, "wins_by_slot": [1, 1, 1, 1],
+		"character_buckets": 4, "wins_by_character": {"a": 1, "b": 1, "c": 1, "d": 1},
+		"character_bias": 0.0, "zero_score_runs": 0, "avg_duration": 20.0, "expert_edge": 0.6,
+	}
+	var boss_def := Registry.minigame("boss_forge")
+	t.ok(not sim._flags(boss_def, boss_row).has("boss difficulty outcome evidence incomplete"), "known mixed difficulty outcomes are valid evidence")
+	for bad_samples in [[], [{"boss_outcome": "defeated"}], [{}, {"boss_outcome": "survived"}],
+			[{"boss_outcome": "unknown"}, {"boss_outcome": "survived"}], [null, {"boss_outcome": "survived"}]]:
+		boss_row["difficulty_samples"] = bad_samples
+		t.ok(sim._flags(boss_def, boss_row).has("boss difficulty outcome evidence incomplete"), "incomplete difficulty outcome cannot appear qualified")

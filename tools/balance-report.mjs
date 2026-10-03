@@ -15,6 +15,7 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
   const reviews = [];
   const characterWins = Object.create(null);
   const bossBaseline = [];
+  const bossComparisons = [];
   let pairingVerified = entries.length > 0;
   for (const { source, checkout, report } of entries) {
     const game = report.games?.[0];
@@ -55,6 +56,7 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
     if (paired) verifyPairs(game, characterIds, seedOffset);
     if (bossGameIds.includes(game.id) || game.boss_outcomes !== undefined) {
       bossBaseline.push({ game: game.id, ...verifyBossOutcomeEvidence(game, seedOffset) });
+      bossComparisons.push({ game: game.id, ...verifyBossComparisonEvidence(game, smoke, seedOffset) });
     }
     pairingVerified &&= paired;
     seen.add(source.game);
@@ -71,7 +73,7 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
     gamesCompleted: seen.size, gamesExpected: gameIds.length,
     matchesCompleted: entries.reduce((total, entry) => total + 26 + entry.source.difficultyRuns, 0),
     difficultyPairingVerified: pairingVerified && missing.length === 0,
-    missing, reviews, characterWins, bossBaseline,
+    missing, reviews, characterWins, bossBaseline, bossComparisons,
     balanceReviewComplete: false,
     releaseReady: false,
   };
@@ -104,6 +106,32 @@ export function verifyBossOutcomeEvidence(game, seedOffset = 0) {
     throw new Error('Missing or contradictory boss objective warning');
   }
   return counts;
+}
+
+export function verifyBossComparisonEvidence(game, smoke, seedOffset = 0) {
+  const samples = game.difficulty_samples;
+  const difficulty = { defeated: 0, survived: 0 };
+  if (!Number.isSafeInteger(seedOffset) || seedOffset < 0 || seedOffset > 1000000000 ||
+      !Number.isSafeInteger(game.difficulty_attempted) || game.difficulty_attempted < 1 ||
+      !Array.isArray(samples) || samples.length !== game.difficulty_attempted) {
+    throw new Error('Missing boss difficulty objective evidence');
+  }
+  for (const [i, sample] of samples.entries()) {
+    if (!sample || sample.seed !== seedOffset + 4242 + Math.floor(i / 2) * 97 ||
+        sample.completed !== true || !['defeated', 'survived'].includes(sample.boss_outcome)) {
+      throw new Error('Invalid boss difficulty objective evidence');
+    }
+    difficulty[sample.boss_outcome]++;
+  }
+  const stress = {};
+  for (const [mode, delta] of [['mutated', 5501], ['chaos', 5502]]) {
+    if (smoke?.id !== game.id || smoke[`${mode}_seed`] !== seedOffset + delta ||
+        smoke[`${mode}_ok`] !== true || !['defeated', 'survived'].includes(smoke[`${mode}_boss_outcome`])) {
+      throw new Error('Invalid boss stress objective evidence');
+    }
+    stress[mode] = smoke[`${mode}_boss_outcome`];
+  }
+  return { difficulty, stress };
 }
 
 function verifyPairs(game, characterIds, seedOffset) {
