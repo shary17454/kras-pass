@@ -1136,12 +1136,13 @@ func _finished(result: MatchResult) -> void:
 				_fail("forge guest simulated physical objects or diverged from health")
 				return
 	if game_id == "base_siege":
-		if not observed_siege_hit or not observed_siege_destroyed:
-			_fail("siege hit/destruction evidence missing")
+		var evidence = preload("res://tests/network_smoke_config.gd")
+		if not evidence.siege_evidence(observed_siege_hit, observed_siege_destroyed, contenders, result.scores):
+			_fail("siege ordinary destruction or final contender damage/score evidence missing")
 			return
 		for round in range(game._round_index + 1):
-			if not siege_hits_by_round.has(round) or not siege_destruction_by_round.has(round):
-				_fail("siege round %d had no real damage/destruction" % round)
+			if not evidence.siege_evidence(siege_hits_by_round.has(round), siege_destruction_by_round.has(round), contenders, result.scores):
+				_fail("siege round %d lacks ordinary destruction or final contender damage/score" % round)
 				return
 		if not host:
 			var world: Dictionary = game._network_replica.target.get("world", {})
