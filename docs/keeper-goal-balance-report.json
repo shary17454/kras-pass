@@ -1,0 +1,202 @@
+{
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 33.1902777777772,
+      "avg_score": 0.75,
+      "category": "ball_zone",
+      "character_bias": 0.0833333333333333,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4921
+        }
+      ],
+      "expert_edge": 0.533653846153846,
+      "flags": [],
+      "id": "goal_guard",
+      "name": "حارس المرمى",
+      "round_window": 100.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "severity": 0,
+      "slot_bias": 0.125,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "barq": 2,
+        "fanoos": 5,
+        "ghaim": 3,
+        "mowja": 3,
+        "nabta": 3,
+        "ramla": 3,
+        "sakhra": 2,
+        "turs": 3
+      },
+      "wins_by_slot": [
+        2,
+        6,
+        7,
+        9
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-03T15:11:05",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "flags": [],
+      "id": "goal_guard",
+      "mutated_ok": true,
+      "name": "حارس المرمى",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural"
+}

@@ -1,0 +1,204 @@
+{
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 35.2687499999993,
+      "avg_score": 0.791666666666667,
+      "category": "ball_zone",
+      "character_bias": 0.0833333333333333,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 4921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 4921
+        }
+      ],
+      "expert_edge": 0.509615384615385,
+      "flags": [
+        "expert bots no better than easy"
+      ],
+      "id": "magnet_court",
+      "name": "المغناطيس",
+      "round_window": 100.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "severity": 1,
+      "slot_bias": 0.125,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "barq": 4,
+        "fanoos": 4,
+        "ghaim": 2,
+        "mowja": 5,
+        "nabta": 3,
+        "ramla": 4,
+        "sakhra": 1,
+        "turs": 1
+      },
+      "wins_by_slot": [
+        9,
+        5,
+        6,
+        4
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-03T15:19:33",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "flags": [],
+      "id": "magnet_court",
+      "mutated_ok": true,
+      "name": "المغناطيس",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural"
+}
