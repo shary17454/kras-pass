@@ -54,10 +54,44 @@ func run(t: TestHarness, host: Node) -> void:
 			# Resetting twice must not recreate objects or consume the opening timers.
 			game.on_round_start()
 			_check_specific(t, game, id)
+		_check_damage_accounting(t, scene, id)
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
 		await host.get_tree().process_frame
+
+
+func _check_damage_accounting(t: TestHarness, scene: Node, id: String) -> void:
+	t.test("%s credits applied damage and rejects invalid hits" % id)
+	var game: Node = scene.controller
+	game.damage_boss(game.boss_health - 25.0, 0)
+	var sequence: int = game.damage_sequence
+	game.damage_boss(55.0, 1)
+	t.equal(scene.ctx.scores[1], 25, "finishing hit earns only remaining health")
+	t.equal(scene.ctx.details[1].get("damage", 0), 25, "contribution detail matches actual damage")
+	t.equal(game.boss_health, 0.0, "finishing hit removes remaining health")
+	t.equal(game.damage_sequence, sequence + 1, "finishing hit emits one damage event")
+	game.damage_boss(55.0, 1)
+	t.equal(scene.ctx.scores[1], 25, "defeated boss cannot yield repeated score")
+	for amount in [NAN, INF, -INF, 0.0, -10.0]:
+		scene._start_next_round()
+		game.damage_boss(amount, 1)
+		t.equal(game.boss_health, game.boss_max_health, "non-finite/non-positive hit cannot mutate health")
+		t.equal(game.damage_sequence, 0, "invalid hit cannot emit damage event")
+		t.equal(Array(scene.ctx.scores), [0, 0, 0, 0], "invalid hit cannot award points")
+		if id == "boss_dreadnought":
+			t.equal(game._aim_at, -1, "invalid hit cannot retarget dreadnought")
+	for slot in [-2, scene.ctx.player_count()]:
+		scene._start_next_round()
+		game.damage_boss(55.0, slot)
+		t.equal(game.boss_health, game.boss_max_health, "invalid owner cannot damage boss")
+		t.equal(game.damage_sequence, 0, "invalid owner cannot emit damage event")
+		if id == "boss_dreadnought":
+			t.equal(game._aim_at, -1, "invalid owner cannot become retaliation target")
+	scene._start_next_round()
+	game.damage_boss(10.0, -1)
+	t.equal(game.boss_health, game.boss_max_health - 10.0, "unowned environmental damage remains supported")
+	t.equal(Array(scene.ctx.scores), [0, 0, 0, 0], "unowned damage awards no player points")
 
 
 func _populate_old_round(game: Node, id: String) -> Array:
