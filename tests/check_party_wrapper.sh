@@ -8,6 +8,10 @@ sh tools/check_party.sh > "$OUT/success.stdout" 2>&1
 for pattern in \
   'SCRIPT ERROR: runtime failure' \
   'Parse Error: invalid script' \
+  'Failed to load script' \
+  'ALL TESTS PASSED - 0 assertions' \
+  'wrapper output without test completion' \
+  '' \
   'FAIL: invalid result' \
   'FAILED - 1 failed' \
   'Required object "obj" is null' \
@@ -25,4 +29,4 @@ if KRAS_FAKE_EXIT=2 sh tools/check_party.sh > "$OUT/exit.stdout" 2>&1; then
   printf 'FAILED: wrapper ignored an engine failure\n' >&2
   exit 1
 fi
-printf 'Wrapper checks passed: success path and 11 failure cases. Evidence: %s\n' "$OUT"
+printf 'Wrapper checks passed: success path and 15 failure cases. Evidence: %s\n' "$OUT"

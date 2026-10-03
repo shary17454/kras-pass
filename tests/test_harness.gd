@@ -72,3 +72,8 @@ func report() -> int:
 			print("   ✗ %s" % f)
 	print("═".repeat(64))
 	return 0 if failed == 0 else 1
+
+
+func require_suite_assertions(previous_count: int) -> void:
+	if passed + failed <= previous_count:
+		ok(false, "suite returned without executing assertions")

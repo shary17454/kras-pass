@@ -12,7 +12,7 @@ run_check() {
   code=0
   "$GODOT_BIN" --headless --fixed-fps 60 --path . --log-file "$OUT/$label.log" "$scene" -- --test-data-dir="$OUT/saves-$label" "$@" >"$OUT/$label.stdout" 2>&1 || code=$?
   tail -n 22 "$OUT/$label.stdout"
-  if grep -Eq 'SCRIPT ERROR:|Parse Error:|FAIL:|FAILED|Required object .* is null|ObjectDB instances (were )?leaked|resources still in use|RID allocations|PagedAllocator.*pages in use|Texture with GL ID.*leaked' "$OUT/$label.stdout"; then
+  if ! sh tools/check_godot_log.sh "$OUT/$label.stdout" "$label"; then
     code=1
   fi
   if [ "$code" -ne 0 ]; then

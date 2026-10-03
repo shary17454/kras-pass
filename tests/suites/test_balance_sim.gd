@@ -64,6 +64,15 @@ func run(t: TestHarness) -> void:
 	sim.only = "not_a_registered_game"
 	t.equal(sim._games().size(), 0, "unknown game selection is empty rather than all games")
 	_boss_outcomes(t, sim)
+	var probe := TestHarness.new()
+	probe.require_suite_assertions(0)
+	t.equal(probe.failed, 1, "an aborted zero-assertion suite cannot pass")
+	probe.require_suite_assertions(probe.passed + probe.failed)
+	t.equal(probe.failed, 2, "a previous failure cannot hide another empty suite")
+	var before := probe.passed + probe.failed
+	probe.ok(true, "completed fixture assertion")
+	probe.require_suite_assertions(before)
+	t.equal(probe.failed, 2, "a completed suite retains its original result")
 	sim.free()
 
 

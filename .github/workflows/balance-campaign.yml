@@ -107,17 +107,20 @@ jobs:
         run: |
           set -euo pipefail
           godot --headless --path . --import --log-file "$RUNNER_TEMP/balance-import.log" \
-            -- --test-data-dir="$RUNNER_TEMP/balance-import-save"
+            -- --test-data-dir="$RUNNER_TEMP/balance-import-save" 2>&1 | tee "$RUNNER_TEMP/balance-import.stdout"
+          sh tools/check_godot_log.sh "$RUNNER_TEMP/balance-import.stdout" import
           godot --headless --fixed-fps 60 --path . tests/test_runner.tscn \
             --log-file "$RUNNER_TEMP/balance-policy.log" \
-            -- --suite=balance_sim --test-data-dir="$RUNNER_TEMP/balance-policy-save"
+            -- --suite=balance_sim --test-data-dir="$RUNNER_TEMP/balance-policy-save" 2>&1 | tee "$RUNNER_TEMP/balance-policy.stdout"
+          sh tools/check_godot_log.sh "$RUNNER_TEMP/balance-policy.stdout" tests
       - name: Complete natural matches
         run: |
           set -euo pipefail
           godot --headless --fixed-fps 60 --path . tools/balance_sim.tscn \
             --log-file "$RUNNER_TEMP/balance-simulation.log" \
             -- --runs=24 --only="$GAME_ID" --seed-offset="$SEED_OFFSET" --out-dir="$RUNNER_TEMP/balance-report" \
-            --test-data-dir="$RUNNER_TEMP/balance-save"
+            --test-data-dir="$RUNNER_TEMP/balance-save" 2>&1 | tee "$RUNNER_TEMP/balance-simulation.stdout"
+          sh tools/check_godot_log.sh "$RUNNER_TEMP/balance-simulation.stdout"
       - name: Verify report coverage
         run: |
           node --input-type=module <<'JS'

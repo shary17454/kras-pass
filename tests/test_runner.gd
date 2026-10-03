@@ -116,11 +116,13 @@ func _ready() -> void:
 			_t.ok(false, "suite failed to load")
 			continue
 		var suite = script.new()
+		var previous_count := _t.passed + _t.failed
 		# Suites that need the tree take a host node; pure ones do not.
 		if suite.run.get_argument_count() >= 2:
 			await suite.run(_t, self)
 		else:
 			suite.run(_t)
+		_t.require_suite_assertions(previous_count)
 	_t.ok(selected > 0, "at least one test suite was selected")
 	var elapsed := (Time.get_ticks_msec() - started) / 1000.0
 	print("\nfinished in %.1fs" % elapsed)
