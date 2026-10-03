@@ -64,6 +64,23 @@ class ExportEvidenceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             EVIDENCE.source_identity(self.root)
 
+    def test_generated_script_uid_must_be_committed(self):
+        uid = self.input.with_suffix(".gd.uid")
+        uid.write_text("uid://teststableidentity\n")
+        with self.assertRaises(RuntimeError):
+            EVIDENCE.source_identity(self.root)
+        self.git("add", "src")
+        self.git("commit", "-qm", "Preserve Godot script identity")
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+        before = EVIDENCE.source_identity(self.root)
+        uid.write_text("uid://differentidentity\n")
+        with self.assertRaises(RuntimeError):
+            EVIDENCE.source_identity(self.root)
+        uid.write_text("uid://teststableidentity\n")
+        self.assertEqual(EVIDENCE.source_identity(self.root), before)
+        self.record()
+        self.assertTrue(EVIDENCE.verify(self.root, self.out))
+
     def test_changed_native_bridge_is_rejected(self):
         path = next(name for name in EVIDENCE.REQUIRED_OUTPUTS if "libKrasApple" in name)
         (self.out / path).write_bytes(b"old bridge")
