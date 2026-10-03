@@ -12,8 +12,16 @@ class RaceCueProbe extends MiniGameController:
 		return 1
 
 class MagnetCueProbe extends MiniGameController:
+	var charge_ready := true
 	func magnet_ready(_slot: int) -> bool:
-		return true
+		return charge_ready
+
+class MagnetDeadlineProbe extends "res://src/ai/brains/magnet_keeper_brain.gd":
+	var observations := {}
+	func _most_dangerous_ball() -> GameBall:
+		return null
+	func perceive_ball(ball: GameBall) -> Dictionary:
+		return observations.get(ball.get_instance_id(), {})
 
 class RelicCueProbe extends MiniGameController:
 	var item: Node3D
@@ -146,6 +154,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_platform(t, scene)
 	_test_remaining_rivals(t, scene)
 	_test_keeper_balls(t, scene)
+	_test_magnet_deadline(t, scene)
 	_test_bomb_states(t, scene)
 	_test_ball_delay(t, scene)
 	_test_relic(t, scene)
@@ -609,6 +618,57 @@ func _test_keeper_balls(t: TestHarness, scene: Node) -> void:
 		if not ball.is_queued_for_deletion(): ball.queue_free()
 	keeper.controller = null
 	magnet.controller = null
+	controller.free()
+
+
+func _test_magnet_deadline(t: TestHarness, scene: Node) -> void:
+	var controller := MagnetCueProbe.new()
+	var brain := MagnetDeadlineProbe.new()
+	brain.controller = controller
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.strategy = 1.0
+	scene.ctx.fighter(0).global_position = Vector3.ZERO
+	var ball := GameBall.new()
+	scene.ctx.world_root.add_child(ball)
+	ball.add_to_group("balls")
+	ball.global_position = Vector3(3, 0, 0)
+	ball.velocity = Vector3.RIGHT * 999.0
+	for normal in [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]:
+		var observed_position: Vector3 = -normal * 3.0
+		brain.observations[ball.get_instance_id()] = {"position": observed_position, "velocity": normal * 10.0}
+		brain.bits = 0
+		brain.decide(0.0)
+		t.ok((brain.bits & InputFrame.Btn.ABILITY) != 0, "expert saves an urgent single ball from observed motion")
+		brain.observations[ball.get_instance_id()]["velocity"] = normal
+		brain.bits = 0
+		brain.decide(0.0)
+		t.equal(brain.bits & InputFrame.Btn.ABILITY, 0, "expert preserves the charge for a distant slow arrival")
+		brain.observations[ball.get_instance_id()]["velocity"] = -normal * 10.0
+		brain.bits = 0
+		brain.decide(0.0)
+		t.equal(brain.bits & InputFrame.Btn.ABILITY, 0, "departing single ball cannot trigger emergency magnet")
+	brain.observations[ball.get_instance_id()] = {"position": Vector3(3, 0, 3), "velocity": Vector3.LEFT * 10.0}
+	brain.bits = 0
+	brain.decide(0.0)
+	t.equal(brain.bits & InputFrame.Btn.ABILITY, 0, "fast passing ball outside catch radius preserves the charge")
+	brain.observations[ball.get_instance_id()] = {"position": Vector3(3, 0, 0), "velocity": Vector3.LEFT * 10.0}
+	ball.hide()
+	brain.bits = 0
+	brain.decide(0.0)
+	t.equal(brain.bits & InputFrame.Btn.ABILITY, 0, "hidden urgent ball cannot trigger emergency magnet")
+	ball.show()
+	controller.charge_ready = false
+	brain.bits = 0
+	brain.decide(0.0)
+	t.equal(brain.bits & InputFrame.Btn.ABILITY, 0, "empty visible charge prevents emergency activation")
+	controller.charge_ready = true
+	brain.observations.clear()
+	brain.bits = 0
+	brain.decide(0.0)
+	t.equal(brain.bits & InputFrame.Btn.ABILITY, 0, "not yet perceived urgent ball cannot trigger emergency magnet")
+	ball.remove_from_group("balls")
+	ball.queue_free()
+	brain.controller = null
 	controller.free()
 
 
