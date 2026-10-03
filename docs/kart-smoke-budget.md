@@ -81,3 +81,38 @@ Node exited zero. Server loop delay reached 3173 ms. This is functional
 qualification for this map/seed, not device FPS or production latency evidence.
 
 Fresh Linux CI, tournament/final and the remaining release gates are pending.
+
+## Two clients plus bots tournament: PASS
+
+Source: `eefbf7c59da03a342d4e1e4a23c078bf4df2255a`.
+Command: `node network-smoke.js --game=kart_sprint --humans=2 --tournament --seed=487119885`.
+Evidence:
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-u61oRz`.
+
+Both real peers completed three tournament matches and reconnected. Final
+match scores were `[2455,3118,999999113,999999013]`, tournament points
+`[15,9,3,6]`, cups `[3,0,0,0]`, champion slot 0 and no tied final. The guest
+received 3248 world snapshots. Node exited zero; all existing physical
+boost/rescue, actual human finish and guest ownership checks passed. As in the
+ordinary sessions, unfinished bots are not claimed as finishers. Server loop
+delay reached 4643 ms, so this is not production latency or FPS evidence.
+
+## Four clients with tied race final: PASS
+
+Source: the same `eefbf7c` head.
+Command: `node network-smoke.js --game=kart_sprint --humans=4 --tournament --race-tiebreak --seed=487119885`.
+Evidence:
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-Z7dYIS`.
+
+Every actual Godot peer completed three ordinary three-lap races plus the
+one-lap final. All four agreed on final scores `[1137,722,1715,1187]`, champion
+slot 1, points `[3,3,3,3]`, unchanged cups `[1,1,1,0]`, zero final awards and
+one tie attempt. The host and one guest reconnected. Guests received 4294-4313
+world snapshots; all finish, collision baseline, replica ownership and final
+award/cup checks passed. Node exited zero. All four slots began this final as
+contenders; spectator-only final qualification is separate. Server loop delay
+reached 2984 ms, not a performance certification.
+
+These local successes do not imply all 39 online games are production-ready.
+The current Linux matrix and release/device/production-service gates remain
+separate, and no App Store submission was performed.
