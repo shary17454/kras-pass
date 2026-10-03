@@ -149,6 +149,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duo(t, scene)
 	_test_smasher(t, scene)
 	_test_duellist(t, scene)
+	_test_duellist_delay(t, scene)
 	_test_ball(t, scene)
 	_test_courier(t, scene)
 	_test_platform(t, scene)
@@ -349,7 +350,7 @@ func _test_duo(t: TestHarness, scene: Node) -> void:
 	var center: Vector3 = scene.ctx.arena_center()
 	for slot in 4:
 		scene.ctx.fighter(slot).show()
-		scene.ctx.fighter(slot).mods.clear()
+		scene.ctx.fighter(slot).mods["shield"] = 0.0
 	scene.ctx.fighter(0).global_position = center + Vector3.UP
 	scene.ctx.fighter(1).global_position = center + Vector3(scene.arena.def.radius - 0.5, 1, 0)
 	scene.ctx.fighter(1).hide()
@@ -366,6 +367,8 @@ func _test_duo(t: TestHarness, scene: Node) -> void:
 	t.equal(duo._pick_target(), 1, "duo can target an enemy once visible again")
 	duo.controller.free()
 	duo.controller = null
+	for fighter in scene.ctx.fighters:
+		t.ok(fighter.mods.has("frozen"), "duo fixture preserves the effect schema used by the live HUD")
 
 
 func _test_smasher(t: TestHarness, scene: Node) -> void:
@@ -426,13 +429,55 @@ func _test_duellist(t: TestHarness, scene: Node) -> void:
 	scene.ctx.fighter(1).damage_percent = 999.0
 	scene.ctx.fighter(1).hide()
 	scene.ctx.fighter(2).damage_percent = 80.0
+	duellist._record_history()
 	t.equal(duellist._best_target(), 2, "duellist targets visible damaged rival rather than hidden leader")
 	scene.ctx.fighter(2).hide()
 	t.equal(duellist._best_target(), 3, "duellist retains remaining visible target")
 	scene.ctx.fighter(3).hide()
 	t.equal(duellist._best_target(), -1, "duellist has no target when rivals are hidden")
 	scene.ctx.fighter(1).show()
+	duellist._record_history()
 	t.equal(duellist._best_target(), 1, "duellist can target damaged rival after it reappears")
+
+
+func _test_duellist_delay(t: TestHarness, scene: Node) -> void:
+	var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
+	duellist.configure(0, scene.ctx, 3, 119)
+	duellist.reaction_time = 0.5
+	duellist.strategy = 1.0
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	for slot in range(1, 4):
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot + 1, 1, 0)
+		scene.ctx.fighter(slot).damage_percent = 0.0
+	scene.ctx.fighter(1).damage_percent = 90.9
+	duellist._record_history()
+	duellist._time = 0.3
+	scene.ctx.fighter(2).damage_percent = 140.0
+	duellist._record_history()
+	duellist._time = 0.6
+	t.near(duellist.perceived_damage(1), 90.0, 0.001, "damage perception uses the displayed integer percentage")
+	t.equal(duellist._best_target(), 1, "damage target selection waits for the same reaction delay as movement")
+	duellist._time = 0.8
+	t.equal(duellist._best_target(), 2, "observed damage becomes actionable after its reaction delay")
+	scene.ctx.fighter(1).damage_percent = 999.0
+	t.equal(duellist._best_target(), 2, "unsampled future damage cannot override the delayed target")
+	scene.ctx.fighter(2).hide()
+	t.equal(duellist._best_target(), 1, "hidden damaged rival cannot remain an actionable target")
+	t.near(duellist.perceived_damage(2), 0.0, 0.001, "hidden damage is not an actionable observation")
+	t.near(duellist.perceived_damage(-1), 0.0, 0.001, "invalid negative damage slot is unknown")
+	t.near(duellist.perceived_damage(4), 0.0, 0.001, "out-of-range damage slot is unknown")
+	scene.ctx.fighter(2).show()
+	duellist.reaction_time = 0.0
+	for sample in AIBrain.HISTORY_CAP + 5:
+		duellist._time += 0.05
+		scene.ctx.fighter(2).damage_percent = 20.9 + sample
+		duellist._record_history()
+	t.equal(duellist._history_damage.size(), AIBrain.HISTORY_CAP, "damage observation storage stays bounded")
+	t.near(duellist.perceived_damage(2), 20.0 + AIBrain.HISTORY_CAP + 4, 0.001, "wrapped history retains the latest observed damage")
+	duellist.on_round_start()
+	t.equal(duellist._history_damage.size(), 0, "new round clears retained damage observations")
+	t.equal(duellist._best_target(), -1, "new round cannot use old damage or a live unsampled fallback")
 
 
 func _test_ball(t: TestHarness, scene: Node) -> void:

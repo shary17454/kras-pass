@@ -2,7 +2,11 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## Duel Pit: hunt the most damaged rival, back off when you are the fragile one.
 ##
 ## Damage percentages are shown on every player's HUD, so reading them is not
-## hidden information — it is exactly the read a human makes before committing.
+## hidden information. Sample that HUD cue with the same delay as movement.
+
+
+func on_configured() -> void:
+	_tracks_damage = true
 
 
 func decide(_delta: float) -> void:
@@ -29,8 +33,7 @@ func decide(_delta: float) -> void:
 		super.decide(_delta)
 		return
 	var spot := predict(target, 0.28)
-	var their := ctx.fighter(target)
-	var their_damage: float = their.damage_percent if their != null and is_instance_valid(their) else 0.0
+	var their_damage := perceived_damage(target)
 
 	# A finisher: line them up against the edge when they are ripe.
 	if their_damage > 80.0 and strategy > 0.4:
@@ -61,10 +64,10 @@ func _best_target() -> int:
 		if i == slot or not ctx.is_alive(i):
 			continue
 		var f := ctx.fighter(i)
-		if not can_observe(f):
+		if not can_observe(f) or not has_observed(i):
 			continue
 		var dist := me.global_position.distance_to(perceive(i))
-		var score: float = f.damage_percent * lerp(0.2, 1.0, strategy) - dist * 2.0
+		var score: float = perceived_damage(i) * lerp(0.2, 1.0, strategy) - dist * 2.0
 		if score > best_score:
 			best_score = score
 			best = i

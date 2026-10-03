@@ -50,9 +50,11 @@ var _decision_clock := 0.0
 var _history_times := PackedFloat32Array()
 var _history_positions: Array[PackedVector3Array] = []
 var _history_velocities: Array[PackedVector3Array] = []
+var _history_damage: Array[PackedFloat32Array] = []
 var _history_balls: Array[Dictionary] = []
 var _first_seen_times := PackedFloat64Array()
 var _tracks_balls := false
+var _tracks_damage := false
 var _history_head := 0
 var _history_count := 0
 var _history_sample_clock := 0.0
@@ -117,6 +119,7 @@ func on_round_start() -> void:
 	_history_times.clear()
 	_history_positions.clear()
 	_history_velocities.clear()
+	_history_damage.clear()
 	_history_balls.clear()
 	_first_seen_times.clear()
 	_history_head = 0
@@ -181,8 +184,10 @@ func _record_history() -> void:
 		_first_seen_times.fill(INF)
 	var positions := PackedVector3Array()
 	var velocities := PackedVector3Array()
+	var damage := PackedFloat32Array()
 	positions.resize(ctx.fighters.size())
 	velocities.resize(ctx.fighters.size())
+	damage.resize(ctx.fighters.size())
 	var previous := (_history_head + _history_count - 1) % HISTORY_CAP if _history_count > 0 else -1
 	var balls := _ball_snapshot(previous)
 	for i in ctx.fighters.size():
@@ -191,19 +196,25 @@ func _record_history() -> void:
 			_first_seen_times[i] = minf(_first_seen_times[i], _time)
 			positions[i] = f.global_position
 			velocities[i] = f.velocity
+			if _tracks_damage:
+				# Duel HUD displays whole percentages, not private fractional damage.
+				damage[i] = floorf(f.damage_percent)
 		else:
 			# Keep a last-seen location, never sample hidden movement or velocity.
 			positions[i] = _history_positions[previous][i] if previous >= 0 else Vector3.ZERO
 			velocities[i] = Vector3.ZERO
+			damage[i] = _history_damage[previous][i] if previous >= 0 else 0.0
 	if _history_count < HISTORY_CAP:
 		_history_positions.append(positions)
 		_history_velocities.append(velocities)
+		_history_damage.append(damage)
 		_history_balls.append(balls)
 		_history_times.append(_time)
 		_history_count += 1
 		return
 	_history_positions[_history_head] = positions
 	_history_velocities[_history_head] = velocities
+	_history_damage[_history_head] = damage
 	_history_balls[_history_head] = balls
 	_history_times[_history_head] = _time
 	_history_head = (_history_head + 1) % HISTORY_CAP
@@ -295,6 +306,16 @@ func _perceived_velocity(target_slot: int) -> Vector3:
 		return _history_velocities[idx][target_slot]
 	var f := ctx.fighter(target_slot)
 	return f.velocity if can_observe(f) else Vector3.ZERO
+
+
+func perceived_damage(target_slot: int) -> float:
+	if not _tracks_damage or not has_observed(target_slot) or not can_observe(ctx.fighter(target_slot)):
+		return 0.0
+	var want := _time - reaction_time
+	var idx := _history_index(want + 0.000001)
+	if idx < 0 or float(_history_times[idx]) > want + 0.000001:
+		return 0.0
+	return _history_damage[idx][target_slot]
 
 
 ## Where a target will be shortly, blended by `prediction`. At low skill this
