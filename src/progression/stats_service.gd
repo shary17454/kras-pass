@@ -146,7 +146,7 @@ func _record_for_slot(config: MatchConfig, result: MatchResult, me: int) -> void
 	if won and result.rounds.size() > 1:
 		var all_rounds := true
 		for r in result.rounds:
-			if r.place_of(me) != 1:
+			if not r.finished_naturally or r.place_of(me) != 1 or r.is_draw():
 				all_rounds = false
 				break
 		if all_rounds:

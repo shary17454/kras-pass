@@ -65,6 +65,12 @@ func _aggregate(t: TestHarness) -> void:
 	r2.details[0]["knockouts"] = 3
 	var merged := MatchResult.aggregate("g", [r1, r2] as Array[MatchResult])
 	t.equal(int(merged.detail(0, "knockouts", 0)), 5, "detail counters sum across rounds")
+	t.ok(merged.finished_naturally, "completed rounds remain eligible for rewards")
+	r2.finished_naturally = false
+	var interrupted := MatchResult.aggregate("g", [r1, r2] as Array[MatchResult])
+	t.ok(not interrupted.finished_naturally, "an interrupted round cannot become a completed match")
+	t.equal(interrupted.rounds.size(), 2, "interrupted results remain available for diagnostics")
+	t.ok(not MatchResult.aggregate("g", [] as Array[MatchResult]).finished_naturally, "no rounds means no completed match")
 
 
 func _survival(t: TestHarness) -> void:

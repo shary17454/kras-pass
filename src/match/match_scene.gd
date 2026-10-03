@@ -974,7 +974,7 @@ func _celebrate(result: MatchResult) -> void:
 func _complete_match() -> void:
 	var aggregate := MatchResult.aggregate(config.minigame_id, _round_results, ctx.definition.higher_is_better())
 	aggregate.arena_id = config.arena_id
-	aggregate.finished_naturally = not _aborted
+	aggregate.finished_naturally = aggregate.finished_naturally and not _aborted
 	if _online():
 		Net.publish_result(aggregate.scores)
 		_set_phase(P.DONE)

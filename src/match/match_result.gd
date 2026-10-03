@@ -103,12 +103,14 @@ static func aggregate(minigame_id: String, round_results: Array[MatchResult], hi
 	var agg := MatchResult.new()
 	agg.minigame_id = minigame_id
 	if round_results.is_empty():
+		agg.finished_naturally = false
 		return agg
 	var slots: int = round_results[0].scores.size()
 	var totals: Array[int] = []
 	totals.resize(slots)
 	totals.fill(0)
 	for r in round_results:
+		agg.finished_naturally = agg.finished_naturally and r.finished_naturally
 		for i in mini(slots, r.scores.size()):
 			totals[i] += r.scores[i]
 		agg.duration += r.duration

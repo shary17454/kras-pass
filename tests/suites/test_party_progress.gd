@@ -152,7 +152,37 @@ func run(t: TestHarness, host: Node) -> void:
 	SaveSystem.profile_loaded.emit(backup)
 	SaveSystem.set_settings(settings)
 	_playlists(t)
+	_result_integrity(t)
 	await host.get_tree().process_frame
+
+
+func _result_integrity(t: TestHarness) -> void:
+	t.test("aborted aggregates cannot earn statistics, gems or achievements")
+	var backup := SaveSystem.profile().duplicate(true)
+	var profile_id := SaveSystem.create_profile("Reward integrity")
+	SaveSystem.switch_profile(profile_id)
+	var cfg := MatchConfig.build("tank_arena", ["nabta", "sakhra"], 1, 1)
+	cfg.players[0].local_profile_id = profile_id
+	var won := MatchResult.make("tank_arena", cfg.arena_id, [4, 0] as Array[int])
+	won.duration = 20
+	var aborted := MatchResult.make("tank_arena", cfg.arena_id, [4, 0] as Array[int])
+	aborted.finished_naturally = false
+	var interrupted := MatchResult.aggregate("tank_arena", [won, aborted] as Array[MatchResult])
+	var gems_before := Progression.gems()
+	Stats.record_match(cfg, interrupted)
+	t.equal(Stats.total_matches(), 0, "an interrupted round aggregate cannot increment matches")
+	t.equal(Progression.gems(), gems_before, "an interrupted aggregate cannot award gems")
+	t.ok(not Achievements.is_unlocked("first_win"), "an interrupted aggregate cannot unlock first win")
+	t.test("flawless means an outright win in every round, not a shared draw")
+	var drawn := MatchResult.make("tank_arena", cfg.arena_id, [2, 2] as Array[int])
+	drawn.duration = 20
+	Stats.record_match(cfg, MatchResult.aggregate("tank_arena", [won, drawn] as Array[MatchResult]))
+	t.equal(Stats.total_wins(), 1, "winning the overall match still counts")
+	t.equal(SaveSystem.profile_branch(profile_id, "stats").get("flawless_wins"), 0, "a tied round prevents the flawless award")
+	Stats.record_match(cfg, MatchResult.aggregate("tank_arena", [won, won] as Array[MatchResult]))
+	t.equal(SaveSystem.profile_branch(profile_id, "stats").get("flawless_wins"), 1, "two outright round wins still earn flawless")
+	SaveSystem.set_profile(backup)
+	SaveSystem.profile_loaded.emit(backup)
 
 
 func _playlists(t: TestHarness) -> void:

@@ -79,6 +79,20 @@ func _match_pauses_on_real_background_signal(t: TestHarness) -> void:
 	await tree.physics_frame
 	t.ok(scene._paused, "coming back to the foreground does not silently resume a match the player was not looking at")
 
+	t.test("match completion preserves interrupted round eligibility")
+	var interrupted := MatchResult.make(cfg.minigame_id, cfg.arena_id, [4, 0, 0, 0] as Array[int])
+	interrupted.finished_naturally = false
+	scene._round_results.clear()
+	scene._round_results.append(interrupted)
+	scene._aborted = false
+	var outcomes: Array[MatchResult] = []
+	scene._on_finished = func(result: MatchResult): outcomes.append(result)
+	scene._complete_match()
+	t.equal(outcomes.size(), 1, "the real completion path delivers one aggregate")
+	if outcomes.size() == 1:
+		t.ok(not outcomes[0].finished_naturally, "the scene cannot turn an interrupted round into a rewardable match")
+	t.equal(scene.phase, MatchPhase.P.DONE, "interrupted result still completes cleanup flow")
+
 	scene.teardown()
 	scene.queue_free()
 	await tree.process_frame
