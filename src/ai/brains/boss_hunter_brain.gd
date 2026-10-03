@@ -92,6 +92,24 @@ func _steer_on_ground(target: Vector3, urgency := 1.0) -> void:
 		move = Vector2.ZERO
 
 
+func _publish_output(movement: Vector2) -> void:
+	var actions := bits
+	var me := self_body()
+	var arena := ctx.arena as Arena
+	if (actions & Btn.DASH) != 0 and me != null and arena != null and is_instance_valid(arena._crater_floor):
+		var direction := Vector3(movement.x, 0.0, movement.y)
+		if me.locomotion == Fighter.Locomotion.DRIVE or direction.length_squared() < 0.05:
+			direction = me.facing
+		var origin := me.global_position - arena.global_position
+		# Match the shared dash projection; speed items only increase the guard.
+		var travel := 5.0 * maxf(1.0, float(me.mods.get("speed", 1.0)))
+		var landing := origin + direction.normalized() * travel
+		var margin := minf(0.5, maxf(0.0, arena._crater_floor.edge_distance(origin)))
+		if not arena._crater_floor.path_clear(origin, landing, margin):
+			actions &= ~Btn.DASH
+	InputRouter.push_virtual(slot, movement, aim, actions)
+
+
 ## Horizontal distance from this bot to a point.
 func _flat(point: Vector3) -> float:
 	var me := self_body()

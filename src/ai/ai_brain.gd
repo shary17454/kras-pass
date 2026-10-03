@@ -165,7 +165,12 @@ func _publish() -> void:
 		# like a human hand and not like static.
 		_noise_phase += 0.09
 		m += Vector2(sin(_noise_phase * 1.7), cos(_noise_phase * 1.3)) * input_noise * 0.5
-	InputRouter.push_virtual(slot, m.limit_length(1.0), aim, bits)
+	_publish_output(m.limit_length(1.0))
+
+
+## Game-specific safety checks must see the final noisy input, not a proposal.
+func _publish_output(movement: Vector2) -> void:
+	InputRouter.push_virtual(slot, movement, aim, bits)
 
 
 # --- perception ------------------------------------------------------------

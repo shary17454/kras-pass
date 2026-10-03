@@ -78,7 +78,49 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(game._pick_target(), Vector3(valid_target.x, scene.arena.global_position.y, valid_target.z), "slam targets only visible active players on actual ground")
 	fighter.global_position = Vector3(80, 20, 80)
 	t.equal(game._pick_target(), Vector3.INF, "no unreachable slam when every player is falling or waiting")
+	_dash_clearance(t, scene, brain)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
 	await host.get_tree().process_frame
+
+
+func _dash_clearance(t: TestHarness, scene: Node, brain) -> void:
+	t.test("published dash input respects the entire carved-ground segment")
+	var floor: Node = scene.arena._crater_floor
+	floor.reset()
+	floor.open_hole(Vector3.ZERO, 1.0)
+	var fighter: Fighter = scene.ctx.fighter(0)
+	fighter.global_position = scene.arena.global_position + Vector3(-3, 0, 0)
+	brain.input_noise = 0.0
+	brain.move = Vector2.RIGHT
+	brain.bits = InputFrame.Btn.DASH | InputFrame.Btn.ATTACK
+	brain._publish()
+	var frame: InputFrame = InputRouter._virtual_pending[0]
+	t.ok(floor.has_ground(Vector3(2, 0, 0), 0.5), "dash destination has ground; endpoint-only validation would miss this hole")
+	t.ok((frame.bits & InputFrame.Btn.DASH) == 0, "a dash cannot cross a hole even if its endpoint is safe")
+	t.ok((frame.bits & InputFrame.Btn.ATTACK) != 0, "ground filtering leaves attack input unchanged")
+	brain.move = Vector2.UP
+	brain.bits = InputFrame.Btn.DASH
+	brain._publish()
+	t.ok((frame.bits & InputFrame.Btn.DASH) != 0, "dash remains available along clear ground")
+	brain.move = Vector2.ZERO
+	fighter.facing = Vector3.RIGHT
+	brain.bits = InputFrame.Btn.DASH
+	brain._publish()
+	t.ok((frame.bits & InputFrame.Btn.DASH) == 0, "neutral-stick dash uses the fighter's actual facing direction")
+	fighter.facing = Vector3.FORWARD
+	brain.bits = InputFrame.Btn.DASH
+	brain._publish()
+	t.ok((frame.bits & InputFrame.Btn.DASH) != 0, "neutral-stick clear-facing dash stays available")
+	brain.input_noise = 1.5
+	brain._noise_phase = PI / (2.0 * 1.7) - 0.09
+	brain.bits = InputFrame.Btn.DASH
+	brain._publish()
+	t.ok((frame.bits & InputFrame.Btn.DASH) == 0, "clearance is checked after final input noise, not the earlier steering proposal")
+	brain.input_noise = 0.0
+	floor.reset()
+	brain.move = Vector2.RIGHT
+	brain.bits = InputFrame.Btn.DASH
+	brain._publish()
+	t.ok((frame.bits & InputFrame.Btn.DASH) != 0, "removing the hole restores dash without resetting the brain")
