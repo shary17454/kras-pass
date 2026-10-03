@@ -125,6 +125,7 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           import fs from 'node:fs';
+          import { verifyBossOutcomeEvidence } from './tools/balance-report.mjs';
           const report = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/balance-report/report.json`, 'utf8'));
           const game = report.games[0];
           const smoke = report.mutator_smoke[0];
@@ -136,6 +137,10 @@ jobs:
               game.difficulty_completed !== 16 || game.difficulty_pairing !== 'matched_seed_character' ||
               !smoke.mutated_ok || !smoke.chaos_ok) {
             throw new Error('Incomplete balance campaign coverage');
+          }
+          const catalogue = JSON.parse(fs.readFileSync('data/minigames.json', 'utf8'));
+          if (catalogue.games.some(def => def.id === game.id && def.boss === true)) {
+            verifyBossOutcomeEvidence(game, offset);
           }
           JS
       - name: Record source evidence

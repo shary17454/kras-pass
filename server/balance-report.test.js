@@ -117,6 +117,62 @@ function pairedEntry(id) {
   return value;
 }
 const pairedOptions = { ...options, characterIds, requirePaired: true };
+const bossOptions = { ...pairedOptions, bossGameIds: ['one'] };
+function bossEntry() {
+  const value = offsetEntry('one', 0);
+  const game = value.report.games[0];
+  game.boss_outcomes = game.baseline_seeds.map(seed => ({ seed, outcome: 'defeated' }));
+  game.boss_defeated_runs = 24;
+  game.boss_survived_runs = game.boss_unknown_runs = 0;
+  return value;
+}
+test('boss completion requires explicit seeded objective evidence', () => {
+  assert.equal(summarizeBalance([bossEntry(), pairedEntry('two')], bossOptions).complete, true);
+});
+for (const [name, mutate] of [
+  ['missing outcomes', g => { delete g.boss_outcomes; }],
+  ['missing counter', g => { delete g.boss_defeated_runs; }],
+  ['negative counter', g => { g.boss_survived_runs = -1; }],
+  ['fractional counter', g => { g.boss_defeated_runs = 23.5; }],
+  ['string counter', g => { g.boss_defeated_runs = '24'; }],
+  ['counter mismatch', g => { g.boss_defeated_runs = 23; g.boss_survived_runs = 1; }],
+  ['short outcomes', g => { g.boss_outcomes.pop(); }],
+  ['duplicate seed', g => { g.boss_outcomes[1].seed = g.boss_outcomes[0].seed; }],
+  ['wrong seed', g => { g.boss_outcomes[0].seed++; }],
+  ['malformed outcome', g => { g.boss_outcomes[0] = null; }],
+  ['unknown objective', g => { g.boss_outcomes[0].outcome = 'unknown'; g.boss_defeated_runs = 23; g.boss_unknown_runs = 1; }],
+  ['invalid objective', g => { g.boss_outcomes[0].outcome = 'finished'; }],
+]) {
+  test(`rejects boss evidence ${name}`, () => {
+    const one = bossEntry(); mutate(one.report.games[0]);
+    assert.throws(() => summarizeBalance([one, pairedEntry('two')], bossOptions), /boss/i);
+  });
+}
+test('surviving every boss match requires a retained review warning', () => {
+  const one = bossEntry(); const game = one.report.games[0];
+  game.boss_outcomes.forEach(sample => { sample.outcome = 'survived'; });
+  game.boss_defeated_runs = 0; game.boss_survived_runs = 24;
+  assert.throws(() => summarizeBalance([one, pairedEntry('two')], bossOptions), /boss/i);
+  game.flags = ['boss never defeated in baseline sample']; game.severity = 1;
+  const summary = summarizeBalance([one, pairedEntry('two')], bossOptions);
+  assert.deepEqual(summary.reviews, [{ game: 'one', flags: game.flags }]);
+  assert.equal(summary.releaseReady, false);
+  game.boss_outcomes[0].outcome = 'defeated'; game.boss_defeated_runs = 1; game.boss_survived_runs = 23;
+  assert.throws(() => summarizeBalance([one, pairedEntry('two')], bossOptions), /boss/i);
+});
+test('boss outcomes must use the configured independent campaign offset', () => {
+  const one = bossEntry();
+  const independent = offsetEntry('one', 100000);
+  Object.assign(independent.report.games[0], {
+    boss_outcomes: one.report.games[0].boss_outcomes,
+    boss_defeated_runs: 24, boss_survived_runs: 0, boss_unknown_runs: 0,
+  });
+  assert.throws(() => summarizeBalance([independent, offsetEntry('two', 100000)],
+    { ...bossOptions, seedOffset: 100000 }), /boss/i);
+  independent.report.games[0].boss_outcomes.forEach(sample => { sample.seed += 100000; });
+  assert.equal(summarizeBalance([independent, offsetEntry('two', 100000)],
+    { ...bossOptions, seedOffset: 100000 }).complete, true);
+});
 test('paired campaign verifies all roster members and adjusted match counts', () => {
   const result = summarizeBalance([pairedEntry('one'), pairedEntry('two')], pairedOptions);
   assert.equal(result.matchesCompleted, 84);

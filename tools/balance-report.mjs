@@ -2,16 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export function summarizeBalance(entries, { commit, run, gameIds, characterIds = [], partial = false, requirePaired = false, seedOffset = 0 }) {
+export function summarizeBalance(entries, { commit, run, gameIds, characterIds = [], bossGameIds = [], partial = false, requirePaired = false, seedOffset = 0 }) {
   if (!/^[a-f0-9]{40}$/.test(commit) || !run || !Array.isArray(gameIds) ||
       !gameIds.length || new Set(gameIds).size !== gameIds.length ||
-      !Number.isSafeInteger(seedOffset) || seedOffset < 0 || seedOffset > 1000000000) {
+      !Number.isSafeInteger(seedOffset) || seedOffset < 0 || seedOffset > 1000000000 ||
+      !Array.isArray(bossGameIds) || new Set(bossGameIds).size !== bossGameIds.length ||
+      bossGameIds.some(id => !gameIds.includes(id))) {
     throw new Error('Invalid expected campaign identity');
   }
   const expected = new Set(gameIds);
   const seen = new Set();
   const reviews = [];
   const characterWins = Object.create(null);
+  const bossBaseline = [];
   let pairingVerified = entries.length > 0;
   for (const { source, checkout, report } of entries) {
     const game = report.games?.[0];
@@ -50,6 +53,9 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
       }
     }
     if (paired) verifyPairs(game, characterIds, seedOffset);
+    if (bossGameIds.includes(game.id) || game.boss_outcomes !== undefined) {
+      bossBaseline.push({ game: game.id, ...verifyBossOutcomeEvidence(game, seedOffset) });
+    }
     pairingVerified &&= paired;
     seen.add(source.game);
     if (game.flags.length) reviews.push({ game: game.id, flags: game.flags });
@@ -65,10 +71,39 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
     gamesCompleted: seen.size, gamesExpected: gameIds.length,
     matchesCompleted: entries.reduce((total, entry) => total + 26 + entry.source.difficultyRuns, 0),
     difficultyPairingVerified: pairingVerified && missing.length === 0,
-    missing, reviews, characterWins,
+    missing, reviews, characterWins, bossBaseline,
     balanceReviewComplete: false,
     releaseReady: false,
   };
+}
+
+export function verifyBossOutcomeEvidence(game, seedOffset = 0) {
+  const samples = game.boss_outcomes;
+  const counts = { defeated: 0, survived: 0, unknown: 0 };
+  if (!Number.isSafeInteger(seedOffset) || seedOffset < 0 || seedOffset > 1000000000 ||
+      !Number.isSafeInteger(game.runs) || game.runs < 1 ||
+      !Array.isArray(samples) || samples.length !== game.runs) {
+    throw new Error('Missing boss objective evidence');
+  }
+  for (const [i, sample] of samples.entries()) {
+    if (!sample || sample.seed !== seedOffset + 9001 + i * 613 ||
+        !['defeated', 'survived'].includes(sample.outcome)) {
+      throw new Error('Invalid seeded boss objective evidence');
+    }
+    counts[sample.outcome]++;
+  }
+  for (const [outcome, count] of Object.entries(counts)) {
+    const recorded = game[`boss_${outcome}_runs`];
+    if (!Number.isSafeInteger(recorded) || recorded !== count) {
+      throw new Error('Mismatched boss objective counters');
+    }
+  }
+  const noDefeat = 'boss never defeated in baseline sample';
+  if (!Array.isArray(game.flags) || game.flags.includes(noDefeat) !== (counts.defeated === 0) ||
+      (counts.defeated === 0 && game.severity !== 1)) {
+    throw new Error('Missing or contradictory boss objective warning');
+  }
+  return counts;
 }
 
 function verifyPairs(game, characterIds, seedOffset) {
@@ -116,6 +151,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const summary = summarizeBalance(readBalanceEntries(root), {
       commit, run, gameIds: catalogue.games.map(game => game.id), partial: process.argv.includes('--partial'),
       characterIds: characters.characters.map(character => character.id), requirePaired: process.argv.includes('--paired'),
+      bossGameIds: catalogue.games.filter(game => game.boss === true).map(game => game.id),
       seedOffset: Number(offsetText),
     });
     console.log(JSON.stringify(summary, null, 2));
