@@ -123,6 +123,12 @@ func _test_keeper_interception(t: TestHarness, scene: Node) -> void:
 		brain.prediction = 0.0
 		brain.decide(0.1)
 		t.ok(brain.target.is_equal_approx(brain._goal_pos - axis * 1.7), "low-prediction tier retains its short observed horizon")
+		brain.prediction = 1.0
+		brain.risk = 1.0
+		brain.observed = {"position": brain._goal_pos + normal * 2.0 - axis * 0.5,
+			"velocity": -normal * 8.0 + axis * 6.0}
+		brain.decide(0.1)
+		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis), "nearby ball never draws keeper off its physically constrained lane")
 		brain.controller = null
 
 
