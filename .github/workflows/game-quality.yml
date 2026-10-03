@@ -21,6 +21,9 @@ concurrency:
 jobs:
   balance:
     if: github.event_name == 'workflow_dispatch' && inputs.balance_campaign
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/balance-campaign.yml
 
   godot:
