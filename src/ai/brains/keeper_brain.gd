@@ -1,10 +1,8 @@
 extends AIBrain
 ## Goal Guard: stay on your line, intercept, aim clearances at rivals.
 ##
-## Interception uses `predict()`, so a low-skill keeper reacts to where the ball
-## *was* and gets beaten by pace, while an Expert keeper meets it early. That is
-## the honest way to model "better goalkeeping" without giving anyone the ball's
-## exact velocity for free.
+## Prediction strength changes the interception lead. Ball motion currently
+## uses visible live state; delayed object observation remains to be implemented.
 
 var _goal_axis := Vector3.RIGHT
 var _goal_pos := Vector3.ZERO
@@ -60,7 +58,7 @@ func _most_dangerous_ball() -> GameBall:
 	var best_score := -INF
 	for node in _tree.get_nodes_in_group("balls"):
 		var b := node as GameBall
-		if b == null or not is_instance_valid(b):
+		if not can_observe(b):
 			continue
 		var to: Vector3 = _goal_pos - b.global_position
 		var dist := to.length()

@@ -43,13 +43,15 @@ func decide(_delta: float) -> void:
 
 ## Whoever is closest to my crystal, if they are close enough to be a problem.
 func _intruder_at_home() -> int:
+	if not bool(controller.call("base_visible", slot)):
+		return -1
 	var home: Vector3 = controller.call("base_position", slot)
 	if float(controller.call("base_health", slot)) <= 0.0:
 		return -1
 	var best := -1
 	var best_d := 5.0
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var d := home.distance_to(perceive(i))
 		if d < best_d:
@@ -74,7 +76,7 @@ func _weakest_rival_base() -> int:
 	var best := -1
 	var best_cost := INF
 	for i in ctx.fighters.size():
-		if i == slot:
+		if i == slot or not bool(controller.call("base_visible", i)):
 			continue
 		var health: float = controller.call("base_health", i)
 		if health <= 0.0:

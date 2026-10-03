@@ -37,7 +37,7 @@ func _rival_above() -> int:
 	if me == null:
 		return -1
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var p := perceive(i)
 		if p.y > me.global_position.y + 0.8 and Vector2(p.x - me.global_position.x, p.z - me.global_position.z).length() < 4.0:
@@ -54,7 +54,7 @@ func _find_higher_ground(from: Vector3) -> Vector3:
 	var best := from
 	var best_score := -INF
 	for node in arena.get_node_or_null("Static").get_children() if arena.has_node("Static") else []:
-		if not (node is Node3D):
+		if not node is Node3D or not can_observe(node):
 			continue
 		var p: Vector3 = node.global_position
 		if p.y <= from.y + 0.4:

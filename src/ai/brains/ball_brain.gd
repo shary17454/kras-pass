@@ -52,7 +52,7 @@ func _ball() -> GameBall:
 	if _tree == null:
 		return null
 	for b in _tree.get_nodes_in_group("balls"):
-		if is_instance_valid(b):
+		if b is GameBall and can_observe(b):
 			return b
 	return null
 
@@ -62,7 +62,7 @@ func _best_victim(from: Vector3) -> int:
 	var best := -1
 	var best_d := INF
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var d: float = perceive(i).distance_squared_to(from)
 		if d < best_d:

@@ -11,6 +11,11 @@ const BOMB_COLOR := Color("#3a2b3f")
 var _judgements := {}
 
 
+func on_round_start() -> void:
+	super.on_round_start()
+	_judgements.clear()
+
+
 func decide(_delta: float) -> void:
 	var me := self_body()
 	if me == null or controller == null:
@@ -35,14 +40,19 @@ func _pick_crate() -> Node3D:
 		return null
 	var best: Node3D = null
 	var best_d := INF
+	var observed := {}
 	for entry in entries:
 		var node: Node3D = entry["node"]
-		if not is_instance_valid(node):
+		if not can_observe(node):
+			continue
+		var cue := _visible_bomb_cue(node)
+		if cue < 0:
 			continue
 		var id := node.get_instance_id()
+		observed[id] = true
 		if not _judgements.has(id):
 			# Judge it once, from the visible colour, and live with the verdict.
-			var reads_bomb: bool = bool(entry["bomb"]) if rng.randf() < accuracy else not bool(entry["bomb"])
+			var reads_bomb: bool = cue == 1 if rng.randf() < accuracy else cue != 1
 			_judgements[id] = reads_bomb
 		if bool(_judgements[id]):
 			continue
@@ -50,4 +60,17 @@ func _pick_crate() -> Node3D:
 		if d < best_d:
 			best_d = d
 			best = node
+	for id in _judgements.keys():
+		if not observed.has(id):
+			_judgements.erase(id)
 	return best
+
+
+func _visible_bomb_cue(node: Node3D) -> int:
+	var body := node.find_child("CrateBody", true, false) as MeshInstance3D
+	if not can_observe(body) or body.mesh == null or body.mesh.get_surface_count() == 0:
+		return -1
+	var material := body.get_active_material(0) as BaseMaterial3D
+	if material == null:
+		return -1
+	return 1 if material.albedo_color.is_equal_approx(BOMB_COLOR) else 0
