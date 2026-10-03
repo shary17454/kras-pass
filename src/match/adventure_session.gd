@@ -114,8 +114,14 @@ func award_result(result: MatchResult) -> Dictionary:
 	if rewards.has(receipt):
 		return rewards[receipt].duplicate(true)
 	var place := result.place_of(0)
-	var cleared := place == 1 and not result.is_draw()
-	var stars := stars_for(2 if place == 1 and result.is_draw() else place, result.places.size())
+	var definition := Registry.minigame(result.minigame_id)
+	var objective_met := true
+	if definition != null and definition.is_boss:
+		var rounds := maxi(1, result.rounds.size())
+		objective_met = int(result.detail(0, "boss_rounds", 0)) == rounds \
+			and int(result.detail(0, "boss_defeats", 0)) == rounds
+	var cleared := objective_met and place == 1 and not result.is_draw()
+	var stars := stars_for(2 if place == 1 and result.is_draw() else place, result.places.size()) if objective_met else 0
 	var newly := Progression.record_stage(world_id, stage_id(), cleared, stars, result.score_of(0))
 	var gems := Balance.inum("tuning", "scoring.gems_per_participation", 1)
 	if cleared:

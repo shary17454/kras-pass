@@ -300,6 +300,12 @@ func is_round_over() -> bool:
 	return ctx.early_finish or boss_defeated
 
 
+func on_round_end() -> void:
+	for slot in ctx.player_count():
+		ctx.details[slot]["boss_rounds"] = 1
+		ctx.details[slot]["boss_defeats"] = 1 if boss_defeated else 0
+
+
 func hud_value(slot: int) -> String:
 	return str(ctx.scores[slot])
 
