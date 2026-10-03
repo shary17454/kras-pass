@@ -5,6 +5,8 @@ extends AIBrain
 
 var _goal_axis := Vector3.RIGHT
 var _goal_pos := Vector3.ZERO
+var _goal_normal := Vector3.FORWARD
+var _lane_limit := 0.0
 var _tree: SceneTree
 
 
@@ -19,6 +21,8 @@ func on_configured() -> void:
 	var spots := [Vector3(r, 0, 0), Vector3(-r, 0, 0), Vector3(0, 0, r), Vector3(0, 0, -r)]
 	_goal_pos = arena.global_position + spots[side]
 	_goal_axis = Vector3.FORWARD if side < 2 else Vector3.RIGHT
+	_goal_normal = (arena.global_position - _goal_pos).normalized()
+	_lane_limit = maxf(0.0, arena.def.radius - 2.0)
 
 
 func decide(_delta: float) -> void:
@@ -33,14 +37,18 @@ func decide(_delta: float) -> void:
 	var position: Vector3 = observed["position"]
 	var velocity: Vector3 = observed["velocity"]
 
-	# Stand between the ball and the goal, sliding along the goal line.
-	var lead: float = lerp(0.05, 0.45, prediction)
+	# Predict arrival at the defensive line from delayed observations only.
+	var lead := 0.0
+	var normal_speed := velocity.dot(_goal_normal)
+	if absf(normal_speed) > 0.001:
+		var arrival := (_goal_pos - position).dot(_goal_normal) / normal_speed
+		if arrival > 0.0:
+			lead = lerpf(minf(0.05, arrival), minf(arrival, 3.0), prediction)
 	var future: Vector3 = position + velocity * lead
-	var intercept := _goal_pos + _goal_axis * _goal_axis.dot(future - _goal_pos)
-	# Step off the line to meet a ball that is already close, if brave enough.
+	var along := clampf(_goal_axis.dot(future - _goal_pos), -_lane_limit, _lane_limit)
+	var intercept := _goal_pos + _goal_axis * along
+	# Goal Guard constrains all keepers to this lane, including human players.
 	var closing := me.global_position.distance_to(position)
-	if closing < lerp(3.0, 7.0, risk):
-		intercept = intercept.lerp(future, 0.6)
 	steer_to(intercept)
 
 	if closing < 2.8 and rng.randf() < attack_chance:

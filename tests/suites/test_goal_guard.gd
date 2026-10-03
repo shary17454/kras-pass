@@ -1,6 +1,18 @@
 extends RefCounted
 
 
+class KeeperProbe extends "res://src/ai/brains/keeper_brain.gd":
+	var observed: Dictionary
+	var ball: GameBall
+	var target := Vector3.INF
+	func _most_dangerous_ball() -> GameBall:
+		return ball
+	func perceive_ball(_ball: GameBall) -> Dictionary:
+		return observed
+	func steer_to(point: Vector3, _urgency: float = 1.0) -> void:
+		target = point
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("goal guard")
 	t.test("shield control, fast interception, scoring and restart")
@@ -12,6 +24,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var game = scene.controller
 	game.on_round_start()
 	game.tick(0.0)
+	_test_keeper_interception(t, scene)
 	t.equal(game.side_for(0), 2, "local keeper starts on the near goal")
 	t.equal(game.paddles.size(), 4, "every keeper has a visible shield")
 	t.equal(scene.ctx.definition.control_profile, ControlProfile.Kind.KEEPER, "single-stick keeper controls")
@@ -77,6 +90,40 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.queue_free()
 	await host.get_tree().process_frame
 	await _network_replica(t, host)
+
+
+func _test_keeper_interception(t: TestHarness, scene: Node) -> void:
+	t.test("keepers predict crossing from observed trajectory on all four sides")
+	for slot in 4:
+		var brain := KeeperProbe.new()
+		brain.controller = scene.controller
+		brain.configure(slot, scene.ctx, 3, 819)
+		brain.prediction = 1.0
+		brain.risk = 0.0
+		brain.ball = scene.controller.balls[0]
+		brain.ball.velocity = Vector3(999, 0, 999)
+		var normal: Vector3 = scene.controller.NORMALS[scene.controller.side_for(slot)]
+		var axis: Vector3 = brain._goal_axis
+		var pos: Vector3 = brain._goal_pos + normal * 8.0 - axis * 2.0
+		var vel: Vector3 = -normal * 8.0 + axis * 6.0
+		brain.observed = {"position": pos, "velocity": vel}
+		brain.decide(0.1)
+		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis * 4.0), "intercept predicts the one-second crossing, not a fixed short horizon")
+		brain.observed.velocity = normal * 8.0 + axis * 6.0
+		brain.decide(0.1)
+		t.ok(brain.target.is_equal_approx(brain._goal_pos - axis * 2.0), "departing ball does not produce a backwards-time crossing")
+		brain.observed.velocity = axis * 6.0
+		brain.decide(0.1)
+		t.ok(brain.target.is_equal_approx(brain._goal_pos - axis * 2.0), "parallel trajectory has no invented arrival time")
+		brain.observed.velocity = -normal * 8.0 + axis * 100.0
+		brain.decide(0.1)
+		var limit: float = scene.arena.def.radius - 2.0
+		t.ok(brain.target.is_equal_approx(brain._goal_pos + axis * limit), "crossing outside lane is clamped to reachable court edge")
+		brain.observed.velocity = vel
+		brain.prediction = 0.0
+		brain.decide(0.1)
+		t.ok(brain.target.is_equal_approx(brain._goal_pos - axis * 1.7), "low-prediction tier retains its short observed horizon")
+		brain.controller = null
 
 
 func _network_replica(t: TestHarness, host: Node) -> void:
