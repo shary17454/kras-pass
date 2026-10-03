@@ -475,6 +475,7 @@ static func _tile(size: Vector2) -> Vector3:
 static func crate(size: float, color: Color, accent: Color) -> Node3D:
 	var root := Node3D.new()
 	var body := box(Vector3.ONE * size, color)
+	body.name = "CrateBody"
 	body.material_override = satin(color, 0.48, 0.0, 0.08)
 	root.add_child(body)
 	var bar := size * 0.14

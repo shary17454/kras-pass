@@ -108,6 +108,8 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(brain.nearest_in_group("test_ai_visible_pickups", host.get_tree()), null, "queued pickup cannot become a target")
 	_test_collector(t, scene)
 	_test_duo(t, scene)
+	_test_smasher(t, scene)
+	_test_duellist(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
@@ -182,3 +184,70 @@ func _test_duo(t: TestHarness, scene: Node) -> void:
 	t.equal(duo._pick_target(), 1, "duo can target an enemy once visible again")
 	duo.controller.free()
 	duo.controller = null
+
+
+func _test_smasher(t: TestHarness, scene: Node) -> void:
+	var smasher = load("res://src/ai/brains/smasher_brain.gd").new()
+	smasher.configure(0, scene.ctx, 3, 119)
+	smasher.accuracy = 1.0
+	var controller = load("res://src/minigames/crate_smash.gd").new()
+	smasher.controller = controller
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	var crates: Array[Node3D] = []
+	for index in 3:
+		var crate := StaticBody3D.new()
+		crate.add_child(MeshFactory.crate(1.5,
+			Color("#3a2b3f") if index == 1 else Color("#ffc46b"), Color.WHITE))
+		scene.add_child(crate)
+		crate.global_position = Vector3([4.0, 1.0, 0.1][index], 1, 0)
+		crates.append(crate)
+		controller._crates.append({"node": crate, "bomb": index != 1})
+	crates[2].hide()
+	t.equal(smasher._pick_crate(), crates[0], "smasher judges rendered colour rather than contradictory bomb flags")
+	t.ok(not smasher._judgements.has(crates[2].get_instance_id()), "hidden crate has no cached judgement")
+	crates[2].show()
+	t.equal(smasher._pick_crate(), crates[2], "newly visible safe crate becomes a target")
+	smasher.on_round_start()
+	t.equal(smasher._judgements.size(), 0, "new round discards crate judgements")
+	for entry in controller._crates: entry["bomb"] = not bool(entry["bomb"])
+	crates[2].hide()
+	t.equal(smasher._pick_crate(), crates[0], "changing secret flags alone cannot change crate classification")
+	smasher.accuracy = 0.0
+	t.equal(smasher._pick_crate(), crates[0], "cached visible judgement is not rerolled each decision")
+	smasher.on_round_start()
+	t.equal(smasher._pick_crate(), crates[1], "configured classification error still applies to visible cues")
+	smasher.accuracy = 1.0
+	var visual: Node3D = crates[0].get_child(0)
+	visual.hide()
+	smasher.on_round_start()
+	t.equal(smasher._pick_crate(), null, "smasher cannot classify a crate whose visual is hidden")
+	visual.show()
+	t.equal(smasher._pick_crate(), crates[0], "revealing the visual permits a fresh judgement")
+	crates[0].queue_free()
+	t.equal(smasher._pick_crate(), null, "queued safe crate cannot become a target")
+	t.ok(not smasher._judgements.has(crates[0].get_instance_id()), "removed crates do not accumulate cached judgements")
+	smasher.controller = null
+	controller.cleanup()
+	controller.free()
+
+
+func _test_duellist(t: TestHarness, scene: Node) -> void:
+	var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
+	duellist.configure(0, scene.ctx, 3, 119)
+	duellist.reaction_time = 0.0
+	duellist.strategy = 1.0
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	for slot in range(1, 4):
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot + 1, 1, 0)
+		scene.ctx.fighter(slot).damage_percent = 20.0
+	scene.ctx.fighter(1).damage_percent = 999.0
+	scene.ctx.fighter(1).hide()
+	scene.ctx.fighter(2).damage_percent = 80.0
+	t.equal(duellist._best_target(), 2, "duellist targets visible damaged rival rather than hidden leader")
+	scene.ctx.fighter(2).hide()
+	t.equal(duellist._best_target(), 3, "duellist retains remaining visible target")
+	scene.ctx.fighter(3).hide()
+	t.equal(duellist._best_target(), -1, "duellist has no target when rivals are hidden")
+	scene.ctx.fighter(1).show()
+	t.equal(duellist._best_target(), 1, "duellist can target damaged rival after it reappears")

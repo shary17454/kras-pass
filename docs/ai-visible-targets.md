@@ -97,5 +97,39 @@ The full 21,081-assertion run above belongs to `181491a`, not this follow-up.
 The latest observed CI run for `67620dd`, `37100912388`, had successful core,
 ring and goal jobs, with other network jobs running or queued. That does not
 qualify this follow-up source. No CI run was cancelled to obtain these results.
-Duellist, Smasher, ball/hazard/controller-specific perception, full balance,
+At that follow-up, Duellist, Smasher, ball/hazard/controller-specific perception, full balance,
 Internet/device testing and the Apple release gates remain unfinished.
+
+## Rendered crate cues and duellist targets
+
+Follow-up branch: `feature/kras-ai-rendered-crate-cues`, based on `159d773`.
+Smasher previously read `entry.bomb` despite its comment promising a visible
+colour cue. It now reads the actual visible primary crate mesh material.
+`MeshFactory.crate` names that mesh `CrateBody`; geometry/materials, gameplay
+bomb flags and network schemas are unchanged. Missing/hidden visuals are not
+classified. Difficulty accuracy still controls mistaken colour classification,
+and a visible crate keeps its judgement between decisions. Round reset and
+pruning removed/unobservable entries bound the judgement cache to observed crates.
+Duellist now excludes hidden/queued rivals before target ranking.
+
+The first fixture incorrectly used plain Node3D crates, causing a cleanup
+script error; `/tmp/kras-crate-ai-before.log` is not valid qualification.
+After using StaticBody3D, the valid unchanged-code baseline
+`/tmp/kras-crate-ai-before-valid.log` failed 12 checks with 32 passing and no
+cleanup script error. The final fixture adds cached-judgement and accuracy-zero
+checks, so its assertion count differs from the baseline.
+
+Verification of this follow-up, all terminal exit zero:
+
+- `/tmp/kras-crate-ai-final.log`: 46 focused assertions.
+- `/tmp/kras-crate-ai-compile.log`: all 323 scripts compile.
+- `/tmp/kras-crate-ai-rounds.log`: 92 crate lifecycle assertions.
+- `/tmp/kras-crate-ai-network.log`: 125 crate presentation assertions.
+- `/tmp/kras-crate-ai-duel.log`: 39 duel presentation assertions.
+
+These final logs retain the macOS CA retrieval error, with no script or resource
+leak errors. The prior full regression is not evidence for this new source.
+This is a rendered-material cue, not an isolated full Perception Layer with
+occlusion, object observation delay or camera-frustum checks. Ball/hazard and
+other custom controllers, full balance, four-peer Internet qualification,
+physical-device QA and all Apple release gates still require completion.
