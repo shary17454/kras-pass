@@ -65,3 +65,40 @@ test('rejects unregistered source and invalid expected identity', () => {
   assert.throws(() => summarizeBalance([entry('three')], { ...options, partial: true }));
   assert.throws(() => summarizeBalance([], { ...options, commit: 'short' }));
 });
+
+const characterIds = Array.from({ length: 8 }, (_, i) => `character_${i}`);
+function pairedEntry(id) {
+  const value = entry(id);
+  value.source.difficultyPolicy = 'matched_seed_character';
+  value.source.difficultyRuns = 16;
+  const game = value.report.games[0];
+  game.difficulty_attempted = game.difficulty_completed = 16;
+  game.difficulty_pairing = 'matched_seed_character';
+  game.difficulty_samples = Array.from({ length: 16 }, (_, i) => ({
+    seed: 4242 + Math.floor(i / 2) * 97, character: characterIds[Math.floor(i / 2)],
+    expert_slots: i % 2 === 0 ? [0, 1] : [2, 3], completed: true,
+  }));
+  return value;
+}
+const pairedOptions = { ...options, characterIds, requirePaired: true };
+test('paired campaign verifies all roster members and adjusted match counts', () => {
+  const result = summarizeBalance([pairedEntry('one'), pairedEntry('two')], pairedOptions);
+  assert.equal(result.matchesCompleted, 84);
+  assert.equal(result.difficultyPairingVerified, true);
+});
+test('legacy evidence stays explicitly unpaired and cannot qualify a paired campaign', () => {
+  assert.equal(summarizeBalance([entry('one'), entry('two')], options).difficultyPairingVerified, false);
+  assert.throws(() => summarizeBalance([entry('one'), entry('two')], pairedOptions));
+});
+for (const [name, mutate] of [
+  ['world seed', e => { e.report.games[0].difficulty_samples[1].seed++; }],
+  ['character', e => { e.report.games[0].difficulty_samples[1].character = 'other'; }],
+  ['seat orientation', e => { e.report.games[0].difficulty_samples[1].expert_slots = [0, 1]; }],
+  ['completion', e => { e.report.games[0].difficulty_samples[1].completed = false; }],
+  ['roster coverage', e => { e.report.games[0].difficulty_samples[14].character = e.report.games[0].difficulty_samples[15].character = characterIds[0]; }],
+]) {
+  test(`rejects mismatched paired ${name}`, () => {
+    const one = pairedEntry('one'); mutate(one);
+    assert.throws(() => summarizeBalance([one, pairedEntry('two')], pairedOptions));
+  });
+}

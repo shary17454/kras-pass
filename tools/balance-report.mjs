@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export function summarizeBalance(entries, { commit, run, gameIds, partial = false }) {
+export function summarizeBalance(entries, { commit, run, gameIds, characterIds = [], partial = false, requirePaired = false }) {
   if (!/^[a-f0-9]{40}$/.test(commit) || !run || !Array.isArray(gameIds) ||
       !gameIds.length || new Set(gameIds).size !== gameIds.length) {
     throw new Error('Invalid expected campaign identity');
@@ -11,14 +11,20 @@ export function summarizeBalance(entries, { commit, run, gameIds, partial = fals
   const seen = new Set();
   const reviews = [];
   const characterWins = Object.create(null);
+  let pairingVerified = entries.length > 0;
   for (const { source, checkout, report } of entries) {
     const game = report.games?.[0];
     const smoke = report.mutator_smoke?.[0];
+    const paired = source.difficultyPolicy === 'matched_seed_character';
+    const difficultyRuns = paired ? 16 : 12;
+    if ((source.difficultyPolicy !== undefined && !paired) || (requirePaired && !paired)) {
+      throw new Error('Unqualified difficulty pairing policy');
+    }
     if (source.commit !== commit || checkout.trim() !== commit || String(source.run) !== String(run) ||
         !expected.has(source.game) || seen.has(source.game) || source.mode !== 'natural' ||
         report.sample_mode !== 'natural' || report.games?.length !== 1 || game?.id !== source.game ||
         game.sample_mode !== 'natural' || source.runs !== 24 || game.attempted_runs !== 24 || game.runs !== 24 ||
-        source.difficultyRuns !== 12 || game.difficulty_attempted !== 12 || game.difficulty_completed !== 12 ||
+        source.difficultyRuns !== difficultyRuns || game.difficulty_attempted !== difficultyRuns || game.difficulty_completed !== difficultyRuns ||
         source.smokeRuns !== 2 || report.mutator_smoke?.length !== 1 || smoke?.id !== source.game ||
         smoke.mutated_ok !== true || smoke.chaos_ok !== true || smoke.severity !== 0 ||
         !Array.isArray(smoke.flags) || smoke.flags.length || !Array.isArray(game.flags) ||
@@ -26,6 +32,8 @@ export function summarizeBalance(entries, { commit, run, gameIds, partial = fals
         ![0, 1].includes(game.severity) || (game.flags.length > 0) !== (game.severity === 1)) {
       throw new Error(`Invalid or incomplete campaign evidence: ${source.game}`);
     }
+    if (paired) verifyPairs(game, characterIds);
+    pairingVerified &&= paired;
     seen.add(source.game);
     if (game.flags.length) reviews.push({ game: game.id, flags: game.flags });
     for (const [character, wins] of Object.entries(game.wins_by_character ?? {})) {
@@ -37,11 +45,28 @@ export function summarizeBalance(entries, { commit, run, gameIds, partial = fals
   if (missing.length && !partial) throw new Error(`Missing campaign games: ${missing.join(', ')}`);
   return {
     commit, run: String(run), complete: missing.length === 0,
-    gamesCompleted: seen.size, gamesExpected: gameIds.length, matchesCompleted: seen.size * 38,
+    gamesCompleted: seen.size, gamesExpected: gameIds.length,
+    matchesCompleted: entries.reduce((total, entry) => total + 26 + entry.source.difficultyRuns, 0),
+    difficultyPairingVerified: pairingVerified && missing.length === 0,
     missing, reviews, characterWins,
     balanceReviewComplete: false,
     releaseReady: false,
   };
+}
+
+function verifyPairs(game, characterIds) {
+  const samples = game.difficulty_samples;
+  if (game.difficulty_pairing !== 'matched_seed_character' || !Array.isArray(samples) || samples.length !== 16 ||
+      characterIds.length !== 8 || new Set(characterIds).size !== 8) throw new Error('Missing paired difficulty evidence');
+  const seen = new Set();
+  for (let i = 0; i < 16; i += 2) {
+    const first = samples[i]; const second = samples[i + 1];
+    if (!Number.isSafeInteger(first.seed) || first.seed !== second.seed || first.character !== second.character ||
+        !characterIds.includes(first.character) || seen.has(first.character) ||
+        JSON.stringify(first.expert_slots) !== '[0,1]' || JSON.stringify(second.expert_slots) !== '[2,3]' ||
+        first.completed !== true || second.completed !== true) throw new Error('Mismatched difficulty pair');
+    seen.add(first.character);
+  }
 }
 
 export function readBalanceEntries(root) {
@@ -67,8 +92,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const [root, commit, run] = process.argv.slice(2);
     if (!root) throw new Error('Usage: node tools/balance-report.mjs ARTIFACTS COMMIT RUN [--partial]');
     const catalogue = JSON.parse(fs.readFileSync(new URL('../data/minigames.json', import.meta.url), 'utf8'));
+    const characters = JSON.parse(fs.readFileSync(new URL('../data/characters.json', import.meta.url), 'utf8'));
     const summary = summarizeBalance(readBalanceEntries(root), {
       commit, run, gameIds: catalogue.games.map(game => game.id), partial: process.argv.includes('--partial'),
+      characterIds: characters.characters.map(character => character.id), requirePaired: process.argv.includes('--paired'),
     });
     console.log(JSON.stringify(summary, null, 2));
   } catch (error) {

@@ -33,6 +33,7 @@ var only := ""
 var natural_rounds := true
 var _difficulty_attempted := 0
 var _difficulty_completed := 0
+var _difficulty_samples: Array[Dictionary] = []
 var _report := []
 var _mutator_report := []
 var _null_cache := {}
@@ -171,6 +172,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"round_window": _window_for(def),
 		"difficulty_attempted": _difficulty_attempted,
 		"difficulty_completed": _difficulty_completed,
+		"difficulty_pairing": "matched_seed_character",
+		"difficulty_samples": _difficulty_samples.duplicate(true),
 		"tie_rate": float(ties) / maxf(1.0, float(completed)),
 		"avg_duration": avg_duration,
 		"wins_by_slot": wins_by_slot,
@@ -220,24 +223,16 @@ func _window_for(def: MiniGameDef) -> float:
 func _difficulty_edge(def: MiniGameDef) -> float:
 	_difficulty_attempted = 0
 	_difficulty_completed = 0
+	_difficulty_samples.clear()
 	var expert_total := 0.0
 	var easy_total := 0.0
-	var roster := Registry.characters()
-	for i in maxi(2, runs / 2):
+	for i in _difficulty_runs():
 		var expert_first := i % 2 == 0
-		var same: Array = []
-		for slot in 4:
-			same.append(roster[i % roster.size()].id)
-		var cfg := MatchConfig.build(def.id, same, 0, PlayerConfig.Difficulty.EASY, 4242 + i * 97)
-		cfg.duration_override = _window_for(def)
-		cfg.rounds = 1
-		cfg.allow_powerups = false
-		for slot in 4:
-			var is_expert := (slot < 2) == expert_first
-			cfg.players[slot].ai_difficulty = PlayerConfig.Difficulty.EXPERT if is_expert \
-				else PlayerConfig.Difficulty.EASY
+		var cfg := _difficulty_configuration(def, i)
 		_difficulty_attempted += 1
 		var result := await _play(cfg)
+		_difficulty_samples.append({"seed": cfg.seed, "character": cfg.players[0].character_id,
+			"expert_slots": [0, 1] if expert_first else [2, 3], "completed": result != null})
 		if result == null:
 			continue
 		_difficulty_completed += 1
@@ -258,6 +253,25 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 	if total <= 0.0:
 		return 0.5
 	return expert_total / total
+
+
+func _difficulty_runs() -> int:
+	return maxi(Registry.characters().size() * 2, int(ceil(float(runs) / 4.0)) * 2)
+
+
+func _difficulty_configuration(def: MiniGameDef, sample: int) -> MatchConfig:
+	var pair := int(sample / 2)
+	var roster := Registry.characters()
+	var character: String = roster[pair % roster.size()].id
+	var cfg := MatchConfig.build(def.id, [character, character, character, character],
+		0, PlayerConfig.Difficulty.EASY, 4242 + pair * 97)
+	cfg.duration_override = _window_for(def)
+	cfg.rounds = 1
+	cfg.allow_powerups = false
+	for slot in 4:
+		cfg.players[slot].ai_difficulty = PlayerConfig.Difficulty.EXPERT if (slot < 2) == (sample % 2 == 0) \
+			else PlayerConfig.Difficulty.EASY
+	return cfg
 
 
 ## MutatorSystem and chaos mode never went through the bot tournament before
