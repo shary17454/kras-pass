@@ -1,0 +1,235 @@
+{
+  "games": [
+    {
+      "attempted_runs": 2,
+      "avg_duration": 64.3749999999976,
+      "avg_score": 224.0,
+      "baseline_seeds": [
+        409001,
+        409614
+      ],
+      "boss_defeated_runs": 2,
+      "boss_outcomes": [
+        {
+          "outcome": "defeated",
+          "seed": 409001
+        },
+        {
+          "outcome": "defeated",
+          "seed": 409614
+        }
+      ],
+      "boss_survived_runs": 0,
+      "boss_unknown_runs": 0,
+      "category": "combat",
+      "character_bias": 0.3,
+      "character_buckets": 5,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "boss_outcome": "defeated",
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404242
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404242
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404339
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404339
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404436
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404436
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404533
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404533
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404630
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404630
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404727
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404727
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404824
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404824
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 404921
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 404921
+        }
+      ],
+      "expert_edge": 0.676829268292683,
+      "flags": [],
+      "id": "boss_forge",
+      "name": "حارس المسبك",
+      "round_window": 150.0,
+      "runs": 2,
+      "sample_mode": "natural",
+      "seed_offset": 400000,
+      "severity": 0,
+      "slot_bias": 0.75,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "nabta": 1,
+        "sakhra": 1
+      },
+      "wins_by_slot": [
+        2,
+        0,
+        0,
+        0
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-03T20:37:05",
+  "mutator_smoke": [
+    {
+      "chaos_boss_outcome": "survived",
+      "chaos_ok": true,
+      "chaos_seed": 405502,
+      "flags": [],
+      "id": "boss_forge",
+      "mutated_boss_outcome": "survived",
+      "mutated_ok": true,
+      "mutated_seed": 405501,
+      "name": "حارس المسبك",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 2,
+  "sample_mode": "natural",
+  "seed_offset": 400000
+}
