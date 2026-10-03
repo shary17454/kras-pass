@@ -124,6 +124,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_remaining_rivals(t, scene)
 	_test_keeper_balls(t, scene)
 	_test_bomb_states(t, scene)
+	_test_ball_delay(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
@@ -278,10 +279,11 @@ func _test_ball(t: TestHarness, scene: Node) -> void:
 	for index in 3:
 		var ball := GameBall.new()
 		if index == 1: parent.add_child(ball)
-		else: scene.add_child(ball)
+		else: scene.ctx.world_root.add_child(ball)
 		ball.add_to_group("balls")
 		balls.append(ball)
 	balls[0].hide()
+	brain._record_history()
 	t.equal(brain._ball(), balls[2], "blast bot ignores hidden and inherited-hidden balls")
 	balls[2].queue_free()
 	t.equal(brain._ball(), null, "blast bot ignores queued or hidden balls")
@@ -446,22 +448,35 @@ func _test_keeper_balls(t: TestHarness, scene: Node) -> void:
 		brain.controller = controller
 		brain.configure(0, scene.ctx, 3, 119)
 		brain.strategy = 1.0
+		brain.reaction_time = 0.0
 		brain._goal_pos = Vector3.ZERO
 	scene.ctx.fighter(0).global_position = Vector3.ZERO
 	var balls: Array[GameBall] = []
 	for index in 3:
 		var ball := GameBall.new()
-		scene.add_child(ball)
+		scene.ctx.world_root.add_child(ball)
 		ball.add_to_group("balls")
 		ball.global_position = Vector3(index + 1, 0, 0)
 		ball.velocity = Vector3.LEFT
 		balls.append(ball)
 	balls[0].hide()
 	balls[1].hide()
+	for brain in [keeper, magnet]: brain._record_history()
+	for ball in balls: ball.global_position += Vector3.LEFT * 0.1
+	for brain in [keeper, magnet]:
+		brain._time = 0.1
+		brain._record_history()
 	t.equal(keeper._most_dangerous_ball(), balls[2], "keeper ignores closer hidden balls")
 	magnet.decide(0.0)
 	t.equal(magnet.bits & InputFrame.Btn.ABILITY, 0, "hidden balls cannot contribute to a multi-ball magnet trigger")
 	balls[1].show()
+	for brain in [keeper, magnet]:
+		brain._time = 0.2
+		brain._record_history()
+	for ball in balls: ball.global_position += Vector3.LEFT * 0.1
+	for brain in [keeper, magnet]:
+		brain._time = 0.3
+		brain._record_history()
 	magnet.bits = 0
 	magnet.decide(0.0)
 	t.ok((magnet.bits & InputFrame.Btn.ABILITY) != 0, "two visible incoming balls still trigger the magnet")
@@ -494,3 +509,86 @@ func _test_bomb_states(t: TestHarness, scene: Node) -> void:
 	controller.free()
 	for bomb in bombs:
 		if not bomb.is_queued_for_deletion(): bomb.queue_free()
+
+
+func _test_ball_delay(t: TestHarness, scene: Node) -> void:
+	var keeper = load("res://src/ai/brains/keeper_brain.gd").new()
+	var controller := MagnetCueProbe.new()
+	keeper.controller = controller
+	keeper.configure(0, scene.ctx, 3, 119)
+	keeper._goal_pos = Vector3.ZERO
+	keeper.reaction_time = 0.2
+	var balls: Array[GameBall] = []
+	for index in 2:
+		var ball := GameBall.new()
+		scene.ctx.world_root.add_child(ball)
+		ball.add_to_group("balls")
+		ball.global_position = Vector3(2 if index == 0 else 6, 0, 0)
+		ball.velocity = Vector3.RIGHT if index == 0 else Vector3.LEFT
+		balls.append(ball)
+	t.equal(keeper._most_dangerous_ball(), null, "keeper cannot react to a ball it has not observed")
+	keeper._time = 0.0
+	keeper._record_history()
+	t.equal(keeper._most_dangerous_ball(), null, "new ball observation waits for reaction delay")
+	keeper._time = 0.2
+	balls[0].global_position = Vector3(20, 0, 0)
+	balls[1].global_position = Vector3(4, 0, 0)
+	keeper._record_history()
+	keeper._time = 0.3
+	t.equal(keeper._most_dangerous_ball(), balls[0], "keeper threat ranking uses delayed observed position rather than live velocity")
+	keeper._time = 0.5
+	t.equal(keeper._most_dangerous_ball(), balls[1], "keeper updates threat ranking after the observation delay")
+	balls[1].velocity = Vector3(999, 0, 0)
+	var observation: Dictionary = keeper.perceive_ball(balls[1])
+	t.equal(observation.get("velocity"), Vector3(-10, 0, 0), "ball prediction infers motion instead of reading private velocity")
+	observation["position"] = Vector3(999, 0, 0)
+	t.equal(keeper.perceive_ball(balls[1]).get("position"), Vector3(4, 0, 0), "returned observation cannot mutate retained history")
+	balls[1].configure(Color.WHITE, 0.5, false, true)
+	balls[1]._label.text = "4.0"
+	balls[1].fuse = 999.0
+	keeper._time = 0.6
+	keeper._record_history()
+	balls[1]._label.text = "1.0"
+	keeper._time = 0.7
+	keeper._record_history()
+	keeper._time = 0.8
+	t.equal(keeper.perceive_ball(balls[1]).get("fuse"), 4.0, "ball fuse comes from the delayed displayed label, not its private timer")
+	balls[1]._label.hide()
+	keeper._time = 0.9
+	keeper._record_history()
+	keeper._time = 1.2
+	t.equal(keeper.perceive_ball(balls[1]).get("fuse"), -1.0, "hidden fuse label does not reveal a timer")
+	balls[1].hide()
+	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "hidden ball cannot return an actionable old observation")
+	balls[1].show()
+	balls[1].launch(Vector3(8, 1, 0), Vector3.FORWARD, 9.0)
+	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "relaunch cannot reuse the preceding trajectory")
+	keeper._time = 1.3
+	keeper._record_history()
+	keeper._time = 1.4
+	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "relaunch also waits for reaction delay")
+	keeper._time = 1.6
+	t.equal(keeper.perceive_ball(balls[1]).get("velocity"), Vector3.ZERO, "relaunch does not infer velocity from teleport distance")
+	keeper.on_round_start()
+	t.equal(keeper._history_balls.size(), 0, "round restart discards ball observations")
+	for index in AIBrain.HISTORY_CAP + 4:
+		keeper._time = float(index) * 0.05
+		keeper._record_history()
+	t.equal(keeper._history_balls.size(), AIBrain.HISTORY_CAP, "ball observation history stays bounded after ring wrap")
+	var non_ball_brain := AIBrain.new()
+	non_ball_brain.configure(0, scene.ctx, 3, 119)
+	non_ball_brain._record_history()
+	t.ok(non_ball_brain._history_balls[0].is_empty(), "non-ball brains do not collect ball state")
+	var foreign := GameBall.new()
+	scene.add_child(foreign)
+	foreign.add_to_group("balls")
+	keeper._time += 0.1
+	keeper._record_history()
+	t.ok(keeper.perceive_ball(foreign).is_empty(), "ball outside this match cannot be observed")
+	foreign.remove_from_group("balls")
+	foreign.queue_free()
+	for ball in balls:
+		ball.remove_from_group("balls")
+		ball.queue_free()
+	keeper.controller = null
+	controller.free()

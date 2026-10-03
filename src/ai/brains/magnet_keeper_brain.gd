@@ -20,12 +20,15 @@ func decide(delta: float) -> void:
 	for b in ctx.world_root.get_tree().get_nodes_in_group("balls"):
 		if not b is GameBall or not can_observe(b):
 			continue
-		var to: Vector3 = me.global_position - b.global_position
+		var observed := perceive_ball(b)
+		if observed.is_empty():
+			continue
+		var to: Vector3 = me.global_position - Vector3(observed["position"])
 		to.y = 0.0
 		if to.length() > 6.0:
 			continue
 		close += 1
-		if b.velocity.dot(to) > 0.0:
+		if Vector3(observed["velocity"]).dot(to) > 0.0:
 			incoming += 1
 	# Panic threshold scales with strategy: Easy fires at the first incoming
 	# ball, Expert holds out for a multi-ball catch unless truly cornered.

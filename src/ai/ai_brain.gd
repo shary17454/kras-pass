@@ -50,6 +50,8 @@ var _decision_clock := 0.0
 var _history_times := PackedFloat32Array()
 var _history_positions: Array[PackedVector3Array] = []
 var _history_velocities: Array[PackedVector3Array] = []
+var _history_balls: Array[Dictionary] = []
+var _tracks_balls := false
 var _history_head := 0
 var _history_count := 0
 var _history_sample_clock := 0.0
@@ -114,6 +116,7 @@ func on_round_start() -> void:
 	_history_times.clear()
 	_history_positions.clear()
 	_history_velocities.clear()
+	_history_balls.clear()
 	_history_head = 0
 	_history_count = 0
 	_history_sample_clock = 0.0
@@ -171,6 +174,7 @@ func _record_history() -> void:
 	positions.resize(ctx.fighters.size())
 	velocities.resize(ctx.fighters.size())
 	var previous := (_history_head + _history_count - 1) % HISTORY_CAP if _history_count > 0 else -1
+	var balls := _ball_snapshot(previous)
 	for i in ctx.fighters.size():
 		var f := ctx.fighters[i]
 		if can_observe(f):
@@ -183,13 +187,54 @@ func _record_history() -> void:
 	if _history_count < HISTORY_CAP:
 		_history_positions.append(positions)
 		_history_velocities.append(velocities)
+		_history_balls.append(balls)
 		_history_times.append(_time)
 		_history_count += 1
 		return
 	_history_positions[_history_head] = positions
 	_history_velocities[_history_head] = velocities
+	_history_balls[_history_head] = balls
 	_history_times[_history_head] = _time
 	_history_head = (_history_head + 1) % HISTORY_CAP
+
+
+func _ball_snapshot(previous: int) -> Dictionary:
+	var snapshot := {}
+	if not _tracks_balls or not is_instance_valid(ctx.world_root) or not ctx.world_root.is_inside_tree():
+		return snapshot
+	for node in ctx.world_root.get_tree().get_nodes_in_group("balls"):
+		if not node is GameBall or not can_observe(node) or not ctx.world_root.is_ancestor_of(node):
+			continue
+		var ball := node as GameBall
+		var id := ball.get_instance_id()
+		var position := ball.global_position
+		var velocity := Vector3.ZERO
+		# Infer motion from successive visible samples, not private momentum.
+		if previous >= 0:
+			var old: Dictionary = _history_balls[previous].get(id, {})
+			var elapsed := _time - float(_history_times[previous])
+			if not old.is_empty() and int(old["generation"]) == ball.launch_generation and elapsed > 0.000001:
+				velocity = (position - Vector3(old["position"])) / elapsed
+		var fuse := -1.0
+		if can_observe(ball._label):
+			fuse = ball._label.text.to_float()
+		snapshot[id] = {"position": position, "velocity": velocity, "fuse": fuse,
+			"generation": ball.launch_generation}
+	return snapshot
+
+
+func perceive_ball(ball: GameBall) -> Dictionary:
+	if not can_observe(ball) or not is_instance_valid(ctx.world_root) or not ctx.world_root.is_ancestor_of(ball):
+		return {}
+	var want := _time - reaction_time
+	var idx := _history_index(want + 0.000001)
+	if idx < 0 or float(_history_times[idx]) > want + 0.000001:
+		return {}
+	var sample: Dictionary = _history_balls[idx].get(ball.get_instance_id(), {})
+	# A relaunch reuses the node, not the preceding ball's observed trajectory.
+	if sample.is_empty() or int(sample["generation"]) != ball.launch_generation:
+		return {}
+	return sample.duplicate()
 
 
 func can_observe(node: Node3D) -> bool:

@@ -8,6 +8,7 @@ var _tree: SceneTree
 
 
 func on_configured() -> void:
+	_tracks_balls = true
 	_tree = Engine.get_main_loop() as SceneTree
 
 
@@ -21,28 +22,33 @@ func decide(_delta: float) -> void:
 		steer_to(arena.global_position)
 		return
 
-	var fuse: float = ball.fuse
-	var dist := me.global_position.distance_to(ball.global_position)
+	var observed := perceive_ball(ball)
+	var position: Vector3 = observed["position"]
+	var fuse: float = observed["fuse"]
+	if fuse < 0.0:
+		steer_to(arena.global_position)
+		return
+	var dist := me.global_position.distance_to(position)
 	# How long a bot is willing to stay near the bomb scales with risk and with
 	# how quickly it can react if things go wrong.
 	var commit_window: float = lerp(2.4, 1.1, risk) + reaction_time
 
 	if fuse > commit_window and dist < 9.0 and rng.randf() < aggression + 0.25:
 		# Approach from the side opposite the rival we want to send it toward.
-		var victim := _best_victim(ball.global_position)
-		var push_from: Vector3 = ball.global_position
+		var victim := _best_victim(position)
+		var push_from: Vector3 = position
 		if victim >= 0:
-			var dir: Vector3 = perceive(victim) - ball.global_position
+			var dir: Vector3 = perceive(victim) - position
 			dir.y = 0.0
 			if dir.length() > 0.5:
-				push_from = ball.global_position - dir.normalized() * 1.4
+				push_from = position - dir.normalized() * 1.4
 		steer_to(push_from)
 		if dist < 3.0:
 			press(Btn.ATTACK)
 		if dist > 5.0:
 			maybe_dash(0.8)
 	else:
-		steer_away(ball.global_position)
+		steer_away(position)
 		if dist < 5.0:
 			maybe_dash(1.3)
 	keep_off_edge(2.4)
@@ -52,7 +58,7 @@ func _ball() -> GameBall:
 	if _tree == null:
 		return null
 	for b in _tree.get_nodes_in_group("balls"):
-		if b is GameBall and can_observe(b):
+		if b is GameBall and can_observe(b) and not perceive_ball(b).is_empty():
 			return b
 	return null
 

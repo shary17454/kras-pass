@@ -1,8 +1,7 @@
 extends AIBrain
 ## Goal Guard: stay on your line, intercept, aim clearances at rivals.
 ##
-## Prediction strength changes the interception lead. Ball motion currently
-## uses visible live state; delayed object observation remains to be implemented.
+## Interception uses delayed visible position samples and their inferred motion.
 
 var _goal_axis := Vector3.RIGHT
 var _goal_pos := Vector3.ZERO
@@ -10,6 +9,7 @@ var _tree: SceneTree
 
 
 func on_configured() -> void:
+	_tracks_balls = true
 	_tree = Engine.get_main_loop() as SceneTree
 	var arena := ctx.arena as Arena
 	if arena == null:
@@ -29,13 +29,16 @@ func decide(_delta: float) -> void:
 	if ball == null:
 		steer_to(_goal_pos)
 		return
+	var observed := perceive_ball(ball)
+	var position: Vector3 = observed["position"]
+	var velocity: Vector3 = observed["velocity"]
 
 	# Stand between the ball and the goal, sliding along the goal line.
 	var lead: float = lerp(0.05, 0.45, prediction)
-	var future: Vector3 = ball.global_position + ball.velocity * lead
+	var future: Vector3 = position + velocity * lead
 	var intercept := _goal_pos + _goal_axis * _goal_axis.dot(future - _goal_pos)
 	# Step off the line to meet a ball that is already close, if brave enough.
-	var closing := me.global_position.distance_to(ball.global_position)
+	var closing := me.global_position.distance_to(position)
 	if closing < lerp(3.0, 7.0, risk):
 		intercept = intercept.lerp(future, 0.6)
 	steer_to(intercept)
@@ -60,12 +63,15 @@ func _most_dangerous_ball() -> GameBall:
 		var b := node as GameBall
 		if not can_observe(b):
 			continue
-		var to: Vector3 = _goal_pos - b.global_position
+		var observed := perceive_ball(b)
+		if observed.is_empty():
+			continue
+		var to: Vector3 = _goal_pos - Vector3(observed["position"])
 		var dist := to.length()
 		if dist < 0.01:
 			continue
 		# Threat = how directly it is travelling at our goal, over distance.
-		var heading: float = b.velocity.normalized().dot(to.normalized())
+		var heading: float = Vector3(observed["velocity"]).normalized().dot(to.normalized())
 		var score: float = heading * 12.0 - dist * 0.35
 		if score > best_score:
 			best_score = score
