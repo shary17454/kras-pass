@@ -55,7 +55,7 @@ class Sweeper extends Node3D:
 					dir = Vector3.FORWARD
 				# Push along the arm's tangent so the hit reads as "swept",
 				# not "shoved from the centre".
-				var tangent := global_transform.basis.z
+				var tangent := -global_transform.basis.z * signf(current_speed())
 				var push := (dir.normalized() * 0.55 + tangent.normalized() * 0.75).normalized()
 				body.take_hit(-1, push, power, 0.0)
 
