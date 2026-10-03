@@ -21,7 +21,9 @@ func decide(delta: float) -> void:
 			# Only bail while there is still time to be somewhere else; a tier
 			# that reacts slowly discovers the ring too late to leave it.
 			if float(z["left"]) > reaction_time * 0.8 and _flat(pos) < r + float(z.get("margin", 0.8)):
-				steer_away(pos, 1.0)
+				var away := me.global_position - pos
+				away.y = 0.0
+				_steer_on_ground(me.global_position + (away.normalized() if away.length() > 0.1 else Vector3.RIGHT) * 5.0)
 				maybe_dash(1.3)
 				return
 
@@ -30,7 +32,7 @@ func decide(delta: float) -> void:
 		move = Vector2.ZERO
 		if not plan.is_empty():
 			var target: Vector3 = plan.target
-			steer_to(target, clampf(_flat(target) * 0.8, 0.0, 1.0))
+			_steer_on_ground(target, clampf(_flat(target) * 0.8, 0.0, 1.0))
 			if plan.attack and rng.randf() < attack_chance:
 				press(Btn.ATTACK)
 			return
@@ -70,6 +72,24 @@ func decide(delta: float) -> void:
 	elif d < 9.0:
 		maybe_dash(0.8)
 	keep_off_edge(3.0)
+
+
+func _steer_on_ground(target: Vector3, urgency := 1.0) -> void:
+	var me := self_body()
+	var arena := ctx.arena as Arena
+	if me == null or arena == null or not is_instance_valid(arena._crater_floor):
+		steer_to(target, urgency)
+		return
+	var origin := me.global_position - arena.global_position
+	var direction: Vector3 = arena._crater_floor.steering_direction(origin, target - arena.global_position)
+	if direction.is_zero_approx():
+		move = Vector2.ZERO
+		return
+	# Keep difficulty's aim error, but never accept a resulting step into a hole.
+	steer_to(me.global_position + direction, urgency)
+	var next := origin + Vector3(move.x, 0, move.y) * 1.2
+	if not arena._crater_floor.path_clear(origin, next, minf(0.5, maxf(0.0, arena._crater_floor.edge_distance(origin)))):
+		move = Vector2.ZERO
 
 
 ## Horizontal distance from this bot to a point.
