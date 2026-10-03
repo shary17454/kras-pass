@@ -266,13 +266,48 @@ func retreat_point(pos: Vector3) -> Vector3:
 	if is_instance_valid(_crater_floor):
 		return global_position + _crater_floor.retreat_point(pos - global_position)
 	if def.shape == "ring" or def.shape == "oval":
-		var dir := Vector3(pos.x, 0, pos.z).normalized()
-		return global_position + dir * current_radius * 0.72
+		var offset := pos - global_position
+		var dir := Vector3(offset.x, 0, offset.z).normalized()
+		if dir.is_zero_approx():
+			dir = Vector3.RIGHT
+		var band := 0.775 if def.shape == "oval" else 0.725
+		return global_position + dir * current_radius * band
 	if def.shape == "circuit":
 		# Back onto the racing line, not toward the middle: the middle of a
 		# circuit is off the track entirely.
 		return _circuit_nearest(pos)
 	return global_position + Vector3(0, pos.y, 0)
+
+
+func annular_path_clear(from: Vector3, to: Vector3, margin: float = 0.6) -> bool:
+	if def.shape not in ["ring", "oval"]:
+		return is_inside(from, margin) and is_inside(to, margin)
+	var a := Vector2(from.x - global_position.x, from.z - global_position.z)
+	var b := Vector2(to.x - global_position.x, to.z - global_position.z)
+	var inner := current_radius * (0.55 if def.shape == "oval" else 0.45)
+	var nearest := Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b)
+	return maxf(a.length(), b.length()) <= current_radius - margin and nearest.length() >= inner + margin
+
+
+func annular_waypoint(from: Vector3, target: Vector3, margin: float = 0.6) -> Vector3:
+	if def.shape not in ["ring", "oval"]:
+		return target
+	var inner := current_radius * (0.55 if def.shape == "oval" else 0.45)
+	var offset := Vector2(from.x - global_position.x, from.z - global_position.z)
+	var destination := Vector2(target.x - global_position.x, target.z - global_position.z)
+	var angle := offset.angle()
+	if destination.is_zero_approx():
+		destination = Vector2.from_angle(angle) * (inner + margin)
+	else:
+		destination = destination.normalized() * clampf(destination.length(), inner + margin, current_radius - margin)
+	var clamped_target := global_position + Vector3(destination.x, 0, destination.y)
+	if annular_path_clear(from, clamped_target, margin):
+		return clamped_target
+	# Recover radially first when already at an edge; otherwise use short chords.
+	if offset.length() >= inner + margin and offset.length() <= current_radius - margin:
+		angle += clampf(wrapf(destination.angle() - angle, -PI, PI), -0.35, 0.35)
+	var band := (inner + current_radius) * 0.5
+	return global_position + Vector3(cos(angle) * band, 0, sin(angle) * band)
 
 
 func tile_at(pos: Vector3) -> ArenaTile:
