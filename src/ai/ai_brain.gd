@@ -330,15 +330,23 @@ func nearest_rival() -> int:
 
 ## Rival with the highest score — the one a strategic AI should target.
 func leader_rival() -> int:
-	var best := -1
 	var best_score := -2147483648
+	var candidates: Array[int] = []
 	for i in ctx.scores.size():
 		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
-		if ctx.scores[i] > best_score:
+		if candidates.is_empty() or ctx.scores[i] > best_score:
 			best_score = ctx.scores[i]
-			best = i
-	return best
+			candidates.clear()
+			candidates.append(i)
+		elif ctx.scores[i] == best_score:
+			candidates.append(i)
+	if candidates.is_empty():
+		return -1
+	if candidates.size() == 1:
+		return candidates[0]
+	# Randomize only actual co-leaders, not lower scores encountered on the way.
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
 ## Blend of "closest" and "most dangerous", weighted by strategy. A low-skill

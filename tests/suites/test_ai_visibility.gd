@@ -159,9 +159,46 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_ball_delay(t, scene)
 	_test_relic(t, scene)
 	_test_tag(t, scene)
+	_test_tied_leaders(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_tied_leaders(t: TestHarness, scene: Node) -> void:
+	t.test("equal visible leaders do not always target the lowest player ID")
+	scene.ctx.scores.fill(0)
+	scene.ctx.alive.fill(true)
+	for fighter in scene.ctx.fighters:
+		fighter.show()
+	var brain := AIBrain.new()
+	var replay_brain := AIBrain.new()
+	brain.configure(0, scene.ctx, 3, 5319)
+	replay_brain.configure(0, scene.ctx, 3, 5319)
+	var counts := [0, 0, 0, 0]
+	for sample in 900:
+		var selected := brain.leader_rival()
+		t.ok(selected in [1, 2, 3], "tied leader selection excludes self")
+		t.equal(selected, replay_brain.leader_rival(), "same seed reproduces tied target choices")
+		if selected in [1, 2, 3]:
+			counts[selected] += 1
+	for rival in [1, 2, 3]:
+		t.ok(counts[rival] >= 220 and counts[rival] <= 380, "seeded tie fixture distributes targets across every eligible rival")
+	scene.ctx.scores[3] = 10
+	var rng_state := brain.rng.state
+	for sample in 30:
+		t.equal(brain.leader_rival(), 3, "unique visible highest score still takes priority")
+	t.equal(brain.rng.state, rng_state, "unique leader does not consume tie randomness")
+	scene.ctx.fighter(3).hide()
+	scene.ctx.alive[1] = false
+	for sample in 30:
+		t.equal(brain.leader_rival(), 2, "hidden leader and eliminated rival are excluded before tie selection")
+	scene.ctx.scores[2] = -9223372036854775807
+	var minimum_rng := brain.rng.state
+	t.equal(brain.leader_rival(), 2, "eligible negative score below old sentinel remains a target")
+	t.equal(brain.rng.state, minimum_rng, "unique negative leader consumes no tie randomness")
+	scene.ctx.fighter(2).hide()
+	t.equal(brain.leader_rival(), -1, "no eligible visible rival has no target")
 
 
 func _test_relic(t: TestHarness, scene: Node) -> void:
