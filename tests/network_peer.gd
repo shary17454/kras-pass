@@ -457,6 +457,10 @@ func _physics_process(_delta: float) -> void:
 		if world.get("boss", {}).get("defeated", false): dread_defeat_by_round[game._round_index] = true
 	if game_id == "boss_sovereign":
 		var world := _sovereign_world()
+		for warning in world.get("warnings", []):
+			if absf(float(warning.position[1]) - game.arena.global_position.y) > 0.01:
+				_fail("sovereign warning is not on the arena floor")
+				return
 		if int(world.get("boss", {}).get("damage", 0)) > 0: sovereign_damage_by_round[game._round_index] = true
 		if int(world.get("volleys", 0)) > 0: sovereign_orbs_by_round[game._round_index] = true
 		if world.get("shielded", false): sovereign_shield_by_round[game._round_index] = true

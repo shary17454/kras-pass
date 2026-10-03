@@ -100,7 +100,8 @@ func _pursuit(delta: float) -> void:
 	_lunge_timer -= delta
 	if _lunge_timer <= 0.0:
 		_lunge_timer = LUNGE_PERIOD
-		telegraph(f.global_position, 4.2, 1.35, func(pos: Vector3, radius: float):
+		var floor_position := Vector3(f.global_position.x, ctx.arena.global_position.y, f.global_position.z)
+		telegraph(floor_position, 4.2, 1.35, func(pos: Vector3, radius: float):
 			strike(pos, radius, 30.0)
 			# It over-commits and has to right itself: that is the opening.
 			_recover = RECOVER_TIME
@@ -224,12 +225,12 @@ func _collapse(delta: float) -> void:
 	_collapse_timer = COLLAPSE_PERIOD
 	# Everything at once, but every piece of it still announced.
 	for i in ctx.fighters.size():
-		if not ctx.is_alive(i):
+		if not _eligible_target(i):
 			continue
 		var f := ctx.fighter(i)
-		if f != null and is_instance_valid(f):
-			telegraph(f.global_position, 3.2, 1.0,
-				func(pos: Vector3, radius: float): strike(pos, radius, 26.0))
+		var floor_position := Vector3(f.global_position.x, arena.global_position.y, f.global_position.z)
+		telegraph(floor_position, 3.2, 1.0,
+			func(pos: Vector3, radius: float): strike(pos, radius, 26.0))
 	var ang := ctx.rng.randf() * TAU
 	for k in 5:
 		var r: float = arena.current_radius * lerpf(0.25, 0.9, float(k) / 4.0)
@@ -259,16 +260,24 @@ func _closest_alive() -> int:
 	var best := -1
 	var best_d := INF
 	for i in ctx.fighters.size():
-		if not ctx.is_alive(i):
+		if not _eligible_target(i):
 			continue
 		var f := ctx.fighter(i)
-		if f == null or not is_instance_valid(f):
-			continue
 		var d: float = f.global_position.distance_to(boss_node.global_position)
 		if d < best_d:
 			best_d = d
 			best = i
 	return best
+
+
+func _eligible_target(slot: int) -> bool:
+	var fighter := ctx.fighter(slot)
+	var arena := ctx.arena as Arena
+	# Match-alive slots may still be falling or parked below the respawn floor.
+	return ctx.is_alive(slot) and is_instance_valid(fighter) and fighter.alive and fighter.visible \
+		and arena != null and fighter.global_position.is_finite() \
+		and fighter.global_position.y >= arena.global_position.y - 0.5 \
+		and arena.is_inside(fighter.global_position, 0.5)
 
 
 func on_phase_changed(new_phase: int) -> void:
