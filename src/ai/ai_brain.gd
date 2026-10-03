@@ -170,11 +170,16 @@ func _record_history() -> void:
 	var velocities := PackedVector3Array()
 	positions.resize(ctx.fighters.size())
 	velocities.resize(ctx.fighters.size())
+	var previous := (_history_head + _history_count - 1) % HISTORY_CAP if _history_count > 0 else -1
 	for i in ctx.fighters.size():
 		var f := ctx.fighters[i]
-		var valid := f != null and is_instance_valid(f)
-		positions[i] = f.global_position if valid else Vector3.ZERO
-		velocities[i] = f.velocity if valid else Vector3.ZERO
+		if can_observe(f):
+			positions[i] = f.global_position
+			velocities[i] = f.velocity
+		else:
+			# Keep a last-seen location, never sample hidden movement or velocity.
+			positions[i] = _history_positions[previous][i] if previous >= 0 else Vector3.ZERO
+			velocities[i] = Vector3.ZERO
 	if _history_count < HISTORY_CAP:
 		_history_positions.append(positions)
 		_history_velocities.append(velocities)
@@ -185,6 +190,11 @@ func _record_history() -> void:
 	_history_velocities[_history_head] = velocities
 	_history_times[_history_head] = _time
 	_history_head = (_history_head + 1) % HISTORY_CAP
+
+
+func can_observe(node: Node3D) -> bool:
+	return node != null and is_instance_valid(node) and not node.is_queued_for_deletion() \
+		and node.is_visible_in_tree()
 
 
 ## Ring-buffer slot holding the newest sample at or before `want`, so both
@@ -207,7 +217,7 @@ func perceive(target_slot: int) -> Vector3:
 	if idx >= 0:
 		return _history_positions[idx][target_slot]
 	var f := ctx.fighter(target_slot)
-	return f.global_position if f != null and is_instance_valid(f) else Vector3.ZERO
+	return f.global_position if can_observe(f) else Vector3.ZERO
 
 
 ## Same delay as `perceive()`, for the velocity `predict()` leads with — a
@@ -220,7 +230,7 @@ func _perceived_velocity(target_slot: int) -> Vector3:
 	if idx >= 0:
 		return _history_velocities[idx][target_slot]
 	var f := ctx.fighter(target_slot)
-	return f.velocity if f != null and is_instance_valid(f) else Vector3.ZERO
+	return f.velocity if can_observe(f) else Vector3.ZERO
 
 
 ## Where a target will be shortly, blended by `prediction`. At low skill this
@@ -246,7 +256,7 @@ func nearest_rival() -> int:
 	var best := -1
 	var best_d := INF
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var d := me.global_position.distance_squared_to(perceive(i))
 		if d < best_d:
@@ -260,7 +270,7 @@ func leader_rival() -> int:
 	var best := -1
 	var best_score := -2147483648
 	for i in ctx.scores.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		if ctx.scores[i] > best_score:
 			best_score = ctx.scores[i]
@@ -295,7 +305,7 @@ func edge_pressured_rival(threshold: float = 4.0) -> int:
 	var best := -1
 	var best_margin := threshold
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var margin := arena.edge_distance(perceive(i))
 		if margin < best_margin:
@@ -309,7 +319,7 @@ func edge_pressured_rival(threshold: float = 4.0) -> int:
 ## reading the picture rather than reading the state.
 func is_empowered(check_slot: int) -> bool:
 	var f := ctx.fighter(check_slot)
-	if f == null or not is_instance_valid(f):
+	if not can_observe(f):
 		return false
 	return float(f.mods["push"]) > 1.2 or float(f.mods["weight"]) > 1.3 \
 		or float(f.mods["size"]) > 1.2 or float(f.mods["shield"]) > 0.0
@@ -495,7 +505,7 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 
 func maybe_attack(target_slot: int, range_: float = 2.4) -> void:
 	var me := self_body()
-	if me == null or not me.can_attack or target_slot < 0:
+	if me == null or not me.can_attack or target_slot < 0 or not can_observe(ctx.fighter(target_slot)):
 		return
 	var target := predict(target_slot, 0.2)
 	if me.global_position.distance_to(target) > range_:
@@ -521,6 +531,8 @@ func nearest_in_group(group: String, tree: SceneTree) -> Node3D:
 	var best_d := INF
 	for n in tree.get_nodes_in_group(group):
 		if not (n is Node3D) or not is_instance_valid(n):
+			continue
+		if not can_observe(n):
 			continue
 		if n.has_method("is_available") and not n.call("is_available"):
 			continue
