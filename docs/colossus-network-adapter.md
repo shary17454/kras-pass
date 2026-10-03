@@ -25,14 +25,27 @@ The development room allowlist is unchanged. Production networking is not enable
   host health from 800 to 745. Guest geometry matches without a collider.
 - Server: `KRAS_COLOSSUS_WORLD_FIXTURE=/tmp/kras-colossus-adapter-test-saves/colossus-world.json node --test colossus-world.test.js`,
   two passing tests, no skips.
+- Shared match path: `/tmp/kras-colossus-shared-contracts.log`, 126 assertions.
+  Initial and replacement baselines stay quiet, fresh damage at exactly 1000 ms
+  plays once, and a 1001 ms sample updates health without replaying its sound.
+  Duplicate snapshots do not recreate floor geometry. Host radius changes preserve
+  holes while the guest remains collider-free. Replacement retires old view nodes.
+  Malformed boss state, object IDs, object shapes and oversized populations are
+  rejected by the bounded schema.
+- Extended shared events/reconnect: `/tmp/kras-colossus-shared-reconnect.log`,
+  139 assertions. Actual host damage crosses the first phase threshold, a host
+  strike increments its sequence, and lethal host damage hides the guest boss.
+  Fresh effects play once; a replacement after defeat displays the same state
+  without replaying damage, phase, explosion or victory sounds. A subsequent
+  round reset clears the replaced view's crater geometry correctly.
+- Boss round-reset regressions: `/tmp/kras-colossus-shared-reset.log`, 429
+  assertions across Forge, Colossus, Dreadnought and Sovereign.
 - An earlier test used the wrong on_round_start argument count and emitted a
   runtime error despite the harness summary. That run is invalid; the corrected
   capture run completes teardown without leak diagnostics.
 
 ## Remaining Before Online Qualification
 
-- Expand malformed packet, feedback-clock, stale baseline and replacement tests.
-- Exercise the shared presentation path, not only the adapter in isolation.
 - Add room authority/resume/result contracts before enabling the room allowlist.
 - Run real two/four-client matches, reconnects, tournaments and tied finals.
 - Run full project regression and inspect geometry/network scheduling budgets.

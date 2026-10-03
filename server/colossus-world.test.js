@@ -18,6 +18,10 @@ test('colossus world bounds poses, holes, identity and authority state', () => {
   for (const field of Object.keys(world().boss)) {
     const data = world(); delete data.boss[field]; assert.equal(validColossusWorld(data, 4), false);
   }
+  for (const [key, values] of Object.entries({health: [-1, 800.1, true, NaN, Infinity, null],
+    phase: [-1, 1, .5, true], defeated: [true, 0], position: [[10001, 0, 0], [NaN, 0, 0], [0, 0]]})) {
+    for (const value of values) {const data = world(); data.boss[key] = value; assert.equal(validColossusWorld(data, 4), false);}
+  }
   for (const [health, phase] of [[800, 0], [528, 1], [264, 2], [0, 2]]) {
     const data = world(); Object.assign(data.boss, {health, phase, defeated: health === 0});
     assert.ok(validColossusWorld(data, 4));
@@ -34,6 +38,8 @@ test('colossus world bounds poses, holes, identity and authority state', () => {
     for (const id of ['', '01', '-1', '1.0', 1, null]) {
       const data = world(); data[group][0].id = id; assert.equal(validColossusWorld(data, 4), false);
     }
+    const extra = world(); extra[group][0].extra = 1; assert.equal(validColossusWorld(extra, 4), false);
+    const duplicate = world(); duplicate[group].push({...duplicate[group][0]}); assert.equal(validColossusWorld(duplicate, 4), false);
     const data = world(); data[group] = Array.from({length: 65}, (_, i) => ({...world()[group][0], id: String(i + 10)}));
     assert.equal(validColossusWorld(data, 4), false);
   }
