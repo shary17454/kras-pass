@@ -66,7 +66,7 @@ func _has_ground(p: Vector3) -> bool:
 func tick(delta: float) -> void:
 	for item in _items:
 		if is_instance_valid(item):
-			item.tick(delta)
+			item.tick(delta, ctx.rng)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = 1.6

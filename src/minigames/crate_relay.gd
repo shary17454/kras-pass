@@ -79,7 +79,7 @@ func tick(delta: float) -> void:
 		if is_instance_valid(item):
 			if item.available and (not arena.is_inside(item.global_position, 0.6) or not is_equal_approx(item._base_y, arena.global_position.y + 1.0)):
 				_recover_crate(item)
-			item.tick(delta)
+			item.tick(delta, ctx.rng, _can_take_crate)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = 2.2
@@ -87,6 +87,10 @@ func tick(delta: float) -> void:
 			_spawn_crate()
 	_check_deliveries()
 	_update_carry_visuals()
+
+
+func _can_take_crate(fighter: Fighter) -> bool:
+	return fighter.carrying <= 0
 
 
 func _on_taken(item: Collectible, slot: int) -> void:
