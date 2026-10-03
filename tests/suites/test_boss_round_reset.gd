@@ -30,6 +30,12 @@ func run(t: TestHarness, host: Node) -> void:
 				game.damage_boss(game.boss_max_health * 0.2, 0)
 				game._hit_flash = 0.1
 				t.ok(not game.boss_defeated, "interrupted round keeps boss alive before transition")
+			game.on_round_end()
+			for slot in scene.ctx.player_count():
+				t.equal(scene.ctx.details[slot].get("boss_rounds", 0), 1, "round result explicitly records boss participation")
+				t.equal(scene.ctx.details[slot].get("boss_defeats", -1), 0 if round == 1 else 1, "timer completion is distinct from actual boss defeat")
+			game.on_round_end()
+			t.equal(scene.ctx.details[0].get("boss_rounds", 0), 1, "repeated finalization does not double the objective counter")
 			scene._start_next_round()
 			t.equal(scene._round_index, round + 1, "actual match transition advances round")
 			t.ok(game.boss_node.visible, "next-round boss is visible")
@@ -42,6 +48,7 @@ func run(t: TestHarness, host: Node) -> void:
 			t.empty(game._shots, "old boss projectiles are discarded")
 			t.empty(game._telegraphs, "old warning callbacks are discarded")
 			t.equal(Array(scene.ctx.scores), [0, 0, 0, 0], "round scores do not leak")
+			t.ok(not scene.ctx.details[0].has("boss_defeats"), "next round cannot inherit a prior objective success")
 			_check_specific(t, game, id)
 			game._tick_telegraphs(1.0)
 			t.ok(not probe.landed, "cancelled prior-round callback never lands")
@@ -55,6 +62,37 @@ func run(t: TestHarness, host: Node) -> void:
 			game.on_round_start()
 			_check_specific(t, game, id)
 		_check_damage_accounting(t, scene, id)
+		await _check_objective_delivery(t, host, id)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
+		await host.get_tree().process_frame
+
+
+func _check_objective_delivery(t: TestHarness, host: Node, id: String) -> void:
+	t.test("%s delivers objective outcome through real completion" % id)
+	var captured: Array[MatchResult] = []
+	for defeated in [false, true]:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		var config := MatchConfig.build(id, ["fanoos", "mowja", "ramla", "nabta"], 0, 4, 119)
+		config.rounds = 1
+		config.context = MatchConfig.Context.TRAINING
+		scene.setup({"config": config, "on_finished": func(result: MatchResult): captured.append(result)})
+		scene.set_physics_process(false)
+		scene._set_phase(scene.P.INSTRUCTIONS)
+		scene._set_phase(scene.P.COUNTDOWN)
+		scene._set_phase(scene.P.PLAYING)
+		if defeated:
+			scene.controller.damage_boss(scene.controller.boss_max_health, 0)
+		scene._set_phase(scene.P.FINISH)
+		scene._set_phase(scene.P.RESULTS)
+		t.equal(captured.size(), 2 if defeated else 1, "actual result callback runs once per completed match")
+		var result: MatchResult = captured.back()
+		t.equal(result.rounds.size(), 1, "match aggregate retains round evidence")
+		for slot in scene.ctx.player_count():
+			t.equal(result.detail(slot, "boss_rounds", 0), 1, "objective participation survives round and match result aggregation")
+			t.equal(result.detail(slot, "boss_defeats", -1), 1 if defeated else 0, "callback distinguishes deadline from defeat")
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame

@@ -154,7 +154,43 @@ func run(t: TestHarness, host: Node) -> void:
 	_playlists(t)
 	_result_integrity(t)
 	_adventure_integrity(t)
+	_adventure_boss_integrity(t)
 	await host.get_tree().process_frame
+
+
+func _adventure_boss_integrity(t: TestHarness) -> void:
+	t.test("adventure boss progression requires actual defeat in every round")
+	var backup := SaveSystem.profile().duplicate(true)
+	SaveSystem.switch_profile(SaveSystem.create_profile("Boss objective integrity"))
+	var session := AdventureSession.new()
+	for world in Registry.worlds():
+		for stage in world["stages"]:
+			var definition := Registry.minigame(String(stage["game"]))
+			if definition != null and definition.is_boss:
+				session.setup(world, stage, "nabta")
+				break
+		if not session.stage.is_empty():
+			break
+	t.ok(not session.stage.is_empty(), "catalog contains a real boss adventure stage")
+	var game := String(session.stage["game"])
+	var expired := MatchResult.make(game, "", [200, 100, 50, 10] as Array[int])
+	expired.details[0] = {"boss_rounds": 1, "boss_defeats": 0}
+	var reward := session.award_result(expired)
+	t.ok(not reward["cleared"], "leading damage at deadline is not a boss victory")
+	t.equal(reward["stars"], 0, "unfinished boss objective cannot farm adventure stars")
+	t.ok(not Progression.is_stage_cleared(session.world_id, session.stage_id()), "deadline leader cannot unlock the next stage")
+	var missing := MatchResult.make(game, "", [200, 100, 50, 10] as Array[int])
+	t.ok(not session.award_result(missing)["cleared"], "missing boss outcome evidence fails closed")
+	var defeated := MatchResult.make(game, "", [200, 100, 50, 10] as Array[int])
+	defeated.details[0] = {"boss_rounds": 1, "boss_defeats": 1}
+	var mixed := MatchResult.aggregate(game, [defeated, expired] as Array[MatchResult])
+	t.ok(not session.award_result(mixed)["cleared"], "one victory cannot hide another failed boss round")
+	var completed := MatchResult.aggregate(game, [defeated, defeated] as Array[MatchResult])
+	var victory := session.award_result(completed)
+	t.ok(victory["cleared"] and victory["newly_cleared"], "all boss rounds defeated by the leading contributor clear the stage")
+	t.equal(victory["stars"], 3, "real boss victory retains three stars")
+	SaveSystem.set_profile(backup)
+	SaveSystem.profile_loaded.emit(backup)
 
 
 func _adventure_integrity(t: TestHarness) -> void:
