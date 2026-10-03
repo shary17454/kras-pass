@@ -31,6 +31,7 @@ const NULL_TRIALS := 4000
 var runs := 6
 var only := ""
 var natural_rounds := true
+var seed_offset := 0
 var _difficulty_attempted := 0
 var _difficulty_completed := 0
 var _difficulty_samples: Array[Dictionary] = []
@@ -44,13 +45,16 @@ var _log: FileAccess
 
 
 func _ready() -> void:
-	_parse_args()
+	if not _parse_args():
+		push_error("Invalid --seed-offset: expected an integer from 0 to 1000000000")
+		get_tree().quit(2)
+		return
 	if _games().is_empty():
 		push_error("No registered minigames selected: %s" % only)
 		get_tree().quit(2)
 		return
 	_log = FileAccess.open(SaveSystem.storage_root.path_join("balance_progress.txt"), FileAccess.WRITE)
-	_say("start runs=%d only=%s" % [runs, only])
+	_say("start runs=%d only=%s seed_offset=%d" % [runs, only, seed_offset])
 	_started = Time.get_ticks_msec()
 	# Shorter pre-round cards: this is a simulation, not a demo.
 	UserSettings.set_value("show_control_hints", false)
@@ -85,7 +89,7 @@ func _say(line: String) -> void:
 		_log.flush()
 
 
-func _parse_args() -> void:
+func _parse_args() -> bool:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--runs="):
 			runs = maxi(2, int(arg.split("=")[1]))
@@ -95,6 +99,24 @@ func _parse_args() -> void:
 			out_dir = arg.trim_prefix("--out-dir=")
 		elif arg == "--clipped-rounds":
 			natural_rounds = false
+		elif arg.begins_with("--seed-offset="):
+			if not _set_seed_offset(arg.trim_prefix("--seed-offset=")):
+				return false
+	return true
+
+
+func _set_seed_offset(value: String) -> bool:
+	if not value.is_valid_int():
+		return false
+	var parsed := int(value)
+	if parsed < 0 or parsed > 1000000000:
+		return false
+	seed_offset = parsed
+	return true
+
+
+func _baseline_seed(run: int) -> int:
+	return seed_offset + 9001 + run * 613
 
 
 func _games() -> Array[MiniGameDef]:
@@ -122,6 +144,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	var zero_score_runs := 0
 	var completed := 0
 	var scores_seen: Array[int] = []
+	var baseline_seeds: Array[int] = []
 
 	for run in runs:
 		_say("  %s run %d/%d" % [def.id, run + 1, runs])
@@ -131,7 +154,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		for slot in 4:
 			var cid_played := roster[(slot + run) % roster.size()].id
 			chars.append(cid_played)
-		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 9001 + run * 613)
+		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, _baseline_seed(run))
+		baseline_seeds.append(cfg.seed)
 		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
 		var result := await _play(cfg)
@@ -169,6 +193,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"runs": completed,
 		"attempted_runs": runs,
 		"sample_mode": "natural" if natural_rounds else "clipped",
+		"seed_offset": seed_offset,
+		"baseline_seeds": baseline_seeds,
 		"round_window": _window_for(def),
 		"difficulty_attempted": _difficulty_attempted,
 		"difficulty_completed": _difficulty_completed,
@@ -264,7 +290,7 @@ func _difficulty_configuration(def: MiniGameDef, sample: int) -> MatchConfig:
 	var roster := Registry.characters()
 	var character: String = roster[pair % roster.size()].id
 	var cfg := MatchConfig.build(def.id, [character, character, character, character],
-		0, PlayerConfig.Difficulty.EASY, 4242 + pair * 97)
+		0, PlayerConfig.Difficulty.EASY, seed_offset + 4242 + pair * 97)
 	cfg.duration_override = _window_for(def)
 	cfg.rounds = 1
 	cfg.allow_powerups = false
@@ -286,7 +312,7 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 		chars.append(roster[slot % roster.size()].id)
 
 	var errors_before := Log.error_count()
-	var mutated_cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 5501)
+	var mutated_cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, seed_offset + 5501)
 	mutated_cfg.duration_override = ROUND_SECONDS
 	mutated_cfg.rounds = 1
 	mutated_cfg.mutators = PackedStringArray(MUTATOR_STRESS_SET)
@@ -294,7 +320,7 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 	var mutated_ok := mutated_result != null
 	var errors_after_mutated := Log.error_count()
 
-	var chaos_cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 5502)
+	var chaos_cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, seed_offset + 5502)
 	chaos_cfg.duration_override = ROUND_SECONDS
 	chaos_cfg.rounds = 1
 	chaos_cfg.chaos = true
@@ -316,6 +342,8 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 	return {
 		"id": def.id,
 		"name": def.display_name(),
+		"mutated_seed": mutated_cfg.seed,
+		"chaos_seed": chaos_cfg.seed,
 		"mutated_ok": mutated_ok,
 		"chaos_ok": chaos_ok,
 		"flags": flags,
@@ -478,6 +506,7 @@ func _write_reports() -> void:
 	if json != null:
 		json.store_string(JSON.stringify({
 			"generated": Time.get_datetime_string_from_system(),
+			"seed_offset": seed_offset,
 			"runs_per_game": runs,
 			"round_seconds": ROUND_SECONDS,
 			"sample_mode": "natural" if natural_rounds else "clipped",

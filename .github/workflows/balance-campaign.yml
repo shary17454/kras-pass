@@ -2,7 +2,16 @@ name: Natural Balance Campaign
 
 on:
   workflow_dispatch:
+    inputs:
+      seed_offset:
+        description: Reproducible independent seed offset (0 to 1000000000)
+        type: string
+        default: '0'
   workflow_call:
+    inputs:
+      seed_offset:
+        type: string
+        default: '0'
 
 permissions:
   contents: read
@@ -30,11 +39,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          SEED_OFFSET: ${{ inputs.seed_offset || '0' }}
         run: |
           set -euo pipefail
           gh run download "$GITHUB_RUN_ID" --pattern 'natural-balance-*' --dir "$RUNNER_TEMP/balance-evidence"
           node tools/balance-report.mjs "$RUNNER_TEMP/balance-evidence" "$GITHUB_SHA" "$GITHUB_RUN_ID" \
-            --paired \
+            --paired --seed-offset="$SEED_OFFSET" \
             | tee "$RUNNER_TEMP/balance-summary.json"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
@@ -76,6 +86,7 @@ jobs:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
       GAME_ID: ${{ matrix.game }}
+      SEED_OFFSET: ${{ inputs.seed_offset || '0' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -105,7 +116,7 @@ jobs:
           set -euo pipefail
           godot --headless --fixed-fps 60 --path . tools/balance_sim.tscn \
             --log-file "$RUNNER_TEMP/balance-simulation.log" \
-            -- --runs=24 --only="$GAME_ID" --out-dir="$RUNNER_TEMP/balance-report" \
+            -- --runs=24 --only="$GAME_ID" --seed-offset="$SEED_OFFSET" --out-dir="$RUNNER_TEMP/balance-report" \
             --test-data-dir="$RUNNER_TEMP/balance-save"
       - name: Verify report coverage
         run: |
@@ -114,7 +125,10 @@ jobs:
           const report = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/balance-report/report.json`, 'utf8'));
           const game = report.games[0];
           const smoke = report.mutator_smoke[0];
+          const offset = Number(process.env.SEED_OFFSET);
           if (report.sample_mode !== 'natural' || report.games.length !== 1 || game.id !== process.env.GAME_ID ||
+              !Number.isSafeInteger(offset) || offset < 0 || offset > 1000000000 ||
+              report.seed_offset !== offset || game.seed_offset !== offset ||
               game.attempted_runs !== 24 || game.runs !== 24 || game.difficulty_attempted !== 16 ||
               game.difficulty_completed !== 16 || game.difficulty_pairing !== 'matched_seed_character' ||
               !smoke.mutated_ok || !smoke.chaos_ok) {
@@ -132,7 +146,8 @@ jobs:
           import fs from 'node:fs';
           fs.writeFileSync(`${process.env.RUNNER_TEMP}/balance-source.json`, JSON.stringify({
             commit: process.env.QA_COMMIT, run: process.env.QA_RUN, game: process.env.GAME_ID,
-            runs: 24, difficultyRuns: 16, difficultyPolicy: 'matched_seed_character', smokeRuns: 2, mode: 'natural'
+            runs: 24, difficultyRuns: 16, difficultyPolicy: 'matched_seed_character', smokeRuns: 2, mode: 'natural',
+            seedOffset: Number(process.env.SEED_OFFSET)
           }, null, 2));
           JS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
