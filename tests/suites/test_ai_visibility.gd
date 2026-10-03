@@ -7,6 +7,14 @@ class PickupProbe extends Node3D:
 		queries += 1
 		return available
 
+class RaceCueProbe extends MiniGameController:
+	func rival_ahead(_slot: int) -> int:
+		return 1
+
+class MagnetCueProbe extends MiniGameController:
+	func magnet_ready(_slot: int) -> bool:
+		return true
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI visible targets")
@@ -113,6 +121,9 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_ball(t, scene)
 	_test_courier(t, scene)
 	_test_platform(t, scene)
+	_test_remaining_rivals(t, scene)
+	_test_keeper_balls(t, scene)
+	_test_bomb_states(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
@@ -351,3 +362,135 @@ func _test_platform(t: TestHarness, scene: Node) -> void:
 	scene.arena.tiles = tiles
 	tile.queue_free()
 	other.queue_free()
+
+
+func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
+	for slot in 4:
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot, 1, 0)
+	var zone = load("res://src/ai/brains/zone_brain.gd").new()
+	var bomber = load("res://src/ai/brains/bomber_brain.gd").new()
+	var climber = load("res://src/ai/brains/climber_brain.gd").new()
+	var racer = load("res://src/ai/brains/racer_armed_brain.gd").new()
+	var siege = load("res://src/ai/brains/siege_brain.gd").new()
+	scene.ctx.fighter(0).facing = Vector3.FORWARD
+	scene.ctx.fighter(1).global_position = Vector3(0, 2, 1)
+	scene.ctx.fighter(2).global_position = Vector3(0, 2, 2)
+	scene.ctx.fighter(3).global_position = Vector3(10, 1, 0)
+	for brain in [zone, bomber, climber, racer, siege]:
+		brain.configure(0, scene.ctx, 3, 119)
+		brain.reaction_time = 0.0
+		brain.strategy = 1.0
+		brain._record_history()
+	scene.ctx.fighter(1).hide()
+	t.equal(zone._rival_in_zone(Vector3(0, 2, 1), 3.0), 2, "zone bot chooses visible intruder instead of hidden rival")
+	t.equal(climber._rival_above(), 2, "climber chooses visible rival above it")
+	scene.ctx.fighter(2).hide()
+	t.equal(zone._rival_in_zone(Vector3(0, 2, 1), 3.0), -1, "hidden rivals cannot occupy a zone for the bot")
+	t.equal(climber._rival_above(), -1, "hidden rivals cannot lure the climber upward")
+	t.ok(not bomber._rival_within(4.0), "hidden nearby rivals cannot make a bomb worth collecting")
+	t.ok(not racer._tailed(), "hidden remembered follower cannot trigger a race mine")
+	var race_controller := RaceCueProbe.new()
+	racer.controller = race_controller
+	t.ok(not racer._should_use(racer.Race.Item.MISSILE, scene.ctx.fighter(0)), "hidden race target cannot trigger a deliberate missile")
+	scene.ctx.fighter(1).show()
+	t.ok(bomber._rival_within(4.0), "visible nearby rival can justify collecting a bomb")
+	t.ok(racer._tailed(), "visible follower still triggers a race mine")
+	t.ok(racer._should_use(racer.Race.Item.MISSILE, scene.ctx.fighter(0)), "visible race target can trigger a deliberate missile")
+	racer.controller = null
+	race_controller.free()
+	var base_controller = load("res://src/minigames/base_siege.gd").new()
+	base_controller.ctx = scene.ctx
+	siege.controller = base_controller
+	var bases: Array[Node3D] = []
+	for slot in 4:
+		var base := Node3D.new()
+		scene.add_child(base)
+		base.global_position = Vector3(slot, 1, 0)
+		bases.append(base)
+		base_controller._bases.append({"slot": slot, "node": base, "health": [100, 1, 80, 0][slot]})
+	scene.ctx.fighter(1).hide()
+	scene.ctx.fighter(2).show()
+	t.equal(siege._intruder_at_home(), 2, "siege bot ignores hidden home intruder")
+	bases[1].hide()
+	t.equal(siege._weakest_rival_base(), 2, "siege bot ignores hidden crystal despite low health")
+	bases[2].hide()
+	t.equal(siege._weakest_rival_base(), -1, "siege bot has no visible living crystal to attack")
+	bases[1].show()
+	t.equal(siege._weakest_rival_base(), 1, "visible crystal remains attackable while its owner is hidden")
+	siege.controller = null
+	base_controller.free()
+	for base in bases: base.queue_free()
+	var static_root: Node3D = scene.arena.get_node_or_null("Static")
+	if static_root == null:
+		static_root = Node3D.new()
+		static_root.name = "Static"
+		scene.arena.add_child(static_root)
+	var hidden_ledge := Node3D.new()
+	var visible_ledge := Node3D.new()
+	static_root.add_child(hidden_ledge)
+	static_root.add_child(visible_ledge)
+	hidden_ledge.global_position = Vector3(0, 104, 0)
+	visible_ledge.global_position = Vector3(1, 102, 0)
+	hidden_ledge.hide()
+	t.equal(climber._find_higher_ground(Vector3(0, 100, 0)), Vector3(1, 103, 0), "climber ignores hidden higher geometry")
+	hidden_ledge.queue_free()
+	visible_ledge.queue_free()
+
+
+func _test_keeper_balls(t: TestHarness, scene: Node) -> void:
+	var keeper = load("res://src/ai/brains/keeper_brain.gd").new()
+	var magnet = load("res://src/ai/brains/magnet_keeper_brain.gd").new()
+	var controller := MagnetCueProbe.new()
+	for brain in [keeper, magnet]:
+		brain.controller = controller
+		brain.configure(0, scene.ctx, 3, 119)
+		brain.strategy = 1.0
+		brain._goal_pos = Vector3.ZERO
+	scene.ctx.fighter(0).global_position = Vector3.ZERO
+	var balls: Array[GameBall] = []
+	for index in 3:
+		var ball := GameBall.new()
+		scene.add_child(ball)
+		ball.add_to_group("balls")
+		ball.global_position = Vector3(index + 1, 0, 0)
+		ball.velocity = Vector3.LEFT
+		balls.append(ball)
+	balls[0].hide()
+	balls[1].hide()
+	t.equal(keeper._most_dangerous_ball(), balls[2], "keeper ignores closer hidden balls")
+	magnet.decide(0.0)
+	t.equal(magnet.bits & InputFrame.Btn.ABILITY, 0, "hidden balls cannot contribute to a multi-ball magnet trigger")
+	balls[1].show()
+	magnet.bits = 0
+	magnet.decide(0.0)
+	t.ok((magnet.bits & InputFrame.Btn.ABILITY) != 0, "two visible incoming balls still trigger the magnet")
+	balls[1].queue_free()
+	balls[2].queue_free()
+	t.equal(keeper._most_dangerous_ball(), null, "keeper excludes queued balls")
+	for ball in balls:
+		ball.remove_from_group("balls")
+		if not ball.is_queued_for_deletion(): ball.queue_free()
+	keeper.controller = null
+	magnet.controller = null
+	controller.free()
+
+
+func _test_bomb_states(t: TestHarness, scene: Node) -> void:
+	var controller = load("res://src/minigames/fawda.gd").new()
+	var bombs: Array[Node3D] = []
+	for index in 3:
+		var bomb := Node3D.new()
+		scene.add_child(bomb)
+		bomb.global_position = Vector3(index, 1, 0)
+		bombs.append(bomb)
+		controller._bombs.append({"node": bomb, "fuse": 5.0, "held": -1})
+	bombs[0].hide()
+	bombs[1].queue_free()
+	var states: Array = controller.bomb_states()
+	t.equal(states.size(), 1, "bomb perception API excludes hidden and queued ordnance")
+	if states.size() == 1:
+		t.equal(states[0]["pos"], bombs[2].global_position, "visible bomb position remains observable")
+	controller.free()
+	for bomb in bombs:
+		if not bomb.is_queued_for_deletion(): bomb.queue_free()

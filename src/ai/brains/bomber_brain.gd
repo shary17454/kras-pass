@@ -65,7 +65,7 @@ func _rival_within(radius: float) -> bool:
 	if me == null:
 		return false
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		if me.global_position.distance_to(perceive(i)) <= radius:
 			return true

@@ -44,7 +44,7 @@ func _should_use(item: int, me: Fighter) -> bool:
 		Race.Item.MISSILE:  # Needs somebody ahead on the road, not merely near.
 			var target: int = controller.call("rival_ahead", slot) \
 				if controller.has_method("rival_ahead") else -1
-			if target < 0:
+			if target < 0 or not can_observe(ctx.fighter(target)):
 				return false
 			return me.global_position.distance_to(predict(target, 0.4)) < MISSILE_RANGE
 		Race.Item.BOMB:  # A mine is worth nothing dropped on an empty road.
@@ -60,7 +60,7 @@ func _tailed() -> bool:
 		return false
 	var back := -me.facing.normalized()
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var seen := perceive(i)
 		if seen == Vector3.ZERO:

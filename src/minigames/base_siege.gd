@@ -236,6 +236,15 @@ func base_health(slot: int) -> float:
 	return 0.0
 
 
+func base_visible(slot: int) -> bool:
+	for base in _bases:
+		if int(base["slot"]) == slot:
+			var node: Node3D = base["node"]
+			return is_instance_valid(node) and not node.is_queued_for_deletion() \
+				and node.is_visible_in_tree()
+	return false
+
+
 func base_position(slot: int) -> Vector3:
 	for base in _bases:
 		if int(base["slot"]) == slot:

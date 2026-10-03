@@ -268,8 +268,9 @@ func ai_script() -> Script:
 func bomb_states() -> Array:
 	var out: Array = []
 	for b in _bombs:
-		if is_instance_valid(b["node"]):
-			out.append({"pos": b["node"].global_position, "fuse": float(b["fuse"]),
+		var node: Node3D = b["node"]
+		if is_instance_valid(node) and not node.is_queued_for_deletion() and node.is_visible_in_tree():
+			out.append({"pos": node.global_position, "fuse": float(b["fuse"]),
 				"held": int(b["held"])})
 	return out
 

@@ -18,7 +18,7 @@ func decide(delta: float) -> void:
 	var close := 0
 	var incoming := 0
 	for b in ctx.world_root.get_tree().get_nodes_in_group("balls"):
-		if not is_instance_valid(b):
+		if not b is GameBall or not can_observe(b):
 			continue
 		var to: Vector3 = me.global_position - b.global_position
 		to.y = 0.0
