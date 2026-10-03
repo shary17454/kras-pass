@@ -40,3 +40,9 @@ Run a new campaign from the current immutable feature commit, with 24 baseline,
 Retain the original campaign rather than cancelling, overwriting or relabelling
 its evidence. Full regression/network checks, device QA, Railway release sync,
 archive/signature validation and App Store submission remain separate gates.
+
+New matched campaign dispatched once and verified queued:
+https://github.com/shary17454/kras-pass/actions/runs/37113379841
+Exact source: `c97cd88e88e9e957120d49027a33494828cb392e`.
+This accepted dispatch is not evidence that its tests have completed. Follow
+this run ID rather than creating duplicates on observation timeouts.
