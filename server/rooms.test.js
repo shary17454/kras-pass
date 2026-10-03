@@ -1281,7 +1281,9 @@ test('real WebSocket match, reconnect and closed-room input drain', async t => {
   const server = createServer();
   const multiplayer = attachMultiplayer(server, {enabled: true});
   const sockets = [];
+  const timers = new Set();
   t.after(async () => {
+    for (const timer of timers) clearTimeout(timer);
     for (const socket of sockets) socket.terminate();
     multiplayer.close();
     await new Promise(resolve => server.close(resolve));
@@ -1296,10 +1298,17 @@ test('real WebSocket match, reconnect and closed-room input drain', async t => {
       for (const w of [...waiters]) if (w.op === m.op) { waiters.splice(waiters.indexOf(w), 1); w.resolve(m); }
     });
     const wait = op => new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`timeout ${op}`)), 5000);
-      waiters.push({op, resolve: m => { clearTimeout(timer); resolve(m); }});
+      const waiter = {op, resolve: m => { clearTimeout(timer); timers.delete(timer); resolve(m); }};
+      const timer = setTimeout(() => {
+        timers.delete(timer);
+        const index = waiters.indexOf(waiter);
+        if (index >= 0) waiters.splice(index, 1);
+        reject(new Error(`timeout ${op}`));
+      }, 5000);
+      timers.add(timer);
+      waiters.push(waiter);
     });
-    const hello = wait('hello'); await once(socket, 'open'); await hello;
+    await Promise.all([once(socket, 'open'), wait('hello')]);
     return {socket, messages, wait, send: m => socket.send(JSON.stringify({v: 1, ...m}))};
   }
   const clients = await Promise.all(Array.from({length: 4}, connect));
@@ -1318,7 +1327,9 @@ test('real WebSocket match, reconnect and closed-room input drain', async t => {
   const token = clients[2].messages.find(m => m.op === 'welcome').token;
   const disconnect = once(clients[2].socket, 'close'); clients[2].socket.close(); await disconnect;
   const returned = await connect(); const welcome = returned.wait('welcome'); const restored = returned.wait('start');
-  returned.send({op: 'resume', token}); assert.equal((await welcome).id, 3); await restored;
+  returned.send({op: 'resume', token});
+  const [resumed] = await Promise.all([welcome, restored]);
+  assert.equal(resumed.id, 3);
   const done = returned.wait('result'); host.send({op: 'result', epoch, scores: [4, 3, 2, 1]});
   assert.deepEqual((await done).scores, [4, 3, 2, 1]);
   const closed = returned.wait('closed'); host.send({op: 'leave'}); await closed;
