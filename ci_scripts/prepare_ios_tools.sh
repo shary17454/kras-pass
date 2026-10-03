@@ -9,7 +9,7 @@ RELEASE="https://github.com/godotengine/godot-builds/releases/download/$VERSION-
 fetch_verified() {
 	local url="$1" file="$2" sha="$3"
 	if [[ ! -f "$file" ]] || ! printf '%s  %s\n' "$sha" "$file" | shasum -a 256 -c - >/dev/null 2>&1; then
-		curl --fail --location --retry 3 --max-time 900 "$url" --output "$file.download"
+		curl --fail --location --retry 3 --max-time 3600 "$url" --output "$file.download"
 		printf '%s  %s\n' "$sha" "$file.download" | shasum -a 256 -c -
 		mv "$file.download" "$file"
 	fi
