@@ -14,6 +14,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var brain = load("res://src/ai/brains/dodger_brain.gd").new()
 	brain.configure(0, ctx, 3, 119)
 	brain.reaction_time = 0.5
+	brain.prediction = 0.0
 	brain.edge_awareness = 1.0
 	var target := Vector3.RIGHT.rotated(Vector3.UP, 0.5) * 3.0
 	t.ok(brain._incoming_arm(arena, target).is_empty(), "unobserved arm cannot trigger a dodge")
@@ -49,6 +50,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_signed_motion(t, brain, arena, arm)
 	_test_visibility_gap(t, brain, arena, arm)
 	_test_history_capacity(t, brain, arena, arm)
+	_test_prediction(t, brain, arena, arm)
 	arena.queue_free()
 	await host.get_tree().process_frame
 
@@ -56,6 +58,7 @@ func run(t: TestHarness, host: Node) -> void:
 func _test_signed_motion(t: TestHarness, brain, arena: Arena, arm: ArenaHazards.Sweeper) -> void:
 	for difficulty in range(4):
 		brain.configure(0, brain.ctx, difficulty, 119)
+		brain.prediction = 0.0
 		for angle in [-2.95, 0.0, 2.95]:
 			for direction in [-1.0, 1.0]:
 				brain.on_round_start()
@@ -103,6 +106,7 @@ func _test_visibility_gap(t: TestHarness, brain, arena: Arena, arm: ArenaHazards
 func _test_history_capacity(t: TestHarness, brain, arena: Arena, arm: ArenaHazards.Sweeper) -> void:
 	brain.on_round_start()
 	brain.reaction_time = 0.1
+	brain.prediction = 0.0
 	for i in range(AIBrain.HISTORY_CAP + 8):
 		brain._time = i * AIBrain.HISTORY_SAMPLE_INTERVAL
 		arm.rotation.y = brain._time
@@ -120,3 +124,34 @@ func _test_history_capacity(t: TestHarness, brain, arena: Arena, arm: ArenaHazar
 	t.equal(brain._history_sweepers.size(), 0, "restart clears bounded hazard history")
 	t.near(brain._dodge_until, 0.0, 0.00001, "restart clears encounter cooldown")
 	t.near(brain._lead, -1.0, 0.00001, "restart clears encounter jump timing")
+
+
+func _test_prediction(t: TestHarness, brain, arena: Arena, arm: ArenaHazards.Sweeper) -> void:
+	brain.on_round_start()
+	brain.reaction_time = 0.5
+	brain.edge_awareness = 1.0
+	for direction in [-1.0, 1.0]:
+		brain.on_round_start()
+		brain._time = 1.0
+		arm.rotation.y = 0.0
+		brain._record_history()
+		brain._time = 1.1
+		arm.rotation.y = direction * 0.1
+		brain._record_history()
+		brain._time = 1.6
+		var target := Vector3.RIGHT.rotated(Vector3.UP, direction * 0.7) * 3.0
+		for strength in [0.0, 0.5, 1.0, 2.0, -1.0]:
+			brain.prediction = strength
+			var threat: Dictionary = brain._incoming_arm(arena, target)
+			t.ok(not threat.is_empty(), "bounded prediction retains the incoming observed threat")
+			if not threat.is_empty():
+				var expected := 0.6 - 0.5 * clampf(strength, 0.0, 1.0)
+				t.near(float(threat["eta"]), expected, 0.001, "prediction estimates present angle from delayed visible angular motion")
+		brain.prediction = 1.0
+		arm.rotation.y = -direction * 2.0
+		arm.speed = -direction * 50.0
+		var predicted: Dictionary = brain._incoming_arm(arena, target)
+		t.near(float(predicted.get("eta", -1.0)), 0.1, 0.001, "unsampled reversal cannot change the estimated trajectory")
+		brain._time = 3.0
+		predicted = brain._incoming_arm(arena, target)
+		t.near(float(predicted.get("eta", -1.0)), 0.05, 0.001, "stale observation extrapolation is capped at reaction plus one sample interval")
