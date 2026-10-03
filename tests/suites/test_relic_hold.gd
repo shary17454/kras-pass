@@ -11,8 +11,10 @@ func run(t: TestHarness, host: Node) -> void:
 	var game = scene.controller
 	var fighter: Fighter = scene.ctx.fighters[0]
 	game.on_round_start()
+	t.equal(game.loose_relic(), game._relic, "loose cue returns the actual spawned collectible")
 	t.ok(fighter.can_attack, "initial player can attack")
 	game._on_taken(game._relic, 0)
+	t.equal(game.loose_relic(), null, "carrying removes the loose target cue")
 	t.equal(game.holder(), 0, "pickup sets holder")
 	t.equal(fighter.carrying, 1, "holder carries relic")
 	t.ok(not fighter.can_attack, "holder cannot attack")

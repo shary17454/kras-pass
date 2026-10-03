@@ -15,6 +15,19 @@ class MagnetCueProbe extends MiniGameController:
 	func magnet_ready(_slot: int) -> bool:
 		return true
 
+class RelicCueProbe extends MiniGameController:
+	var item: Node3D
+	var carrier := -1
+	func holder() -> int:
+		return carrier
+	func loose_relic() -> Node3D:
+		return item if carrier < 0 else null
+
+class RelicSteeringProbe extends "res://src/ai/brains/relic_brain.gd":
+	var destination := Vector3.ZERO
+	func steer_to(target: Vector3, _urgency: float = 1.0) -> void:
+		destination = target
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI visible targets")
@@ -125,9 +138,48 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_keeper_balls(t, scene)
 	_test_bomb_states(t, scene)
 	_test_ball_delay(t, scene)
+	_test_relic(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_relic(t: TestHarness, scene: Node) -> void:
+	var brain := RelicSteeringProbe.new()
+	var cue := RelicCueProbe.new()
+	scene.add_child(cue)
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.controller = cue
+	brain.reaction_time = 0.0
+	var parent := Node3D.new()
+	scene.ctx.world_root.add_child(parent)
+	var item := Node3D.new()
+	parent.add_child(item)
+	cue.item = item
+	t.equal(brain._loose_relic(), item, "relic bot can target a visible loose prize")
+	item.hide()
+	t.equal(brain._loose_relic(), null, "relic bot cannot locate a hidden loose prize")
+	item.show()
+	parent.hide()
+	t.equal(brain._loose_relic(), null, "relic bot respects inherited prize visibility")
+	parent.show()
+	t.equal(brain._loose_relic(), item, "relic bot recovers when the prize reappears")
+	cue.carrier = 1
+	t.equal(brain._loose_relic(), null, "carried relic cannot remain a loose target")
+	var carrier: Fighter = scene.ctx.fighter(1)
+	carrier.global_position = Vector3(6, 1, 0)
+	carrier.hide()
+	brain.decide(0.0)
+	t.equal(brain.destination, scene.arena.retreat_point(scene.ctx.fighter(0).global_position), "hidden holder does not reveal a pursuit destination")
+	carrier.show()
+	brain._record_history()
+	brain.decide(0.0)
+	t.ok(brain.destination.x > 0.0, "visible holder becomes a pursuit target again")
+	cue.carrier = -1
+	item.queue_free()
+	t.equal(brain._loose_relic(), null, "queued relic cannot become a target")
+	parent.queue_free()
+	cue.queue_free()
 
 
 func _test_collector(t: TestHarness, scene: Node) -> void:

@@ -31,7 +31,7 @@ func decide(_delta: float) -> void:
 		keep_off_edge(4.0)
 		return
 
-	if holder >= 0:
+	if holder >= 0 and can_observe(ctx.fighter(holder)):
 		# Somebody else has it. Line the shove up outward so the steal also
 		# threatens a ring-out.
 		var spot := predict(holder, 0.3)
@@ -46,9 +46,19 @@ func decide(_delta: float) -> void:
 		keep_off_edge(3.0)
 		return
 
-	# Loose relic: race for it.
-	var target: Vector3 = controller.call("relic_position")
+	var relic := _loose_relic()
+	if relic == null:
+		steer_to(arena.retreat_point(me.global_position))
+		keep_off_edge(2.6)
+		return
+	# The controller's fallback position is not a visible prize.
+	var target := relic.global_position
 	steer_to(target)
 	if distance_to(target) > 4.0:
 		maybe_dash(0.7)
 	keep_off_edge(2.6)
+
+
+func _loose_relic() -> Node3D:
+	var relic: Node3D = controller.call("loose_relic")
+	return relic if can_observe(relic) else null

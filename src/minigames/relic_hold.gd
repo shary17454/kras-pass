@@ -183,6 +183,10 @@ func holder() -> int:
 	return _holder
 
 
+func loose_relic() -> Node3D:
+	return _relic if _holder < 0 and is_instance_valid(_relic) else null
+
+
 func relic_position() -> Vector3:
 	if _holder >= 0:
 		var f := ctx.fighter(_holder)
