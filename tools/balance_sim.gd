@@ -145,6 +145,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	var completed := 0
 	var scores_seen: Array[int] = []
 	var baseline_seeds: Array[int] = []
+	var boss_outcomes: Array[Dictionary] = []
 
 	for run in runs:
 		_say("  %s run %d/%d" % [def.id, run + 1, runs])
@@ -159,6 +160,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
 		var result := await _play(cfg)
+		if def.is_boss:
+			boss_outcomes.append({"seed": cfg.seed, "outcome": _boss_outcome(result)})
 		if result == null:
 			continue
 		completed += 1
@@ -211,6 +214,11 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"expert_edge": expert_edge,
 		"avg_score": _mean(scores_seen),
 	}
+	if def.is_boss:
+		row["boss_outcomes"] = boss_outcomes
+		row["boss_defeated_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "defeated").size()
+		row["boss_survived_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "survived").size()
+		row["boss_unknown_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "unknown").size()
 	row["flags"] = _flags(def, row)
 	row["severity"] = _severity(row["flags"])
 	return row
@@ -279,6 +287,37 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 	if total <= 0.0:
 		return 0.5
 	return expert_total / total
+
+
+func _boss_outcome(result: MatchResult) -> String:
+	if result == null or not result.finished_naturally or result.scores.is_empty() \
+			or result.details.size() != result.scores.size() or result.places.size() != result.scores.size():
+		return "unknown"
+	var rounds := maxi(1, result.rounds.size())
+	var defeats := -1
+	for slot in result.scores.size():
+		if not result.details[slot] is Dictionary:
+			return "unknown"
+		var played = result.details[slot].get("boss_rounds")
+		var defeated = result.details[slot].get("boss_defeats")
+		if typeof(played) != TYPE_INT or typeof(defeated) != TYPE_INT \
+				or played != rounds or defeated < 0 or defeated > rounds:
+			return "unknown"
+		if defeats >= 0 and defeats != defeated:
+			return "unknown"
+		defeats = defeated
+	if not result.rounds.is_empty():
+		var proved := 0
+		for round in result.rounds:
+			if not round is MatchResult or not round.rounds.is_empty():
+				return "unknown"
+			var outcome := _boss_outcome(round)
+			if outcome == "unknown":
+				return "unknown"
+			proved += 1 if outcome == "defeated" else 0
+		if proved != defeats:
+			return "unknown"
+	return "defeated" if defeats == rounds else "survived"
 
 
 func _difficulty_runs() -> int:
@@ -454,6 +493,11 @@ func _flags(def: MiniGameDef, row: Dictionary) -> Array:
 	var difficulty_missing := int(row.get("difficulty_attempted", 0)) - int(row.get("difficulty_completed", 0))
 	if difficulty_missing > 0:
 		flags.append("did not finish %d difficulty comparison runs" % difficulty_missing)
+	if def.is_boss:
+		if not row.has("boss_outcomes") or int(row.get("boss_unknown_runs", 0)) > 0:
+			flags.append("boss outcome evidence incomplete")
+		elif int(row.get("boss_defeated_runs", 0)) == 0 and int(row["runs"]) > 0:
+			flags.append("boss never defeated in baseline sample")
 	if float(row["tie_rate"]) > 0.4:
 		flags.append("ties %.0f%% of the time" % (float(row["tie_rate"]) * 100.0))
 	# Thresholds come from the fair-game null for this sample size, never from a
@@ -484,7 +528,7 @@ func _severity(flags: Array) -> int:
 		return 0
 	for f in flags:
 		var s := String(f)
-		if s.begins_with("did not finish") or s.begins_with("ends almost") or s.contains("scored nothing"):
+		if s.begins_with("did not finish") or s.begins_with("ends almost") or s.contains("scored nothing") or s == "boss outcome evidence incomplete":
 			return 2
 	return 1
 

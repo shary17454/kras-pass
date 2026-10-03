@@ -63,4 +63,38 @@ func run(t: TestHarness) -> void:
 	t.ok(sim._flags(def, row).is_empty(), "completed balanced sample has no synthetic warning")
 	sim.only = "not_a_registered_game"
 	t.equal(sim._games().size(), 0, "unknown game selection is empty rather than all games")
+	_boss_outcomes(t, sim)
 	sim.free()
+
+
+func _boss_outcomes(t: TestHarness, sim: Node) -> void:
+	t.test("boss completion is not inferred from score or duration")
+	t.equal(sim._boss_outcome(null), "unknown", "missing match cannot establish defeat")
+	var result := MatchResult.make("boss_colossus", "", [500, 100] as Array[int])
+	result.duration = 150.0
+	t.equal(sim._boss_outcome(result), "unknown", "positive damage and natural deadline alone prove nothing")
+	for slot in result.scores.size():
+		result.details[slot] = {"boss_rounds": 1, "boss_defeats": 0}
+	t.equal(sim._boss_outcome(result), "survived", "explicit surviving boss is recorded separately")
+	var defeated := result.duplicate(true) as MatchResult
+	for slot in defeated.scores.size():
+		defeated.details[slot]["boss_defeats"] = 1
+	t.equal(sim._boss_outcome(defeated), "defeated", "explicit defeat proves the round objective")
+	t.equal(sim._boss_outcome(MatchResult.aggregate(result.minigame_id, [result, defeated] as Array[MatchResult])), "survived", "mixed round objectives are not a complete victory")
+	t.equal(sim._boss_outcome(MatchResult.aggregate(result.minigame_id, [defeated, defeated] as Array[MatchResult])), "defeated", "complete aggregate retains objective proof")
+	defeated.details[1]["boss_defeats"] = 0
+	t.equal(sim._boss_outcome(defeated), "unknown", "conflicting player evidence cannot be accepted")
+	defeated.details[1]["boss_defeats"] = 2
+	t.equal(sim._boss_outcome(defeated), "unknown", "more defeats than played rounds is invalid")
+	defeated.details[1]["boss_defeats"] = "1"
+	t.equal(sim._boss_outcome(defeated), "unknown", "string counters are not coerced into proof")
+	defeated.details[1] = []
+	t.equal(sim._boss_outcome(defeated), "unknown", "malformed detail rows are rejected without a runtime error")
+	var aggregate := MatchResult.aggregate(result.minigame_id, [result, result] as Array[MatchResult])
+	for slot in aggregate.scores.size():
+		aggregate.details[slot]["boss_defeats"] = 2
+	t.equal(sim._boss_outcome(aggregate), "unknown", "aggregate counters cannot contradict retained round outcomes")
+	result.finished_naturally = false
+	t.equal(sim._boss_outcome(result), "unknown", "aborted outcome cannot establish objective completion")
+	t.equal(sim._severity(["boss outcome evidence incomplete"]), 2, "missing objective proof blocks qualification")
+	t.equal(sim._severity(["boss never defeated in baseline sample"]), 1, "zero observed defeats require balance investigation")
