@@ -93,17 +93,29 @@ func _opponent_roster(count: int) -> Array[String]:
 
 ## Stars: 3 for winning, 2 for a podium, 1 for finishing at all.
 static func stars_for(place: int, players: int) -> int:
-	if place <= 1:
+	if players <= 0 or place <= 0 or place > players:
+		return 0
+	if place == 1:
 		return 3
 	if place == 2 and players > 2:
 		return 2
 	return 1
 
 
-func on_match_finished(result: MatchResult) -> void:
+func award_result(result: MatchResult) -> Dictionary:
+	var reward := {"cleared": false, "stars": 0, "newly_cleared": false, "gems": 0}
+	if result == null or not result.finished_naturally or result.place_of(0) <= 0 \
+			or result.scores.size() != result.places.size() \
+			or result.place_of(0) > result.places.size() or world_id.is_empty() or stage_id().is_empty() \
+			or result.minigame_id != String(stage.get("game", "")):
+		return reward
+	var receipt := "%s:%s" % [world_id, stage_id()]
+	var rewards: Dictionary = result.get_meta("adventure_rewards", {})
+	if rewards.has(receipt):
+		return rewards[receipt].duplicate(true)
 	var place := result.place_of(0)
-	var cleared := place == 1
-	var stars := stars_for(place, result.places.size())
+	var cleared := place == 1 and not result.is_draw()
+	var stars := stars_for(2 if place == 1 and result.is_draw() else place, result.places.size())
 	var newly := Progression.record_stage(world_id, stage_id(), cleared, stars, result.score_of(0))
 	var gems := Balance.inum("tuning", "scoring.gems_per_participation", 1)
 	if cleared:
@@ -112,15 +124,23 @@ func on_match_finished(result: MatchResult) -> void:
 		gems += int(stage["reward_gems"])
 	Progression.grant_gems(gems)
 	Achievements.evaluate_all()
+	reward = {"cleared": cleared, "stars": stars, "newly_cleared": newly, "gems": gems}
+	rewards[receipt] = reward.duplicate(true)
+	result.set_meta("adventure_rewards", rewards)
+	return reward
+
+
+func on_match_finished(result: MatchResult) -> void:
+	var reward := award_result(result)
 	SceneRouter.go_to("results", {
 		"result": result,
 		"config": build_config(),
 		"adventure": {
 			"world": world_id,
 			"stage": stage_id(),
-			"cleared": cleared,
-			"stars": stars,
-			"newly_cleared": newly,
-			"gems": gems,
+			"cleared": reward["cleared"],
+			"stars": reward["stars"],
+			"newly_cleared": reward["newly_cleared"],
+			"gems": reward["gems"],
 		},
 	}, false)

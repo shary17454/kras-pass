@@ -153,7 +153,56 @@ func run(t: TestHarness, host: Node) -> void:
 	SaveSystem.set_settings(settings)
 	_playlists(t)
 	_result_integrity(t)
+	_adventure_integrity(t)
 	await host.get_tree().process_frame
+
+
+func _adventure_integrity(t: TestHarness) -> void:
+	t.test("adventure rewards require a completed valid outcome")
+	var backup := SaveSystem.profile().duplicate(true)
+	var profile_id := SaveSystem.create_profile("Adventure integrity")
+	SaveSystem.switch_profile(profile_id)
+	var session := AdventureSession.new()
+	var world: Dictionary = Registry.worlds()[0]
+	var stage: Dictionary = world["stages"][0]
+	session.setup(world, stage, "nabta")
+	var game := String(stage["game"])
+	var before := SaveSystem.profile().duplicate(true)
+	t.equal(session.award_result(null)["gems"], 0, "missing outcome grants no rewards")
+	var aborted := MatchResult.make(game, "", [4, 0, 0, 0] as Array[int])
+	aborted.finished_naturally = false
+	t.equal(session.award_result(aborted)["gems"], 0, "aborted win grants no gems")
+	t.equal(SaveSystem.profile(), before, "aborted win leaves all progress unchanged")
+	var empty := MatchResult.aggregate(game, [] as Array[MatchResult])
+	t.equal(session.award_result(empty)["stars"], 0, "empty result cannot award stars")
+	t.equal(SaveSystem.profile(), before, "empty result leaves profile unchanged")
+	var malformed := MatchResult.make(game, "", [4, 0] as Array[int])
+	malformed.scores.clear()
+	t.equal(session.award_result(malformed)["gems"], 0, "placement without corresponding scores is rejected")
+	t.equal(SaveSystem.profile(), before, "malformed result leaves profile unchanged")
+	t.equal(AdventureSession.stars_for(0, 4), 0, "missing place is not a win")
+	t.equal(AdventureSession.stars_for(-1, 4), 0, "negative place is invalid")
+	t.equal(AdventureSession.stars_for(5, 4), 0, "out-of-range place is invalid")
+	var wrong := MatchResult.make("not-the-stage", "", [4, 0] as Array[int])
+	t.equal(session.award_result(wrong)["gems"], 0, "another game's outcome cannot clear this stage")
+	t.equal(SaveSystem.profile(), before, "wrong-game result leaves profile unchanged")
+	var drawn := MatchResult.make(game, "", [4, 4, 0, 0] as Array[int])
+	var draw_reward := session.award_result(drawn)
+	t.ok(not draw_reward["cleared"], "shared first place does not clear the stage")
+	t.equal(draw_reward["stars"], 2, "completed tied podium retains participation progress")
+	t.ok(not Progression.is_stage_cleared(session.world_id, session.stage_id()), "draw cannot unlock stage completion")
+	var won := MatchResult.make(game, "", [4, 0, 0, 0] as Array[int])
+	var won_reward := session.award_result(won)
+	t.ok(won_reward["cleared"] and won_reward["newly_cleared"], "outright win still clears the stage")
+	t.equal(won_reward["stars"], 3, "outright win retains three stars")
+	var after_win := SaveSystem.profile().duplicate(true)
+	t.equal(session.award_result(won), won_reward, "repeated callback retains displayed reward")
+	t.equal(SaveSystem.profile(), after_win, "repeated callback cannot duplicate progression or gems")
+	var displayed := session.award_result(won)
+	displayed["gems"] = 999
+	t.equal(session.award_result(won)["gems"], won_reward["gems"], "UI changes cannot mutate the reward receipt")
+	SaveSystem.set_profile(backup)
+	SaveSystem.profile_loaded.emit(backup)
 
 
 func _result_integrity(t: TestHarness) -> void:
