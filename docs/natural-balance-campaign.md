@@ -27,8 +27,24 @@ than duplicating IDs. It schedules 24 baseline, 12 difficulty and two smoke
 matches per game: 1,482 matches for the current 39 definitions. Three workers
 maximum, no cancellation of an existing campaign, independent reports and
 checkout/commit evidence. It verifies completion counts and uploads evidence
-even on failure. It must be available on the default branch before GitHub's
-manual dispatch can be used; it has not been dispatched or qualified here.
+even on failure. The existing Game Quality workflow can call this campaign
+with its `balance_campaign` dispatch input on a development ref, without needing
+to merge the new workflow to main first. This selects the balance campaign
+instead of also starting the full network matrix. Dispatch and completion
+evidence are recorded separately from the local tool checks above.
+
+## Dispatched Campaign
+
+GitHub run `37108335239` was accepted on 2026-10-03 from exact source
+`0b21cac95075705a3ee85641e33e3aa680bcd879`, development ref
+`feature/kras-balance-campaign-dispatch`. The catalogue job completed
+successfully. A live snapshot showed three simulation jobs in progress
+(tank_arena, ring_rumble, crumble_court), 36 queued, and the ordinary network
+matrix skipped as intended. This is execution evidence, not a campaign pass.
+
+Run: https://github.com/shary17454/kras-pass/actions/runs/37108335239
+Review: https://github.com/shary17454/kras-pass/pull/10
+Do not dispatch a duplicate just because later observations are slow.
 
 Remaining qualification: run the full campaign, inspect small-sample warnings
 and character exposure fairness, vary arena/seed/player compositions, and
