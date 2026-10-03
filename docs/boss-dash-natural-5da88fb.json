@@ -1,0 +1,232 @@
+{
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 147.172222222232,
+      "avg_score": 127.552083333333,
+      "baseline_seeds": [
+        109001,
+        109614,
+        110227,
+        110840,
+        111453,
+        112066,
+        112679,
+        113292,
+        113905,
+        114518,
+        115131,
+        115744,
+        116357,
+        116970,
+        117583,
+        118196,
+        118809,
+        119422,
+        120035,
+        120648,
+        121261,
+        121874,
+        122487,
+        123100
+      ],
+      "category": "combat",
+      "character_bias": 0.0220588235294118,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 104921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 104921
+        }
+      ],
+      "expert_edge": 0.662721893491124,
+      "flags": [],
+      "id": "boss_colossus",
+      "name": "العملاق",
+      "round_window": 150.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 100000,
+      "severity": 0,
+      "slot_bias": 0.0441176470588235,
+      "tie_rate": 0.333333333333333,
+      "wins_by_character": {
+        "barq": 2,
+        "fanoos": 4,
+        "ghaim": 5,
+        "mowja": 4,
+        "nabta": 4,
+        "ramla": 5,
+        "sakhra": 5,
+        "turs": 5
+      },
+      "wins_by_slot": [
+        8,
+        8,
+        10,
+        8
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-03T18:56:04",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 105502,
+      "flags": [],
+      "id": "boss_colossus",
+      "mutated_ok": true,
+      "mutated_seed": 105501,
+      "name": "العملاق",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 100000
+}
