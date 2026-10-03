@@ -76,3 +76,11 @@ worktree's original Git pack index is an iCloud dataless file. The pending local
 commit was interrupted without deleting its staged work or another process's
 locks. This does not qualify a production build or allow release gates to be
 skipped.
+
+## Post-fix bot match
+
+At source `f579071d27a2fac17f4e5cdd5cda5b092bfb976b`, the actual four-Expert-bot
+match at seed 9614 defeated Colossus with health zero and scores
+`[275,220,165,165]`. `/tmp/kras-impact-spacing-ai.log` ends with
+`COLOSSUS_AI: PASS`, process exit zero. This is one local match, not network,
+determinism, character balance or physical-device performance qualification.
