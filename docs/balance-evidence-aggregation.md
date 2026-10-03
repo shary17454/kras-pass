@@ -3,8 +3,11 @@
 `tools/balance-report.mjs` verifies campaign identity and complete per-game
 coverage before counting matches. Required evidence: matching 40-character
 source/checkout commit, matching run ID, registered unique game ID, natural
-round mode, 24 completed baseline rounds, 12 completed difficulty comparisons,
-and two successful smoke rounds. Mixed sources, missing/duplicate games,
+round mode, 24 completed baseline rounds and two successful smoke rounds.
+Legacy evidence has 12 difficulty samples and is explicitly unpaired. The new
+policy requires 16 samples covering all eight characters, paired by world seed
+and character with mirrored Expert seats. `--paired` rejects legacy evidence.
+Mixed sources, missing/duplicate games,
 clipped rounds, incomplete samples and critical findings fail qualification.
 `--partial` is explicit and reports missing games; it never implies completion.
 

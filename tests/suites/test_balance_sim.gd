@@ -18,6 +18,23 @@ func run(t: TestHarness) -> void:
 	var boss := Registry.minigame("boss_forge")
 	t.equal(sim._window_for(boss), 75.0, "clipped boss window remains available explicitly")
 	var def := Registry.minigame("ring_rumble")
+	sim.runs = 24
+	t.equal(sim._difficulty_runs(), 16, "difficulty sample includes a mirrored pair for all eight characters")
+	var characters := {}
+	for pair in 8:
+		var first: MatchConfig = sim._difficulty_configuration(def, pair * 2)
+		var second: MatchConfig = sim._difficulty_configuration(def, pair * 2 + 1)
+		t.equal(first.seed, second.seed, "paired difficulty samples share the world seed")
+		characters[first.players[0].character_id] = true
+		for slot in 4:
+			t.equal(first.players[slot].character_id, second.players[slot].character_id, "paired difficulty samples share characters")
+			t.equal(first.players[slot].character_id, first.players[0].character_id, "difficulty comparison does not mix character strength")
+			t.equal(first.players[slot].ai_difficulty, PlayerConfig.Difficulty.EXPERT if slot < 2 else PlayerConfig.Difficulty.EASY, "first pair orientation")
+			t.equal(second.players[slot].ai_difficulty, PlayerConfig.Difficulty.EASY if slot < 2 else PlayerConfig.Difficulty.EXPERT, "mirrored pair orientation")
+	t.equal(characters.size(), Registry.characters().size(), "difficulty comparison covers the whole roster")
+	sim.runs = 25
+	t.equal(sim._difficulty_runs() % 2, 0, "odd baseline counts cannot produce an unmatched difficulty sample")
+	sim.runs = 24
 	t.ok(sim._window_for(def) <= 45.0, "explicit smoke mode keeps short ordinary windows")
 	var row := {
 		"runs": sim.runs, "tie_rate": 0.0, "slot_bias": 0.0,

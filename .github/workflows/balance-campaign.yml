@@ -34,6 +34,7 @@ jobs:
           set -euo pipefail
           gh run download "$GITHUB_RUN_ID" --pattern 'natural-balance-*' --dir "$RUNNER_TEMP/balance-evidence"
           node tools/balance-report.mjs "$RUNNER_TEMP/balance-evidence" "$GITHUB_SHA" "$GITHUB_RUN_ID" \
+            --paired \
             | tee "$RUNNER_TEMP/balance-summary.json"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
@@ -114,8 +115,9 @@ jobs:
           const game = report.games[0];
           const smoke = report.mutator_smoke[0];
           if (report.sample_mode !== 'natural' || report.games.length !== 1 || game.id !== process.env.GAME_ID ||
-              game.attempted_runs !== 24 || game.runs !== 24 || game.difficulty_attempted !== 12 ||
-              game.difficulty_completed !== 12 || !smoke.mutated_ok || !smoke.chaos_ok) {
+              game.attempted_runs !== 24 || game.runs !== 24 || game.difficulty_attempted !== 16 ||
+              game.difficulty_completed !== 16 || game.difficulty_pairing !== 'matched_seed_character' ||
+              !smoke.mutated_ok || !smoke.chaos_ok) {
             throw new Error('Incomplete balance campaign coverage');
           }
           JS
@@ -130,7 +132,7 @@ jobs:
           import fs from 'node:fs';
           fs.writeFileSync(`${process.env.RUNNER_TEMP}/balance-source.json`, JSON.stringify({
             commit: process.env.QA_COMMIT, run: process.env.QA_RUN, game: process.env.GAME_ID,
-            runs: 24, difficultyRuns: 12, smokeRuns: 2, mode: 'natural'
+            runs: 24, difficultyRuns: 16, difficultyPolicy: 'matched_seed_character', smokeRuns: 2, mode: 'natural'
           }, null, 2));
           JS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
