@@ -54,3 +54,22 @@ reached 3840 ms; this is functional evidence, not performance certification.
 
 The full fresh release gate, broader minigame network qualification and
 physical-device QA remain required before release.
+
+## Full Godot unit/integration suite: PASS
+
+After both real peer runs, the complete `tests/test_runner.tscn` suite ran with
+`--fixed-fps 60` and isolated storage at
+`/tmp/kras-siege-final-full-suite-save`. It completed in 691.8 seconds, reported
+21029 passing assertions and exited zero. Log:
+`/tmp/kras-siege-final-full-suite.log`. This includes real three-lap AI route
+completion across the authored racing arenas, not forced race finishes.
+
+The compile check passed all 321 scripts, exit zero; log:
+`/tmp/kras-siege-final-compile.log`. Neither log matched the release script's
+script/parse failure, leaked resource, ObjectDB or RID allocation patterns.
+Expected save-corruption and unsupported-input warnings from negative tests
+are not suppressed or claimed absent.
+
+These are two components of `tools/check_party.sh`, not a claim that its whole
+gate passed: the inventory, dedicated race/boss regression runs and repeated
+all-game stability cycles still need fresh qualification on this source.
