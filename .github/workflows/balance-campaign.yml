@@ -1,0 +1,115 @@
+name: Natural Balance Campaign
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: balance-campaign-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  catalogue:
+    runs-on: ubuntu-24.04
+    outputs:
+      games: ${{ steps.catalogue.outputs.games }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - id: catalogue
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const games = JSON.parse(fs.readFileSync('data/minigames.json', 'utf8')).games.map(game => game.id);
+          if (games.length < 39 || new Set(games).size !== games.length || games.some(id => !/^[a-z0-9_]+$/.test(id))) {
+            throw new Error('Invalid balance catalogue');
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `games=${JSON.stringify(games)}\n`);
+          JS
+
+  simulation:
+    needs: catalogue
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        game: ${{ fromJSON(needs.catalogue.outputs.games) }}
+    env:
+      GODOT_VERSION: 4.7.1
+      GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
+      GAME_ID: ${{ matrix.game }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install verified Godot
+        run: |
+          set -euo pipefail
+          archive="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl --fail --location --retry 3 --max-time 300 \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${archive}" \
+            --output "$RUNNER_TEMP/godot.zip"
+          printf '%s  %s\n' "$GODOT_SHA256" "$RUNNER_TEMP/godot.zip" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot-bin"
+          mv "$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$RUNNER_TEMP/godot-bin/godot"
+          chmod +x "$RUNNER_TEMP/godot-bin/godot"
+          echo "$RUNNER_TEMP/godot-bin" >> "$GITHUB_PATH"
+      - name: Import and check policy
+        run: |
+          set -euo pipefail
+          godot --headless --path . --import --log-file "$RUNNER_TEMP/balance-import.log" \
+            -- --test-data-dir="$RUNNER_TEMP/balance-import-save"
+          godot --headless --fixed-fps 60 --path . tests/test_runner.tscn \
+            --log-file "$RUNNER_TEMP/balance-policy.log" \
+            -- --suite=balance_sim --test-data-dir="$RUNNER_TEMP/balance-policy-save"
+      - name: Complete natural matches
+        run: |
+          set -euo pipefail
+          godot --headless --fixed-fps 60 --path . tools/balance_sim.tscn \
+            --log-file "$RUNNER_TEMP/balance-simulation.log" \
+            -- --runs=24 --only="$GAME_ID" --out-dir="$RUNNER_TEMP/balance-report" \
+            --test-data-dir="$RUNNER_TEMP/balance-save"
+      - name: Verify report coverage
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/balance-report/report.json`, 'utf8'));
+          const game = report.games[0];
+          const smoke = report.mutator_smoke[0];
+          if (report.sample_mode !== 'natural' || report.games.length !== 1 || game.id !== process.env.GAME_ID ||
+              game.attempted_runs !== 24 || game.runs !== 24 || game.difficulty_attempted !== 12 ||
+              game.difficulty_completed !== 12 || !smoke.mutated_ok || !smoke.chaos_ok) {
+            throw new Error('Incomplete balance campaign coverage');
+          }
+          JS
+      - name: Record source evidence
+        if: always()
+        env:
+          QA_COMMIT: ${{ github.sha }}
+          QA_RUN: ${{ github.run_id }}
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/balance-checkout.txt"
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          fs.writeFileSync(`${process.env.RUNNER_TEMP}/balance-source.json`, JSON.stringify({
+            commit: process.env.QA_COMMIT, run: process.env.QA_RUN, game: process.env.GAME_ID,
+            runs: 24, difficultyRuns: 12, smokeRuns: 2, mode: 'natural'
+          }, null, 2));
+          JS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: natural-balance-${{ matrix.game }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/balance-*.log
+            ${{ runner.temp }}/balance-checkout.txt
+            ${{ runner.temp }}/balance-source.json
+            ${{ runner.temp }}/balance-report/
+            ${{ runner.temp }}/balance-save/balance_progress.txt

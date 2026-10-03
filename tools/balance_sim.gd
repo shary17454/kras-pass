@@ -30,6 +30,9 @@ const NULL_TRIALS := 4000
 
 var runs := 6
 var only := ""
+var natural_rounds := true
+var _difficulty_attempted := 0
+var _difficulty_completed := 0
 var _report := []
 var _mutator_report := []
 var _null_cache := {}
@@ -41,6 +44,10 @@ var _log: FileAccess
 
 func _ready() -> void:
 	_parse_args()
+	if _games().is_empty():
+		push_error("No registered minigames selected: %s" % only)
+		get_tree().quit(2)
+		return
 	_log = FileAccess.open(SaveSystem.storage_root.path_join("balance_progress.txt"), FileAccess.WRITE)
 	_say("start runs=%d only=%s" % [runs, only])
 	_started = Time.get_ticks_msec()
@@ -85,11 +92,13 @@ func _parse_args() -> void:
 			only = arg.split("=")[1]
 		elif arg.begins_with("--out-dir="):
 			out_dir = arg.trim_prefix("--out-dir=")
+		elif arg == "--clipped-rounds":
+			natural_rounds = false
 
 
 func _games() -> Array[MiniGameDef]:
 	if only == "":
-		return Registry.minigames()
+		return Registry.all_minigames()
 	var out: Array[MiniGameDef] = []
 	var def := Registry.minigame(only)
 	if def != null:
@@ -121,7 +130,6 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		for slot in 4:
 			var cid_played := roster[(slot + run) % roster.size()].id
 			chars.append(cid_played)
-			appearances[cid_played] = int(appearances.get(cid_played, 0)) + 1
 		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, 9001 + run * 613)
 		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
@@ -129,6 +137,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		if result == null:
 			continue
 		completed += 1
+		for cid_played in chars:
+			appearances[cid_played] = int(appearances.get(cid_played, 0)) + 1
 		durations.append(result.duration)
 		if result.is_draw():
 			ties += 1
@@ -156,6 +166,11 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"name": def.display_name(),
 		"category": def.category_name(),
 		"runs": completed,
+		"attempted_runs": runs,
+		"sample_mode": "natural" if natural_rounds else "clipped",
+		"round_window": _window_for(def),
+		"difficulty_attempted": _difficulty_attempted,
+		"difficulty_completed": _difficulty_completed,
 		"tie_rate": float(ties) / maxf(1.0, float(completed)),
 		"avg_duration": avg_duration,
 		"wins_by_slot": wins_by_slot,
@@ -178,6 +193,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 ## nobody having landed enough hits to score and every boss reads as a 100% tie
 ## on zero. Give them a window the fight can actually resolve in.
 func _window_for(def: MiniGameDef) -> float:
+	if natural_rounds:
+		return def.duration
 	if def.is_boss:
 		return 75.0
 	# A fraction of the intended round, not a flat count of seconds. The flat
@@ -201,6 +218,8 @@ func _window_for(def: MiniGameDef) -> float:
 ## Expert-versus-Easy, mirrored across slots, expressed as the share of points
 ## the expert pair took. 0.5 is no separation at all.
 func _difficulty_edge(def: MiniGameDef) -> float:
+	_difficulty_attempted = 0
+	_difficulty_completed = 0
 	var expert_total := 0.0
 	var easy_total := 0.0
 	var roster := Registry.characters()
@@ -217,9 +236,11 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 			var is_expert := (slot < 2) == expert_first
 			cfg.players[slot].ai_difficulty = PlayerConfig.Difficulty.EXPERT if is_expert \
 				else PlayerConfig.Difficulty.EASY
+		_difficulty_attempted += 1
 		var result := await _play(cfg)
 		if result == null:
 			continue
+		_difficulty_completed += 1
 		# Compare finishing places, not raw scores. Raw scores lied wherever a
 		# game encodes its result indirectly — an unfinished race reports a
 		# huge sentinel for everyone, so inverting it flattened every kart to
@@ -298,7 +319,7 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	var guard := 0
 	# Finish-line races deliberately ignore the ordinary round timer. Give a
 	# three-lap race its real window instead of marking every long race stuck.
-	var max_ticks := 60 * 600 if cfg.definition().category == MiniGameDef.Category.RACE else MAX_TICKS
+	var max_ticks := _tick_budget(cfg)
 	while captured.is_empty() and guard < max_ticks:
 		await tree.physics_frame
 		guard += 1
@@ -306,6 +327,15 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	scene.queue_free()
 	await tree.process_frame
 	return captured[0] if captured.size() > 0 else null
+
+
+func _tick_budget(cfg: MatchConfig) -> int:
+	if cfg.definition().category == MiniGameDef.Category.RACE:
+		return 60 * 600
+	var window := cfg.duration_override if cfg.duration_override > 0.0 else cfg.definition().duration
+	# Leave time for introduction, sudden death, finish and cleanup. A full
+	# boss round must not be discarded by the old two-minute tool cutoff.
+	return maxi(MAX_TICKS, int(ceil((window + 90.0) * 60.0)))
 
 
 ## How far the most-favoured entry is above an even share. 0 is perfectly even.
@@ -379,6 +409,9 @@ func _flags(def: MiniGameDef, row: Dictionary) -> Array:
 	var flags: Array = []
 	if int(row["runs"]) < runs:
 		flags.append("did not finish %d/%d runs" % [runs - int(row["runs"]), runs])
+	var difficulty_missing := int(row.get("difficulty_attempted", 0)) - int(row.get("difficulty_completed", 0))
+	if difficulty_missing > 0:
+		flags.append("did not finish %d difficulty comparison runs" % difficulty_missing)
 	if float(row["tie_rate"]) > 0.4:
 		flags.append("ties %.0f%% of the time" % (float(row["tie_rate"]) * 100.0))
 	# Thresholds come from the fair-game null for this sample size, never from a
@@ -433,6 +466,7 @@ func _write_reports() -> void:
 			"generated": Time.get_datetime_string_from_system(),
 			"runs_per_game": runs,
 			"round_seconds": ROUND_SECONDS,
+			"sample_mode": "natural" if natural_rounds else "clipped",
 			"games": _report,
 			"mutator_smoke": _mutator_report,
 		}, "  "))
@@ -475,7 +509,7 @@ border-bottom:1px solid #252c52;padding:8px 10px} td{padding:8px 10px;border-bot
 .note{color:#9aa2c8;margin-top:24px;max-width:60em}
 </style>
 <h1>Kras Pass — balance report</h1>
-<div class="sub">%s · %d runs per game · %.0fs rounds</div>
+<div class="sub">%s · %d runs per game · %s rounds (per-game windows in JSON)</div>
 <table><tr><th>Mini-game</th><th>Runs</th><th>Length</th><th>Ties</th><th>Slot bias</th>
 <th>Character bias</th><th>Expert share</th><th>Avg score</th><th>Verdict</th></tr>
 %s</table>
@@ -488,4 +522,4 @@ an Expert pair takes from an Easy pair with identical characters, mirrored acros
 <div class="sub">one run under a deliberately over-stuffed mutator set, one run with chaos mode on</div>
 <table><tr><th>Mini-game</th><th>Mutated run</th><th>Chaos run</th><th>Verdict</th></tr>
 %s</table>
-""" % [Time.get_datetime_string_from_system(), runs, ROUND_SECONDS, rows, mutator_rows]
+""" % [Time.get_datetime_string_from_system(), runs, "natural" if natural_rounds else "clipped", rows, mutator_rows]
