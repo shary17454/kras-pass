@@ -92,7 +92,7 @@ func _preferred_loot() -> Node3D:
 	var chosen: Node3D = null
 	var best := INF
 	for node in _tree.get_nodes_in_group("pickups"):
-		if not node is Node3D or not is_instance_valid(node):
+		if not node is Node3D or not can_observe(node):
 			continue
 		if node.has_method("is_available") and not node.is_available():
 			continue
@@ -102,7 +102,7 @@ func _preferred_loot() -> Node3D:
 		# Use delayed perception, not the rival's current velocity or intent.
 		if strategy > 0.5:
 			for rival in ctx.player_count():
-				if rival == slot or not ctx.is_alive(rival):
+				if rival == slot or not ctx.is_alive(rival) or not can_observe(ctx.fighter(rival)):
 					continue
 				var reach := perceive(rival).distance_to(node.global_position)
 				if reach < distance * 0.75:

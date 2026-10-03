@@ -106,6 +106,79 @@ func run(t: TestHarness, host: Node) -> void:
 	probes[3].show()
 	probes[3].queue_free()
 	t.equal(brain.nearest_in_group("test_ai_visible_pickups", host.get_tree()), null, "queued pickup cannot become a target")
+	_test_collector(t, scene)
+	_test_duo(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_collector(t: TestHarness, scene: Node) -> void:
+	var collector = load("res://src/ai/brains/collector_brain.gd").new()
+	collector.configure(0, scene.ctx, 3, 119)
+	collector.reaction_time = 0.0
+	collector.strategy = 1.0
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	for slot in range(1, 4): scene.ctx.fighter(slot).hide()
+	var parent := Node3D.new()
+	scene.add_child(parent)
+	parent.hide()
+	var probes: Array[PickupProbe] = []
+	for index in 4:
+		var probe := PickupProbe.new()
+		if index == 1: parent.add_child(probe)
+		else: scene.add_child(probe)
+		probe.add_to_group("pickups")
+		probe.global_position = Vector3([0.1, 0.2, 4.0, -6.0][index], 1, 0)
+		probes.append(probe)
+	probes[0].hide()
+	scene.ctx.fighter(1).global_position = probes[2].global_position
+	scene.ctx.fighter(1).show()
+	collector._record_history()
+	scene.ctx.fighter(1).hide()
+	t.equal(collector._preferred_loot(), probes[2], "collector chooses visible loot without hidden competition")
+	t.equal(probes[0].queries, 0, "collector never queries hidden pickup availability")
+	t.equal(probes[1].queries, 0, "collector respects hidden pickup ancestors")
+	scene.ctx.fighter(1).show()
+	t.equal(collector._preferred_loot(), probes[3], "collector still avoids loot contested by a visible rival")
+	scene.ctx.fighter(1).hide()
+	t.equal(collector._preferred_loot(), probes[2], "hidden rival cannot keep visible loot contested")
+	probes[2].available = false
+	t.equal(collector._preferred_loot(), probes[3], "collector preserves visible availability checks")
+	probes[3].hide()
+	t.equal(collector._preferred_loot(), null, "collector has no target when observable loot is unavailable")
+	probes[3].show()
+	probes[3].queue_free()
+	t.equal(collector._preferred_loot(), null, "collector excludes queued pickups")
+	for probe in probes:
+		probe.remove_from_group("pickups")
+		if not probe.is_queued_for_deletion(): probe.queue_free()
+	parent.queue_free()
+
+
+func _test_duo(t: TestHarness, scene: Node) -> void:
+	var duo = load("res://src/ai/brains/duo_brain.gd").new()
+	duo.configure(0, scene.ctx, 3, 119)
+	duo.controller = load("res://src/minigames/duo_clash.gd").new()
+	duo.reaction_time = 0.0
+	duo.edge_awareness = 1.0
+	var center: Vector3 = scene.ctx.arena_center()
+	for slot in 4:
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).mods.clear()
+	scene.ctx.fighter(0).global_position = center + Vector3.UP
+	scene.ctx.fighter(1).global_position = center + Vector3(scene.arena.def.radius - 0.5, 1, 0)
+	scene.ctx.fighter(1).hide()
+	scene.ctx.fighter(2).global_position = center + Vector3(scene.arena.def.radius - 0.2, 1, 0)
+	scene.ctx.fighter(3).global_position = center + Vector3(3, 1, 0)
+	t.equal(duo._pick_target(), 3, "duo edge selection excludes hidden enemy and visible ally")
+	duo.edge_awareness = 0.0
+	scene.ctx.fighter(1).global_position = center + Vector3(0.1, 1, 0)
+	scene.ctx.fighter(2).global_position = center + Vector3(0.05, 1, 0)
+	t.equal(duo._pick_target(), 3, "duo nearest selection excludes hidden enemy and visible ally")
+	scene.ctx.fighter(3).hide()
+	t.equal(duo._pick_target(), -1, "duo has no target when only its ally is visible")
+	scene.ctx.fighter(1).show()
+	t.equal(duo._pick_target(), 1, "duo can target an enemy once visible again")
+	duo.controller.free()
+	duo.controller = null

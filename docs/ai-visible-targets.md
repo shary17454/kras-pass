@@ -27,8 +27,8 @@ stats or score award changed. History remains capped at 32 samples.
 
 This is not camera-frustum or wall-occlusion visibility. It does not introduce
 a fully isolated Perception Layer for every controller-specific brain API.
-Custom selectors still need review, including Collector `_preferred_loot`,
-Duo `_pick_target`, and direct ball/hazard/controller queries. Do not label all
+At this shared-helper revision, custom selectors still needed review, including
+Collector `_preferred_loot`, Duo `_pick_target`, and direct ball/hazard/controller queries. Do not label all
 AI fair or all games balanced based on this shared-helper repair.
 
 ## Verification
@@ -69,3 +69,33 @@ CA error. Do not claim a clean CA environment or signed-device connection.
 These are not four-independent-peer, signed-device, Internet, battery/thermal
 or App Store submission results. Dedicated AI balance simulations, custom
 perception paths and the complete network matrix remain unqualified.
+
+## Custom collector and team selectors
+
+Follow-up branch: `feature/kras-ai-custom-visible-targets`, based on `67620dd`.
+Collector filters invisible/queued pickups before availability queries and
+ignores hidden rivals when calculating contested loot. Duo applies the same
+visibility guard in both edge-priority and nearest-opponent paths, while keeping
+the existing team exclusions. No movement, difficulty, points or team rules change.
+
+The initial expanded fixture failed 11 checks with 20 passing in
+`/tmp/kras-custom-ai-before.log`. A separately constructed team controller leaked
+in that test fixture; explicitly freeing it removed the leak. The final fixture
+also gives the collector a previously observed rival before hiding that rival,
+so stale last-seen proximity cannot continue to penalize visible loot.
+
+Verification of this follow-up:
+
+- `/tmp/kras-custom-ai-final.log`: 31 assertions passed, exit zero.
+- `/tmp/kras-custom-ai-compile.log`: all 323 scripts compile, exit zero.
+- `/tmp/kras-custom-ai-party.log`: 4,117 assertions passed, exit zero.
+- `/tmp/kras-custom-ai-duo.log`: 101 assertions passed, exit zero.
+- Logs retain the macOS system CA retrieval error. No script or resource leak
+  error appeared in these final test logs.
+
+The full 21,081-assertion run above belongs to `181491a`, not this follow-up.
+The latest observed CI run for `67620dd`, `37100912388`, had successful core,
+ring and goal jobs, with other network jobs running or queued. That does not
+qualify this follow-up source. No CI run was cancelled to obtain these results.
+Duellist, Smasher, ball/hazard/controller-specific perception, full balance,
+Internet/device testing and the Apple release gates remain unfinished.
