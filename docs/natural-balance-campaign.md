@@ -22,9 +22,11 @@ Verified locally on this patch:
   Average baseline duration 75.0 seconds, no tied baseline, both smoke rounds
   complete. Reports: `/tmp/kras-natural-balance-draw-report/`.
 
-The new manual `Natural Balance Campaign` workflow reads the catalogue rather
-than duplicating IDs. It schedules 24 baseline, 12 difficulty and two smoke
-matches per game: 1,482 matches for the current 39 definitions. Three workers
+The manual `Natural Balance Campaign` workflow reads the catalogue rather
+than duplicating IDs. The current paired policy schedules 24 baseline, 16
+difficulty and two smoke matches per game: 1,638 matches for the current 39
+definitions. The original dispatched source used 12 unpaired difficulty
+samples (1,482 matches); its evidence remains identified separately. Three workers
 maximum, no cancellation of an existing campaign, independent reports and
 checkout/commit evidence. It verifies completion counts and uploads evidence
 even on failure. The existing Game Quality workflow can call this campaign
