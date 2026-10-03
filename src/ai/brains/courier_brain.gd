@@ -64,7 +64,7 @@ func _richest_carrier() -> int:
 		if i == slot or not ctx.is_alive(i):
 			continue
 		var f := ctx.fighter(i)
-		if f != null and is_instance_valid(f) and f.carrying > best_n:
+		if can_observe(f) and f.carrying > best_n:
 			best_n = f.carrying
 			best = i
 	return best if best_n > 0 else nearest_rival()

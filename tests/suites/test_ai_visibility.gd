@@ -110,6 +110,9 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duo(t, scene)
 	_test_smasher(t, scene)
 	_test_duellist(t, scene)
+	_test_ball(t, scene)
+	_test_courier(t, scene)
+	_test_platform(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
@@ -251,3 +254,100 @@ func _test_duellist(t: TestHarness, scene: Node) -> void:
 	t.equal(duellist._best_target(), -1, "duellist has no target when rivals are hidden")
 	scene.ctx.fighter(1).show()
 	t.equal(duellist._best_target(), 1, "duellist can target damaged rival after it reappears")
+
+
+func _test_ball(t: TestHarness, scene: Node) -> void:
+	var brain = load("res://src/ai/brains/ball_brain.gd").new()
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.reaction_time = 0.0
+	var parent := Node3D.new()
+	scene.add_child(parent)
+	parent.hide()
+	var balls: Array[GameBall] = []
+	for index in 3:
+		var ball := GameBall.new()
+		if index == 1: parent.add_child(ball)
+		else: scene.add_child(ball)
+		ball.add_to_group("balls")
+		balls.append(ball)
+	balls[0].hide()
+	t.equal(brain._ball(), balls[2], "blast bot ignores hidden and inherited-hidden balls")
+	balls[2].queue_free()
+	t.equal(brain._ball(), null, "blast bot ignores queued or hidden balls")
+	for slot in 4:
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot, 1, 0)
+	brain._record_history()
+	scene.ctx.fighter(1).hide()
+	t.equal(brain._best_victim(Vector3(1, 1, 0)), 2, "blast bot cannot select a hidden victim at its last seen position")
+	scene.ctx.fighter(2).hide()
+	scene.ctx.fighter(3).hide()
+	t.equal(brain._best_victim(Vector3(1, 1, 0)), -1, "blast bot has no victim when rivals are hidden")
+	scene.ctx.fighter(1).show()
+	t.equal(brain._best_victim(Vector3(1, 1, 0)), 1, "blast bot can select a rival after it reappears")
+	for ball in balls:
+		ball.remove_from_group("balls")
+		if not ball.is_queued_for_deletion(): ball.queue_free()
+	parent.queue_free()
+
+
+func _test_courier(t: TestHarness, scene: Node) -> void:
+	var brain = load("res://src/ai/brains/courier_brain.gd").new()
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.reaction_time = 0.0
+	for slot in 4:
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot, 1, 0)
+		scene.ctx.fighter(slot).carrying = slot
+	scene.ctx.fighter(1).carrying = 8
+	scene.ctx.fighter(2).carrying = 4
+	brain._record_history()
+	scene.ctx.fighter(1).hide()
+	t.equal(brain._richest_carrier(), 2, "courier ignores a hidden carrier's larger inventory")
+	scene.ctx.fighter(2).hide()
+	t.equal(brain._richest_carrier(), 3, "courier chooses the remaining visible carrier")
+	scene.ctx.fighter(3).hide()
+	t.equal(brain._richest_carrier(), -1, "courier has no target when all carriers are hidden")
+	scene.ctx.fighter(2).show()
+	scene.ctx.fighter(2).carrying = 0
+	t.equal(brain._richest_carrier(), 2, "courier still falls back to a visible nearest rival")
+	scene.ctx.fighter(1).show()
+	t.equal(brain._richest_carrier(), 1, "courier can target a visible loaded carrier again")
+
+
+func _test_platform(t: TestHarness, scene: Node) -> void:
+	var brain = load("res://src/ai/brains/platform_brain.gd").new()
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.reaction_time = 0.0
+	for slot in 4:
+		scene.ctx.fighter(slot).show()
+		scene.ctx.fighter(slot).global_position = Vector3(slot * 5, 1, 0)
+	var tile := ArenaTile.new()
+	scene.add_child(tile)
+	tile.global_position = scene.ctx.fighter(1).global_position
+	brain._record_history()
+	scene.ctx.fighter(1).hide()
+	t.ok(not brain._occupied(tile), "hidden rival's last seen position cannot reserve a tile")
+	scene.ctx.fighter(1).show()
+	t.ok(brain._occupied(tile), "visible rival still marks a tile occupied")
+	var other := ArenaTile.new()
+	scene.add_child(other)
+	other.global_position = tile.global_position + Vector3(4, 0, 0)
+	var tiles: Array[ArenaTile] = scene.arena.tiles.duplicate()
+	scene.arena.tiles.clear()
+	scene.arena.tiles.append(tile)
+	scene.arena.tiles.append(other)
+	tile.hide()
+	t.equal(brain._pick_tile(scene.arena, tile.global_position), other, "hidden solid floor cannot become a platform target")
+	t.equal(brain._solid_neighbours(scene.arena, other), 0.0, "hidden floor cannot improve a tile's neighbour score")
+	other.hide()
+	t.equal(brain._pick_tile(scene.arena, tile.global_position), null, "platform bot has no target when all tiles are hidden")
+	brain._target_tile = tile
+	brain.decide(0.0)
+	t.equal(brain._target_tile, null, "platform bot discards a cached tile once it becomes hidden")
+	other.show()
+	brain.decide(0.0)
+	t.equal(brain._target_tile, other, "platform bot resumes targeting visible solid ground")
+	scene.arena.tiles = tiles
+	tile.queue_free()
+	other.queue_free()

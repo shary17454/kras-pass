@@ -133,3 +133,39 @@ This is a rendered-material cue, not an isolated full Perception Layer with
 occlusion, object observation delay or camera-frustum checks. Ball/hazard and
 other custom controllers, full balance, four-peer Internet qualification,
 physical-device QA and all Apple release gates still require completion.
+
+## Ball, carrier and platform selection
+
+Next commit on `feature/kras-ai-rendered-crate-cues`, based on `d689f16`:
+
+- Blast bot filters hidden/queued balls and requires GameBall nodes, and does
+  not select hidden opponents from their previously observed positions.
+- Courier excludes hidden loaded rivals while retaining the nearest visible
+  fallback when nobody visible is carrying items.
+- Platform bot excludes hidden tiles from targets and neighbour scoring, drops
+  a cached target after it disappears, and ignores hidden rival occupancy.
+- AIBrain's header now describes the actual partial visibility boundary rather
+  than incorrectly asserting every query is already isolated by construction.
+
+The initial platform fixture assigned an untyped Array to a typed Arena.tiles
+property; `/tmp/kras-world-ai-before.log` includes that script error and is not
+valid qualification. Correcting the fixture without changing runtime source
+produced `/tmp/kras-world-ai-before-valid.log`: 49 passing and 12 failing
+assertions. The final fixture adds two cached-platform recovery checks.
+
+Terminal verification for this source:
+
+- `/tmp/kras-world-ai-final.log`: 63 assertions passed, exit zero.
+- `/tmp/kras-world-ai-compile.log`: 323 scripts compiled, exit zero.
+- `/tmp/kras-world-ai-blast.log`: 94 assertions passed, exit zero.
+- `/tmp/kras-world-ai-collection.log`: 99 assertions passed, exit zero.
+- `/tmp/kras-world-ai-crumble.log`: 2,512 assertions passed, exit zero.
+
+The final logs retain the local macOS CA retrieval error. These tests do not
+qualify object-motion observation delay, occlusion, all custom brain queries,
+full balance or physical-device performance. Further inspection still finds
+custom fighter loops in Siege, Zone, Bomber, Armed Racer and Climber, and direct
+ball queries in Keeper/Magnet Keeper. Each needs semantic review and tests.
+The prior full regression is still older-source evidence, not a pass for this
+commit. No main merge, production Online activation, archive or Apple upload
+has occurred for these follow-ups.

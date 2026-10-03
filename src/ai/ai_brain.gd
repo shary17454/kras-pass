@@ -2,12 +2,12 @@ class_name AIBrain
 extends RefCounted
 ## Base opponent intelligence.
 ##
-## Design rule, enforced by construction: **an AI may only read what a human
-## player can see on screen, and only after a human-plausible delay.** Every
-## world query goes through `perceive()`, which returns a position from
-## `reaction_time` seconds ago plus aim error scaled by `accuracy`. Higher
-## difficulties are faster and more accurate, never better informed — there is
-## no hidden state, no perfect prediction and no rubber-band speed bonus.
+## Design rule: bots must use observable cues rather than hidden game state.
+## Shared fighter perception retains delayed positions and velocities, with
+## aim error scaled by `accuracy`. Explicit visibility guards are not full
+## camera/frustum or wall-occlusion perception. Specialised controller and
+## object queries must be reviewed separately for visibility and reaction delay.
+## Difficulty must not grant hidden movement or damage bonuses.
 ##
 ## Subclasses in `src/ai/` override `decide()` to express one game's strategy.
 ## Everything else — the decision clock, edge safety, aim noise, deliberate
