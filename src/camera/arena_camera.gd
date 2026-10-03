@@ -347,10 +347,10 @@ func _apply(weight: float, delta: float) -> void:
 
 func _wanted_focus() -> Vector3:
 	if mode == Mode.WORLD:
-		if is_instance_valid(local_target) and (not local_target is Fighter or local_target.alive):
-			return local_target.global_position
 		var survivors := _live_targets()
-		return survivors[0].global_position if not survivors.is_empty() else focus
+		if is_instance_valid(local_target) and local_target in survivors:
+			return _bounded_world_focus(local_target.global_position)
+		return _bounded_world_focus(survivors[0].global_position if not survivors.is_empty() else focus)
 	var live := _live_targets()
 	if live.is_empty():
 		return arena.global_position if arena != null else focus
@@ -363,6 +363,19 @@ func _wanted_focus() -> Vector3:
 	elif arena != null:
 		centre = centre.lerp(arena.global_position, 0.18)
 	return _clamped_to_arena(centre)
+
+
+func _bounded_world_focus(p: Vector3) -> Vector3:
+	if arena == null:
+		return p
+	if arena.def.shape not in ["square", "grid", "tiles"]:
+		return _clamped_to_arena(p)
+	var origin := arena.global_position
+	var radius := arena.current_radius
+	# A world follow camera must preserve playable square corners, not clamp
+	# them to the inscribed circle used for compact shared arenas.
+	return origin + Vector3(clampf(p.x - origin.x, -radius, radius),
+		clampf(p.y - origin.y, -1.0, 14.0), clampf(p.z - origin.z, -radius, radius))
 
 
 ## Final guard: the focus never leaves the play area, whatever the targets do.

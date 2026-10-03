@@ -274,6 +274,7 @@ func _play(cfg: MatchConfig) -> Dictionary:
 	var moved := false
 	var elapsed := 0.0
 	var max_focus_offset := 0.0
+	var max_world_focus_overflow := 0.0
 	var tree := _host.get_tree()
 	while captured.is_empty() and elapsed < _match_window(cfg):
 		await tree.physics_frame
@@ -284,6 +285,9 @@ func _play(cfg: MatchConfig) -> Dictionary:
 		if scene.camera != null and scene.arena != null and MatchPhase.is_live(scene.phase):
 			var f: Vector3 = scene.camera.focus - scene.arena.global_position
 			max_focus_offset = maxf(max_focus_offset, Vector2(f.x, f.z).length())
+			if scene.camera.mode == ArenaCamera.Mode.WORLD and scene.arena.def.shape in ["square", "grid", "tiles"]:
+				max_world_focus_overflow = maxf(max_world_focus_overflow,
+					maxf(absf(f.x), absf(f.z)) - scene.arena.current_radius)
 		if scene.ctx != null and start_positions.is_empty() and MatchPhase.is_live(scene.phase):
 			for f in scene.ctx.fighters:
 				start_positions.append(f.global_position)
@@ -306,6 +310,8 @@ func _play(cfg: MatchConfig) -> Dictionary:
 		"moved": moved,
 		"seconds": elapsed,
 		"max_focus_offset": max_focus_offset,
+		"max_world_focus_overflow": max_world_focus_overflow,
+		"arena_shape": scene.arena.def.shape if scene.arena != null else "",
 		"arena_radius": scene.arena.def.radius if scene.arena != null else 0.0,
 		"camera_mode": scene.camera.mode if scene.camera != null else -1,
 	}
@@ -337,7 +343,10 @@ func _every_minigame(t: TestHarness) -> void:
 			seen_places[p] = true
 		t.ok(seen_places.has(1), "%s awarded a first place" % def.id)
 		t.ok(bool(run_result["moved"]), "%s: AI competitors actually moved" % def.id)
-		if int(run_result["camera_mode"]) != ArenaCamera.Mode.RACE:
+		if int(run_result["camera_mode"]) == ArenaCamera.Mode.WORLD and run_result["arena_shape"] in ["square", "grid", "tiles"]:
+			t.ok(float(run_result["max_world_focus_overflow"]) <= 0.001,
+				"%s: the world camera stays within the authored square, including its corners" % def.id)
+		elif int(run_result["camera_mode"]) != ArenaCamera.Mode.RACE:
 			t.ok(float(run_result["max_focus_offset"]) <= float(run_result["arena_radius"]),
 				"%s: the camera never leaves the arena chasing a falling player" % def.id)
 		t.ok(float(run_result["seconds"]) < _match_window(cfg), "%s finished before the test watchdog" % def.id)
