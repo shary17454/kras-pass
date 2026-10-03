@@ -81,6 +81,36 @@ func path_clear(from: Vector3, to: Vector3, margin := 0.42) -> bool:
 			return false
 	return true
 
+func steering_direction(from: Vector3, target: Vector3, lookahead := 1.2, margin := 0.5) -> Vector3:
+	var to := target - from
+	to.y = 0.0
+	if to.length() < 0.15 or lookahead <= 0.0:
+		return Vector3.ZERO
+	var distance := minf(lookahead, to.length())
+	var best := Vector3.ZERO
+	var cost := INF
+	var clearance := edge_distance(from)
+	for step in 32:
+		var angle := TAU * float(step) / 32.0
+		var direction := Vector3(cos(angle), 0, sin(angle))
+		var next := from + direction * distance
+		var safe := path_clear(from, next, margin)
+		# Near a rim, allow only escape steps that never lose body clearance.
+		if not safe and clearance >= 0.0 and clearance < margin:
+			safe = has_ground(next, margin)
+			for sample in range(1, 9):
+				if edge_distance(from.lerp(next, float(sample) / 8.0)) + 0.0001 < clearance:
+					safe = false
+					break
+		if not safe:
+			continue
+		var next_cost := next.distance_squared_to(target)
+		if next_cost < cost:
+			cost = next_cost
+			best = direction
+	return best
+
+
 func retreat_point(point: Vector3) -> Vector3:
 	var margin := minf(3.0, radius * 0.25)
 	if has_ground(point, margin):

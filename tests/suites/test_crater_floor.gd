@@ -22,6 +22,17 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(floor_node.path_clear(Vector3(-4, 0, 0), Vector3(-8, 0, 0)), "clear segment remains traversable")
 	t.ok(not floor_node.path_clear(Vector3(4, 0, 0), Vector3(-4, 0, 0)), "path with carved start is rejected")
 	t.ok(not floor_node.path_clear(Vector3(-4, 0, 0), Vector3(-18, 0, 0)), "path cannot leave arena rim")
+	for from in [Vector3(0, 0, 0), Vector3(8, 0, 0), Vector3(4, 0, 4), Vector3(4, 0, -4)]:
+		var target: Vector3 = Vector3(4, 0, 0) * 2.0 - from
+		var direction: Vector3 = floor_node.steering_direction(from, target)
+		t.ok(direction.length() > 0.1, "safe steering has an escape around each side of a crater")
+		t.ok(floor_node.path_clear(from, from + direction * 1.2, 0.5), "steering samples a complete safe segment")
+	var near_rim := Vector3(7.2, 0, 0)
+	var escape: Vector3 = floor_node.steering_direction(near_rim, Vector3(4, 0, 0))
+	t.ok(escape.x > 0.0, "thin-margin start escapes rather than stepping into the crater")
+	for sample in range(1, 9):
+		t.ok(floor_node.edge_distance(near_rim + escape * 1.2 * float(sample) / 8.0) >= floor_node.edge_distance(near_rim) - 0.0001, "escape preserves existing clearance throughout the step")
+	t.equal(floor_node.steering_direction(Vector3(-4, 0, 0), Vector3(-4, 0, 0)), Vector3.ZERO, "already reached target produces no movement")
 	floor_node.open_hole(Vector3(6, 0, 0), 3.0)
 	await host.get_tree().physics_frame
 	await host.get_tree().physics_frame
@@ -41,6 +52,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().physics_frame
 	await host.get_tree().physics_frame
 	t.ok(not _ground(floor_node, Vector3.ZERO), "fully removed floor has no ground")
+	t.equal(floor_node.steering_direction(Vector3.ZERO, Vector3(5, 0, 0)), Vector3.ZERO, "fully removed ground has no fabricated safe direction")
 	floor_node.reset()
 	await host.get_tree().physics_frame
 	await host.get_tree().physics_frame

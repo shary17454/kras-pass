@@ -1023,31 +1023,10 @@ func _colossus_movement(from: Vector3, target: Vector3) -> Vector2:
 	var direction := target - from
 	direction.y = 0.0
 	if direction.length() < 0.15: return Vector2.ZERO
-	var best := Vector3.ZERO
-	var distance := INF
 	var floor: Node = game.arena._crater_floor
 	if not is_instance_valid(floor): return Vector2.ZERO
 	var local_from: Vector3 = from - game.arena.global_position
-	var clearance: float = floor.edge_distance(local_from)
-	for step in 32:
-		var angle := TAU * float(step) / 32.0
-		var candidate := Vector3(cos(angle), 0, sin(angle))
-		var next := from + candidate * 1.2
-		var local_next: Vector3 = next - game.arena.global_position
-		var safe: bool = floor.path_clear(local_from, local_next, 0.5)
-		# A fighter can stand closer to an edge than the navigation margin.
-		# Permit escape only if no sampled point loses its current clearance.
-		if not safe and clearance >= 0.0 and clearance < 0.5:
-			safe = floor.has_ground(local_next, 0.5)
-			for sample in range(1, 9):
-				if floor.edge_distance(local_from.lerp(local_next, float(sample) / 8.0)) + 0.0001 < clearance:
-					safe = false
-					break
-		if not safe: continue
-		var cost := next.distance_squared_to(target)
-		if cost < distance:
-			distance = cost
-			best = candidate
+	var best: Vector3 = floor.steering_direction(local_from, target - game.arena.global_position)
 	return Vector2(best.x, best.z) * minf(1.0, direction.length())
 
 

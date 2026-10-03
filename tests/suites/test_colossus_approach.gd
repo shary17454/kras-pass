@@ -41,6 +41,25 @@ func run(t: TestHarness, host: Node) -> void:
 		brain.decide(0.1)
 		t.ok((brain.bits & InputFrame.Btn.ATTACK) == 0, "temporary slam warning takes priority over attacking")
 		t.ok(brain.move.x > 0.0, "bot flees visible warning instead of approaching fist")
+		game._clear_telegraphs()
+		game._open_crater(Vector3(-2, 0, 0), 1.0)
+		fighter.global_position = Vector3(-4, 0, 0)
+		brain.bits = 0
+		brain.decide(0.1)
+		var origin: Vector3 = fighter.global_position - scene.arena.global_position
+		var next: Vector3 = origin + Vector3(brain.move.x, 0, brain.move.y) * 1.2
+		t.ok(brain.move.length() > 0.1, "bot finds a lateral step around an intervening crater")
+		t.ok(scene.arena._crater_floor.path_clear(origin, next, 0.5), "bot approach step never crosses intervening carved ground")
+		for sample in 12:
+			brain.accuracy = 0.0
+			brain.decide(0.1)
+			next = origin + Vector3(brain.move.x, 0, brain.move.y) * 1.2
+			t.ok(scene.arena._crater_floor.path_clear(origin, next, 0.5), "aim error never redirects a safe approach into the crater")
+		brain.accuracy = 1.0
+		game.telegraph(Vector3(-5, 0, 0), 4.0, 2.0, func(_p, _r): pass)
+		brain.decide(0.1)
+		next = origin + Vector3(brain.move.x, 0, brain.move.y) * 1.2
+		t.ok(scene.arena._crater_floor.path_clear(origin, next, 0.5), "warning escape cannot run directly into another crater")
 		game._exposed = 0.0
 		t.empty(game.attack_plan(fighter.global_position), "no attack plan for unexposed fist")
 	else:
