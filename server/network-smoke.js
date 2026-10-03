@@ -111,7 +111,7 @@ try {
       child.stdout.on('data', collect); child.stderr.on('data', collect);
       return new Promise((resolve, reject) => {
         const deadline = game === 'sabaq_sawarikh' ? (tournament ? 960000 : 660000)
-          : ['boss_forge', 'boss_dreadnought', 'boss_sovereign'].includes(game) ? (tournament ? 800000 : 450000) : (tournament ? 360000 : 180000);
+          : ['boss_forge', 'boss_dreadnought', 'boss_sovereign', 'boss_colossus'].includes(game) ? (tournament ? 800000 : 450000) : (tournament ? 360000 : 180000);
         const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, deadline);
         child.on('error', reject);
         child.on('exit', async code => {

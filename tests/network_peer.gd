@@ -123,6 +123,10 @@ var sovereign_orbs_by_round := {}
 var sovereign_return_by_round := {}
 var sovereign_shield_by_round := {}
 var sovereign_defeat_by_round := {}
+var colossus_damage_by_round := {}
+var colossus_crater_by_round := {}
+var colossus_strike_by_round := {}
+var colossus_defeat_by_round := {}
 
 
 func _process(_delta: float) -> void:
@@ -136,6 +140,17 @@ func _process(_delta: float) -> void:
 			"seed": game.config.seed if is_instance_valid(game) else 0,
 			"phase": game.phase if is_instance_valid(game) else -1, "running": Net.match_running,
 			"max_frame_gap_ms": _max_frame_gap_ms, "snapshots": snapshots}))
+		if game_id == "boss_colossus" and is_instance_valid(game):
+			var world := _colossus_world()
+			var fighters: Array = []
+			for fighter in game.ctx.fighters:
+				fighters.append({"slot": fighter.slot, "position": str(fighter.global_position),
+					"velocity": str(fighter.velocity), "alive": fighter.alive, "attack": fighter.is_attacking()})
+			print("NETWORK_COLOSSUS=" + JSON.stringify({"round": game._round_index,
+				"time_left": game.ctx.time_left, "elapsed": game._round_elapsed,
+				"health": world.get("boss", {}).get("health", -1), "craters": world.get("craters", []).size(),
+				"exposed": world.get("exposed", 0), "fighters": fighters,
+				"damage_rounds": colossus_damage_by_round.keys(), "defeat_rounds": colossus_defeat_by_round.keys()}))
 		if game_id == "hurdle_dash" and is_instance_valid(game):
 			var runners: Array = []
 			for fighter in game.ctx.fighters:
@@ -241,7 +256,7 @@ func _ready() -> void:
 	Net.online_error.connect(func(reason): _fail("protocol " + reason))
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
-	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign"] else (300 if tournament_mode else 150)
+	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign", "boss_colossus"] else (300 if tournament_mode else 150)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
@@ -298,7 +313,7 @@ func _start(cfg: MatchConfig) -> void:
 		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
 	preload("res://tests/network_smoke_config.gd").configure_boss(cfg)
-	if game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign"] and not cfg.rule("online_contenders", []).is_empty():
+	if game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign", "boss_colossus"] and not cfg.rule("online_contenders", []).is_empty():
 		observed_boss_final = true
 		if boss_final_cups.is_empty(): boss_final_cups = Net.tournament.get("cups", []).duplicate()
 	if game_id == "hurdle_dash":
@@ -356,6 +371,11 @@ func _start(cfg: MatchConfig) -> void:
 		sovereign_return_by_round.clear()
 		sovereign_shield_by_round.clear()
 		sovereign_defeat_by_round.clear()
+	if game_id == "boss_colossus":
+		colossus_damage_by_round.clear()
+		colossus_crater_by_round.clear()
+		colossus_strike_by_round.clear()
+		colossus_defeat_by_round.clear()
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
@@ -440,6 +460,12 @@ func _physics_process(_delta: float) -> void:
 			observed_siege_destroyed = observed_siege_destroyed or float(base.health) <= 0.0
 			if int(base.hits) > 0: siege_hits_by_round[game._round_index] = true
 			if float(base.health) <= 0.0: siege_destruction_by_round[game._round_index] = true
+	if game_id == "boss_colossus":
+		var world := _colossus_world()
+		if int(world.get("boss", {}).get("damage", 0)) > 0: colossus_damage_by_round[game._round_index] = true
+		if int(world.get("boss", {}).get("strike", 0)) > 0: colossus_strike_by_round[game._round_index] = true
+		if not world.get("craters", []).is_empty(): colossus_crater_by_round[game._round_index] = true
+		if world.get("boss", {}).get("defeated", false): colossus_defeat_by_round[game._round_index] = true
 	if game_id == "boss_forge":
 		var world: Dictionary = _forge_world()
 		if int(world.get("boss", {}).get("damage", 0)) > 0:
@@ -595,6 +621,21 @@ func _physics_process(_delta: float) -> void:
 			if absf(diff) > 2.3 and fighter.speed_ratio() < 0.15:
 				movement = Vector2(clampf(diff * 1.8, -1.0, 1.0), 0.85)
 		var buttons := 0
+		if game_id == "boss_colossus":
+			var fighter: Fighter = game.ctx.fighter(slot)
+			var plan: Dictionary = game.controller.attack_plan(fighter.global_position)
+			var target: Vector3 = game.arena.retreat_point(fighter.global_position) if plan.is_empty() else plan.target
+			var world := _colossus_world()
+			for warning in world.get("warnings", []):
+				var point := Vector3(warning.position[0], fighter.global_position.y, warning.position[2])
+				if fighter.global_position.distance_to(point) < float(warning.radius) + 0.8:
+					var away := fighter.global_position - point
+					away.y = 0.0
+					target = fighter.global_position + (away.normalized() if away.length() > 0.1 else Vector3.RIGHT) * 5.0
+					break
+			movement = _colossus_movement(fighter.global_position, target)
+			if not plan.is_empty() and plan.attack and (Time.get_ticks_msec() - started_at) % 400 < 100:
+				buttons = InputFrame.Btn.ATTACK
 		if game_id == "boss_sovereign":
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var world := _sovereign_world()
@@ -964,6 +1005,29 @@ func _sovereign_world() -> Dictionary:
 	return load("res://src/net/sovereign_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
 
 
+func _colossus_world() -> Dictionary:
+	return load("res://src/net/colossus_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+
+
+func _colossus_movement(from: Vector3, target: Vector3) -> Vector2:
+	var direction := target - from
+	direction.y = 0.0
+	if direction.length() < 0.15: return Vector2.ZERO
+	var best := Vector3.ZERO
+	var distance := INF
+	for step in 32:
+		var angle := TAU * float(step) / 32.0
+		var candidate := Vector3(cos(angle), 0, sin(angle))
+		var next := from + candidate * 1.2
+		var floor: Node = game.arena._crater_floor
+		if not is_instance_valid(floor) or not floor.path_clear(from - game.arena.global_position, next - game.arena.global_position, 0.5): continue
+		var cost := next.distance_squared_to(target)
+		if cost < distance:
+			distance = cost
+			best = candidate
+	return Vector2(best.x, best.z) * minf(1.0, direction.length())
+
+
 func _finished(result: MatchResult) -> void:
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
@@ -978,6 +1042,24 @@ func _finished(result: MatchResult) -> void:
 	if not host and snapshots < 5:
 		_fail("no snapshots")
 		return
+	if game_id == "boss_colossus":
+		for round in range(game._round_index + 1):
+			if not colossus_damage_by_round.has(round) or (contenders.is_empty() and (
+				not colossus_crater_by_round.has(round) or not colossus_strike_by_round.has(round)
+				or not colossus_defeat_by_round.has(round))):
+				print("NETWORK_COLOSSUS_FAILURE=" + JSON.stringify({"round": round, "host": host, "world": _colossus_world()}))
+				_fail("colossus round %d lacks actual damage, crater, strike or defeat" % round)
+				return
+		if not host:
+			var world := _colossus_world()
+			if world_snapshots < 5 or world.is_empty() or not game.controller.presentation_only:
+				_fail("colossus world missing or guest remained authoritative")
+				return
+			for frame in 30: game._network_replica.render(game, 0.016)
+			if not game.controller._craters.is_empty() or not game.controller._telegraphs.is_empty() \
+				or game.arena._crater_floor._body != null or absf(game.controller.boss_health - float(world.boss.health)) > 0.001:
+				_fail("colossus guest simulated craters or diverged from host health")
+				return
 	if game_id == "boss_sovereign":
 		for round in range(game._round_index + 1):
 			if not sovereign_damage_by_round.has(round) or (contenders.is_empty() and (
