@@ -33,6 +33,19 @@ to merge the new workflow to main first. This selects the balance campaign
 instead of also starting the full network matrix. Dispatch and completion
 evidence are recorded separately from the local tool checks above.
 
+## Dispatched Campaign
+
+GitHub run `37108335239` was accepted on 2026-10-03 from exact source
+`0b21cac95075705a3ee85641e33e3aa680bcd879`, development ref
+`feature/kras-balance-campaign-dispatch`. The catalogue job completed
+successfully. A live snapshot showed three simulation jobs in progress
+(tank_arena, ring_rumble, crumble_court), 36 queued, and the ordinary network
+matrix skipped as intended. This is execution evidence, not a campaign pass.
+
+Run: https://github.com/shary17454/kras-pass/actions/runs/37108335239
+Review: https://github.com/shary17454/kras-pass/pull/10
+Do not dispatch a duplicate just because later observations are slow.
+
 Remaining qualification: run the full campaign, inspect small-sample warnings
 and character exposure fairness, vary arena/seed/player compositions, and
 resolve real balance issues. Two baseline matches are functional evidence for
