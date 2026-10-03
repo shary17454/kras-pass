@@ -27,6 +27,7 @@ const SUITES := [
 	"res://tests/suites/test_dreadnought_network.gd",
 	"res://tests/suites/test_sovereign_network.gd",
 	"res://tests/suites/test_colossus_network.gd",
+	"res://tests/suites/test_colossus_targets.gd",
 	"res://tests/suites/test_forge_feeding.gd",
 	"res://tests/suites/test_quick_draw.gd",
 	"res://tests/suites/test_symbol_echo.gd",

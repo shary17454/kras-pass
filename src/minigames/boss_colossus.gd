@@ -93,7 +93,7 @@ func _slam() -> void:
 		# The fist stays where it landed, at floor level: it has to be somewhere
 		# a fighter can actually stand next to, not four metres overhead.
 		if _fist != null and is_instance_valid(_fist):
-			_fist.global_position = Vector3(pos.x, 1.0, pos.z)
+			_fist.global_position = pos + Vector3.UP
 		_exposed = EXPOSED_TIME
 		_hit_this_window.clear())
 
@@ -158,12 +158,14 @@ func _pick_target() -> Vector3:
 		# Match-alive slots can still be falling or waiting at the respawn pose.
 		# A fist outside real ground creates an opening nobody can reach.
 		if ctx.is_alive(i) and is_instance_valid(fighter) and fighter.alive and fighter.visible \
-			and arena != null and arena.is_inside(fighter.global_position, 0.5):
+			and arena != null and fighter.global_position.is_finite() \
+			and fighter.global_position.y >= arena.global_position.y - 0.5 \
+			and arena.is_inside(fighter.global_position, 0.5):
 			alive.append(i)
 	if alive.is_empty():
 		return Vector3.INF
 	var f := ctx.fighter(alive[ctx.rng.randi_range(0, alive.size() - 1)])
-	return f.global_position if f != null and is_instance_valid(f) else Vector3.INF
+	return Vector3(f.global_position.x, arena.global_position.y, f.global_position.z)
 
 
 func on_phase_changed(new_phase: int) -> void:

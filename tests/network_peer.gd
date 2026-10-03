@@ -462,6 +462,14 @@ func _physics_process(_delta: float) -> void:
 			if float(base.health) <= 0.0: siege_destruction_by_round[game._round_index] = true
 	if game_id == "boss_colossus":
 		var world := _colossus_world()
+		for warning in world.get("warnings", []):
+			if absf(float(warning.position[1]) - game.arena.global_position.y) > 0.01:
+				_fail("colossus warning is not on arena floor")
+				return
+		if game.phase == MatchPhase.P.FINISH and game.config.rule("online_contenders", []).is_empty() \
+			and not bool(world.get("boss", {}).get("defeated", false)):
+			_fail("colossus round %d ended without actual boss defeat" % game._round_index)
+			return
 		if int(world.get("boss", {}).get("damage", 0)) > 0: colossus_damage_by_round[game._round_index] = true
 		if int(world.get("boss", {}).get("strike", 0)) > 0: colossus_strike_by_round[game._round_index] = true
 		if not world.get("craters", []).is_empty(): colossus_crater_by_round[game._round_index] = true
@@ -1015,12 +1023,25 @@ func _colossus_movement(from: Vector3, target: Vector3) -> Vector2:
 	if direction.length() < 0.15: return Vector2.ZERO
 	var best := Vector3.ZERO
 	var distance := INF
+	var floor: Node = game.arena._crater_floor
+	if not is_instance_valid(floor): return Vector2.ZERO
+	var local_from: Vector3 = from - game.arena.global_position
+	var clearance: float = floor.edge_distance(local_from)
 	for step in 32:
 		var angle := TAU * float(step) / 32.0
 		var candidate := Vector3(cos(angle), 0, sin(angle))
 		var next := from + candidate * 1.2
-		var floor: Node = game.arena._crater_floor
-		if not is_instance_valid(floor) or not floor.path_clear(from - game.arena.global_position, next - game.arena.global_position, 0.5): continue
+		var local_next: Vector3 = next - game.arena.global_position
+		var safe: bool = floor.path_clear(local_from, local_next, 0.5)
+		# A fighter can stand closer to an edge than the navigation margin.
+		# Permit escape only if no sampled point loses its current clearance.
+		if not safe and clearance >= 0.0 and clearance < 0.5:
+			safe = floor.has_ground(local_next, 0.5)
+			for sample in range(1, 9):
+				if floor.edge_distance(local_from.lerp(local_next, float(sample) / 8.0)) + 0.0001 < clearance:
+					safe = false
+					break
+		if not safe: continue
 		var cost := next.distance_squared_to(target)
 		if cost < distance:
 			distance = cost

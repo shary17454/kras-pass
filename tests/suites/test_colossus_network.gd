@@ -133,6 +133,21 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(guest.controller.boss_health, 745.0, "guest cannot decide damage")
 	t.equal(guest.arena._crater_floor._mesh.mesh, mesh, "guest simulation cannot mutate host ground")
 	t.empty(guest.controller._craters, "guest cannot spawn local crater")
+	var pilot: Node = preload("res://tests/network_peer.gd").new()
+	pilot.game = guest
+	var rim := Vector3(9.45, 0, 0)
+	t.ok(guest.arena.is_inside(rim, 0.42), "pilot recovery starts on fighter-safe crater rim")
+	t.ok(not guest.arena.is_inside(rim, 0.5), "pilot recovery starts outside navigation margin")
+	var escape: Vector2 = pilot._colossus_movement(rim, Vector3(12, 0, 0))
+	t.ok(escape.x > 0.5, "pilot can leave fighter-safe rim instead of freezing")
+	for sample in range(1, 9):
+		var point := rim + Vector3(escape.x, 0, escape.y) * 1.2 * float(sample) / 8.0
+		t.ok(guest.arena.is_inside(point, 0.45 - 0.0001), "rim escape never reduces initial clearance")
+	var outer_escape: Vector2 = pilot._colossus_movement(Vector3(15.55, 0, 0), Vector3.ZERO)
+	t.ok(outer_escape.x < -0.5, "pilot can escape fighter-safe outer rim inward")
+	var unsafe: Vector2 = pilot._colossus_movement(Vector3(6, 0, 0), Vector3(12, 0, 0))
+	t.equal(unsafe, Vector2.ZERO, "pilot cannot walk out through absent crater ground")
+	pilot.free()
 	game.damage_boss(1.0, 0)
 	packet = _packet(source)
 	sample_time.now = 2000
