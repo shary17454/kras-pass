@@ -1,0 +1,14 @@
+{
+  "name": "kras-pass-infrastructure",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:infra": "node --test .railway/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "railway": "3.12.0"
+  }
+}
