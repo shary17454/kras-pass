@@ -257,6 +257,8 @@ func _ready() -> void:
 	Net.connection_lost.connect(func(reason):
 		if not completed: _fail("closed " + reason))
 	var deadline := (900 if tournament_mode else 600) if requested_game_id == "sabaq_sawarikh" else (750 if tournament_mode else 400) if requested_game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign", "boss_colossus"] else (300 if tournament_mode else 150)
+	if requested_game_id == "kart_sprint":
+		deadline = preload("res://tests/network_smoke_config.gd").kart_deadline(tournament_mode)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")

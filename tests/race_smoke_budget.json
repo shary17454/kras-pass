@@ -1,0 +1,9 @@
+{
+  "race_seconds": 420,
+  "ordinary_races": 2,
+  "tournament_races": 3,
+  "maximum_finals": 3,
+  "final_seconds": 120,
+  "setup_seconds": 60,
+  "node_grace_seconds": 60
+}

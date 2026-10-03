@@ -18,7 +18,8 @@ jobs:
     name: ${{ matrix.scenario == 'core' && 'godot' || format('network-{0}', matrix.scenario) }}
     runs-on: ubuntu-24.04
     # Colossus runs two ordinary (450s) and two tournament (800s) peer groups.
-    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 45 || 30 }}
+    # Kart: 2 x 960s ordinary + 3 x 1740s tournament/final + 10m setup < 130m.
+    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 130 || 30 }}
     strategy:
       fail-fast: false
       max-parallel: 3
