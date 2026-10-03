@@ -74,3 +74,24 @@ not completed, when this build finished. Follow those exact run IDs; no duplicat
 campaign was launched. Game balance, complete regression/network qualification,
 release-source integration, Railway validation and physical-device QA remain
 separate prerequisites before submission.
+
+## Completed Current-Source Core CI
+
+After the local build, the core job in run 37113428591 completed successfully.
+Artifacts are under `/tmp/kras-current-core-37113428591`.
+Its actual checkout is PR merge commit `ef027d220aa0b575e7ce13caee53079fb2ecabac`;
+the recorded tree `00a8639c38131218df885b7e98a6ba29ba7d2204` exactly matches the
+intended source a217b97's tree. Tracked changes are empty, run/scenario match.
+
+- Full Godot test suite: 21,418 assertions pass, 234.6 seconds.
+- Compile check: 324 scripts.
+- Server tests with six fresh actual Godot world captures: 144 pass, zero fail
+  and zero skipped. The earlier pre-capture run correctly skipped six fixtures.
+- Race regression, three Colossus seeds, Forge/Dreadnought/Sovereign AI checks
+  pass. Three stability cycles cover all 39 games (117 passes).
+- These headless checks do not replace multi-engine network job completion,
+  natural-round balance, touch/layout QA or physical-device measurements.
+
+Qualification documentation is committed locally without pushing it over the
+active PR head: a docs-only push would cancel/restart the ongoing network matrix
+under the current CI concurrency rule. Runtime code has not changed.
