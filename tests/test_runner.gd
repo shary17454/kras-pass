@@ -51,6 +51,7 @@ const SUITES := [
 	"res://tests/suites/test_tide_scoring.gd",
 	"res://tests/suites/test_sweeper_network.gd",
 	"res://tests/suites/test_sweeper_impact.gd",
+	"res://tests/suites/test_dodger_perception.gd",
 	"res://tests/suites/test_arena_respawn_scoring.gd",
 	"res://tests/suites/test_duel_network.gd",
 	"res://tests/suites/test_duo_network.gd",

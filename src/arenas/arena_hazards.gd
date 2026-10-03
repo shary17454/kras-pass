@@ -15,11 +15,13 @@ class Sweeper extends Node3D:
 	var power := 15.0
 	var accel_over_time := 0.06
 	var _area: Area3D
+	var _arm_mesh: MeshInstance3D
 	var _age := 0.0
 
 	func build(color: Color, arm_length: float, arm_height: float) -> void:
 		length = arm_length
 		var arm := MeshFactory.box(Vector3(length, 0.45, 0.7), color, 0.5)
+		_arm_mesh = arm
 		arm.position = Vector3(length * 0.5, arm_height, 0)
 		add_child(arm)
 		var hub := MeshFactory.cylinder(0.6, arm_height * 1.6, color.darkened(0.3))
@@ -36,11 +38,23 @@ class Sweeper extends Node3D:
 		_area.add_child(cs)
 		add_child(_area)
 
-	## The rate the arm is turning *right now*, acceleration included. This is
-	## what a player reads off the screen, so it is also what a bot is allowed
-	## to use when judging whether the arm will reach it in time.
+	## Physics rate; AI must infer motion from successive rendered samples.
 	func current_speed() -> float:
 		return speed * (1.0 + _age * accel_over_time)
+
+	func visible_arm_geometry() -> Dictionary:
+		if not is_inside_tree() or not is_visible_in_tree() or is_queued_for_deletion() \
+			or not is_instance_valid(_arm_mesh) or not _arm_mesh.is_visible_in_tree() \
+			or _arm_mesh.mesh == null:
+			return {}
+		var axis := _arm_mesh.global_transform.basis.x
+		if axis.length_squared() < 0.0001:
+			return {}
+		var bounds := _arm_mesh.mesh.get_aabb()
+		var reach := bounds.size.x * axis.length()
+		axis = axis.normalized()
+		var center := _arm_mesh.global_transform * bounds.get_center()
+		return {"origin": center - axis * reach * 0.5, "axis": axis, "length": reach}
 
 	func tick(delta: float) -> void:
 		_age += delta
