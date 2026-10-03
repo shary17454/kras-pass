@@ -10,16 +10,34 @@ extends RefCounted
 var world_id := ""
 var stage := {}
 var character_id := ""
+var _profile_id := ""
 
 
 func setup(world: Dictionary, stage_data: Dictionary, character: String) -> void:
 	world_id = String(world.get("id", ""))
 	stage = stage_data
 	character_id = character
+	_profile_id = SaveSystem.active_profile_id()
 
 
 func stage_id() -> String:
 	return String(stage.get("id", ""))
+
+
+static func for_rematch(config: MatchConfig, context: Dictionary) -> AdventureSession:
+	if config == null or config.context != MatchConfig.Context.ADVENTURE or config.player_at(0) == null:
+		return null
+	var player := config.player_at(0)
+	if not player.local_profile_id.is_empty() and player.local_profile_id != SaveSystem.active_profile_id():
+		return null
+	var world := Registry.world(String(context.get("world", "")))
+	for candidate in world.get("stages", []):
+		if String(candidate.get("id", "")) == String(context.get("stage", "")) \
+				and String(candidate.get("game", "")) == config.minigame_id:
+			var session := AdventureSession.new()
+			session.setup(world, candidate, player.character_id)
+			return session
+	return null
 
 
 func is_boss() -> bool:
@@ -58,6 +76,7 @@ func build_config() -> MatchConfig:
 	me.slot = 0
 	me.character_id = character_id
 	me.is_human = true
+	me.local_profile_id = _profile_id
 	cfg.players.append(me)
 
 	var roster := _opponent_roster(opponents)
@@ -105,14 +124,33 @@ static func stars_for(place: int, players: int) -> int:
 func award_result(result: MatchResult) -> Dictionary:
 	var reward := {"cleared": false, "stars": 0, "newly_cleared": false, "gems": 0}
 	if result == null or not result.finished_naturally or result.place_of(0) <= 0 \
+			or _profile_id.is_empty() or SaveSystem.active_profile_id() != _profile_id \
 			or result.scores.size() != result.places.size() \
 			or result.place_of(0) > result.places.size() or world_id.is_empty() or stage_id().is_empty() \
 			or result.minigame_id != String(stage.get("game", "")):
 		return reward
 	var receipt := "%s:%s" % [world_id, stage_id()]
-	var rewards: Dictionary = result.get_meta("adventure_rewards", {})
+	if result.reward_id.is_empty():
+		result.reward_id = Crypto.new().generate_random_bytes(16).hex_encode()
+	var receipts := SaveSystem.profile_branch(_profile_id, "adventure_receipts")
+	if receipts.has(result.reward_id):
+		var saved = receipts[result.reward_id]
+		if saved is Dictionary and saved.get("stage") == receipt and saved.get("reward") is Dictionary:
+			var canonical := _canonical_reward(saved["reward"])
+			return canonical if not canonical.is_empty() else reward
+		return reward
+	var rewards = result.get_meta("adventure_rewards", {})
+	if not rewards is Dictionary:
+		return reward
 	if rewards.has(receipt):
-		return rewards[receipt].duplicate(true)
+		var canonical := _canonical_reward(rewards[receipt])
+		if canonical.is_empty():
+			return reward
+		reward = canonical
+		receipts[result.reward_id] = {"stage": receipt, "reward": reward.duplicate(true)}
+		SaveSystem.set_profile_branch(_profile_id, "adventure_receipts", receipts)
+		SaveSystem.flush()
+		return reward
 	var place := result.place_of(0)
 	var definition := Registry.minigame(result.minigame_id)
 	var objective_met := true
@@ -122,6 +160,7 @@ func award_result(result: MatchResult) -> Dictionary:
 			and int(result.detail(0, "boss_defeats", 0)) == rounds
 	var cleared := objective_met and place == 1 and not result.is_draw()
 	var stars := stars_for(2 if place == 1 and result.is_draw() else place, result.places.size()) if objective_met else 0
+	SaveSystem.begin_batch()
 	var newly := Progression.record_stage(world_id, stage_id(), cleared, stars, result.score_of(0))
 	var gems := Balance.inum("tuning", "scoring.gems_per_participation", 1)
 	if cleared:
@@ -131,9 +170,27 @@ func award_result(result: MatchResult) -> Dictionary:
 	Progression.grant_gems(gems)
 	Achievements.evaluate_all()
 	reward = {"cleared": cleared, "stars": stars, "newly_cleared": newly, "gems": gems}
+	# Receipt and progression share the same atomic profile-slot write.
+	receipts[result.reward_id] = {"stage": receipt, "reward": reward.duplicate(true)}
+	SaveSystem.set_profile_branch(_profile_id, "adventure_receipts", receipts)
+	SaveSystem.end_batch()
 	rewards[receipt] = reward.duplicate(true)
 	result.set_meta("adventure_rewards", rewards)
 	return reward
+
+
+static func _canonical_reward(value: Variant) -> Dictionary:
+	if not value is Dictionary or not value.get("cleared") is bool or not value.get("newly_cleared") is bool:
+		return {}
+	for key in ["stars", "gems"]:
+		var number = value.get(key)
+		if typeof(number) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(number)) \
+				or number < 0 or number > 2147483647 or float(number) != floor(float(number)):
+			return {}
+	if value["stars"] > 3:
+		return {}
+	return {"cleared": value["cleared"], "stars": int(value["stars"]),
+		"newly_cleared": value["newly_cleared"], "gems": int(value["gems"])}
 
 
 func on_match_finished(result: MatchResult) -> void:

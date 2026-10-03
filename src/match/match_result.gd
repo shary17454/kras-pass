@@ -7,6 +7,8 @@ extends Resource
 ## and adventure layers can trust the numbers they are handed.
 
 @export var minigame_id := ""
+## Persistence identity only; never used by scoring or seeded gameplay.
+@export var reward_id := ""
 @export var arena_id := ""
 @export var round_index := 0
 @export var scores: Array[int] = []          # index = slot
@@ -87,6 +89,7 @@ static func compute_places(values: Array[int], higher_is_better: bool = true) ->
 
 static func make(minigame_id: String, arena_id: String, scores: Array[int], higher_is_better: bool = true) -> MatchResult:
 	var r := MatchResult.new()
+	r.reward_id = Crypto.new().generate_random_bytes(16).hex_encode()
 	r.minigame_id = minigame_id
 	r.arena_id = arena_id
 	r.scores = scores.duplicate()
@@ -101,6 +104,13 @@ static func make(minigame_id: String, arena_id: String, scores: Array[int], high
 ## rounds cannot lose the match on a technicality.
 static func aggregate(minigame_id: String, round_results: Array[MatchResult], higher_is_better: bool = true) -> MatchResult:
 	var agg := MatchResult.new()
+	var identities: Array[String] = []
+	for result in round_results:
+		if result.reward_id.is_empty():
+			result.reward_id = Crypto.new().generate_random_bytes(16).hex_encode()
+		identities.append(result.reward_id)
+	# Rebuilding the same completed rounds must not mint a new reward event.
+	agg.reward_id = JSON.stringify([minigame_id, identities]).sha256_text().left(32)
 	agg.minigame_id = minigame_id
 	if round_results.is_empty():
 		agg.finished_naturally = false

@@ -237,6 +237,90 @@ func _adventure_integrity(t: TestHarness) -> void:
 	var displayed := session.award_result(won)
 	displayed["gems"] = 999
 	t.equal(session.award_result(won)["gems"], won_reward["gems"], "UI changes cannot mutate the reward receipt")
+	var reloaded := won.duplicate(true) as MatchResult
+	reloaded.remove_meta("adventure_rewards")
+	var restored := JSON.parse_string(JSON.stringify(SaveSystem.profile())) as Dictionary
+	SaveSystem.set_profile(restored)
+	SaveSystem.profile_loaded.emit(restored)
+	var restored_before := restored.duplicate(true)
+	var resumed := AdventureSession.new()
+	resumed.setup(world, stage, "nabta")
+	t.equal(resumed.award_result(reloaded), won_reward, "persisted receipt retains the original displayed reward after restart")
+	t.equal(SaveSystem.profile(), restored_before, "reconstructed result cannot duplicate rewards")
+	var cfg := resumed.build_config()
+	t.equal(cfg.players[0].local_profile_id, profile_id, "adventure config retains reward owner identity")
+	var replay_context := {"world": session.world_id, "stage": session.stage_id()}
+	var rematch := AdventureSession.for_rematch(cfg, replay_context)
+	t.ok(rematch != null, "adventure rematch restores its progression session")
+	if rematch != null:
+		t.equal(rematch.build_config().minigame_id, game, "rematch retains the intended stage game")
+		t.equal(rematch.character_id, cfg.player_at(0).character_id, "rematch retains the chosen character")
+	t.ok(AdventureSession.for_rematch(cfg, {"world": "missing", "stage": session.stage_id()}) == null, "missing world cannot start an untracked adventure rematch")
+	t.ok(AdventureSession.for_rematch(cfg, {"world": session.world_id, "stage": "missing"}) == null, "missing stage cannot start an untracked adventure rematch")
+	var mismatched := cfg.duplicate(true) as MatchConfig
+	mismatched.minigame_id = "wrong-game"
+	t.ok(AdventureSession.for_rematch(mismatched, replay_context) == null, "rematch rejects a stage and game mismatch")
+	t.equal(reloaded.reward_id, won.reward_id, "duplicating a result preserves its persisted identity")
+	var next := MatchResult.make(game, "", [4, 0, 0, 0] as Array[int])
+	t.ok(not next.reward_id.is_empty() and next.reward_id != won.reward_id, "a genuine new match has a different receipt identity")
+	var next_reward := resumed.award_result(next)
+	t.ok(next_reward["cleared"] and not next_reward["newly_cleared"], "intentional rematch can still earn ordinary win rewards")
+	t.equal(next_reward["gems"], Balance.inum("tuning", "scoring.gems_per_participation", 1) + Balance.inum("tuning", "scoring.gems_per_win", 3), "new attempt cannot earn the first-clear bonus twice")
+	var completed_round := MatchResult.make(game, "", [8, 0, 0, 0] as Array[int])
+	var whole := MatchResult.aggregate(game, [completed_round] as Array[MatchResult])
+	var rebuilt := MatchResult.aggregate(game, [completed_round.duplicate(true) as MatchResult] as Array[MatchResult])
+	t.equal(rebuilt.reward_id, whole.reward_id, "reconstructing the same round set retains the completed match identity")
+	var whole_reward := resumed.award_result(whole)
+	var whole_before := SaveSystem.profile().duplicate(true)
+	t.equal(resumed.award_result(rebuilt), whole_reward, "reaggregated rounds cannot mint a second reward event")
+	t.equal(SaveSystem.profile(), whole_before, "reaggregation preserves all progression")
+	var another := MatchResult.aggregate(game, [MatchResult.make(game, "", [8, 0, 0, 0] as Array[int])] as Array[MatchResult])
+	t.ok(another.reward_id != whole.reward_id, "a new match remains distinct even with identical scores")
+	var root := SaveSystem.storage_root
+	var enabled := SaveSystem.enabled
+	SaveSystem.storage_root = root.path_join("adventure-receipt-fixture")
+	SaveSystem.enabled = true
+	DirAccess.make_dir_recursive_absolute(SaveSystem.storage_root)
+	SaveSystem.mark_dirty(SaveSystem.PROFILE)
+	SaveSystem.flush()
+	var resource_path := SaveSystem.storage_root.path_join("outcome.tres")
+	t.equal(ResourceSaver.save(reloaded, resource_path), OK, "result identity can be written as a resource")
+	var disk_profile := SaveSystem.load_slot(SaveSystem.PROFILE)
+	SaveSystem.set_profile(disk_profile)
+	SaveSystem.profile_loaded.emit(disk_profile)
+	var disk_result := ResourceLoader.load(resource_path, "", ResourceLoader.CACHE_MODE_IGNORE) as MatchResult
+	t.ok(disk_result != null, "outcome can be loaded from disk without object metadata caching")
+	if disk_result != null:
+		t.equal(disk_result.reward_id, won.reward_id, "disk roundtrip preserves reward identity")
+		var disk_before := SaveSystem.profile().duplicate(true)
+		t.equal(resumed.award_result(disk_result), won_reward, "disk-loaded receipt returns the original result without paying again")
+		t.equal(SaveSystem.profile(), disk_before, "disk-loaded duplicate leaves progression and gems unchanged")
+	var writes: Array = []
+	var record_write := func(): writes.append(SaveSystem.profile().duplicate(true))
+	SaveSystem.profile_saved.connect(record_write)
+	var stage_two: Dictionary = world["stages"][1]
+	var atomic_session := AdventureSession.new()
+	atomic_session.setup(world, stage_two, "nabta")
+	var atomic_win := MatchResult.make(String(stage_two["game"]), "", [4, 0, 0, 0] as Array[int])
+	var before_gems := Progression.gems()
+	var before_trophies := Progression.trophies()
+	var atomic_reward := atomic_session.award_result(atomic_win)
+	SaveSystem.profile_saved.disconnect(record_write)
+	t.equal(writes.size(), 1, "first-clear trophy, gems, achievements and receipt flush together once")
+	var persisted := SaveSystem.load_slot(SaveSystem.PROFILE)
+	var persisted_player: Dictionary = persisted.get("profiles", {}).get(profile_id, {})
+	t.ok(persisted_player.get("adventure_receipts", {}).has(atomic_win.reward_id), "atomic disk write includes the reward receipt")
+	t.equal(int(persisted_player.get("progress", {}).get("gems", -1)), before_gems + int(atomic_reward["gems"]), "receipt and gem total are in the same persisted document")
+	t.equal(int(persisted_player.get("progress", {}).get("trophies", -1)), before_trophies + 1, "first-clear trophy is in the same persisted document")
+	SaveSystem.storage_root = root
+	SaveSystem.enabled = enabled
+	var other_profile := SaveSystem.create_profile("Another adventure player")
+	SaveSystem.switch_profile(other_profile)
+	var other_before := SaveSystem.profile().duplicate(true)
+	t.ok(AdventureSession.for_rematch(cfg, replay_context) == null, "rematch cannot silently move a saved result to another profile")
+	t.equal(resumed.award_result(MatchResult.make(game, "", [4, 0, 0, 0] as Array[int]))["gems"], 0, "switching profile cannot steal a pending adventure reward")
+	t.equal(SaveSystem.profile(), other_before, "wrong profile reward leaves both profiles unchanged")
+	SaveSystem.switch_profile(profile_id)
 	SaveSystem.set_profile(backup)
 	SaveSystem.profile_loaded.emit(backup)
 

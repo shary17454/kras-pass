@@ -32,7 +32,7 @@ const SETTINGS := "settings"
 const SCHEMA_VERSION := 2
 const DEFAULT_PROFILE := "default"
 ## Branches stored per player rather than per device.
-const PLAYER_BRANCHES := ["progress", "stats", "achievements", "rewards_claimed", "daily_done"]
+const PLAYER_BRANCHES := ["progress", "stats", "achievements", "rewards_claimed", "daily_done", "adventure_receipts"]
 
 var storage_root := DIR
 

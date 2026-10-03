@@ -196,18 +196,16 @@ func _add_actions() -> void:
 
 
 func _rematch() -> void:
-	var fresh := MatchConfig.new()
-	fresh.minigame_id = config.minigame_id
-	fresh.arena_id = config.arena_id
-	fresh.context = config.context
-	fresh.rounds = config.rounds
-	fresh.rules = config.rules.duplicate(true)
-	fresh.allow_powerups = config.allow_powerups
-	fresh.sudden_death = config.sudden_death
-	fresh.subtitle_key = config.subtitle_key
+	var on_finished := Callable()
+	if config.context == MatchConfig.Context.ADVENTURE:
+		var session := AdventureSession.for_rematch(config, adventure)
+		if session == null:
+			SceneRouter.go_to("adventure", {}, false)
+			return
+		on_finished = Callable(session, "on_match_finished")
+	var fresh := config.duplicate(true) as MatchConfig
 	fresh.seed = randi() & 0x7FFFFFFF
-	fresh.players = config.players.duplicate()
-	SceneRouter.start_match(fresh)
+	SceneRouter.start_match(fresh, on_finished)
 
 
 func _player_won() -> bool:
