@@ -242,20 +242,45 @@ func safe_respawn_position(slot: int) -> Vector3:
 	if presentation_only: return spawn_position(slot)
 	var arena := ctx.arena as Arena
 	var preferred := spawn_position(slot)
-	if arena == null or arena.is_inside(preferred, 1.0):
+	if arena == null:
 		return preferred
-	for ring in [0.0, 0.25, 0.5, 0.75]:
-		for step in 32:
-			var angle := TAU * (float(step) / 32.0 + float(slot) / 4.0)
-			var point := arena.global_position + Vector3(cos(angle), 0, sin(angle)) * arena.current_radius * float(ring)
-			point.y = preferred.y
-			if arena.is_inside(point, 1.0):
-				return point
-	# Exhausted ground must not trap a respawning player in an endless fall.
-	_clear_craters()
+	for attempt in 2:
+		if arena.is_inside(preferred, 1.0) and _respawn_space_clear(slot, preferred):
+			return preferred
+		for ring in [0.0, 0.25, 0.5, 0.75]:
+			for step in 32:
+				var angle := TAU * (float(step) / 32.0 + float(slot) / 4.0)
+				var point := arena.global_position + Vector3(cos(angle), 0, sin(angle)) * arena.current_radius * float(ring)
+				point.y = preferred.y
+				if arena.is_inside(point, 1.0) and _respawn_space_clear(slot, point):
+					return point
+		# Recover exhausted ground, then repeat occupancy checks on that ground.
+		if attempt == 0: _clear_craters()
 	var fallback := arena.global_position
 	fallback.y = preferred.y
 	return fallback
+
+
+func _respawn_space_clear(slot: int, point: Vector3) -> bool:
+	var radius := _fighter_radius(ctx.fighter(slot))
+	for i in ctx.fighters.size():
+		var other := ctx.fighter(i)
+		if i == slot or not ctx.is_alive(i) or not is_instance_valid(other) or not other.alive or not other.visible:
+			continue
+		if absf(point.y - other.global_position.y) > 2.0:
+			continue
+		var offset := Vector2(point.x - other.global_position.x, point.z - other.global_position.z)
+		if offset.length() < radius + _fighter_radius(other) + 0.1:
+			return false
+	return true
+
+
+func _fighter_radius(fighter: Node) -> float:
+	if is_instance_valid(fighter):
+		var body := fighter.get_node_or_null("Body") as CollisionShape3D
+		if is_instance_valid(body) and body.shape is CapsuleShape3D:
+			return body.shape.radius
+	return 0.42
 
 
 func cleanup() -> void:

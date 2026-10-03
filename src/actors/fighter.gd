@@ -1016,6 +1016,7 @@ static func resolve_impacts(delta: float) -> void:
 		var tangential := relative - into * closing
 		a._deal_ram(b, into, closing, tangential, t)
 		b._deal_ram(a, -into, closing, -tangential, t)
+	_contacts.clear()
 
 
 ## Clears the shared contact state. Called when a match is built, so nothing

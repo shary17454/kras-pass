@@ -95,6 +95,7 @@ var _neutral_frame := InputFrame.new()
 ## Slots that have already broken the surface this round, so one fall makes one
 ## splash rather than one per frame.
 var _splashed := {}
+var _shrink_ejected := {}
 var _network_tick := 0
 var _network_frame := InputFrame.new()
 var _network_replica = preload("res://src/net/match_replica.gd").new()
@@ -460,6 +461,7 @@ func _begin_play() -> void:
 	_announce_voice("announcer.go")
 	_warn_second = -1
 	_splashed.clear()
+	_shrink_ejected.clear()
 	controller.on_round_start()
 	if _online():
 		var contenders: Array = config.rule("online_contenders", [])
@@ -855,6 +857,7 @@ func _check_water_line() -> void:
 func _check_out_of_bounds() -> void:
 	for f in _fighters:
 		if not is_instance_valid(f) or not f.alive or not ctx.is_alive(f.slot):
+			if is_instance_valid(f): _shrink_ejected.erase(f.slot)
 			continue
 		# The fighter has no arena reference of its own, so the one place that
 		# already measures every body against the rim also tells it how close
@@ -862,12 +865,18 @@ func _check_out_of_bounds() -> void:
 		f.set_edge_margin(arena.edge_distance(f.global_position))
 		f.set_surface_grip(arena.surface_grip(f.global_position))
 		if f.global_position.y < arena.fall_y:
+			_shrink_ejected.erase(f.slot)
 			f.on_fell_out()
 			continue
 		if arena.current_radius < arena.def.radius - 0.01 and not arena.is_inside(f.global_position, -1.2):
-			# The ring shrank out from under them: give a shove outward so the
-			# fall reads as a consequence rather than a teleport.
-			f.apply_impulse(Vector3(f.global_position.x, 0, f.global_position.z).normalized() * 4.0)
+			# One cue per exit, not an acceleration applied every physics frame.
+			if not _shrink_ejected.has(f.slot):
+				_shrink_ejected[f.slot] = true
+				var outward := f.global_position - arena.global_position
+				outward.y = 0.0
+				f.apply_impulse(outward.normalized() * 4.0)
+		else:
+			_shrink_ejected.erase(f.slot)
 
 
 func _note(kind: String, slot: int, value: float = 0.0, other: int = -1) -> void:

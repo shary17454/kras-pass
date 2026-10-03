@@ -56,7 +56,7 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.ctx.fighter(2).alive = false
 	scene.ctx.fighter(3).global_position = Vector3(4, 1, 0)
 	for sample in 32:
-		t.equal(game._pick_target(), valid_target, "slam targets only visible active players on actual ground")
+		t.equal(game._pick_target(), Vector3(valid_target.x, scene.arena.global_position.y, valid_target.z), "slam targets only visible active players on actual ground")
 	fighter.global_position = Vector3(80, 20, 80)
 	t.equal(game._pick_target(), Vector3.INF, "no unreachable slam when every player is falling or waiting")
 	scene.teardown()
