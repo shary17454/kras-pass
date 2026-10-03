@@ -1,0 +1,216 @@
+{
+  "games": [
+    {
+      "attempted_runs": 2,
+      "avg_duration": 54.5416666666649,
+      "avg_score": 223.5,
+      "baseline_seeds": [
+        309001,
+        309614
+      ],
+      "boss_defeated_runs": 2,
+      "boss_outcomes": [
+        {
+          "outcome": "defeated",
+          "seed": 309001
+        },
+        {
+          "outcome": "defeated",
+          "seed": 309614
+        }
+      ],
+      "boss_survived_runs": 0,
+      "boss_unknown_runs": 0,
+      "category": "combat",
+      "character_bias": 0.8,
+      "character_buckets": 5,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            0,
+            1
+          ],
+          "seed": 304921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "expert_slots": [
+            2,
+            3
+          ],
+          "seed": 304921
+        }
+      ],
+      "expert_edge": 0.662721893491124,
+      "flags": [],
+      "id": "boss_forge",
+      "name": "حارس المسبك",
+      "round_window": 75.0,
+      "runs": 2,
+      "sample_mode": "clipped",
+      "seed_offset": 300000,
+      "severity": 0,
+      "slot_bias": 0.25,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "sakhra": 2
+      },
+      "wins_by_slot": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-03T19:42:02",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 305502,
+      "flags": [],
+      "id": "boss_forge",
+      "mutated_ok": true,
+      "mutated_seed": 305501,
+      "name": "حارس المسبك",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 2,
+  "sample_mode": "clipped",
+  "seed_offset": 300000
+}
