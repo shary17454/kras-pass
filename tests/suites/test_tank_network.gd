@@ -2,6 +2,14 @@ extends RefCounted
 
 const Replica = preload("res://src/net/match_replica.gd")
 
+class AmmoSteeringProbe extends "res://src/ai/brains/tank_brain.gd":
+	var destination := Vector3.ZERO
+	var blocked := Vector3(INF, INF, INF)
+	func drive_to(target: Vector3, _reverse_when_stuck: bool = true) -> void:
+		destination = target
+	func _has_line_of_sight(_from: Vector3, to: Vector3) -> bool:
+		return not to.is_equal_approx(blocked)
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tank network presentation")
@@ -13,6 +21,7 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	_test_ammo_perception(t, scene)
 	var peer: Node = load("res://tests/network_peer.gd").new()
 	peer.game = scene
 	var origin: Vector3 = game.world.roads.get_point_position(0)
@@ -155,6 +164,83 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
+	var game = scene.controller
+	var me: Fighter = scene.ctx.fighter(0)
+	var origin := me.global_position
+	var fighter_visibility: Array[bool] = []
+	for fighter in scene.ctx.fighters:
+		fighter_visibility.append(fighter.visible)
+		fighter.hide()
+	me.show()
+	me.global_position = scene.ctx.arena_center() + Vector3.UP
+	var saved: Array[Dictionary] = []
+	for crate in game.crates:
+		saved.append({"position": crate.node.global_position, "pos": crate.pos,
+			"cooldown": crate.cooldown, "visible": crate.node.visible})
+		crate.cooldown = 0.0
+		crate.node.hide()
+	var first: Node3D = game.crates[0].node
+	var second: Node3D = game.crates[1].node
+	first.global_position = me.global_position + Vector3(2, 0, 0)
+	second.global_position = me.global_position + Vector3(4, 0, 0)
+	game.crates[0].pos = first.global_position
+	game.crates[1].pos = second.global_position
+	second.show()
+	t.equal(game.crate_target(0), second.global_position, "hidden ammo cannot displace a visible target")
+	var brain := AmmoSteeringProbe.new()
+	brain.configure(0, scene.ctx, 3, 117)
+	brain.controller = game
+	brain.decide(0.0)
+	t.equal(brain.destination, second.global_position, "unarmed tank collects visible ammo without a visible rival")
+	first.show()
+	brain.blocked = first.global_position
+	brain.decide(0.0)
+	t.equal(brain.destination, second.global_position, "blocked nearest crate cannot mask reachable ammo")
+	brain.blocked = Vector3(INF, INF, INF)
+	game.crates[0].cooldown = 1.0
+	brain.decide(0.0)
+	t.equal(brain.destination, second.global_position, "collected crate cannot attract a bot before respawn")
+	game.crates[0].cooldown = 0.0
+	brain.decide(0.0)
+	t.equal(brain.destination, first.global_position, "visible respawn restores nearest ammo target")
+	game.crates[0].pos = me.global_position + Vector3(99, 0, 0)
+	t.equal(game.crate_target(0), first.global_position, "target uses rendered location rather than stored coordinates")
+	var parent := Node3D.new()
+	game.add_child(parent)
+	first.reparent(parent, true)
+	parent.hide()
+	brain.decide(0.0)
+	t.equal(brain.destination, second.global_position, "hidden crate parent suppresses the ammo cue")
+	first.reparent(game, true)
+	parent.queue_free()
+	game.ammo[0] = 3
+	t.equal(game.crate_target(0), me.global_position, "armed tank does not seek another weapon")
+	brain.destination = Vector3(INF, INF, INF)
+	brain.decide(0.0)
+	t.ok(not brain.destination.is_equal_approx(first.global_position), "armed bot does not chase ammo")
+	game.ammo[0] = 0
+	first.hide()
+	second.hide()
+	t.equal(game.crate_target(0), me.global_position, "no visible ammo returns no movement target")
+	var queued := Node3D.new()
+	game.add_child(queued)
+	queued.global_position = me.global_position + Vector3.RIGHT
+	game.crates.append({"node": queued, "pos": queued.global_position, "cooldown": 0.0})
+	queued.queue_free()
+	t.equal(game.crate_target(0), me.global_position, "queued ammo cannot become a target")
+	game.crates.pop_back()
+	for index in game.crates.size():
+		var crate: Dictionary = game.crates[index]
+		crate.node.global_position = saved[index].position
+		crate.pos = saved[index].pos
+		crate.cooldown = saved[index].cooldown
+		crate.node.visible = saved[index].visible
+	for index in scene.ctx.player_count():
+		scene.ctx.fighter(index).visible = fighter_visibility[index]
+	me.global_position = origin
 
 
 func _has_collision(node: Node) -> bool:

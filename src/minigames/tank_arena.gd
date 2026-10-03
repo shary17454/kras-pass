@@ -260,17 +260,26 @@ func cleanup() -> void:
 		_engine.stop()
 
 
+func weapon_crates(slot: int) -> Array[Node3D]:
+	var available: Array[Node3D] = []
+	if ammo[slot] > 0:
+		return available
+	for crate in crates:
+		var node: Node3D = crate.node
+		if float(crate.cooldown) > 0.0 or not is_instance_valid(node) \
+			or node.is_queued_for_deletion() or not node.is_visible_in_tree():
+			continue
+		available.append(node)
+	return available
+
+
 func crate_target(slot: int) -> Vector3:
 	var origin := ctx.fighter(slot).global_position
 	var target := origin
 	var distance := 30.0
-	if ammo[slot] > 0:
-		return target
-	for crate in crates:
-		if float(crate.cooldown) > 0.0:
-			continue
-		var d := origin.distance_to(crate.pos)
+	for node in weapon_crates(slot):
+		var d := origin.distance_to(node.global_position)
 		if d < distance:
 			distance = d
-			target = crate.pos
+			target = node.global_position
 	return target
