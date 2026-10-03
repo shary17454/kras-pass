@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -84,6 +85,43 @@ class ExportEvidenceTests(unittest.TestCase):
     def test_extra_generated_file_invalidates_export(self):
         (self.out / "unexpected.pck").write_bytes(b"stale")
         self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def fetch(self, expected):
+        tools = self.root / "fake-tools"
+        tools.mkdir()
+        godot = tools / "godot"
+        godot.write_text("#!/bin/sh\necho 4.7.1.stable.fixture\n")
+        scons = tools / "scons"
+        scons.write_text("#!/bin/sh\necho 'SCons: v4.11.1.fixture'\n")
+        godot.chmod(0o755)
+        scons.chmod(0o755)
+        home = self.root / "home"
+        templates = home / "Library/Application Support/Godot/export_templates/4.7.1.stable"
+        templates.mkdir(parents=True)
+        (templates / "ios.zip").write_bytes(b"fixture")
+        original = tools / "original.zip"
+        original.write_bytes(b"verified bytes")
+        destination = tools / "downloaded.zip"
+        destination.write_bytes(b"stale cache")
+        env = dict(os.environ, ROOT=str(self.root), HOME=str(home), GODOT=str(godot),
+                   SCONS=str(scons), GODOT_CPP_PATH=str(tools))
+        helper = Path(__file__).parents[1] / "ci_scripts/prepare_ios_tools.sh"
+        result = subprocess.run(["bash", "-c",
+            'source "$1"; fetch_verified "$2" "$3" "$4"', "fetch-test",
+            str(helper), original.as_uri(), str(destination), expected],
+            env=env, capture_output=True)
+        return result, destination
+
+    def test_verified_download_replaces_bad_cache(self):
+        expected = EVIDENCE.hashlib.sha256(b"verified bytes").hexdigest()
+        result, destination = self.fetch(expected)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(destination.read_bytes(), b"verified bytes")
+
+    def test_wrong_checksum_cannot_promote_download(self):
+        result, destination = self.fetch("0" * 64)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(destination.read_bytes(), b"stale cache")
 
 
 if __name__ == "__main__":
