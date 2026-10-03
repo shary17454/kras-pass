@@ -27,8 +27,11 @@ than duplicating IDs. It schedules 24 baseline, 12 difficulty and two smoke
 matches per game: 1,482 matches for the current 39 definitions. Three workers
 maximum, no cancellation of an existing campaign, independent reports and
 checkout/commit evidence. It verifies completion counts and uploads evidence
-even on failure. It must be available on the default branch before GitHub's
-manual dispatch can be used; it has not been dispatched or qualified here.
+even on failure. The existing Game Quality workflow can call this campaign
+with its `balance_campaign` dispatch input on a development ref, without needing
+to merge the new workflow to main first. This selects the balance campaign
+instead of also starting the full network matrix. Dispatch and completion
+evidence are recorded separately from the local tool checks above.
 
 Remaining qualification: run the full campaign, inspect small-sample warnings
 and character exposure fairness, vary arena/seed/player compositions, and
