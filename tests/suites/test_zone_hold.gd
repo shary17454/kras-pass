@@ -13,6 +13,63 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().physics_frame
 	var arena: Arena = scene.arena
 	var band := arena.def.radius * 0.72
+	var brain = load("res://src/ai/brains/zone_brain.gd").new()
+	brain.configure(0, scene.ctx, PlayerConfig.Difficulty.EXPERT, 86)
+	brain.controller = game
+	brain.accuracy = 1.0
+	brain.input_noise = 0.0
+	var origin := arena.global_position
+	for translation in [Vector3.ZERO, Vector3(60, 0, -40)]:
+		arena.global_position = origin + translation
+		for step in 12:
+			var angle := TAU * step / 12.0
+			var radial := Vector3(cos(angle), 0, sin(angle))
+			var start: Vector3 = arena.global_position + radial * band
+			scene.ctx.fighter(0).global_position = start
+			brain.steer_to(arena.global_position - radial * band)
+			var next: Vector3 = start + Vector3(brain.move.x, 0, brain.move.y) * 5.0
+			t.ok(arena.is_inside(next, 0.5), "opposite-zone steering does not point through the hole")
+			var retreat := arena.retreat_point(start)
+			t.near((retreat - arena.global_position).normalized().dot(radial), 1.0, 0.001, "ring retreat direction is relative to arena origin")
+			var destination: Vector3 = arena.global_position - radial * band
+			for frame in 100:
+				var before: Vector3 = scene.ctx.fighter(0).global_position
+				if before.distance_to(destination) < 0.6:
+					break
+				brain.steer_to(destination)
+				var after: Vector3 = before + Vector3(brain.move.x, 0, brain.move.y) * 0.5
+				var a := Vector2(before.x - arena.global_position.x, before.z - arena.global_position.z)
+				var b := Vector2(after.x - arena.global_position.x, after.z - arena.global_position.z)
+				var nearest := Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b)
+				t.ok(nearest.length() >= arena.current_radius * 0.45 + 0.5, "routing step stays outside central hole")
+				t.ok(maxf(a.length(), b.length()) <= arena.current_radius - 0.5, "routing step stays inside outer edge")
+				scene.ctx.fighter(0).global_position = after
+			t.ok(scene.ctx.fighter(0).global_position.distance_to(destination) < 0.6, "kinematic route reaches opposite zone rather than stalling")
+			scene.ctx.fighter(0).global_position = start
+			brain.bits = InputFrame.Btn.DASH | InputFrame.Btn.ATTACK
+			brain._publish_output(Vector2(-radial.x, -radial.z))
+			t.equal(InputRouter._virtual_pending[0].bits & InputFrame.Btn.DASH, 0, "final unsafe dash is rejected even when falls allow respawn")
+			t.equal(InputRouter._virtual_pending[0].bits & InputFrame.Btn.ATTACK, InputFrame.Btn.ATTACK, "dash guard preserves unrelated attack input")
+			brain._publish_output(Vector2(-radial.z, radial.x))
+			t.equal(InputRouter._virtual_pending[0].bits & InputFrame.Btn.DASH, InputFrame.Btn.DASH, "clear tangent dash remains available")
+			scene.ctx.fighter(0).mods["speed"] = 2.0
+			brain._publish_output(Vector2(-radial.z, radial.x))
+			t.equal(InputRouter._virtual_pending[0].bits & InputFrame.Btn.DASH, 0, "speed boost increases checked dash travel")
+			scene.ctx.fighter(0).mods.erase("speed")
+	arena.global_position = origin
+	scene.ctx.fighter(0).global_position = origin + Vector3(band, 0, 0)
+	brain.move = Vector2(0, 1)
+	brain.input_noise = 2.0
+	for frame in 100:
+		brain.bits = InputFrame.Btn.DASH
+		brain._publish()
+		var output: InputFrame = InputRouter._virtual_pending[0]
+		var direction := Vector3(output.move.x, 0, output.move.y)
+		if direction.length_squared() < 0.05:
+			direction = scene.ctx.fighter(0).facing
+		var landing: Vector3 = scene.ctx.fighter(0).global_position + direction.normalized() * 5.0
+		var clear := arena.annular_path_clear(scene.ctx.fighter(0).global_position, landing, 0.6)
+		t.equal((output.bits & InputFrame.Btn.DASH) != 0, clear, "dash safety uses final noisy published direction")
 	for step in 56:
 		var angle := TAU * step / 56.0
 		for radius in [arena.def.radius * 0.45 + 0.5, band, arena.def.radius - 0.5]:

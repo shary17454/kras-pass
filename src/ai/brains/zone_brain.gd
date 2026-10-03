@@ -2,6 +2,29 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## Zone Hold: get in the circle, and be the only one in it.
 
 
+func steer_to(target: Vector3, urgency: float = 1.0) -> void:
+	var me := self_body()
+	var arena := ctx.arena as Arena
+	if me != null and arena != null:
+		target = arena.annular_waypoint(me.global_position, target)
+	super.steer_to(target, urgency)
+
+
+func _publish_output(movement: Vector2) -> void:
+	var actions := bits
+	var me := self_body()
+	var arena := ctx.arena as Arena
+	if (actions & Btn.DASH) != 0 and me != null and arena != null:
+		var direction := Vector3(movement.x, 0, movement.y)
+		if direction.length_squared() < 0.05:
+			direction = me.facing
+		var travel := 5.0 * maxf(1.0, float(me.mods.get("speed", 1.0)))
+		var landing := me.global_position + direction.normalized() * travel
+		if not arena.annular_path_clear(me.global_position, landing, 0.6):
+			actions &= ~Btn.DASH
+	InputRouter.push_virtual(slot, movement, aim, actions)
+
+
 func decide(_delta: float) -> void:
 	var me := self_body()
 	if me == null or controller == null:
