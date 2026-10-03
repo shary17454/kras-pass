@@ -58,6 +58,42 @@ for (const [name, mutate] of [
     assert.throws(() => summarizeBalance([one, entry('two')], options));
   });
 }
+
+function offsetEntry(id, offset) {
+  const value = pairedEntry(id);
+  value.source.seedOffset = value.report.seed_offset = value.report.games[0].seed_offset = offset;
+  value.report.games[0].baseline_seeds = Array.from({length: 24}, (_, i) => offset + 9001 + i * 613);
+  value.report.mutator_smoke[0].mutated_seed = offset + 5501;
+  value.report.mutator_smoke[0].chaos_seed = offset + 5502;
+  for (const sample of value.report.games[0].difficulty_samples) sample.seed += offset;
+  return value;
+}
+test('independent campaign records offset and still verifies matched pairs', () => {
+  const result = summarizeBalance([offsetEntry('one', 100000), offsetEntry('two', 100000)], {...pairedOptions, seedOffset: 100000});
+  assert.equal(result.seedOffset, 100000);
+  assert.equal(result.difficultyPairingVerified, true);
+  assert.equal(result.releaseReady, false);
+});
+for (const [name, mutate] of [
+  ['source offset', e => { e.source.seedOffset = 0; }],
+  ['report offset', e => { delete e.report.seed_offset; }],
+  ['game offset', e => { e.report.games[0].seed_offset++; }],
+  ['baseline missing', e => { delete e.report.games[0].baseline_seeds; }],
+  ['baseline replayed', e => { e.report.games[0].baseline_seeds[0] = 9001; }],
+  ['mutator replayed', e => { e.report.mutator_smoke[0].mutated_seed = 5501; }],
+  ['chaos missing', e => { delete e.report.mutator_smoke[0].chaos_seed; }],
+  ['both difficulty seeds replayed', e => { e.report.games[0].difficulty_samples[0].seed = e.report.games[0].difficulty_samples[1].seed = 4242; }],
+]) {
+  test(`rejects independent campaign ${name}`, () => {
+    const one = offsetEntry('one', 100000); mutate(one);
+    assert.throws(() => summarizeBalance([one, offsetEntry('two', 100000)], {...pairedOptions, seedOffset: 100000}));
+  });
+}
+for (const seedOffset of [-1, 1.5, 1000000001, NaN, Infinity]) {
+  test(`rejects invalid expected seed offset ${seedOffset}`, () => {
+    assert.throws(() => summarizeBalance([], {...options, seedOffset}));
+  });
+}
 test('rejects duplicate reports even in partial mode', () => {
   assert.throws(() => summarizeBalance([entry('one'), entry('one')], { ...options, partial: true }));
 });

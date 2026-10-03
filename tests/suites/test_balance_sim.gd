@@ -32,6 +32,19 @@ func run(t: TestHarness) -> void:
 			t.equal(first.players[slot].ai_difficulty, PlayerConfig.Difficulty.EXPERT if slot < 2 else PlayerConfig.Difficulty.EASY, "first pair orientation")
 			t.equal(second.players[slot].ai_difficulty, PlayerConfig.Difficulty.EASY if slot < 2 else PlayerConfig.Difficulty.EXPERT, "mirrored pair orientation")
 	t.equal(characters.size(), Registry.characters().size(), "difficulty comparison covers the whole roster")
+	for offset in [0, 100000, 1000000000]:
+		t.ok(sim._set_seed_offset(str(offset)), "valid campaign seed offset is accepted")
+		for pair in 8:
+			var first: MatchConfig = sim._difficulty_configuration(def, pair * 2)
+			var second: MatchConfig = sim._difficulty_configuration(def, pair * 2 + 1)
+			t.equal(first.seed, offset + 4242 + pair * 97, "campaign offset changes the actual comparison seed")
+			t.equal(first.seed, second.seed, "offset campaign retains mirrored seed pairing")
+		for sample in 24:
+			t.equal(sim._baseline_seed(sample), offset + 9001 + sample * 613, "baseline uses the same reproducible campaign offset")
+	for invalid in ["", "abc", "1.5", "-1", "1000000001", "999999999999999999999"]:
+		t.ok(not sim._set_seed_offset(invalid), "malformed or out-of-range seed offset is rejected")
+		t.equal(sim.seed_offset, 1000000000, "rejected offset does not alter campaign identity")
+	sim.seed_offset = 0
 	sim.runs = 25
 	t.equal(sim._difficulty_runs() % 2, 0, "odd baseline counts cannot produce an unmatched difficulty sample")
 	sim.runs = 24
