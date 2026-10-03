@@ -1,0 +1,103 @@
+{
+  "commit": "c97cd88e88e9e957120d49027a33494828cb392e",
+  "run": "37113379841",
+  "complete": true,
+  "gamesCompleted": 39,
+  "gamesExpected": 39,
+  "matchesCompleted": 1638,
+  "difficultyPairingVerified": true,
+  "missing": [],
+  "reviews": [
+    {
+      "game": "boss_colossus",
+      "flags": [
+        "ties 54% of the time"
+      ]
+    },
+    {
+      "game": "drift_floes",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "duel_pit",
+      "flags": [
+        "character advantage"
+      ]
+    },
+    {
+      "game": "duo_clash",
+      "flags": [
+        "ties 42% of the time"
+      ]
+    },
+    {
+      "game": "fawda",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "goal_guard",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "mnatiq",
+      "flags": [
+        "character advantage"
+      ]
+    },
+    {
+      "game": "ring_rumble",
+      "flags": [
+        "character advantage"
+      ]
+    },
+    {
+      "game": "sabaq_sawarikh",
+      "flags": [
+        "character advantage"
+      ]
+    },
+    {
+      "game": "scrap_karts",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "storm_heart",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "sweeper_storm",
+      "flags": [
+        "character advantage",
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "zone_hold",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    }
+  ],
+  "characterWins": {
+    "barq": 116,
+    "fanoos": 100,
+    "ghaim": 103,
+    "mowja": 121,
+    "nabta": 135,
+    "ramla": 129,
+    "sakhra": 133,
+    "turs": 147
+  },
+  "balanceReviewComplete": false,
+  "releaseReady": false
+}
