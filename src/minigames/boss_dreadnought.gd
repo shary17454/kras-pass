@@ -109,8 +109,9 @@ func _track(delta: float) -> void:
 
 func damage_boss(amount: float, by_slot: int) -> void:
 	if presentation_only: return
+	var before := damage_sequence
 	super.damage_boss(amount, by_slot)
-	if by_slot >= 0:
+	if damage_sequence > before and by_slot >= 0:
 		_aim_at = by_slot
 
 

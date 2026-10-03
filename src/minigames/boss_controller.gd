@@ -107,14 +107,19 @@ func in_reach(fighter: Node3D, point: Vector3, extra: float = 0.0) -> bool:
 ## Subclasses call this when a player lands a legitimate hit. Damage is banked
 ## as that player's score, so the results screen ranks contribution.
 func damage_boss(amount: float, by_slot: int) -> void:
-	if presentation_only or boss_defeated or amount <= 0.0:
+	if presentation_only or boss_defeated or not is_finite(amount) or amount <= 0.0:
+		return
+	if ctx == null or by_slot < -1 or by_slot >= ctx.player_count():
+		return
+	var applied := minf(amount, boss_health)
+	if applied <= 0.0:
 		return
 	damage_sequence += 1
-	boss_health = maxf(0.0, boss_health - amount)
+	boss_health = maxf(0.0, boss_health - applied)
 	_hit_flash = 0.12
 	if by_slot >= 0:
-		ctx.add_score(by_slot, int(amount))
-		ctx.bump_detail(by_slot, "damage", int(amount))
+		ctx.add_score(by_slot, int(applied))
+		ctx.bump_detail(by_slot, "damage", int(applied))
 	AudioManager.play_sfx("hit", boss_node.global_position if boss_node != null else Vector3.ZERO)
 	var want := 0
 	for i in phase_thresholds.size():
