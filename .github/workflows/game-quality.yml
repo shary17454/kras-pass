@@ -119,6 +119,8 @@ jobs:
           TMPDIR: ${{ runner.temp }}
           KRAS_STABILITY_CYCLES: '3'
         run: |
+          python3 -m unittest discover -s tests -p test_ios_export_evidence.py -v
+          bash -n ci_scripts/prepare_ios_tools.sh ci_scripts/export_current_ios.sh tools/export_ios.sh
           sh tests/check_party_wrapper.sh
           sh tools/check_party.sh
       - name: Validate server schema against actual Godot capture
