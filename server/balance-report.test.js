@@ -124,10 +124,16 @@ function bossEntry() {
   game.boss_outcomes = game.baseline_seeds.map(seed => ({ seed, outcome: 'defeated' }));
   game.boss_defeated_runs = 24;
   game.boss_survived_runs = game.boss_unknown_runs = 0;
+  game.difficulty_samples.forEach(sample => { sample.boss_outcome = 'survived'; });
+  value.report.mutator_smoke[0].mutated_boss_outcome = 'survived';
+  value.report.mutator_smoke[0].chaos_boss_outcome = 'defeated';
   return value;
 }
 test('boss completion requires explicit seeded objective evidence', () => {
-  assert.equal(summarizeBalance([bossEntry(), pairedEntry('two')], bossOptions).complete, true);
+  const summary = summarizeBalance([bossEntry(), pairedEntry('two')], bossOptions);
+  assert.equal(summary.complete, true);
+  assert.deepEqual(summary.bossComparisons, [{ game: 'one', difficulty: { defeated: 0, survived: 16 },
+    stress: { mutated: 'survived', chaos: 'defeated' } }]);
 });
 for (const [name, mutate] of [
   ['missing outcomes', g => { delete g.boss_outcomes; }],
@@ -167,12 +173,28 @@ test('boss outcomes must use the configured independent campaign offset', () => 
     boss_outcomes: one.report.games[0].boss_outcomes,
     boss_defeated_runs: 24, boss_survived_runs: 0, boss_unknown_runs: 0,
   });
+  independent.report.games[0].difficulty_samples.forEach(sample => { sample.boss_outcome = 'survived'; });
+  independent.report.mutator_smoke[0].mutated_boss_outcome = 'survived';
+  independent.report.mutator_smoke[0].chaos_boss_outcome = 'survived';
   assert.throws(() => summarizeBalance([independent, offsetEntry('two', 100000)],
     { ...bossOptions, seedOffset: 100000 }), /boss/i);
   independent.report.games[0].boss_outcomes.forEach(sample => { sample.seed += 100000; });
   assert.equal(summarizeBalance([independent, offsetEntry('two', 100000)],
     { ...bossOptions, seedOffset: 100000 }).complete, true);
 });
+for (const [name, mutate] of [
+  ['missing difficulty outcome', e => { delete e.report.games[0].difficulty_samples[0].boss_outcome; }],
+  ['unknown difficulty outcome', e => { e.report.games[0].difficulty_samples[0].boss_outcome = 'unknown'; }],
+  ['null difficulty sample', e => { e.report.games[0].difficulty_samples[0] = null; }],
+  ['missing mutated outcome', e => { delete e.report.mutator_smoke[0].mutated_boss_outcome; }],
+  ['unknown chaos outcome', e => { e.report.mutator_smoke[0].chaos_boss_outcome = 'unknown'; }],
+  ['invalid mutated outcome', e => { e.report.mutator_smoke[0].mutated_boss_outcome = true; }],
+]) {
+  test(`rejects boss comparison ${name}`, () => {
+    const one = bossEntry(); mutate(one);
+    assert.throws(() => summarizeBalance([one, pairedEntry('two')], bossOptions));
+  });
+}
 test('paired campaign verifies all roster members and adjusted match counts', () => {
   const result = summarizeBalance([pairedEntry('one'), pairedEntry('two')], pairedOptions);
   assert.equal(result.matchesCompleted, 84);

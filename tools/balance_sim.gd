@@ -108,6 +108,9 @@ func _parse_args() -> bool:
 func _set_seed_offset(value: String) -> bool:
 	if not value.is_valid_int():
 		return false
+	# Bound the significant digits before conversion can overflow int64.
+	if value.trim_prefix("+").trim_prefix("-").lstrip("0").length() > 10:
+		return false
 	var parsed := int(value)
 	if parsed < 0 or parsed > 1000000000:
 		return false
@@ -161,7 +164,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		cfg.rounds = 1
 		var result := await _play(cfg)
 		if def.is_boss:
-			boss_outcomes.append({"seed": cfg.seed, "outcome": _boss_outcome(result)})
+			boss_outcomes.append({"seed": cfg.seed, "outcome": _boss_outcome(result, def.id)})
 		if result == null:
 			continue
 		completed += 1
@@ -265,8 +268,7 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 		var cfg := _difficulty_configuration(def, i)
 		_difficulty_attempted += 1
 		var result := await _play(cfg)
-		_difficulty_samples.append({"seed": cfg.seed, "character": cfg.players[0].character_id,
-			"expert_slots": [0, 1] if expert_first else [2, 3], "completed": result != null})
+		_difficulty_samples.append(_difficulty_sample(cfg, result))
 		if result == null:
 			continue
 		_difficulty_completed += 1
@@ -289,8 +291,18 @@ func _difficulty_edge(def: MiniGameDef) -> float:
 	return expert_total / total
 
 
-func _boss_outcome(result: MatchResult) -> String:
+func _difficulty_sample(cfg: MatchConfig, result: MatchResult) -> Dictionary:
+	var sample := {"seed": cfg.seed, "character": cfg.players[0].character_id,
+		"expert_slots": [0, 1] if cfg.players[0].ai_difficulty == PlayerConfig.Difficulty.EXPERT else [2, 3],
+		"completed": result != null}
+	if cfg.definition().is_boss:
+		sample["boss_outcome"] = _boss_outcome(result, cfg.minigame_id)
+	return sample
+
+
+func _boss_outcome(result: MatchResult, expected_game: String = "") -> String:
 	if result == null or not result.finished_naturally or result.scores.is_empty() \
+			or (expected_game != "" and result.minigame_id != expected_game) \
 			or result.details.size() != result.scores.size() or result.places.size() != result.scores.size():
 		return "unknown"
 	var rounds := maxi(1, result.rounds.size())
@@ -311,7 +323,7 @@ func _boss_outcome(result: MatchResult) -> String:
 		for round in result.rounds:
 			if not round is MatchResult or not round.rounds.is_empty():
 				return "unknown"
-			var outcome := _boss_outcome(round)
+			var outcome := _boss_outcome(round, result.minigame_id)
 			if outcome == "unknown":
 				return "unknown"
 			proved += 1 if outcome == "defeated" else 0
@@ -378,7 +390,7 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 	if errors_after_chaos > errors_after_mutated:
 		flags.append("%d error(s) logged under chaos mode" % (errors_after_chaos - errors_after_mutated))
 
-	return {
+	var row := {
 		"id": def.id,
 		"name": def.display_name(),
 		"mutated_seed": mutated_cfg.seed,
@@ -388,6 +400,13 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 		"flags": flags,
 		"severity": 0 if flags.is_empty() else 2,
 	}
+	if def.is_boss:
+		row["mutated_boss_outcome"] = _boss_outcome(mutated_result, def.id)
+		row["chaos_boss_outcome"] = _boss_outcome(chaos_result, def.id)
+		if row["mutated_boss_outcome"] == "unknown" or row["chaos_boss_outcome"] == "unknown":
+			flags.append("boss smoke outcome evidence incomplete")
+			row["severity"] = 2
+	return row
 
 
 func _play(cfg: MatchConfig) -> MatchResult:
@@ -498,6 +517,10 @@ func _flags(def: MiniGameDef, row: Dictionary) -> Array:
 			flags.append("boss outcome evidence incomplete")
 		elif int(row.get("boss_defeated_runs", 0)) == 0 and int(row["runs"]) > 0:
 			flags.append("boss never defeated in baseline sample")
+		var difficulty_samples: Array = row.get("difficulty_samples", [])
+		if difficulty_samples.size() != int(row.get("difficulty_attempted", 0)) or difficulty_samples.is_empty() \
+				or difficulty_samples.any(func(sample): return not sample is Dictionary or sample.get("boss_outcome", "unknown") not in ["defeated", "survived"]):
+			flags.append("boss difficulty outcome evidence incomplete")
 	if float(row["tie_rate"]) > 0.4:
 		flags.append("ties %.0f%% of the time" % (float(row["tie_rate"]) * 100.0))
 	# Thresholds come from the fair-game null for this sample size, never from a
@@ -528,7 +551,8 @@ func _severity(flags: Array) -> int:
 		return 0
 	for f in flags:
 		var s := String(f)
-		if s.begins_with("did not finish") or s.begins_with("ends almost") or s.contains("scored nothing") or s == "boss outcome evidence incomplete":
+		if s.begins_with("did not finish") or s.begins_with("ends almost") or s.contains("scored nothing") \
+				or s in ["boss outcome evidence incomplete", "boss difficulty outcome evidence incomplete", "boss smoke outcome evidence incomplete"]:
 			return 2
 	return 1
 
