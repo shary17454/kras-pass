@@ -1,7 +1,9 @@
 # Colossus Network Adapter Checkpoint
 
 This is an adapter checkpoint, not online qualification or release readiness.
-The development room allowlist is unchanged. Production networking is not enabled.
+At the adapter checkpoint the development room allowlist was unchanged. The
+subsequent development-room integration is tracked in `colossus-room-contracts.md`;
+its real-client qualification is still pending. Production networking is not enabled.
 
 ## Implemented
 

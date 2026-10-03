@@ -31,6 +31,47 @@ const sovereignWorld = () => ({boss: {health: 1440, phase: 0, defeated: false,
   warnings: [{id: '1', position: [3, 0, 2], radius: 4.2, left: .8, total: 1.3}],
   orbs: [{id: '2', position: [5, 3.2, 0], returned: false}], shielded: false, recovery: 2, volleys: 1, returns: 0});
 
+const colossusWorld = () => ({boss: {health: 745, phase: 0, defeated: false,
+  position: [0, 0, 0], rotation: [0, 0, 0], damage: 1, strike: 1,
+  strike_position: [6, 0, 0], strike_radius: 4},
+  warnings: [{id: '1', position: [-4, 0, 2], radius: 3, left: 1.2, total: 1.2}],
+  craters: [{id: '2', position: [6, 0, 0], radius: 3}],
+  arm_rotation: [0, 0, 0], fist_position: [6, 1, 0], fist_scale: [1, 1, 1], exposed: 2.4});
+
+test('colossus room validates host authority and restores carved world and result on resume', () => {
+  const {rooms, host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const config = {game: 'boss_colossus', arena: 'vortex_ring', rounds: 2, bots: true, difficulty: 1};
+  assert.throws(() => host.send({op: 'configure', config: {...config, arena: 'crate_yard'}}), /invalid_config/);
+  host.send({op: 'configure', config});
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true}); host.send({op: 'start'});
+  const epoch = host.last('start').epoch;
+  host.send({op: 'loaded', epoch}); guest.send({op: 'loaded', epoch});
+  const data = {...snapshot(), world: colossusWorld()};
+  assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
+  host.send({op: 'snapshot', epoch, tick: 1, data});
+  for (const world of [undefined, {}, {...data.world, extra: 1}, {...data.world, exposed: 2.41},
+    {...data.world, boss: {...data.world.boss, phase: 2}}, {...data.world, fist_scale: [0, 1, 1]},
+    {...data.world, craters: [{...data.world.craters[0], id: '1'}]}]) {
+    assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
+    assert.equal(guest.last('snapshot').tick, 1);
+  }
+  const token = guest.last('welcome').token, id = guest.c.player.id;
+  rooms.disconnect(guest.c);
+  const resumed = client(); resumed.send({op: 'resume', token});
+  assert.equal(resumed.last('welcome').id, id);
+  assert.equal(resumed.last('start').config.game, 'boss_colossus');
+  assert.deepEqual(resumed.last('snapshot').data.world, data.world);
+  assert.throws(() => resumed.send({op: 'result', epoch, scores: [55, 0, 0, 0]}), /host_only/);
+  host.send({op: 'result', epoch, scores: [0, 55, 0, 0]});
+  assert.deepEqual(resumed.last('result').scores, [0, 55, 0, 0]);
+  const hostToken = host.last('welcome').token, hostId = host.c.player.id;
+  rooms.disconnect(host.c);
+  const restoredHost = client(); restoredHost.send({op: 'resume', token: hostToken});
+  assert.equal(restoredHost.last('welcome').id, hostId);
+  assert.deepEqual(restoredHost.last('result').scores, [0, 55, 0, 0]);
+});
+
 test('sovereign room validates host world and restores identity, world and result on resume', () => {
   const {rooms, host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
@@ -127,7 +168,7 @@ test('forge room validates host state and restores identity, world and result on
   assert.deepEqual(resumed.last('result').scores, [0, 120, 0, 0]);
 });
 
-for (const [game, arena, world] of [['boss_forge', 'crate_yard', forgeWorld], ['boss_dreadnought', 'iron_flats', dreadWorld], ['boss_sovereign', 'vortex_ring', sovereignWorld]]) {
+for (const [game, arena, world] of [['boss_forge', 'crate_yard', forgeWorld], ['boss_dreadnought', 'iron_flats', dreadWorld], ['boss_sovereign', 'vortex_ring', sovereignWorld], ['boss_colossus', 'vortex_ring', colossusWorld]]) {
 test(`${game} tournament resolves final without changing ordinary points or cups`, () => {
   const {host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});

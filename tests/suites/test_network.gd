@@ -132,7 +132,16 @@ func run(t: TestHarness) -> void:
 	Net.match_data["tournament"] = {"contenders": [0, 2]}
 	t.equal(Net.make_match_config().rule("online_contenders", []), [0, 2], "sovereign final preserves contender roster")
 	Net.match_data.erase("tournament")
-	for boss_id in ["boss_forge", "boss_dreadnought", "boss_sovereign"]:
+	Net.match_data.config.game = "boss_colossus"
+	Net.match_data.config.arena = "vortex_ring"
+	t.equal(Net.make_match_config().minigame_id, "boss_colossus", "colossus uses shared match configuration")
+	t.equal(Net.ONLINE_ARENAS.boss_colossus, ["vortex_ring"], "colossus retains authored arena")
+	t.equal(Net.make_match_config().duration_override, 0.0, "ordinary colossus retains authored duration")
+	Net.match_data["tournament"] = {"contenders": [0, 2]}
+	t.equal(Net.make_match_config().rule("online_contenders", []), [0, 2], "colossus final preserves contender roster")
+	Net.match_data.erase("tournament")
+	t.equal(Net.ONLINE_GAMES.size(), 39, "all catalogue games have development room adapters")
+	for boss_id in ["boss_forge", "boss_dreadnought", "boss_sovereign", "boss_colossus"]:
 		Net.match_data.config.game = boss_id
 		var smoke_config := Net.make_match_config()
 		smoke_config.duration_override = 15.0
