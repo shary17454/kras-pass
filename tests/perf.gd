@@ -12,6 +12,7 @@ const SAMPLE_FRAMES := 400
 const WARMUP_SECONDS := 1.0
 const MIN_LIVE_SECONDS := 10.0
 const MAX_SECONDS := 25.0
+const ResourcePreparation = preload("res://src/match/match_resource_preparation.gd")
 
 var _scene: Node
 var _samples: Array[float] = []
@@ -26,6 +27,9 @@ var _live_seconds := 0.0
 var _initial_positions: Array[Vector3] = []
 var _max_displacements: Array[float] = []
 var _failed := false
+var _preparing := false
+var _preparation_msec := 0
+var _preparation_frames := 0
 
 func _ready() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -53,20 +57,40 @@ func _ready() -> void:
 	_start()
 
 func _start() -> void:
-	var build_started := Time.get_ticks_msec()
-	var cfg := MatchConfig.build(_games[_index], ["nabta","sakhra","barq","turs"], 0, 3, 11)
-	cfg.duration_override = 60.0
-	_scene = load("res://src/match/match_scene.gd").new()
-	add_child(_scene)
-	_scene.setup({"config": cfg, "on_finished": func(_r): pass})
-	_build_msec = Time.get_ticks_msec() - build_started
-	_started_msec = Time.get_ticks_msec()
+	_build_msec = 0
 	_frames = 0
 	_elapsed = 0.0
 	_live_seconds = 0.0
 	_initial_positions.clear()
 	_max_displacements.clear()
 	_samples.clear()
+	var cfg := MatchConfig.build(_games[_index], ["nabta","sakhra","barq","turs"], 0, 3, 11)
+	cfg.duration_override = 60.0
+	var preparation: Node
+	_preparation_msec = 0
+	_preparation_frames = 0
+	if "--prepare-resources" in OS.get_cmdline_user_args():
+		var preparation_started := Time.get_ticks_msec()
+		preparation = ResourcePreparation.new()
+		add_child(preparation)
+		_preparing = true
+		var loaded: bool = await preparation.prepare(ResourcePreparation.paths_for(cfg))
+		_preparing = false
+		_preparation_msec = Time.get_ticks_msec() - preparation_started
+		if not loaded:
+			push_error("Performance probe resource preparation failed: " + preparation.error_path)
+			preparation.release()
+			_failed = true
+			await _finish(false)
+			return
+	var build_started := Time.get_ticks_msec()
+	_scene = load("res://src/match/match_scene.gd").new()
+	add_child(_scene)
+	_scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	_build_msec = Time.get_ticks_msec() - build_started
+	if preparation != null:
+		preparation.release()
+	_started_msec = Time.get_ticks_msec()
 
 func _physics_process(delta: float) -> void:
 	if _scene == null or _scene.ctx == null or _scene._paused \
@@ -89,6 +113,9 @@ func _should_finish(round_over: bool) -> bool:
 	return _sample_budget_met() or round_over or _elapsed >= MAX_SECONDS
 
 func _process(delta: float) -> void:
+	if _preparing:
+		_preparation_frames += 1
+		return
 	if _scene == null:
 		return
 	_elapsed = float(Time.get_ticks_msec() - _started_msec) / 1000.0
@@ -104,6 +131,7 @@ func _process(delta: float) -> void:
 func _finish(round_over: bool) -> void:
 	set_process(false)
 	print("PERF_BUILD=" + JSON.stringify({"game": _games[_index], "milliseconds": _build_msec,
+		"preparation_milliseconds": _preparation_msec, "preparation_frames": _preparation_frames,
 		"wall_seconds": _elapsed, "live_frames": _frames, "samples": _samples.size(),
 		"simulation_seconds": _live_seconds, "full_sample_budget": _sample_budget_met(),
 		"max_displacement": _max_displacements,
@@ -128,7 +156,8 @@ func _finish(round_over: bool) -> void:
 	if "--screenshots" in OS.get_cmdline_user_args():
 		await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png("/tmp/kras-perf-%s.png" % _games[_index])
-	_scene.teardown(); _scene.queue_free(); _scene = null
+	if _scene != null:
+		_scene.teardown(); _scene.queue_free(); _scene = null
 	_index += 1
 	if _index >= _games.size():
 		AudioManager.shutdown()

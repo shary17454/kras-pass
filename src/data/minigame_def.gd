@@ -42,6 +42,7 @@ const CATEGORY_NAMES := {
 @export var category: Category = Category.PUSH_OUT
 @export var scoring: Scoring = Scoring.POINTS
 @export var controller_script := ""
+@export var preload_resources: PackedStringArray = []
 @export var arena_ids: PackedStringArray = []
 @export var min_players := 2
 @export var max_players := 4
@@ -77,6 +78,7 @@ static func from_dict(d: Dictionary) -> MiniGameDef:
 	m.category = _category_from(String(d.get("category", "push_out")))
 	m.scoring = _scoring_from(String(d.get("scoring", "points")))
 	m.controller_script = String(d.get("script", "res://src/minigames/%s.gd" % m.id))
+	m.preload_resources = PackedStringArray(d.get("preload_resources", []))
 	m.arena_ids = PackedStringArray(d.get("arenas", []))
 	m.min_players = int(d.get("min_players", 2))
 	m.max_players = int(d.get("max_players", 4))

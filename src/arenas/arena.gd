@@ -91,17 +91,23 @@ func build(arena_def: ArenaDef) -> void:
 	if spawn_points.is_empty():
 		spawn_points = def.spawns_for(4)
 	if def.shape == "circuit":
-		var scenery_path := "res://src/arenas/racing_biome.gd"
-		if def.id == "alula_rain":
-			scenery_path = "res://src/arenas/alula_world.gd"
-		elif def.id in ["sinbad_coast", "pharaoh_valley"]:
-			scenery_path = "res://src/arenas/voyage_world.gd"
+		var scenery_path := scenery_script(def)
 		var scenery: Node3D = load(scenery_path).new()
 		add_child(scenery)
 		scenery.build(self)
 		var structures: Node3D = load("res://src/arenas/race_structures.gd").new()
 		add_child(structures)
 		structures.build(self)
+
+
+static func scenery_script(arena_def: ArenaDef) -> String:
+	if arena_def == null or arena_def.shape != "circuit":
+		return ""
+	if arena_def.id == "alula_rain":
+		return "res://src/arenas/alula_world.gd"
+	if arena_def.id in ["sinbad_coast", "pharaoh_valley"]:
+		return "res://src/arenas/voyage_world.gd"
+	return "res://src/arenas/racing_biome.gd"
 
 
 # --- queries used by gameplay and AI ---------------------------------------
