@@ -156,6 +156,37 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(game._ring_color, game.CONTESTED_COLOR, "guest renders contested ownership")
 	t.equal(game._accum, accum, "guest rendering never advances capture progress")
 	t.equal(scene.ctx.scores[0], 1, "guest rendering never awards score")
+	var driver = load("res://tests/zone_peer_driver.gd")
+	var me: Fighter = scene.ctx.fighter(0)
+	var rival: Fighter = scene.ctx.fighter(1)
+	me.global_position = capture_position
+	me.facing = Vector3.BACK
+	rival.global_position = capture_position + Vector3.BACK * 1.5
+	var control: InputFrame = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 0)
+	t.equal(control.bits, InputFrame.Btn.ATTACK, "peer presses attack toward nearby contestant")
+	t.ok(control.move.y > 0.0, "peer approaches contestant through movement input")
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 300)
+	t.equal(control.bits, 0, "peer releases attack between presses")
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 700)
+	t.equal(control.bits, InputFrame.Btn.ATTACK, "peer creates next attack edge")
+	me.facing = Vector3.FORWARD
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 0)
+	t.equal(control.bits, 0, "peer turns before attempting a backward hit")
+	me.facing = Vector3.BACK
+	rival.hide()
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 0)
+	t.equal(control.bits, 0, "peer does not target hidden contestant")
+	rival.show()
+	rival.alive = false
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 0)
+	t.equal(control.bits, 0, "peer does not attack eliminated contestant")
+	rival.alive = true
+	rival.global_position = capture_position + Vector3.BACK * 3.0
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position, 3.4, 0)
+	t.equal(control.bits, 0, "peer closes distance before attack")
+	rival.global_position = capture_position + Vector3.BACK * 1.5
+	control = driver.input(arena, scene.ctx.fighters, 0, capture_position - Vector3.BACK * 4.0, 3.4, 0)
+	t.equal(control.bits, 0, "peer routes into zone before contest combat")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
