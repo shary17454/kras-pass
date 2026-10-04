@@ -46,6 +46,7 @@ var observed_scrap_ram := false
 var observed_scrap_damage := false
 var observed_fawda_events := {}
 var fawda_pickup_probe := {}
+var fawda_round_evidence: RefCounted
 var observed_kart_boost := false
 var observed_kart_rescue := false
 var fawda_arenas_seen := {}
@@ -389,6 +390,7 @@ func _start(cfg: MatchConfig) -> void:
 		colossus_defeat_by_round.clear()
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
+		fawda_round_evidence = preload("res://tests/fawda_round_evidence.gd").new()
 		observed_fawda_events.clear()
 		fawda_pickup_probe = {"samples": 0, "slow_loose_observations": 0,
 			"in_range_pairs": 0, "minimum_distance": -1.0, "closest": {}}
@@ -464,6 +466,15 @@ func _physics_process(_delta: float) -> void:
 			observed_kart_rescue = observed_kart_rescue or float(progress) >= 0.0
 	if game_id == "fawda":
 		var world: Dictionary = _fawda_world()
+		var alive: Array = []
+		for fighter in game.ctx.fighters:
+			if game.ctx.is_alive(fighter.slot):
+				alive.append(fighter.slot)
+		if fawda_round_evidence.observe(game._round_index, game.phase, game._round_elapsed, alive, world):
+			print("NETWORK_FAWDA_PHASE=" + JSON.stringify({"host": host, "seed": game.config.seed,
+				"arena": game.config.arena_id, "round": game._round_index,
+				"contenders": game.config.rule("online_contenders", []),
+				"evidence": fawda_round_evidence.summary(game._round_index)}))
 		_observe_fawda_pickup(world)
 		for kind in world.get("events", {}):
 			if int(world.events[kind].sequence) > 0:
@@ -1214,7 +1225,8 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "fawda":
 		print("NETWORK_FAWDA_PICKUP=" + JSON.stringify({"host": host,
 			"arena": game.config.arena_id, "seed": game.config.seed,
-			"observed_events": observed_fawda_events, "probe": fawda_pickup_probe}))
+			"observed_events": observed_fawda_events, "probe": fawda_pickup_probe,
+			"rounds": fawda_round_evidence.rounds}))
 		for kind in ["drop", "pickup", "throw", "explode"]:
 			if not observed_fawda_events.has(kind):
 				_fail("fawda real event missing: " + kind)
