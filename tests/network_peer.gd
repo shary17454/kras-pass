@@ -85,6 +85,8 @@ var observed_blast_explosion := false
 var observed_color_drop := false
 var observed_draw_signal := false
 var observed_draw_response := false
+var draw_tap_sequence := -1
+var observed_remote_input_slots := {}
 var observed_echo_cue := false
 var observed_echo_score := false
 var observed_crate_break := false
@@ -311,6 +313,8 @@ func _start(cfg: MatchConfig) -> void:
 		_fail("duplicate match")
 		return
 	game_id = cfg.minigame_id
+	draw_tap_sequence = -1
+	observed_remote_input_slots.clear()
 	if game_id == "duo_clash":
 		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
@@ -432,6 +436,9 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if host:
+		for remote_slot in Net._inputs:
+			observed_remote_input_slots[remote_slot] = true
 	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 		var world: Dictionary = load("res://src/net/kart_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
 		if game_id == "sabaq_sawarikh":
@@ -858,7 +865,8 @@ func _physics_process(_delta: float) -> void:
 			movement = _echo_movement(slot)
 		if game_id == "quick_draw":
 			movement = Vector2.ZERO
-			if game.controller.is_signalled() and not game.controller.is_locked(slot) and not game.controller._order.has(slot):
+			if game.controller.is_signalled() and not game.controller.is_locked(slot) and not game.controller._order.has(slot) and draw_tap_sequence != game.controller.signal_sequence:
+				draw_tap_sequence = game.controller.signal_sequence
 				buttons = InputFrame.Btn.ATTACK
 		if game_id == "color_stand":
 			var fighter: Fighter = game.ctx.fighters[slot]
@@ -1551,7 +1559,7 @@ func _finished(result: MatchResult) -> void:
 			if not game.controller._drone.global_position.is_equal_approx(position) or actual_target != int(world.target):
 				_fail("drone or warning presentation diverged")
 				return
-	if host and Net._inputs.size() < count - 1:
+	if host and observed_remote_input_slots.size() < count - 1:
 		_fail("missing remote inputs")
 		return
 	if game_id == "tank_arena" and (not observed_turret_shot or not observed_tank_armor or not observed_tank_inventory):
