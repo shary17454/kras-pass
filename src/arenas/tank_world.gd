@@ -34,13 +34,7 @@ func build(a: Arena) -> void:
 	material.shader = load("res://src/arenas/battlefield_terrain.gdshader")
 	for map in ["diff", "nor_gl", "rough"]:
 		material.set_shader_parameter("road_" + map, load(ROOT + "gravel_floor/gravel_floor_" + map + "_2k.jpg"))
-	var terrain_body := StaticBody3D.new()
-	terrain_body.name = "TerrainCollision"
-	var terrain_shape := CollisionShape3D.new()
-	terrain_shape.shape = terrain.mesh.create_trimesh_shape()
-	terrain_body.add_child(terrain_shape)
-	add_child(terrain_body)
-	terrain_body.set_meta("observation_mesh", terrain_body.get_path_to(terrain))
+	# _terrain() already owns the collision and its AI observation mesh.
 	for x in 4:
 		for z in 4:
 			_cover(x * 4 + z, _bend(Vector3(-27 + x * 18, 0.05, -27 + z * 18)))
