@@ -191,13 +191,17 @@ func _pickup_arbitration(t: TestHarness, scene: Node) -> void:
 			scene.ctx.fighter(slot).global_position = bomb.node.global_position + Vector3(30 + slot, 0, 0)
 		first.global_position = bomb.node.global_position + Vector3(1.5, 0, 0)
 		closer.global_position = bomb.node.global_position + Vector3(0.1, 0, 0)
-		closer.alive = condition != "dead"
+		if condition == "dead":
+			scene.ctx.eliminate(closer.slot)
 		closer.carrying = 1 if condition == "carrying" else 0
 		if condition == "fast":
 			bomb.vel = Vector3(2.1, 0, 0)
 		game._try_pickup(bomb, bomb.node)
 		t.equal(int(bomb.held), -1 if condition == "fast" else 0, "ineligible nearest player or fast bomb preserves pickup rules: " + condition)
-		closer.alive = true
+		if condition == "dead":
+			scene.ctx.revive(closer.slot)
+			closer.respawn_at(closer.global_position)
+			closer.set_physics_process(false)
 		game._clear_bombs()
 	var counts := [0, 0, 0, 0]
 	scene.ctx.rng.seed = 88419
