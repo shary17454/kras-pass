@@ -12,7 +12,7 @@ godot --headless --fixed-fps 60 --path . tests/test_runner.tscn
 A third tool sits between the two: the assertion suite proves a mini-game
 *can* be completed, but says nothing about whether it plays well. The balance
 simulator (`godot --headless --fixed-fps 60 --path . tools/balance_sim.tscn --
---runs=10`) plays every game many times with bots and reports tie rate,
+--runs=10 --test-data-dir=/tmp/kras-balance-save`) plays every game many times with bots and reports tie rate,
 spawn-slot bias, character bias, round length and Expert-vs-Easy separation to
 `build/balance/report.html`. It has already found and driven the fix for three
 real defects — recorded here because they are the kind of thing worth knowing

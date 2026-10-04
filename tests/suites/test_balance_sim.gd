@@ -4,6 +4,14 @@ extends RefCounted
 func run(t: TestHarness) -> void:
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
+	for unsafe in ["", ".", "relative-save", "user://", "user://simulation", "res://build/save", "/", "C:/"]:
+		t.ok(not sim._storage_is_isolated(unsafe), "simulator rejects a non-isolated save directory")
+	var player_directory := OS.get_user_data_dir()
+	for unsafe in [player_directory, player_directory + "/", player_directory.path_join("simulation"), player_directory.path_join("../" + player_directory.get_file())]:
+		t.ok(not sim._storage_is_isolated(unsafe), "absolute player save paths cannot bypass isolation")
+	t.ok(sim._storage_is_isolated("/tmp/kras-balance-save"), "explicit external test save is accepted")
+	t.ok(sim._storage_is_isolated("/tmp/kras-balance-save/../kras-balance-save-2"), "external path normalization preserves valid isolation")
+	t.ok(sim._storage_is_isolated(player_directory + "-isolated"), "a sibling is not confused with a child of player saves")
 	t.equal(sim._games().size(), Registry.all_minigames().size(), "default balance sweep includes adventure bosses")
 	for def in Registry.all_minigames():
 		t.equal(sim._window_for(def), def.duration, "%s uses its natural round window" % def.id)
