@@ -477,23 +477,17 @@ func _build_environment() -> void:
 	_light.light_energy = 1.05 if _is_arctic() else 1.15
 	_light.light_color = Color(0.78, 0.92, 1.0) if _is_arctic() else Color(1.0, 0.96, 0.9)
 	_light.light_specular = 0.9
-	_light.shadow_enabled = quality >= 1
 	_light.directional_shadow_max_distance = 70.0
-	# Four splits keep near-camera shadows sharp without shortening the range;
-	# blending them hides the banding you otherwise see as a player runs out.
-	_light.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS \
-		if quality >= 2 else DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-	_light.directional_shadow_blend_splits = quality >= 2
+	_apply_shadow_quality()
 	_light.directional_shadow_split_1 = 0.06
 	_light.directional_shadow_split_2 = 0.16
 	_light.directional_shadow_split_3 = 0.42
-	# A real sun is not a point: giving it an angular size softens the shadow
-	# with distance from the contact point, which is what sells it as sunlight.
-	_light.light_angular_distance = 1.1 if quality >= 2 else 0.0
 	_light.shadow_blur = 1.0
 	_light.shadow_bias = 0.035
 	_light.shadow_normal_bias = 1.6
 	add_child(_light)
+	if not UserSettings.changed.is_connected(_on_visual_settings_changed):
+		UserSettings.changed.connect(_on_visual_settings_changed)
 
 	var fill := OmniLight3D.new()
 	fill.position = Vector3(0, def.radius * 0.9, 0)
@@ -502,6 +496,25 @@ func _build_environment() -> void:
 	fill.light_color = Color(0.18, 0.56, 0.82) if _is_arctic() else def.accent_color
 	fill.shadow_enabled = false
 	add_child(fill)
+
+
+func _on_visual_settings_changed(key: String, _value) -> void:
+	if key in ["graphics_quality", "battery_saver", "*"]:
+		_apply_shadow_quality()
+
+
+func _apply_shadow_quality() -> void:
+	if not is_instance_valid(_light):
+		return
+	var quality := int(UserSettings.get_value("graphics_quality"))
+	_light.shadow_enabled = quality >= 1
+	# Four splits keep near-camera shadows sharp without shortening the range;
+	# blending them hides the banding you otherwise see as a player runs out.
+	_light.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS \
+		if quality >= 2 else DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	_light.directional_shadow_blend_splits = quality >= 2
+	# A real sun is not a point: its angular size softens distant shadows.
+	_light.light_angular_distance = 1.1 if quality >= 2 else 0.0
 
 
 func _is_arctic() -> bool:
