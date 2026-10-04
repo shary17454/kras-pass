@@ -27,6 +27,7 @@ const SUITES := [
 	"res://tests/suites/test_perf_sampling.gd",
 	"res://tests/suites/test_match_preparation.gd",
 	"res://tests/suites/test_match_preparation_session.gd",
+	"res://tests/suites/test_online_start_handoff.gd",
 	"res://tests/suites/test_party_progress.gd",
 	"res://tests/suites/test_mutators.gd",
 	"res://tests/suites/test_matches.gd",
