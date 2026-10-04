@@ -133,7 +133,17 @@ func current_game() -> MiniGameDef:
 func next_config() -> MatchConfig:
 	if is_complete():
 		return null
-	var def := current_game()
+	return _config_for(index, tiebreak_slots)
+
+
+func following_config() -> MatchConfig:
+	if is_complete() or not tiebreak_slots.is_empty() or index + 1 >= game_ids.size():
+		return null
+	return _config_for(index + 1, [])
+
+
+func _config_for(game_index: int, contenders: Array[int]) -> MatchConfig:
+	var def := Registry.minigame("quick_draw") if not contenders.is_empty() else Registry.minigame(game_ids[game_index])
 	if def == null:
 		return null
 	var cfg := MatchConfig.new()
@@ -142,8 +152,8 @@ func next_config() -> MatchConfig:
 	cfg.rounds = 1
 	cfg.allow_powerups = allow_powerups
 	cfg.sudden_death = def.supports_sudden_death
-	cfg.seed = seed_value + index * 977 + tiebreak_attempts * 7919
-	var picked := String(arena_ids[index]) if index < arena_ids.size() else ""
+	cfg.seed = seed_value + game_index * 977 + tiebreak_attempts * 7919
+	var picked := String(arena_ids[game_index]) if game_index < arena_ids.size() else ""
 	if picked != "" and def.arena_ids.has(picked):
 		cfg.arena_id = picked
 	elif def.arena_ids.size() > 0:
@@ -162,11 +172,11 @@ func next_config() -> MatchConfig:
 	cfg.rules = match_rules.duplicate(true)
 	cfg.rules["party_short_race"] = int(match_rules.get("race_laps", 3)) < 3
 	cfg.rules["ai_personalities"] = true
-	cfg.rules["party_final"] = index == game_ids.size() - 1
-	cfg.rules["party_progress_token"] = "%s:match:%d" % [run_id, index]
+	cfg.rules["party_final"] = game_index == game_ids.size() - 1
+	cfg.rules["party_progress_token"] = "%s:match:%d" % [run_id, game_index]
 	cfg.rules["maximum_duration"] = float(match_rules.get("maximum_duration", 240.0))
 	cfg.duration_override = minf(def.duration, float(match_rules.get("round_seconds", 120.0)))
-	if not tiebreak_slots.is_empty():
+	if not contenders.is_empty():
 		cfg.subtitle_key = "party.tiebreak"
 		cfg.duration_override = 20.0
 		cfg.rules["maximum_duration"] = 25.0
@@ -175,7 +185,7 @@ func next_config() -> MatchConfig:
 		cfg.mutators = []
 		cfg.chaos = false
 		cfg.rules["party_tiebreak"] = true
-		for original_slot in tiebreak_slots:
+		for original_slot in contenders:
 			var p := players[original_slot].duplicate() as PlayerConfig
 			p.slot = cfg.players.size()
 			cfg.players.append(p)

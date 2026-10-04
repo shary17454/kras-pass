@@ -9,6 +9,7 @@ func setup(a: Dictionary) -> void:
 	session = a.get("session")
 	last = a.get("last")
 	super.setup(a)
+	SceneRouter.prefetch_from_screen(self, session.next_config() if session != null else null)
 	AudioManager.play_music("victory" if session != null and session.is_complete() else "menu")
 
 
