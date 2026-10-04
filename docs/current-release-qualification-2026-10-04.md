@@ -134,3 +134,16 @@ successfully. Remaining network jobs were still running or queued at inspection.
 This is not a passing 39-game network matrix, rendered visual QA, or an Apple
 review submission. Earlier pending statements above record their inspection
 time and are superseded only for the specific gates verified in this section.
+
+The subsequent `network-zone_hold` job `111348417037` failed. Its log
+`/tmp/kras-f29824f-network-zone-job.log` records seed 438683058, two human
+processes plus bots, and a round ending with scores `[0,0,0,0]`. The peer
+assertion was `zone finished without capture scoring`; this is an unresolved
+release gate, not a successful network matrix. Same-seed local reproduction was
+started without altering game rules, score thresholds or the peer assertion.
+The Mac reproduction completed successfully with the same seed, two peers,
+reconnection, matching scores `[1,0,3,1]`, and 1088 client world snapshots.
+Log: `/tmp/kras-zone-438683058-reproduction.log`. Server event-loop maximum
+was 8850 ms, so this is not latency qualification. A local pass does not resolve
+the authoritative Linux failure; platform/timing and contested-zone behavior
+still require diagnosis. No failing assertion was removed or weakened.
