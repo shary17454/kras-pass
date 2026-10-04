@@ -4,6 +4,8 @@ extends Screen
 ## Every mode entry either works or is visibly, explainedly unavailable — there
 ## are no buttons here that do nothing.
 
+var _quit_dialog: ConfirmationDialog
+
 
 func setup(a: Dictionary) -> void:
 	super.setup(a)
@@ -181,19 +183,23 @@ func _next_stage() -> Dictionary:
 
 
 func _confirm_quit() -> void:
-	var dialog := ConfirmationDialog.new()
-	dialog.title = Loc.t("menu.quit_confirm_title")
-	dialog.dialog_text = Loc.t("menu.quit_confirm_body")
-	dialog.ok_button_text = Loc.t("menu.quit")
-	dialog.cancel_button_text = Loc.t("common.cancel")
-	add_child(dialog)
-	dialog.confirmed.connect(func():
-		SaveSystem.flush()
-		get_tree().quit())
-	dialog.popup_centered()
+	if not is_instance_valid(_quit_dialog):
+		_quit_dialog = ConfirmationDialog.new()
+		_quit_dialog.title = Loc.t("menu.quit_confirm_title")
+		_quit_dialog.dialog_text = Loc.t("menu.quit_confirm_body")
+		_quit_dialog.ok_button_text = Loc.t("menu.quit")
+		_quit_dialog.cancel_button_text = Loc.t("common.cancel")
+		add_child(_quit_dialog)
+		_quit_dialog.confirmed.connect(_quit_application)
+	if not _quit_dialog.visible:
+		_quit_dialog.popup_centered()
+
+
+func _quit_application() -> void:
+	SaveSystem.flush()
+	get_tree().quit()
 
 
 func go_back() -> void:
-	# The main menu is the root: back means quit, with no dead end above it.
-	SaveSystem.flush()
-	get_tree().quit()
+	# Root-level back uses the same confirmation as the explicit quit command.
+	_confirm_quit()
