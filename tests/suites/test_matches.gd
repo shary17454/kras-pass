@@ -564,11 +564,13 @@ func _difficulty_separation(t: TestHarness) -> void:
 		t.test("expert AI out-scores easy AI in %s" % game)
 		var expert_total := 0
 		var easy_total := 0
-		# Collection scores over 12 seconds are dominated by the first pickup
-		# cluster. Use eight mirrored samples with time to make real decisions.
-		for i in 8:
+		# Run both slot assignments for every seed, not different worlds for
+		# opposing assignments. Keep all eight seeds and the full decision window.
+		var completed := 0
+		for i in 16:
+			var pair := int(i / 2)
 			var expert_first := i % 2 == 0
-			var cfg := MatchConfig.build(game, same, 0, PlayerConfig.Difficulty.EASY, 100 + i * 37)
+			var cfg := MatchConfig.build(game, same, 0, PlayerConfig.Difficulty.EASY, 100 + pair * 37)
 			cfg.duration_override = 30.0
 			cfg.rounds = 1
 			cfg.allow_powerups = false   # remove the biggest source of variance
@@ -580,12 +582,20 @@ func _difficulty_separation(t: TestHarness) -> void:
 			var result: MatchResult = run_result["result"]
 			if result == null:
 				continue
+			completed += 1
+			var sample_expert := 0
+			var sample_easy := 0
 			for slot in 4:
 				var is_expert := (slot < 2) == expert_first
 				if is_expert:
-					expert_total += result.score_of(slot)
+					sample_expert += result.score_of(slot)
 				else:
-					easy_total += result.score_of(slot)
+					sample_easy += result.score_of(slot)
+			expert_total += sample_expert
+			easy_total += sample_easy
+			print("DIFFICULTY_SAMPLE game=%s seed=%d expert_first=%s expert=%d easy=%d" % [
+				game, cfg.seed, expert_first, sample_expert, sample_easy])
+		t.equal(completed, 16, "%s: both assignments completed for all eight seeds" % game)
 		t.greater(expert_total, easy_total,
 			"%s: expert competitors out-score easy ones across eight mirrored seeds" % game)
 
