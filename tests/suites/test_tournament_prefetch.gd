@@ -72,6 +72,27 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(stats.takes, 1, "cancelled worker is drained once after completion")
 	t.ok(not is_instance_valid(bank), "cancelled bank is removed after safe drain")
 	t.ok(pending._prefetch_job == null and pending._prefetch_paths.is_empty(), "cancelled plan retains no resources")
+	t.ok(pending.prefetch_match(cfg), "replacement test starts the original plan")
+	var replaced: PendingPreparation = pending._prefetch_job
+	var replacement := MatchConfig.build("gem_grab", ["nabta", "sakhra", "barq", "turs"], 1, 1, 24)
+	replacement.context = MatchConfig.Context.TOURNAMENT
+	t.ok(pending.prefetch_match(replacement), "a different following game replaces the plan")
+	var replacement_bank: PendingPreparation = pending._prefetch_job
+	t.ok(replacement_bank != replaced, "different controller resources get a separate bank")
+	replaced.state = ResourceLoader.THREAD_LOAD_LOADED
+	await tree.process_frame
+	await tree.process_frame
+	t.ok(not is_instance_valid(replaced), "superseded request drains without retaining its bank")
+	t.ok(pending._prefetch_job == replacement_bank and not pending._prefetch_ready,
+		"a late superseded completion cannot mark the replacement ready")
+	replacement_bank.state = ResourceLoader.THREAD_LOAD_LOADED
+	for frame in 10:
+		if pending._prefetch_ready:
+			break
+		await tree.process_frame
+	t.ok(pending._prefetch_ready, "only the replacement worker completes its plan")
+	pending.clear_match_prefetch()
+	await tree.process_frame
 	t.ok(pending.prefetch_match(cfg), "a new plan can start after cancellation")
 	bank = pending._prefetch_job
 	bank.state = ResourceLoader.THREAD_LOAD_LOADED
@@ -106,6 +127,18 @@ func run(t: TestHarness, host: Node) -> void:
 	await tree.process_frame
 	cfg.context = MatchConfig.Context.ONLINE
 	t.ok(not router.prefetch_match(cfg), "future online arenas are not guessed locally")
+	var cup := TournamentSession.new()
+	cup.setup(roster, ["ring_rumble", "gem_grab", "quick_draw"], 779)
+	cup.scoring_mode = TournamentSession.ScoringMode.CUPS
+	cup.target_cups = 1
+	t.ok(router.prefetch_match(cup.following_config()), "cup prepares a possible following scheduled game")
+	cup.record(MatchResult.make("ring_rumble", "vortex_ring", [9, 5, 3, 1] as Array[int]))
+	t.ok(cup.is_complete() and cup.next_config() == null, "reaching the cup target cancels the remaining schedule")
+	t.ok(not router.prefetch_match(cup.next_config()), "confirmed champion has no following resource plan")
+	t.ok(router._prefetch_job == null and router._prefetch_paths.is_empty(),
+		"early cup victory releases the speculative following game")
+	await tree.process_frame
+	await tree.process_frame
 	router.queue_free()
 	await tree.process_frame
 	await _real_party_flow(t, host)
