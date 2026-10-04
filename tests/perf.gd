@@ -20,8 +20,14 @@ var _elapsed := 0.0
 var _games := ["ring_rumble", "crate_smash", "goal_guard", "scrap_karts"]
 var _index := 0
 var _nodes_start := 0
+var _started_msec := 0
+var _build_msec := 0
 
 func _ready() -> void:
+	if DisplayServer.get_name() == "headless":
+		push_error("The frame-time probe requires a rendered window, not headless simulation")
+		get_tree().quit(1)
+		return
 	# With vsync on, every game on a 120 Hz panel reports 8.33 ms and every game
 	# on a 60 Hz one reports 16.67 ms — the probe measures the monitor, not the
 	# game, and two runs of the same build disagree because the panel changed
@@ -43,11 +49,14 @@ func _ready() -> void:
 	_start()
 
 func _start() -> void:
+	var build_started := Time.get_ticks_msec()
 	var cfg := MatchConfig.build(_games[_index], ["nabta","sakhra","barq","turs"], 0, 3, 11)
 	cfg.duration_override = 60.0
 	_scene = load("res://src/match/match_scene.gd").new()
 	add_child(_scene)
 	_scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	_build_msec = Time.get_ticks_msec() - build_started
+	_started_msec = Time.get_ticks_msec()
 	_frames = 0
 	_elapsed = 0.0
 	_samples.clear()
@@ -55,7 +64,7 @@ func _start() -> void:
 func _process(delta: float) -> void:
 	if _scene == null:
 		return
-	_elapsed += delta
+	_elapsed = float(Time.get_ticks_msec() - _started_msec) / 1000.0
 	var live: bool = _scene.ctx != null and MatchPhase.is_live(_scene.phase)
 	if live:
 		_frames += 1
@@ -67,6 +76,9 @@ func _process(delta: float) -> void:
 
 func _finish(round_over: bool) -> void:
 	set_process(false)
+	print("PERF_BUILD=" + JSON.stringify({"game": _games[_index], "milliseconds": _build_msec,
+		"wall_seconds": _elapsed, "live_frames": _frames, "samples": _samples.size(),
+		"display": DisplayServer.get_name(), "engine": Engine.get_version_info().string}))
 	if _samples.is_empty():
 		print("%-14s no live frames sampled in %.0fs — round never ran" % [_games[_index], _elapsed])
 	else:
@@ -89,8 +101,10 @@ func _finish(round_over: bool) -> void:
 	_scene.teardown(); _scene.queue_free(); _scene = null
 	_index += 1
 	if _index >= _games.size():
+		AudioManager.shutdown()
 		await get_tree().process_frame
 		await get_tree().process_frame
+		OS.delay_msec(100)
 		print("nodes after teardown: %d (start %d)" % [get_tree().get_node_count(), _nodes_start])
 		get_tree().quit(0)
 	else:
