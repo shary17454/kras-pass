@@ -48,7 +48,9 @@ are changed. Content validation rejects missing or non-bundled declared paths.
   Log: `/tmp/kras-threaded-resource-final-compile.log`.
 - Headless preparation suite before the final progress-visibility assertion:
   736 assertions passed. Log: `/tmp/kras-match-preparation-final.log`.
-- Full core suite log: `/tmp/kras-threaded-resource-core.log`.
+- Full core suite on the pre-guard preparation source: 30,860 passed and 1
+  failed, exit 1, 2002.0 seconds. Log: `/tmp/kras-threaded-resource-core.log`.
+  This is a failed qualification, not a green core run.
 
 ## Online generation guard follow-up
 
@@ -71,8 +73,10 @@ four online players operating the graphical lobby or production connectivity.
 
 The long full core run began with the preparation implementation subsequently
 committed as `cc04450e65f47158420629bd4345c7dfe160e2f7`, before this guard follow-up.
-It has already reported a failing Expert/Easy Gem Grab comparison (72 versus
-74 total points); its terminal result must be recorded before qualification.
+It completed with a failing Expert/Easy Gem Grab comparison (72 versus 74
+total points), 30,860 other assertions passed, and exit 1. This prevents release
+qualification; the final guarded source has not been given a passing full-core
+claim from that older run.
 That comparison currently alternates slot assignments while also changing the
 world seed on every run, rather than pairing identical world seeds as its
 comment claims. Both the failed gate and the comparison design need follow-up;
