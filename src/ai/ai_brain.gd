@@ -4,8 +4,8 @@ extends RefCounted
 ##
 ## Design rule: bots must use observable cues rather than hidden game state.
 ## Shared fighter perception retains delayed positions and velocities, with
-## aim error scaled by `accuracy`. Explicit visibility guards are not full
-## camera/frustum or wall-occlusion perception. Specialised controller and
+## aim error scaled by `accuracy`. Shared visibility checks include the camera
+## frustum, but not wall occlusion. Specialised controller and
 ## object queries must be reviewed separately for visibility and reaction delay.
 ## Difficulty must not grant hidden movement or damage bonuses.
 ##
@@ -261,8 +261,47 @@ func perceive_ball(ball: GameBall) -> Dictionary:
 
 
 func can_observe(node: Node3D) -> bool:
-	return node != null and is_instance_valid(node) and not node.is_queued_for_deletion() \
-		and node.is_visible_in_tree()
+	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion() or not node.is_visible_in_tree():
+		return false
+	if ctx == null or not is_instance_valid(ctx.observation_camera):
+		return true
+	var camera := ctx.observation_camera
+	if node is VisualInstance3D and node.layers & camera.cull_mask == 0:
+		return false
+	if _point_in_view(node.global_position):
+		return true
+	# A mesh may straddle the frame even when its origin lies outside it.
+	if node is MeshInstance3D and node.mesh != null:
+		var bounds: AABB = node.get_aabb()
+		for corner in 8:
+			if _point_in_view(node.global_transform * bounds.get_endpoint(corner)):
+				return true
+	return false
+
+
+func _point_in_view(position: Vector3) -> bool:
+	var camera := ctx.observation_camera
+	var view := camera.global_transform.orthonormalized()
+	view.origin += view.basis.x * camera.h_offset + view.basis.y * camera.v_offset
+	var local := view.affine_inverse() * _view_position(position)
+	var clip: Vector4 = camera.get_camera_projection() * Vector4(local.x, local.y, local.z, 1.0)
+	# Use the camera's actual projection, including in the headless renderer.
+	return clip.is_finite() and clip.w > 0.0 and absf(clip.x) <= clip.w \
+		and absf(clip.y) <= clip.w and absf(clip.z) <= clip.w
+
+
+func _view_position(position: Vector3) -> Vector3:
+	var camera := ctx.observation_camera as ArenaCamera
+	if camera == null or camera.shared_world or camera.mode not in [ArenaCamera.Mode.WORLD, ArenaCamera.Mode.CHASE]:
+		return position
+	var reference := camera.local_target as Fighter
+	var me := self_body()
+	if not is_instance_valid(reference) or me == null:
+		return position
+	# Translate the existing follow-camera projection to this bot's own visible
+	# position and heading, without allocating or rendering additional cameras.
+	var angle := me.facing.signed_angle_to(reference.facing, Vector3.UP)
+	return reference.global_position + (position - me.global_position).rotated(Vector3.UP, angle)
 
 
 ## Ring-buffer slot holding the newest sample at or before `want`, so both
