@@ -910,13 +910,11 @@ func _physics_process(_delta: float) -> void:
 				buttons = InputFrame.Btn.ATTACK
 			movement = Vector2(target.x - position.x, target.z - position.z).limit_length()
 		if game_id == "zone_hold":
-			var p: Vector3 = game.ctx.fighters[slot].global_position - game.arena.global_position
-			var zone: Vector3 = game.controller.zone_position - game.arena.global_position
-			var angle := atan2(zone.z, zone.x) + slot * 0.9
-			var current := atan2(p.z, p.x)
-			var next := current + clampf(wrapf(angle - current, -PI, PI), -0.25, 0.25)
-			var target: Vector3 = Vector3(cos(next), 0, sin(next)) * game.arena.def.radius * 0.72
-			movement = Vector2(target.x - p.x, target.z - p.z).limit_length()
+			var frame: InputFrame = load("res://tests/zone_peer_driver.gd").input(game.arena,
+				game.ctx.fighters, slot, game.controller.zone_position, game.controller.zone_radius,
+				Time.get_ticks_msec() - started_at)
+			movement = frame.move
+			buttons = frame.bits
 		if game_id in ["gem_grab", "star_rush", "crate_relay"]:
 			movement = _collection_movement(slot)
 			if game_id == "gem_grab" and (Time.get_ticks_msec() / 500) % 2 == 0:
