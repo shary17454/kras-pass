@@ -2,12 +2,21 @@ extends RefCounted
 
 class RecordingTransport extends Node:
 	var sent: Array = []
+	var accepted := false
 	func send(message: Dictionary) -> bool:
 		sent.append(message.duplicate(true))
-		return false
+		return accepted
 
 
-func run(t: TestHarness) -> void:
+class QuietReplica extends RefCounted:
+	func render(_scene, _delta: float) -> void:
+		pass
+
+
+func run(t: TestHarness, host: Node) -> void:
+	_input_edges(t)
+	_input_buffer_limits(t)
+	_input_send_budget(t)
 	t.suite("Network snapshot boundary")
 	var replica = load("res://src/net/match_replica.gd").new()
 	var body := {"position": [1.0, 2.0, 3.0], "velocity": [0.0, 0.0, 0.0], "facing": [0.0, 0.0, 1.0],
@@ -59,6 +68,67 @@ func run(t: TestHarness) -> void:
 
 	t.suite("Network player mapping")
 	Net.leave()
+	_player_mapping(t)
+	await _quick_draw_edges(t, host)
+
+
+func _input_edges(t: TestHarness) -> void:
+	t.suite("Network input edges")
+	t.test("a press and release received before a host tick remain distinct")
+	Net.leave()
+	Net.is_host = true
+	Net.epoch = 3
+	for packet in [
+		{"op": "input", "epoch": 3, "slot": 1, "sequence": 1, "axes": [0.5, 0, 1, 0], "bits": 4},
+		{"op": "input", "epoch": 3, "slot": 1, "sequence": 2, "axes": [0, 0, 0, 1], "bits": 0},
+	]:
+		Net._receive(packet)
+	var frame := InputFrame.new()
+	t.ok(Net.consume_input(1, frame, 1), "host receives queued press")
+	t.ok(frame.just_pressed(InputFrame.Btn.ATTACK), "coalesced packets preserve attack press")
+	t.equal(frame.aim, Vector2.RIGHT, "press retains its aiming intent")
+	frame.prev_bits = frame.bits
+	t.ok(Net.consume_input(1, frame, 2), "host receives queued release")
+	t.ok(frame.just_released(InputFrame.Btn.ATTACK), "release follows on the next tick")
+	t.equal(frame.aim, Vector2.DOWN, "release retains its aiming intent")
+	Net.leave()
+
+	t.test("guest physics publishes a one-tick press between movement samples")
+	var saved_transport := Net.transport
+	var recorder := RecordingTransport.new()
+	recorder.accepted = true
+	Net.transport = recorder
+	Net.mode = Net.Mode.ONLINE_CLIENT
+	Net.state = Net.State.IN_MATCH
+	Net.is_host = false
+	Net.local_peer_id = 2
+	Net.peers = {2: {"slot": 1}}
+	Net.match_running = true
+	var scene = load("res://src/match/match_scene.gd").new()
+	scene.config = MatchConfig.build("ring_rumble", ["nabta", "sakhra"], 1, 1, 51)
+	scene.config.context = MatchConfig.Context.ONLINE
+	scene.ctx = MatchContext.new()
+	scene.ctx.config = scene.config
+	scene._network_replica = QuietReplica.new()
+	InputRouter.assign_virtual(1)
+	InputRouter.frame(1).bits = InputFrame.Btn.ATTACK
+	scene._physics_process(1.0 / 60.0)
+	t.equal(recorder.sent.size(), 1, "odd physics tick publishes the short press")
+	InputRouter.frame(1).bits = 0
+	scene._physics_process(1.0 / 60.0)
+	t.equal(recorder.sent.size(), 2, "release publishes even without a movement interval")
+	var captured_press := false
+	for packet in recorder.sent:
+		captured_press = captured_press or int(packet.bits) == InputFrame.Btn.ATTACK
+	t.ok(captured_press, "transport receives the attack, not only neutral input")
+	scene.free()
+	InputRouter.clear_all()
+	Net.transport = saved_transport
+	recorder.free()
+	Net.leave()
+
+
+func _player_mapping(t: TestHarness) -> void:
 	Net.local_peer_id = 8
 	Net.peers = {8: {"slot": 1}}
 	Net.match_data = {"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 3, "difficulty": 2},
@@ -211,3 +281,169 @@ func run(t: TestHarness) -> void:
 	Net.transport = transport
 	recorder.free()
 	Net.leave()
+
+
+func _packet(slot: int, bits: int, sequence := 1, epoch := 3) -> Dictionary:
+	return {"op": "input", "epoch": epoch, "slot": slot, "sequence": sequence,
+		"axes": [0.5, 0, 1, 0], "bits": bits}
+
+
+func _input_buffer_limits(t: TestHarness) -> void:
+	t.suite("Network bounded input buffering")
+	t.test("every action retains its press and release exactly once")
+	for bit in [InputFrame.Btn.JUMP, InputFrame.Btn.ACTION, InputFrame.Btn.ATTACK, InputFrame.Btn.DASH, InputFrame.Btn.ABILITY]:
+		Net.leave()
+		Net.epoch = 3
+		Net._receive(_packet(1, bit))
+		Net._receive(_packet(1, 0, 2))
+		var frame := InputFrame.new()
+		Net.consume_input(1, frame, 1)
+		t.ok(frame.just_pressed(bit), "action press survives packet coalescing")
+		frame.prev_bits = frame.bits
+		Net.consume_input(1, frame, 2)
+		t.ok(frame.just_released(bit), "action release remains ordered")
+		frame.prev_bits = frame.bits
+		Net.consume_input(1, frame, 3)
+		t.ok(not frame.just_pressed(bit) and not frame.just_released(bit), "idle sample cannot replay an action")
+
+	t.test("held buttons do not repeat and movements remain latest-value")
+	Net.leave()
+	Net.epoch = 3
+	var original := _packet(1, 4)
+	Net._receive(original)
+	original.axes[0] = -1
+	var frame := InputFrame.new()
+	Net.consume_input(1, frame, 1)
+	t.equal(frame.move.x, 0.5, "buffer owns its packet instead of a mutable caller reference")
+	frame.prev_bits = frame.bits
+	var latest := _packet(1, 4, 2)
+	latest.axes[0] = -0.5
+	Net._receive(latest)
+	Net.consume_input(1, frame, 2)
+	t.ok(frame.held(InputFrame.Btn.ATTACK) and not frame.just_pressed(InputFrame.Btn.ATTACK), "held attack does not duplicate its press")
+	t.equal(frame.move.x, -0.5, "movement-only update is not delayed in an edge queue")
+	t.ok(Net._input_edges[1].is_empty(), "unchanged held bits do not grow the queue")
+	Net._receive(_packet(2, 8))
+	Net.consume_input(2, InputFrame.new(), 3)
+	t.equal(int(Net._inputs[1].bits), 4, "another player's dash cannot overwrite attack")
+	Net._receive(_packet(1, 0, 3, 2))
+	t.equal(int(Net._inputs[1].bits), 4, "stale-epoch release cannot overwrite live intent")
+
+	t.test("queue and stale intent have strict bounds")
+	Net.leave()
+	Net.epoch = 3
+	for i in 40:
+		Net._receive(_packet(1, 4 if i % 2 == 0 else 0, i + 1))
+	t.equal(Net._input_edges[1].size(), Net.MAX_INPUT_EDGES, "burst is bounded per player")
+	for i in Net.MAX_INPUT_EDGES:
+		Net.consume_input(1, frame, i)
+	t.ok(Net._input_edges[1].is_empty(), "bounded burst drains instead of growing forever")
+	t.equal(frame.bits, 0, "burst ultimately releases its held button")
+	Net._receive(_packet(1, 4, 41))
+	Net._input_edges[1][0]["time"] = Time.get_ticks_msec() - Net.INPUT_EXPIRY_MS - 1
+	Net._receive(_packet(1, 0, 42))
+	frame.prev_bits = 0
+	Net.consume_input(1, frame, 1)
+	t.ok(not frame.just_pressed(InputFrame.Btn.ATTACK), "expired press is not revived by a fresh release")
+	Net._receive(_packet(1, 8, 43))
+	Net._inputs[1]["time"] = Time.get_ticks_msec() - Net.INPUT_EXPIRY_MS - 1
+	t.ok(not Net.consume_input(1, frame, 1), "stale held stream is rejected")
+	t.ok(frame.bits == 0 and not Net._input_edges.has(1), "stale stream releases controls and discards transitions")
+
+	t.test("new round, disconnect and session reset cannot replay old actions")
+	Net._receive(_packet(1, 4, 44))
+	Net._last_input_tick = 50
+	Net._receive({"op": "start", "epoch": 4, "seed": 51,
+		"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
+		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0},
+			{"id": 2, "slot": 1, "name": "Guest", "character": 1}]})
+	t.ok(Net._inputs.is_empty() and Net._input_edges.is_empty(), "new epoch discards previous buttons")
+	t.equal(Net._last_input_tick, -1, "new epoch permits immediate first input")
+	Net._receive(_packet(1, 4, 1, 4))
+	Net._pending_result = {"epoch": 4, "scores": [3, 0]}
+	Net._transport_lost("test_disconnect")
+	t.ok(Net._inputs.is_empty() and Net._input_edges.is_empty(), "disconnect discards pre-reconnect actions")
+	t.ok(not Net._pending_result.is_empty(), "input cleanup cannot discard result retry")
+	Net.leave()
+	t.ok(Net._input_edges.is_empty(), "session reset clears every transition")
+
+
+func _input_send_budget(t: TestHarness) -> void:
+	t.suite("Network movement sampling")
+	Net.leave()
+	var saved_transport := Net.transport
+	var recorder := RecordingTransport.new()
+	recorder.accepted = true
+	Net.transport = recorder
+	Net.mode = Net.Mode.ONLINE_CLIENT
+	Net.local_peer_id = 2
+	Net.peers = {2: {"slot": 1}}
+	Net.match_running = true
+	var frame := InputFrame.new()
+	for tick in 60:
+		frame.move.x = float(tick) / 60.0
+		Net.publish_input(1, frame, tick)
+	t.equal(recorder.sent.size(), 30, "movement sends 30 packets per 60 physics ticks")
+	Net.publish_input(1, frame, 59)
+	t.equal(recorder.sent.size(), 30, "same-tick movement cannot duplicate a packet")
+	frame.bits = InputFrame.Btn.ATTACK
+	Net.publish_input(1, frame, 59)
+	t.equal(recorder.sent.size(), 31, "button press bypasses movement sampling")
+	frame.bits = 0
+	Net.publish_input(1, frame, 60)
+	t.equal(recorder.sent.size(), 32, "one-tick release bypasses movement sampling")
+	Net.publish_input(0, frame, 61)
+	t.equal(recorder.sent.size(), 32, "device cannot publish another owner's input")
+	Net._clear_input_state()
+	recorder.sent.clear()
+	recorder.accepted = false
+	Net.publish_input(1, frame, 1)
+	recorder.accepted = true
+	Net.publish_input(1, frame, 2)
+	t.equal(recorder.sent.size(), 2, "failed transport does not suppress the following retry")
+	Net.publish_input(1, frame, 0)
+	t.equal(recorder.sent.size(), 3, "restarted tick counter permits a fresh sample")
+	Net.transport = saved_transport
+	recorder.free()
+	Net.leave()
+
+
+func _quick_draw_edges(t: TestHarness, host: Node) -> void:
+	t.suite("Network reaction gameplay")
+	t.test("coalesced short tap scores through the actual host physics pipeline")
+	Net.leave()
+	Net.mode = Net.Mode.ONLINE_HOST
+	Net.state = Net.State.IN_MATCH
+	Net.epoch = 7
+	Net.peers = {1: {"slot": 0}, 2: {"slot": 1}}
+	Net.match_data = {"epoch": 7, "seed": 53,
+		"config": {"game": "quick_draw", "arena": "draw_stage", "rounds": 1, "difficulty": 1},
+		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0},
+			{"id": 2, "slot": 1, "name": "Guest", "character": 1}]}
+	var cfg := Net.make_match_config()
+	var scene = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_result): pass})
+	scene.set_physics_process(false)
+	t.ok(scene.ctx != null, "valid network match builds its actual context")
+	if scene.ctx == null:
+		scene.queue_free()
+		Net.leave()
+		await host.get_tree().process_frame
+		return
+	scene.phase = MatchPhase.P.PLAYING
+	scene.ctx.phase = MatchPhase.P.PLAYING
+	Net.match_running = true
+	scene.controller._fire_signal()
+	Net._receive(_packet(1, 4, 1, 7))
+	Net._receive(_packet(1, 0, 2, 7))
+	scene._physics_process(1.0 / 60.0)
+	t.ok(scene.controller._order.has(1), "real quick draw receives the guest's short press")
+	scene._physics_process(1.0 / 60.0)
+	t.equal(scene.controller.correct_sequence, 1, "release does not duplicate a response")
+	scene.controller._resolve()
+	t.equal(scene.ctx.scores[1], 3, "guest earns normal reaction points")
+	scene.teardown()
+	scene.queue_free()
+	Net.leave()
+	await host.get_tree().process_frame

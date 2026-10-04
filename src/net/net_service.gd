@@ -38,6 +38,11 @@ var _retry_at := 0
 var _retry_until := 0
 var _ping_at := 0
 var _inputs := {}
+var _input_edges := {}
+var _last_input_tick := -1
+var _last_input_bits := 0
+const MAX_INPUT_EDGES := 16
+const INPUT_EXPIRY_MS := 250
 var _sequence := 0
 var _last_snapshot := -1
 var _result_epoch := -1
@@ -79,7 +84,7 @@ func reset() -> void:
 	_retry_at = 0
 	room_state = ""
 	match_data.clear()
-	_inputs.clear()
+	_clear_input_state()
 	match_running = false
 	_sequence = 0
 	_last_snapshot = -1
@@ -250,27 +255,62 @@ func next_tournament_round() -> void:
 # --- input transport contract ----------------------------------------------
 
 ## Called every physics tick by the match layer for locally-owned slots. The
-## local backend is a no-op; a network backend would batch and send.
-func publish_input(slot: int, frame: InputFrame, _tick: int) -> void:
+## movement stream is 30 Hz; button transitions are never downsampled.
+func publish_input(slot: int, frame: InputFrame, tick: int) -> void:
 	if mode == Mode.LOCAL or not match_running or slot != local_slot():
 		return
+	var bits := frame.bits & 31
+	if _last_input_tick >= 0 and tick >= _last_input_tick and tick - _last_input_tick < 2 and bits == _last_input_bits:
+		return
 	_sequence += 1
-	transport.send({"op": "input", "epoch": epoch, "sequence": _sequence,
-		"axes": [frame.move.x, frame.move.y, frame.aim.x, frame.aim.y], "bits": frame.bits & 31})
+	if transport.send({"op": "input", "epoch": epoch, "sequence": _sequence,
+		"axes": [frame.move.x, frame.move.y, frame.aim.x, frame.aim.y], "bits": bits}):
+		_last_input_tick = tick
+		_last_input_bits = bits
 
 
 ## Returns true when the frame for a remote slot at `tick` is available. The
 ## local backend always returns false, which makes the match layer fall back to
 ## the AI brain — exactly the behaviour wanted when a remote player drops.
 func consume_input(slot: int, frame: InputFrame, _tick: int) -> bool:
-	if not _inputs.has(slot) or Time.get_ticks_msec() - int(_inputs[slot]["time"]) > 250:
+	var now := Time.get_ticks_msec()
+	if not _inputs.has(slot) or now - int(_inputs[slot]["time"]) > INPUT_EXPIRY_MS:
+		_input_edges.erase(slot)
 		frame.clear()
 		return false
 	var packet: Dictionary = _inputs[slot]
+	var edges: Array = _input_edges.get(slot, [])
+	while not edges.is_empty() and now - int(edges[0]["time"]) > INPUT_EXPIRY_MS:
+		edges.pop_front()
+	# Applying one transition per tick preserves a short tap even when TCP
+	# delivers its press and release together. Each keeps its original aim.
+	if not edges.is_empty():
+		packet = edges.pop_front()
 	frame.move = Vector2(packet.axes[0], packet.axes[1]).limit_length()
 	frame.aim = Vector2(packet.axes[2], packet.axes[3]).limit_length()
 	frame.bits = int(packet.bits) & 31
 	return true
+
+
+func _clear_input_state() -> void:
+	_inputs.clear()
+	_input_edges.clear()
+	_last_input_tick = -1
+	_last_input_bits = 0
+
+
+func _receive_input(message: Dictionary) -> void:
+	var slot := int(message.slot)
+	var packet := message.duplicate(true)
+	packet["time"] = Time.get_ticks_msec()
+	var previous := int(_inputs.get(slot, {}).get("bits", 0))
+	if int(packet.bits) != previous:
+		var edges: Array = _input_edges.get(slot, [])
+		if edges.size() >= MAX_INPUT_EDGES:
+			edges.pop_front()
+		edges.append(packet)
+		_input_edges[slot] = edges
+	_inputs[slot] = packet
 
 
 func _connect(first: Dictionary) -> bool:
@@ -375,7 +415,7 @@ func _receive(m: Dictionary) -> void:
 			room_state = String(m.state)
 			if room_state == "lobby":
 				match_running = false
-				_inputs.clear()
+				_clear_input_state()
 				_pending_result.clear()
 			is_host = int(m.host) == local_peer_id
 			mode = Mode.ONLINE_HOST if is_host else Mode.ONLINE_CLIENT
@@ -393,7 +433,7 @@ func _receive(m: Dictionary) -> void:
 			if fresh:
 				_sequence = 0
 				_last_snapshot = -1
-				_inputs.clear()
+				_clear_input_state()
 				_pending_result.clear()
 				match_running = false
 				match_start_requested.emit(make_match_config())
@@ -409,8 +449,7 @@ func _receive(m: Dictionary) -> void:
 					match_running = true
 		"input":
 			if int(m.epoch) == epoch and is_host:
-				m["time"] = Time.get_ticks_msec()
-				_inputs[int(m.slot)] = m
+				_receive_input(m)
 		"snapshot":
 			if int(m.epoch) == epoch and int(m.tick) > _last_snapshot and not is_host:
 				_last_snapshot = int(m.tick)
@@ -430,6 +469,7 @@ func _receive(m: Dictionary) -> void:
 
 func _transport_lost(reason := "connect_failed") -> void:
 	Log.w("online transport lost: " + reason, "Net")
+	_clear_input_state()
 	if not _token.is_empty():
 		if _retry_until == 0:
 			_retry_until = Time.get_ticks_msec() + 30000

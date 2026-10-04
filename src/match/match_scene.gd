@@ -505,7 +505,7 @@ func _physics_process(delta: float) -> void:
 		_network_tick += 1
 		var local_slot := Net.local_slot()
 		if not Net.is_host:
-			if _network_tick % 2 == 0 and local_slot >= 0:
+			if local_slot >= 0:
 				Net.publish_input(local_slot, InputRouter.frame(local_slot), _network_tick)
 			_network_replica.render(self, delta)
 			return
