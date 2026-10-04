@@ -404,6 +404,8 @@ func to_dict() -> Dictionary:
 
 
 static func restore(data: Dictionary) -> TournamentSession:
+	if not _save_integer(data.get("version"), 1, SAVE_VERSION):
+		return null
 	var save_version := int(data.get("version", 0))
 	if save_version < 1 or save_version > SAVE_VERSION:
 		return null
@@ -412,11 +414,19 @@ static func restore(data: Dictionary) -> TournamentSession:
 			return null
 	if not data.get("rules") is Dictionary:
 		return null
+	for key in ["games", "arenas", "mutators"]:
+		for value in data[key]:
+			if not value is String:
+				return null
+	if not _saved_optional_types(data):
+		return null
 	var roster: Array[PlayerConfig] = []
 	if data["players"].size() < 2 or data["players"].size() > 4:
 		return null
 	for raw in data["players"]:
 		if not raw is Dictionary:
+			return null
+		if not _saved_player_types(raw):
 			return null
 		var player := PlayerConfig.from_dict(raw)
 		if player == null or player.slot != roster.size():
@@ -430,6 +440,8 @@ static func restore(data: Dictionary) -> TournamentSession:
 		if def == null or def.is_boss or roster.size() < def.min_players or roster.size() > def.max_players:
 			return null
 		games.append(def.id)
+	if not _save_integer(data.get("index"), 0, games.size()):
+		return null
 	var next := int(data.get("index", -1))
 	if next < 0 or next > games.size() or data["points"].size() != roster.size():
 		return null
@@ -438,27 +450,38 @@ static func restore(data: Dictionary) -> TournamentSession:
 	if save_version >= 2:
 		if not data.get("cups") is Array or data["cups"].size() != roster.size():
 			return null
+		if not _save_integer(data.get("scoring_mode", ScoringMode.POINTS), ScoringMode.POINTS, ScoringMode.CUPS) \
+				or not _save_integer(data.get("target_cups", 3), 2, 10):
+			return null
 		session.scoring_mode = clampi(int(data.get("scoring_mode", ScoringMode.POINTS)), ScoringMode.POINTS, ScoringMode.CUPS)
 		session.target_cups = clampi(int(data.get("target_cups", 3)), 2, 10)
 		for i in roster.size():
+			if not _save_integer(data["cups"][i], 0, 10):
+				return null
 			var cup_value := int(data["cups"][i])
 			if cup_value < 0 or cup_value > 10:
 				return null
 			session.cups[i] = cup_value
 	session.index = next
 	for i in roster.size():
+		if not _save_integer(data["points"][i], 0, 200):
+			return null
 		var value := int(data["points"][i])
 		if value < 0 or value > 200:
 			return null
 		session.points[i] = value
 	for raw in data["tiebreak_slots"]:
+		if not _save_integer(raw, 0, roster.size() - 1):
+			return null
 		var slot := int(raw)
 		if slot < 0 or slot >= roster.size() or session.tiebreak_slots.has(slot):
 			return null
 		session.tiebreak_slots.append(slot)
 	if not session.tiebreak_slots.is_empty() and (next != games.size() or session.tiebreak_slots.size() < 2):
 		return null
-	session.tiebreak_attempts = clampi(int(data.get("tiebreak_attempts", 0)), 0, MAX_TIEBREAKS - 1)
+	if not _save_integer(data.get("tiebreak_attempts", 0), 0, MAX_TIEBREAKS - 1):
+		return null
+	session.tiebreak_attempts = int(data.get("tiebreak_attempts", 0))
 	session.arena_ids.assign(data["arenas"])
 	session.mutators = PackedStringArray(data["mutators"])
 	session.chaos = bool(data.get("chaos", false))
@@ -472,19 +495,63 @@ static func restore(data: Dictionary) -> TournamentSession:
 		session.run_id = restored_id
 	# Optional fields preserve version-1 checkpoints made before awards existed.
 	var totals = data.get("performance", [])
+	if not totals is Array or (not totals.is_empty() and totals.size() != roster.size()):
+		return null
 	if totals is Array and totals.size() == roster.size():
 		for slot in roster.size():
 			if not totals[slot] is Dictionary:
 				return null
 			for key in ["knockouts", "falls", "collected", "goals", "saves", "crates"]:
+				if not _save_integer(totals[slot].get(key, 0), 0, 100000):
+					return null
 				session.performance[slot][key] = clampi(int(totals[slot].get(key, 0)), 0, 100000)
 	var trailing = data.get("trailed_last", [])
+	if not trailing is Array:
+		return null
 	if trailing is Array:
 		for slot in trailing:
+			if not _save_integer(slot, 0, roster.size() - 1):
+				return null
 			if int(slot) >= 0 and int(slot) < roster.size() and not session.trailed_last.has(int(slot)):
 				session.trailed_last.append(int(slot))
 	session._persistent = true
 	return null if session.is_complete() else session
+
+
+static func _save_integer(value: Variant, minimum: int, maximum: int) -> bool:
+	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) \
+		and is_finite(float(value)) and float(value) == floorf(float(value)) \
+		and value >= minimum and value <= maximum
+
+
+static func _saved_optional_types(data: Dictionary) -> bool:
+	var seed = data.get("seed", 1)
+	# Native integers retain their full range; JSON floats must be exactly representable.
+	if typeof(seed) != TYPE_INT and not _save_integer(seed, -9007199254740991, 9007199254740991):
+		return false
+	for key in ["chaos", "powerups", "double_final"]:
+		if data.has(key) and not data[key] is bool:
+			return false
+	for key in ["preset", "owner", "run_id"]:
+		if data.has(key) and not data[key] is String:
+			return false
+	var id: String = data.get("run_id", "")
+	return id.is_empty() or (id.length() == 32 and id.is_valid_hex_number())
+
+
+static func _saved_player_types(data: Dictionary) -> bool:
+	for key in ["character", "name", "profile", "palette"]:
+		if data.has(key) and not data[key] is String:
+			return false
+	if data.has("human") and not data.human is bool:
+		return false
+	var fields := {"slot": [0, 0, 3], "difficulty": [1, 0, 3],
+		"team": [-1, -1, 3], "device_type": [0, 0, 2], "device_id": [0, -1, 2147483647]}
+	for key in fields:
+		var limits: Array = fields[key]
+		if not _save_integer(data.get(key, limits[0]), limits[1], limits[2]):
+			return false
+	return true
 
 
 static func saved_session() -> TournamentSession:
