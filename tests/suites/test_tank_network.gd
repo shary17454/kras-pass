@@ -11,6 +11,26 @@ class AmmoSteeringProbe extends "res://src/ai/brains/tank_brain.gd":
 		return not to.is_equal_approx(blocked)
 
 
+class RouteSteeringProbe extends AmmoSteeringProbe:
+	var next_target := Vector3(12, 0, 12)
+	func priority_rival() -> int:
+		return 1
+	func predict(_target_slot: int, _lead: float = 0.35) -> Vector3:
+		return next_target
+	func _has_line_of_sight(_from: Vector3, _to: Vector3) -> bool:
+		return false
+	func _visible_weapon_crate() -> Node3D:
+		return null
+
+
+class RoutingWorld extends RefCounted:
+	var calls := 0
+	var waypoint := Vector3(6, 1, 0)
+	func route(from: Vector3, _to: Vector3) -> PackedVector3Array:
+		calls += 1
+		return PackedVector3Array([from, waypoint])
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tank network presentation")
 	var enabled: bool = AudioManager.enabled
@@ -21,6 +41,7 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	_test_routing_clock(t, scene)
 	_test_ammo_perception(t, scene)
 	var peer: Node = load("res://tests/network_peer.gd").new()
 	peer.game = scene
@@ -230,6 +251,15 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 	first.hide()
 	second.hide()
 	t.equal(game.crate_target(0), me.global_position, "no visible ammo returns no movement target")
+	brain.destination = Vector3(INF, INF, INF)
+	brain.decide(0.0)
+	t.equal(brain.destination, scene.ctx.arena_center(), "lost observations choose known arena center instead of stale steering")
+	var idle = load("res://src/ai/brains/tank_brain.gd").new()
+	idle.configure(0, scene.ctx, 3, 117)
+	idle.controller = game
+	idle.move = Vector2(0.6, -0.9)
+	idle.decide(0.0)
+	t.equal(idle.move, Vector2.ZERO, "bot already at search center clears previous driving input")
 	var queued := Node3D.new()
 	game.add_child(queued)
 	queued.global_position = me.global_position + Vector3.RIGHT
@@ -247,6 +277,38 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 		scene.ctx.fighter(index).visible = fighter_visibility[index]
 	me.global_position = origin
 	scene.camera.global_transform = camera_transform
+
+
+func _test_routing_clock(t: TestHarness, scene: Node) -> void:
+	var me: Fighter = scene.ctx.fighter(0)
+	var origin := me.global_position
+	var world = scene.arena.get_meta("tank_world")
+	var routing := RoutingWorld.new()
+	scene.arena.set_meta("tank_world", routing)
+	me.global_position = scene.ctx.arena_center() + Vector3.UP
+	var brain := RouteSteeringProbe.new()
+	brain.configure(0, scene.ctx, 3, 117)
+	brain.controller = scene.controller
+	brain.decide(1.0 / 60.0)
+	t.equal(routing.calls, 1, "blocked route is obtained on the first decision")
+	t.equal(brain.destination, routing.waypoint, "route follows the next unreached road point")
+	brain._time = 0.5
+	brain.decide(1.0 / 60.0)
+	t.equal(routing.calls, 1, "route cache avoids a graph query every decision")
+	brain._time = 1.01
+	brain.decide(1.0 / 60.0)
+	t.equal(routing.calls, 2, "route refresh follows simulation time rather than decision-count times physics delta")
+	me.global_position = routing.waypoint
+	brain._time = 1.1
+	brain.decide(1.0 / 60.0)
+	t.equal(brain.destination, brain.next_target, "reached final road point continues toward observed rival")
+	brain.move = Vector2(0.6, -0.9)
+	brain.on_round_start()
+	t.equal(brain.move, Vector2.ZERO, "new round resets driving input through the shared brain lifecycle")
+	brain.decide(1.0 / 60.0)
+	t.equal(routing.calls, 3, "new round discards the previous round's cached route immediately")
+	me.global_position = origin
+	scene.arena.set_meta("tank_world", world)
 
 
 func _has_collision(node: Node) -> bool:
