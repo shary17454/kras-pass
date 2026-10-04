@@ -167,20 +167,30 @@ func _move_loose(b: Dictionary, node: Node3D, delta: float) -> void:
 func _try_pickup(b: Dictionary, node: Node3D) -> void:
 	if Vector3(b["vel"]).length_squared() > 4.0:
 		return
+	var nearest := 1.6
+	var candidates: Array[Fighter] = []
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
 			continue
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f) or f.carrying > 0:
 			continue
-		if f.global_position.distance_to(node.global_position) > 1.6:
-			continue
-		f.carrying = 1
-		b["held"] = i
-		b["thrower"] = i
-		_feedback("pickup", node.global_position)
-		AudioManager.play_sfx("pickup", node.global_position)
+		var distance := f.global_position.distance_to(node.global_position)
+		if distance < nearest:
+			nearest = distance
+			candidates.assign([f])
+		elif distance == nearest:
+			candidates.append(f)
+	if candidates.is_empty():
 		return
+	# Seat order is not pickup priority; exact ties use the gameplay seed.
+	candidates.sort_custom(func(a: Fighter, other: Fighter) -> bool: return a.slot < other.slot)
+	var winner := candidates[0] if candidates.size() == 1 else candidates[ctx.rng.randi_range(0, candidates.size() - 1)]
+	winner.carrying = 1
+	b["held"] = winner.slot
+	b["thrower"] = winner.slot
+	_feedback("pickup", node.global_position)
+	AudioManager.play_sfx("pickup", node.global_position)
 
 
 func _read_throws() -> void:
