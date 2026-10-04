@@ -48,7 +48,6 @@ var current_id := ""
 var current_node: Node
 var _stack: Array = []
 var _busy := false
-var _pending_args := {}
 
 
 func _ready() -> void:
@@ -81,22 +80,23 @@ func _ready() -> void:
 
 
 ## Replace the current screen. `push` keeps the previous id on the back stack.
-func go_to(id: String, args: Dictionary = {}, push: bool = true, fade: float = 0.22) -> void:
+func go_to(id: String, args: Dictionary = {}, push: bool = true, fade: float = 0.22) -> bool:
 	if _busy:
 		# Two buttons pressed on the same frame must not open two screens.
-		return
+		return false
 	if not SCREENS.has(id):
 		Log.e("unknown screen '%s'" % id, "Router")
-		return
+		return false
 	_busy = true
-	_pending_args = args
-	if push and current_id != "" and current_id != id:
-		_stack.append({"id": current_id, "args": {}})
+	var previous_id := current_id
 	await _fade(1.0, fade)
-	_swap(id, args)
+	var swapped := _swap(id, args)
+	if swapped and push and previous_id != "" and previous_id != id:
+		_stack.append({"id": previous_id, "args": {}})
 	await _fade(0.0, fade)
 	_busy = false
 	transition_finished.emit()
+	return swapped
 
 
 func replace(id: String, args: Dictionary = {}) -> void:
@@ -110,7 +110,8 @@ func back(fallback: String = "main_menu") -> void:
 		await go_to(fallback, {}, false)
 		return
 	var entry: Dictionary = _stack.pop_back()
-	await go_to(String(entry["id"]), entry.get("args", {}), false)
+	if not await go_to(String(entry["id"]), entry.get("args", {}), false):
+		_stack.append(entry)
 
 
 func clear_stack() -> void:
@@ -126,17 +127,23 @@ func start_match(config: MatchConfig, on_finished: Callable = Callable()) -> voi
 	await go_to("match", {"config": config, "on_finished": on_finished})
 
 
-func _swap(id: String, args: Dictionary) -> void:
+func _swap(id: String, args: Dictionary) -> bool:
+	var script := _load_screen_script(id)
+	if script == null or not script.can_instantiate():
+		Log.e("failed to load screen script for '%s'" % id, "Router")
+		return false
+	var candidate = script.new()
+	if not candidate is Node:
+		if candidate is Object and not candidate is RefCounted:
+			candidate.free()
+		Log.e("screen script for '%s' is not a Node" % id, "Router")
+		return false
+	var node: Node = candidate
 	if current_node != null and is_instance_valid(current_node):
 		if current_node.has_method("teardown"):
 			current_node.call("teardown")
 		current_node.queue_free()
 		current_node = null
-	var script: Script = load(SCREENS[id])
-	if script == null:
-		Log.e("failed to load screen script for '%s'" % id, "Router")
-		return
-	var node: Node = script.new()
 	node.name = id
 	holder.add_child(node)
 	if node is Control:
@@ -152,6 +159,11 @@ func _swap(id: String, args: Dictionary) -> void:
 		node.call("setup", args)
 	screen_changed.emit(id)
 	Log.d("screen -> %s" % id, "Router")
+	return true
+
+
+func _load_screen_script(id: String) -> Script:
+	return load(SCREENS[id]) as Script
 
 
 func _fade(target: float, duration: float) -> void:
