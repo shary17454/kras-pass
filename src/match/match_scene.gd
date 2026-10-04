@@ -252,6 +252,7 @@ func _build() -> void:
 	_create_brains()
 	_assign_inputs()
 	_create_touch_controls()
+	hud.touch_sources = touch_sources
 	AudioManager.play_music(controller.music_track())
 	EventBus.match_started.emit(config)
 	_set_phase(P.INTRO)
