@@ -4,6 +4,9 @@ var _status: Label
 var _rooms: Array = []
 var _name := "Player"
 var _refresh_pending := false
+var _pending_match: MatchConfig
+var _pending_epoch := 0
+var _pending_room := ""
 
 
 func build() -> void:
@@ -16,10 +19,34 @@ func build() -> void:
 		if is_instance_valid(_status):
 			_status.text = Loc.t("online.failed"))
 	Net.connection_lost.connect(func(_reason): _schedule_refresh())
-	Net.match_start_requested.connect(func(cfg):
-		if Net.mode != Net.Mode.LOCAL and cfg != null and cfg.context == MatchConfig.Context.ONLINE:
-			SceneRouter.start_match(cfg))
+	Net.match_start_requested.connect(_request_match)
+	SceneRouter.transition_finished.connect(_flush_pending_match, CONNECT_DEFERRED)
 	_refresh()
+
+
+func _request_match(config: MatchConfig) -> void:
+	if config == null or config.context != MatchConfig.Context.ONLINE or Net.mode == Net.Mode.LOCAL:
+		return
+	# Coalesce server starts while the previous transition is still loading.
+	_pending_match = config
+	_pending_epoch = Net.epoch
+	_pending_room = Net.room_code
+	_flush_pending_match()
+
+
+func _flush_pending_match() -> void:
+	if _pending_match == null or SceneRouter._busy:
+		return
+	var config := _pending_match
+	_pending_match = null
+	if SceneRouter.current_node != self or SceneRouter.current_id != "online" \
+			or not SceneRouter._match_session_is_current(config, _pending_epoch, _pending_room):
+		return
+	_launch_match(config)
+
+
+func _launch_match(config: MatchConfig) -> void:
+	SceneRouter.start_match(config)
 
 
 func _schedule_refresh() -> void:
