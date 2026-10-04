@@ -13,15 +13,27 @@ import {attachMultiplayer} from './multiplayer.js';
 import {ONLINE_GAMES, Rooms} from './rooms.js';
 import {kartProcessDeadline} from './race-smoke-budget.js';
 import {labProcessDeadline} from './lab-smoke-budget.js';
+import {restoreFawdaFinal, assertFawdaNetworkEvidence, FAWDA_FINAL_SEED} from './fawda-final-checkpoint.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
 const server = createServer();
 const seedText = process.argv.find(arg => arg.startsWith('--seed='))?.slice(7);
+const fawdaFinalCheckpoint = process.argv.includes('--fawda-final-checkpoint');
 assert.ok(seedText === undefined || (/^[0-9]+$/.test(seedText)
   && Number.isSafeInteger(Number(seedText)) && Number(seedText) >= 1 && Number(seedText) <= 2147483646));
 const service = attachMultiplayer(server, {enabled: true,
-  rooms: seedText === undefined ? new Rooms() : new Rooms({seed: () => Number(seedText)})});
+  rooms: fawdaFinalCheckpoint ? new Rooms({seed: () => FAWDA_FINAL_SEED})
+    : seedText === undefined ? new Rooms() : new Rooms({seed: () => Number(seedText)})});
+if (fawdaFinalCheckpoint) {
+  const beginRound = service.rooms.beginRound.bind(service.rooms);
+  service.rooms.beginRound = room => {
+    if (room.epoch === 0) {
+      console.log(JSON.stringify({event: 'restored_fawda_final', standings: restoreFawdaFinal(room)}));
+    }
+    beginRound(room);
+  };
+}
 const loopDelay = monitorEventLoopDelay({resolution: 20});
 loopDelay.enable();
 const timing = new NetworkTiming();
@@ -77,6 +89,7 @@ assert.ok(!forgeTiebreak || (tournament && game === 'boss_forge'));
 assert.ok(!dreadTiebreak || (tournament && game === 'boss_dreadnought'));
 assert.ok(!sovereignTiebreak || (tournament && game === 'boss_sovereign'));
 const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
+assert.ok(!fawdaFinalCheckpoint || (tournament && game === 'fawda' && selectedHumans === '2' && seedText === undefined));
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
 assert.ok(!raceTiebreak || selectedHumans === undefined || selectedHumans === '4');
@@ -99,6 +112,7 @@ try {
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
         ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : []),
+        ...(fawdaFinalCheckpoint ? ['--fawda-final-checkpoint'] : []),
         ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : []),
         ...(forgeTiebreak ? ['--forge-tiebreak'] : []), ...(dreadTiebreak ? ['--dread-tiebreak'] : []),
         ...(sovereignTiebreak ? ['--sovereign-tiebreak'] : [])],
@@ -133,12 +147,15 @@ try {
     const code = await Promise.race([roomCode, host.then(() => { throw new Error('host exited before room'); })]);
     const results = await Promise.all([host, ...Array.from({length: humans - 1}, (_, i) => peer(i + 1, code))]);
     for (const result of results) assert.deepEqual(result.scores, results[0].scores);
+    if (game === 'fawda') {
+      assertFawdaNetworkEvidence(results, fawdaFinalCheckpoint);
+    }
     assert.equal(new Set(results.map(r => r.id)).size, humans);
     assert.ok(results.some(r => r.reconnected));
     assert.equal(results[0].reconnected, true, 'host result must survive transport loss');
     if (tournament) {
       for (const result of results) {
-        assert.ok(result.matches >= 3);
+        assert.ok(result.matches >= (fawdaFinalCheckpoint ? 1 : 3));
         assert.equal(result.tournament.complete, true);
         assert.deepEqual(result.tournament, results[0].tournament);
       }

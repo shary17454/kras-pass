@@ -18,6 +18,7 @@ var completed := false
 var initial_positions: Array[Vector3] = []
 var moved := false
 var tournament_mode := false
+var fawda_final_checkpoint := false
 var game_id := "ring_rumble"
 var requested_game_id := ""
 var duo_tiebreak := false
@@ -47,6 +48,8 @@ var observed_scrap_damage := false
 var observed_fawda_events := {}
 var fawda_pickup_probe := {}
 var fawda_round_evidence: RefCounted
+var fawda_worlds: Array = []
+var fawda_event_coverage := {}
 var observed_kart_boost := false
 var observed_kart_rescue := false
 var fawda_arenas_seen := {}
@@ -235,6 +238,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
+		if arg == "--fawda-final-checkpoint": fawda_final_checkpoint = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg == "--siege-tiebreak": siege_tiebreak = true
@@ -1227,9 +1231,16 @@ func _finished(result: MatchResult) -> void:
 			"arena": game.config.arena_id, "seed": game.config.seed,
 			"observed_events": observed_fawda_events, "probe": fawda_pickup_probe,
 			"rounds": fawda_round_evidence.rounds}))
-		for kind in ["drop", "pickup", "throw", "explode"]:
-			if not observed_fawda_events.has(kind):
-				_fail("fawda real event missing: " + kind)
+		fawda_worlds.append({"epoch": Net.epoch, "arena": game.config.arena_id,
+			"seed": game.config.seed, "world": _fawda_world().duplicate(true),
+			"observed_events": observed_fawda_events.duplicate(true)})
+		for kind in observed_fawda_events:
+			fawda_event_coverage[kind] = true
+		if host:
+			var valid_end := preload("res://tests/network_smoke_config.gd").fawda_round_ended(game.ctx.alive_slots(), game.ctx.time_left) if contenders.is_empty() \
+				else preload("res://tests/network_smoke_config.gd").fawda_final_ended(contenders, game.ctx.alive_slots(), game.ctx.time_left)
+			if not valid_end:
+				_fail("fawda final ended without survival or timeout")
 				return
 		if not host:
 			var world := _fawda_world()
@@ -1641,9 +1652,14 @@ func _finished(result: MatchResult) -> void:
 	if requested_game_id == "tank_arena" and tournament_mode and tank_arenas_seen.size() != 3:
 		_fail("ATV tournament did not visit all three authored arenas")
 		return
-	if requested_game_id == "fawda" and tournament_mode and fawda_arenas_seen.size() != 2:
+	if requested_game_id == "fawda" and tournament_mode and not fawda_final_checkpoint and fawda_arenas_seen.size() != 2:
 		_fail("fawda tournament did not visit both authored arenas")
 		return
+	if requested_game_id == "fawda" and not fawda_final_checkpoint:
+		for kind in ["drop", "pickup", "throw", "explode"]:
+			if not fawda_event_coverage.has(kind):
+				_fail("fawda campaign did not cover a real event: " + kind)
+				return
 	if requested_game_id == "base_siege" and tournament_mode and siege_arenas_seen.size() != 2:
 		_fail("siege tournament did not visit both authored arenas")
 		return
@@ -1740,6 +1756,8 @@ func _finished(result: MatchResult) -> void:
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
+		"fawda_worlds": fawda_worlds,
+		"fawda_event_coverage": fawda_event_coverage,
 		"collection_scored": observed_collection_score, "carrying_seen": observed_carrying}))
 	call_deferred("_finish_cleanup")
 

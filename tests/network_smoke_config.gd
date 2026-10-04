@@ -42,3 +42,16 @@ static func siege_evidence(hit: bool, destroyed: bool, contenders: Array, scores
 			return false
 		scored = scored or float(score) > 0.0
 	return scored
+
+
+static func fawda_final_ended(contenders: Array, alive: Array, time_left: float) -> bool:
+	if contenders.is_empty() or not is_finite(time_left):
+		return false
+	for slot in alive:
+		if not contenders.has(slot):
+			return false
+	return fawda_round_ended(alive, time_left)
+
+
+static func fawda_round_ended(alive: Array, time_left: float) -> bool:
+	return is_finite(time_left) and (alive.size() <= 1 or time_left <= 0.0)
