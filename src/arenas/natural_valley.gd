@@ -135,6 +135,7 @@ func _terrain() -> void:
 	collision.shape = terrain.mesh.create_trimesh_shape()
 	body.add_child(collision)
 	add_child(body)
+	body.set_meta("observation_mesh", body.get_path_to(terrain))
 	_add_distant_rocks()
 
 

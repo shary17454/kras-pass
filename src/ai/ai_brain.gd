@@ -5,7 +5,7 @@ extends RefCounted
 ## Design rule: bots must use observable cues rather than hidden game state.
 ## Shared fighter perception retains delayed positions and velocities, with
 ## aim error scaled by `accuracy`. Shared visibility checks include the camera
-## frustum, but not wall occlusion. Specialised controller and
+## frustum and visible world-body occlusion. Specialised controller and
 ## object queries must be reviewed separately for visibility and reaction delay.
 ## Difficulty must not grant hidden movement or damage bonuses.
 ##
@@ -16,6 +16,9 @@ extends RefCounted
 const Btn := InputFrame.Btn
 const HISTORY_SAMPLE_INTERVAL := 1.0 / 20.0
 const HISTORY_CAP := 32
+const OCCLUSION_SKIP_LIMIT := 8
+
+var _sight_query := PhysicsRayQueryParameters3D.new()
 
 var slot := 0
 var ctx: MatchContext
@@ -268,14 +271,87 @@ func can_observe(node: Node3D) -> bool:
 	var camera := ctx.observation_camera
 	if node is VisualInstance3D and node.layers & camera.cull_mask == 0:
 		return false
-	if _point_in_view(node.global_position):
+	if _point_in_view(node.global_position) and _world_sight_clear(node, node.global_position):
 		return true
-	# A mesh may straddle the frame even when its origin lies outside it.
-	if node is MeshInstance3D and node.mesh != null:
-		var bounds: AABB = node.get_aabb()
-		for corner in 8:
-			if _point_in_view(node.global_transform * bounds.get_endpoint(corner)):
-				return true
+	# Fighter origins are at ground contact, not at the visible body centre.
+	if node is Fighter:
+		var centre := node.global_position + Vector3.UP * 0.6
+		if _point_in_view(centre) and _world_sight_clear(node, centre):
+			return true
+	# Actor origins can be below a surface while their child mesh is exposed.
+	# Limit both hierarchy traversal and candidate rays independently.
+	var pending: Array[Node] = [node]
+	var visited := 0
+	var points_left := 12
+	while not pending.is_empty() and visited < 32 and points_left > 0:
+		var candidate: Node = pending.pop_back()
+		visited += 1
+		if candidate is MeshInstance3D and candidate.mesh != null and candidate.is_visible_in_tree() and candidate.layers & camera.cull_mask != 0:
+			var bounds: AABB = candidate.get_aabb()
+			for corner in 8:
+				points_left -= 1
+				var point: Vector3 = candidate.global_transform * bounds.get_endpoint(corner)
+				if _point_in_view(point) and _world_sight_clear(node, point):
+					return true
+				if points_left <= 0:
+					break
+		# Preserve child order: the primary body mesh precedes accessories.
+		var children := candidate.get_children()
+		for index in range(mini(children.size(), 32 - visited) - 1, -1, -1):
+			if pending.size() + visited < 32:
+				pending.append(children[index])
+	return false
+
+
+func _world_sight_clear(target: Node3D, point: Vector3) -> bool:
+	if not target.is_inside_tree():
+		return false
+	var camera := ctx.observation_camera
+	var origin := camera.global_position + camera.global_basis.x * camera.h_offset + camera.global_basis.y * camera.v_offset
+	var follow := camera as ArenaCamera
+	if follow != null and not follow.shared_world and follow.mode in [ArenaCamera.Mode.WORLD, ArenaCamera.Mode.CHASE]:
+		var reference := follow.local_target as Fighter
+		var me := self_body()
+		if is_instance_valid(reference) and me != null:
+			var angle := me.facing.signed_angle_to(reference.facing, Vector3.UP)
+			origin = me.global_position + (origin - reference.global_position).rotated(Vector3.UP, -angle)
+	_sight_query.from = origin
+	_sight_query.to = point
+	_sight_query.collision_mask = 1
+	_sight_query.collide_with_areas = false
+	_sight_query.collide_with_bodies = true
+	_sight_query.hit_from_inside = true
+	_sight_query.exclude = []
+	# Invisible collision proxies are not visual obstacles. Bound retries so a
+	# stack of hidden bodies cannot create an unbounded physics-query loop.
+	for attempt in OCCLUSION_SKIP_LIMIT:
+		var hit := target.get_world_3d().direct_space_state.intersect_ray(_sight_query)
+		if hit.is_empty():
+			return true
+		var body := hit.get("collider") as Node3D
+		# Surface contact at the requested point is not an intervening wall.
+		# This also avoids treating a ground-level cue as buried in its floor.
+		if Vector3(hit["normal"]).length_squared() > 0.0 and Vector3(hit["position"]).distance_squared_to(point) <= 0.000001:
+			return true
+		if body == target or (body != null and (body.is_ancestor_of(target) or target.is_ancestor_of(body))):
+			return true
+		if body == null or _has_visible_geometry(body, camera.cull_mask):
+			return false
+		var excluded := _sight_query.exclude
+		excluded.append(hit["rid"])
+		_sight_query.exclude = excluded
+	return false
+
+
+func _has_visible_geometry(root: Node, cull_mask: int) -> bool:
+	if root is CollisionObject3D and root.has_meta("observation_mesh"):
+		var geometry := root.get_node_or_null(NodePath(root.get_meta("observation_mesh"))) as GeometryInstance3D
+		return geometry != null and geometry.is_visible_in_tree() and geometry.layers & cull_mask != 0
+	if root is GeometryInstance3D and root.is_visible_in_tree() and root.layers & cull_mask != 0:
+		return true
+	for child in root.get_children():
+		if _has_visible_geometry(child, cull_mask):
+			return true
 	return false
 
 
