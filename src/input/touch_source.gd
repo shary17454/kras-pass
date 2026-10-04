@@ -131,6 +131,23 @@ static func should_show() -> bool:
 
 # --- geometry --------------------------------------------------------------
 
+func control_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	if ControlProfile.shows_steering(profile):
+		for rect in _steer_rects():
+			rects.append(Rect2(global_position + rect.position, rect.size))
+	if ControlProfile.shows_move_stick(profile):
+		var radius := STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)
+		rects.append(Rect2(global_position + _stick_centre() - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+	if ControlProfile.shows_aim_stick(profile):
+		var radius := STICK_RADIUS * _scale
+		rects.append(Rect2(global_position + _aim_centre() - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+	for index in buttons.size():
+		var radius := BUTTON_RADIUS * _scale
+		rects.append(Rect2(global_position + _button_centre(index) - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+	return rects
+
+
 func _left_edge() -> float:
 	return (EDGE_MARGIN if touch_count == 1 else 12.0) + _inset_left
 
