@@ -778,6 +778,10 @@ func _physics_process(_delta: float) -> void:
 			var direction := target - fighter.global_position
 			direction.y = 0.0
 			movement = Vector2(direction.x, direction.z).limit_length()
+			if fighter.carrying == 0 and nearest > 16.0 and nearest < INF \
+				and fighter.can_afford_dash() and fighter._dash_cd <= 0.0 \
+				and fighter.facing.dot(direction.normalized()) > 0.9:
+				buttons = InputFrame.Btn.DASH
 			if fighter.carrying > 0 and fighter.facing.dot(direction.normalized()) > 0.85 and (Time.get_ticks_msec() - started_at) % 600 < 150:
 				buttons = InputFrame.Btn.ATTACK
 		if game_id in ["turret_duel", "tank_arena", "scrap_karts"]:
