@@ -10,6 +10,7 @@ extends CanvasLayer
 var ctx: MatchContext
 signal ready_requested()
 var controller: MiniGameController
+var touch_sources: Array = []
 
 var _chips: Array = []
 var _timer_label: Label
@@ -19,6 +20,7 @@ var _centre_label: Label
 var _rules_card: Control
 var _hint_label: Label
 var _toast_box: VBoxContainer
+var _offscreen_cues: Array[OffscreenPlayerCue] = []
 ## Width of the per-player charge meter, in unscaled pixels.
 const METER_WIDTH := 118.0
 
@@ -163,6 +165,11 @@ func _build() -> void:
 	get_viewport().size_changed.connect(fit_hint)
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_hint))
 	fit_hint.call()
+	for player in ctx.config.players:
+		var cue := OffscreenPlayerCue.new()
+		root.add_child(cue)
+		cue.configure(player)
+		_offscreen_cues.append(cue)
 
 	# --- toasts ------------------------------------------------------------
 	_toast_box = VBoxContainer.new()
@@ -451,9 +458,31 @@ func tick(delta: float) -> void:
 		return
 	_accum = 0.0
 	_refresh_chips()
+	_refresh_offscreen_cues()
 	var banner := controller.hud_banner() if controller != null else ""
 	if banner != _banner_label.text:
 		_banner_label.text = banner
+
+
+func _refresh_offscreen_cues() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var inset := Platform.safe_insets()
+	var top := maxf(occupied_top() + 40.0, inset.y + 40.0)
+	var bottom := viewport_size.y - inset.w - 40.0
+	for source in touch_sources:
+		if is_instance_valid(source) and source.is_visible_in_tree():
+			for rect in source.control_rects():
+				bottom = minf(bottom, rect.position.y - 40.0)
+	var bounds := Rect2(Vector2(inset.x + 40.0, top), Vector2(viewport_size.x - inset.x - inset.z - 80.0, bottom - top))
+	var results: Array[Dictionary] = []
+	for slot in _offscreen_cues.size():
+		var result := {}
+		if OffscreenPlayerCue.eligible(ctx, slot):
+			result = OffscreenPlayerCue.project(ctx.observation_camera, ctx.fighter(slot).global_position + Vector3.UP * 0.6, bounds)
+		results.append(result)
+	OffscreenPlayerCue.separate(results, bounds)
+	for slot in _offscreen_cues.size():
+		_offscreen_cues[slot].place(results[slot])
 
 
 func _refresh_chips() -> void:
