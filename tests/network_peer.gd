@@ -94,6 +94,7 @@ var observed_crate_break := false
 var observed_crate_score := false
 var observed_lab_weapon := false
 var observed_lab_shot := false
+var crate_attack_clock := 0.0
 var echo_serial := -1
 var echo_cues := {}
 var echo_leaving := false
@@ -439,6 +440,11 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id in ["crate_smash", "lab_crates"]:
+		if game.phase in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
+			crate_attack_clock = fmod(crate_attack_clock + _delta, 0.8)
+		else:
+			crate_attack_clock = 0.0
 	if host:
 		for remote_slot in Net._inputs:
 			observed_remote_input_slots[remote_slot] = true
@@ -868,7 +874,7 @@ func _physics_process(_delta: float) -> void:
 				buttons = InputFrame.Btn.JUMP
 		if game_id in ["crate_smash", "lab_crates"]:
 			movement = _crate_movement(slot)
-			if (Time.get_ticks_msec() - started_at) % 800 < 200:
+			if crate_attack_clock < 0.2:
 				buttons = InputFrame.Btn.ATTACK
 		if game_id == "symbol_echo":
 			movement = _echo_movement(slot)
