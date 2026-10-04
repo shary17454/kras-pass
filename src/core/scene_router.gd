@@ -103,6 +103,8 @@ func go_to(id: String, args: Dictionary = {}, push: bool = true, fade: float = 0
 		return false
 	_busy = true
 	var previous_id := current_id
+	var requested_epoch := Net.epoch
+	var requested_room := Net.room_code
 	await _fade(1.0, fade)
 	var preparation: Node
 	var prepared := true
@@ -118,7 +120,12 @@ func go_to(id: String, args: Dictionary = {}, push: bool = true, fade: float = 0
 			previous_node.process_mode = Node.PROCESS_MODE_DISABLED
 		var config = args.get("config")
 		if config is MatchConfig:
-			prepared = await _prepare_match(preparation, config)
+			prepared = _match_session_is_current(config, requested_epoch, requested_room)
+			if prepared:
+				prepared = await _prepare_match(preparation, config)
+				prepared = prepared and _match_session_is_current(config, requested_epoch, requested_room)
+			if not prepared and config.context == MatchConfig.Context.ONLINE:
+				Log.w("online match changed or could not be prepared", "Router")
 		else:
 			Log.e("match resource preparation requires a config", "Router")
 			prepared = false
@@ -134,6 +141,18 @@ func go_to(id: String, args: Dictionary = {}, push: bool = true, fade: float = 0
 	_busy = false
 	transition_finished.emit()
 	return swapped
+
+
+func _match_session_is_current(config: MatchConfig, expected_epoch: int, expected_room: String) -> bool:
+	if config.context != MatchConfig.Context.ONLINE:
+		return true
+	if Net.mode == Net.Mode.LOCAL or Net.state != Net.State.IN_MATCH \
+			or Net.epoch != expected_epoch or Net.room_code != expected_room \
+			or Net.room_state not in ["loading", "playing"]:
+		return false
+	var rules = Net.match_data.get("config")
+	return rules is Dictionary and rules.get("game") == config.minigame_id \
+		and rules.get("arena") == config.arena_id and Net.match_data.get("seed") == config.seed
 
 
 func _prepare_match(preparation: Node, config: MatchConfig) -> bool:

@@ -50,6 +50,34 @@ are changed. Content validation rejects missing or non-bundled declared paths.
   736 assertions passed. Log: `/tmp/kras-match-preparation-final.log`.
 - Full core suite log: `/tmp/kras-threaded-resource-core.log`.
 
+## Online generation guard follow-up
+
+Waiting for resources creates a real interval in which the room can close,
+disconnect, finish, or advance to a different server epoch. A controlled fixture
+reproduced eight invalid transitions before the guard (20 assertions passed,
+8 failed in `/tmp/kras-match-session-before.log`). The router now captures the
+requested room/epoch before fading and validates the active game, arena and
+seed both before preparation and before swapping. It does not start an obsolete
+match after waiting for resources. Local matches are independent of this guard.
+
+The expanded fixture passed 43 assertions, including malformed/missing match
+data, a changed arena, lobby state and a still-valid playing session
+(`/tmp/kras-match-session-expanded.log`). The actual rendered local transition
+suite still passed 737 assertions after the guard
+(`/tmp/kras-match-preparation-session-guard-rendered.log`). The final compile
+passed 341 scripts (`/tmp/kras-match-session-compile.log`). Runtime log guards
+passed for both suites. These are controlled session-state tests, not proof of
+four online players operating the graphical lobby or production connectivity.
+
+The long full core run began with the preparation implementation subsequently
+committed as `cc04450e65f47158420629bd4345c7dfe160e2f7`, before this guard follow-up.
+It has already reported a failing Expert/Easy Gem Grab comparison (72 versus
+74 total points); its terminal result must be recorded before qualification.
+That comparison currently alternates slot assignments while also changing the
+world seed on every run, rather than pairing identical world seeds as its
+comment claims. Both the failed gate and the comparison design need follow-up;
+the assertion has not been weakened and no AI speed/score advantage was added.
+
 ## Rendered resource and gameplay measurement
 
 The performance probe supports `--prepare-resources` to exercise the same bank
