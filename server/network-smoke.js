@@ -12,6 +12,7 @@ import {NetworkTiming} from './network-timing.js';
 import {attachMultiplayer} from './multiplayer.js';
 import {ONLINE_GAMES, Rooms} from './rooms.js';
 import {kartProcessDeadline} from './race-smoke-budget.js';
+import {labProcessDeadline} from './lab-smoke-budget.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
@@ -112,6 +113,7 @@ try {
       child.stdout.on('data', collect); child.stderr.on('data', collect);
       return new Promise((resolve, reject) => {
         const deadline = game === 'kart_sprint' ? kartProcessDeadline(tournament)
+          : game === 'lab_crates' ? labProcessDeadline(tournament)
           : game === 'sabaq_sawarikh' ? (tournament ? 960000 : 660000)
           : ['boss_forge', 'boss_dreadnought', 'boss_sovereign', 'boss_colossus'].includes(game) ? (tournament ? 800000 : 450000) : (tournament ? 360000 : 180000);
         const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${name} timeout`)); }, deadline);

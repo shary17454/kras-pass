@@ -75,6 +75,7 @@ const SUITES := [
 	"res://tests/suites/test_ai_occlusion.gd",
 	"res://tests/suites/test_collector_observed_motion.gd",
 	"res://tests/suites/test_race_smoke_budget.gd",
+	"res://tests/suites/test_lab_smoke_budget.gd",
 	"res://tests/suites/test_fawda_network.gd",
 	"res://tests/suites/test_race_rounds.gd",
 	"res://tests/suites/test_kart_network.gd",
