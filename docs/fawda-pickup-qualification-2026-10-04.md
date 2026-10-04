@@ -73,3 +73,42 @@ measurements and remaining product requirements are still required.
 The existing iOS QA export is from 9ef106f, not this source. Production health
 currently reports ok/authentication ready, but multiplayer remains disabled.
 Do not deploy or send this unqualified source to Apple review.
+
+## Follow-up: real input pursuit and completed local groups
+
+At `e719d1e0259128f8b40c38ab67a8fee4faa756b5`, the scripted human driver
+uses the existing DASH action when an eligible bomb is more than four metres
+away, the fighter faces the target, and its normal charge/cooldown allow it.
+It retains ordinary movement and throw actions. No game rule, hazard, fuse,
+speed, score, spawn or event requirement changes; no forced pickup.
+Compilation at this source passed all 335 scripts in
+`/tmp/kras-fawda-dash-compile.log`, with a passing log guard.
+
+The same two-input/two-Bot seeded tournament then completed all three matches:
+storm_ring, vortex_ring, vortex_ring. Both peers required and observed all
+four bomb event kinds in every match. Final scores were `[9,2,8,8]`, points
+`[10,4,12,10]`, champion slot two, and both peers successfully reconnected.
+The guest received 2234 world snapshots. Evidence directory:
+`kras-network-smoke-O0SJED` in the session macOS temporary directory.
+Server event-loop maximum was 5864 ms; host maximum frame gap 7266 ms.
+
+A separate ordinary match with four real Godot processes and four scripted
+human input sources, the same seed, also passed. All peers matched scores
+`[15,14,7,11]` and all four bomb event kinds. Host and peer ID two reconnected;
+other peers stayed connected. Guests received 1452, 1452 and 1430 world
+snapshots. This was one match with two internal rounds in vortex_ring, not a
+four-player tournament or four real people on Internet-connected devices.
+Evidence: `kras-network-smoke-S7PBiy`; server maximum 2399 ms, host gap 5218 ms.
+
+The successful groups also reported zero sampled in-range pairs: observation
+runs after rules may already have marked a bomb held and excluded it. Thus
+the earlier sampled minimum/zero pairs are not proof that nobody ever entered
+pickup range. The new input exercise passed; a universal root-cause or
+all-seed/platform stability claim is not supported.
+
+Both fixed-seed commands are now retained in the Fawda CI scenario. Its job
+budget increases to 45 minutes for the two additional groups; existing
+180/360-second per-process deadlines and failure/event assertions remain
+unchanged. Linux execution of these new cases is still unverified.
+The remaining release gates above still apply; these results do not approve
+performance, battery/thermal behavior, physical devices or Apple submission.
