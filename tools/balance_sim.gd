@@ -313,6 +313,10 @@ func _difficulty_sample(cfg: MatchConfig, result: MatchResult) -> Dictionary:
 	var sample := {"seed": cfg.seed, "character": cfg.players[0].character_id,
 		"expert_slots": [0, 1] if cfg.players[0].ai_difficulty == PlayerConfig.Difficulty.EXPERT else [2, 3],
 		"completed": result != null}
+	if result != null:
+		sample["scores"] = Array(result.scores)
+		sample["places"] = Array(result.places)
+		sample["details"] = result.details.duplicate(true)
 	if cfg.definition().is_boss:
 		sample["boss_outcome"] = _boss_outcome(result, cfg.minigame_id)
 	return sample

@@ -455,6 +455,8 @@ func _collector_decisions(t: TestHarness, host: Node) -> void:
 	var brain = load("res://src/ai/brains/collector_brain.gd").new()
 	brain.configure(0, ctx, PlayerConfig.Difficulty.EXPERT, 45)
 	brain._tree = host.get_tree()
+	brain.reaction_time = 0.0
+	brain._record_history()
 	t.equal(brain._preferred_loot(), free, "expert avoids loot the nearby rival will reach first")
 	brain.strategy = 0.2
 	t.equal(brain._preferred_loot(), contested, "easy collector follows nearest loot")

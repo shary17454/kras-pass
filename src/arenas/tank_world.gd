@@ -40,6 +40,7 @@ func build(a: Arena) -> void:
 	terrain_shape.shape = terrain.mesh.create_trimesh_shape()
 	terrain_body.add_child(terrain_shape)
 	add_child(terrain_body)
+	terrain_body.set_meta("observation_mesh", terrain_body.get_path_to(terrain))
 	for x in 4:
 		for z in 4:
 			_cover(x * 4 + z, _bend(Vector3(-27 + x * 18, 0.05, -27 + z * 18)))

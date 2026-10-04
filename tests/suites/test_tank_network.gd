@@ -170,12 +170,15 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 	var game = scene.controller
 	var me: Fighter = scene.ctx.fighter(0)
 	var origin := me.global_position
+	var camera_transform: Transform3D = scene.camera.global_transform
 	var fighter_visibility: Array[bool] = []
 	for fighter in scene.ctx.fighters:
 		fighter_visibility.append(fighter.visible)
 		fighter.hide()
 	me.show()
 	me.global_position = scene.ctx.arena_center() + Vector3.UP
+	# The synthetic ammo venue must move with its follow-camera subject.
+	scene.camera.global_position += me.global_position - origin
 	var saved: Array[Dictionary] = []
 	for crate in game.crates:
 		saved.append({"position": crate.node.global_position, "pos": crate.pos,
@@ -193,9 +196,11 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 	var brain := AmmoSteeringProbe.new()
 	brain.configure(0, scene.ctx, 3, 117)
 	brain.controller = game
+	t.ok(brain.can_observe(second), "ammo fixture's visible crate is inside the observation view")
 	brain.decide(0.0)
 	t.equal(brain.destination, second.global_position, "unarmed tank collects visible ammo without a visible rival")
 	first.show()
+	t.ok(brain.can_observe(first), "near ammo fixture is observable before testing route obstruction")
 	brain.blocked = first.global_position
 	brain.decide(0.0)
 	t.equal(brain.destination, second.global_position, "blocked nearest crate cannot mask reachable ammo")
@@ -241,6 +246,7 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 	for index in scene.ctx.player_count():
 		scene.ctx.fighter(index).visible = fighter_visibility[index]
 	me.global_position = origin
+	scene.camera.global_transform = camera_transform
 
 
 func _has_collision(node: Node) -> bool:

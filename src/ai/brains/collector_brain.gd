@@ -102,12 +102,24 @@ func _preferred_loot() -> Node3D:
 		# Use delayed perception, not the rival's current velocity or intent.
 		if strategy > 0.5:
 			for rival in ctx.player_count():
-				if rival == slot or not ctx.is_alive(rival) or not can_observe(ctx.fighter(rival)):
+				if rival == slot or not ctx.is_alive(rival) or not can_observe(ctx.fighter(rival)) or not has_observed(rival):
 					continue
 				var reach := perceive(rival).distance_to(node.global_position)
-				if reach < distance * 0.75:
+				if reach < distance * 0.75 and _contests_loot(rival, node.global_position, reach):
 					cost += (distance - reach) * strategy
 		if cost < best:
 			best = cost
 			chosen = node
 	return chosen
+
+
+func _contests_loot(rival: int, position: Vector3, reach: float) -> bool:
+	# Within pickup reach the opponent can collect without another step.
+	if reach <= 1.35:
+		return true
+	var motion := _perceived_velocity(rival)
+	motion.y = 0.0
+	var direction := position - perceive(rival)
+	direction.y = 0.0
+	# Moving away is evidence against a race for this gem, not hidden intent.
+	return motion.length_squared() < 0.04 or motion.dot(direction) >= 0.0
