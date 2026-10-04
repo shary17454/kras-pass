@@ -633,8 +633,9 @@ func _physics_process(_delta: float) -> void:
 		if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var target: Vector3 = game.controller.next_checkpoint(slot)
-			# Drive off the edge through normal input, then use the real rescue.
-			if game_id == "kart_sprint" and slot == 0 and game.controller._elapsed >= 2.0 and game.controller._elapsed < 5.0:
+			# Exercise actual fall/stall recovery through driving, not a teleported fixture.
+			# A three-second steering window could end before the stall watchdog fired.
+			if game_id == "kart_sprint" and slot == 0 and not observed_kart_rescue and game.controller._elapsed >= 2.0 and game.controller._elapsed < 18.0:
 				target = fighter.global_position.normalized() * 40.0
 			var direction := target - fighter.global_position
 			var diff := wrapf(atan2(direction.x, direction.z) - atan2(fighter.facing.x, fighter.facing.z), -PI, PI)
