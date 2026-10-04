@@ -83,3 +83,54 @@ product requirements, Internet multiplayer, physical portrait/landscape QA,
 production health configuration, API/auth/database/backup checks, and exact-source
 Distribution archive/signature/upload/processing/review submission.
 No new archive, upload or Apple review submission occurred in this qualification.
+
+## Subsequent Production Health Correction
+
+The live Railway GraphQL schema was inspected before a bounded
+`serviceInstanceUpdate`: only `healthcheckPath=/health` and
+`healthcheckTimeout=100` were supplied, with explicit production service and
+environment IDs. No infrastructure ownership migration, volume change,
+secret update, replica change or multiplayer enablement was performed.
+
+Re-reading `serviceInstance` confirmed both values were saved. An ordinary
+redeploy (`2ab72eb7-1af9-4f50-930e-51479738947e`) succeeded but reused the old
+deployment manifest with null health settings. It therefore did not prove the
+health correction was applied. A subsequent `--from-source` deploy resolved
+the current service configuration from the verified GitHub source instead.
+
+Deployment `79d21f7c-65f3-4ca8-a322-85d1f38c3692` reached `SUCCESS`, exact
+commit `f29824f82d6f34d6d5e4b090befa17e792be6f94`. Its effective manifest
+contains `/health` and 100 seconds. Actual build logs explicitly record:
+`Starting Healthcheck`, `Path: /health`, `Retry window: 1m40s`, and
+`[1/1] Healthcheck succeeded!`. This resolves the health configuration gate,
+not the remaining production multiplayer and release acceptance gates.
+State evidence: `/tmp/kras-health-from-source-state.json`.
+
+A read-only SSH SQLite check returned `PRAGMA quick_check=ok`, zero
+foreign-key errors, and `user_version=0`. The first SSH invocation had a local
+command-quoting error; the corrected command completed successfully without
+changing the database. Database version zero is the existing account schema,
+not proof of a versioned migration or backup-restore strategy.
+
+Production API probes: unauthenticated `GET /account` returned 401 with
+`sign_in_again`; `POST /auth/apple/challenge` returned 200 with string `id`,
+string `nonce`, and integer `expires`, without printing their values. The first
+probe incorrectly expected a field named `challenge`; it was corrected against
+the actual `Accounts.challenge()` contract. These probes do not authenticate a
+real Apple user or prove deletion, revocation or owner entitlements on a phone.
+
+## Subsequent Exact-Source CI Result
+
+The `godot` job `111348417130` in run `37172568945` completed successfully
+against the integrated commit. Its downloaded log is
+`/tmp/kras-f29824f-core-job.log` and confirms compilation of 331 scripts,
+`ALL TESTS PASSED` with 29797 assertions, and 117 stability matches with zero
+failures. Initial server tests passed 173 with six fixture skips; the subsequent
+actual-capture validation passed all 179 with zero skips. Do not report the
+initial skipped run alone as full capture coverage.
+
+The `network-ring_rumble` and `network-goal_guard` jobs also completed
+successfully. Remaining network jobs were still running or queued at inspection.
+This is not a passing 39-game network matrix, rendered visual QA, or an Apple
+review submission. Earlier pending statements above record their inspection
+time and are superseded only for the specific gates verified in this section.
