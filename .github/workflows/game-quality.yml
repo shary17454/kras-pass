@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Colossus runs two ordinary (450s) and two tournament (800s) peer groups.
     # Kart: 2 x 960s ordinary + 3 x 1740s tournament/final + 10m setup < 130m.
+    # Fawda: 3 x 180s ordinary + 4 x 360s tournament + 10m setup < 45m.
     timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 130 || matrix.scenario == 'lab_crates' && 85 || matrix.scenario == 'fawda' && 45 || 30 }}
     strategy:
       fail-fast: false
@@ -92,6 +93,9 @@ jobs:
           match_args=()
           if [ "$GAME_ID" = kart_sprint ]; then
             match_args+=(--seed=439903641)
+          fi
+          if [ "$GAME_ID" = fawda ]; then
+            node network-smoke.js --game="$GAME_ID" --tournament --humans=4 --seed=1528023384 2>&1 | tee "$RUNNER_TEMP/kras-network-fawda-missing-explosion.stdout"
           fi
           node network-smoke.js --game="$GAME_ID" "${match_args[@]}" 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
           node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
