@@ -134,9 +134,15 @@ func _boss_outcomes(t: TestHarness, sim: Node) -> void:
 			t.equal(sample["expert_slots"], [0, 1] if orientation == 0 else [2, 3], "difficulty outcome retains mirrored expert orientation")
 			t.equal(sample["boss_outcome"], "survived", "natural deadline is explicitly not boss defeat")
 			t.ok(sample["completed"], "natural deadline remains a completed match")
+			t.equal(sample["scores"], Array(local_result.scores), "difficulty sample retains actual scores")
+			t.equal(sample["places"], Array(local_result.places), "difficulty sample retains actual ranking")
+			t.equal(sample["details"], local_result.details, "difficulty sample retains outcome counters")
+			sample["details"][0]["boss_defeats"] = 999
+			t.equal(local_result.details[0]["boss_defeats"], 0, "sample diagnostics cannot mutate the original result")
 			var missing: Dictionary = sim._difficulty_sample(cfg, null)
 			t.equal(missing["boss_outcome"], "unknown", "missing result cannot prove boss objective")
 			t.ok(not missing["completed"], "missing match retains completion failure")
+			t.ok(not missing.has("scores") and not missing.has("places"), "missing match cannot fabricate scores or places")
 	var ordinary: MatchConfig = sim._difficulty_configuration(Registry.minigame("ring_rumble"), 0)
 	t.ok(not sim._difficulty_sample(ordinary, result).has("boss_outcome"), "ordinary games do not acquire a fake boss objective")
 	var boss_row := {
