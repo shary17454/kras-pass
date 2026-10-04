@@ -11,6 +11,8 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.set_physics_process(false)
 		var game = scene.controller
 		if id == "lab_crates":
+			await _mixed_break_feedback(t, host)
+		if id == "lab_crates":
 			game._volley(0, Vector3(2, 1, 3))
 		var replica = load("res://src/net/match_replica.gd").new()
 		var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
@@ -38,6 +40,23 @@ func run(t: TestHarness, host: Node) -> void:
 			var bad := packet.duplicate(true)
 			bad.world.merge(changes, true)
 			t.ok(not replica.accept(bad, 4, id), "reject malformed feedback")
+		for value in [null, {}, [], packet.world.break_events.slice(0, 4), packet.world.break_events + [packet.world.break_events[0]]]:
+			var bad := packet.duplicate(true)
+			bad.world.break_events = value
+			t.ok(not replica.accept(bad, 4, id), "reject malformed event lane count")
+		for changes in [{"sequence": -1}, {"sequence": true}, {"sequence": INF}, {"sequence": 0.5}, {"sequence": 1000001}, {"position": [0, NAN, 0]}, {"extra": 1}]:
+			var bad := packet.duplicate(true)
+			bad.world.break_events[0].merge(changes, true)
+			t.ok(not replica.accept(bad, 4, id), "reject malformed event lane")
+		var inconsistent := packet.duplicate(true)
+		inconsistent.world.break_events[0].sequence = 1
+		t.ok(not replica.accept(inconsistent, 4, id), "reject event totals inconsistent with break sequence")
+		if id == "crate_smash":
+			var bad := packet.duplicate(true)
+			bad.world.break_sequence = 2
+			bad.world.break_events[0].sequence = 1
+			bad.world.break_events[3].sequence = 1
+			t.ok(not replica.accept(bad, 4, id), "non-lab world cannot inject a volley event")
 		var excess := packet.duplicate(true)
 		excess.world.crates.append(excess.world.crates[0].duplicate(true))
 		t.ok(not replica.accept(excess, 4, id), "reject oversized crate field")
@@ -80,6 +99,8 @@ func run(t: TestHarness, host: Node) -> void:
 		packet.world.break_sequence += 1
 		packet.world.break_kind = 0
 		packet.world.break_position = packet.world.crates[0].position
+		packet.world.break_events[0].sequence += 1
+		packet.world.break_events[0].position = packet.world.break_position.duplicate()
 		packet.world.crates.pop_front()
 		AudioManager._last_played.erase("crate_break")
 		t.ok(replica.accept(packet, 4, id), "accept broken crate")
@@ -91,6 +112,7 @@ func run(t: TestHarness, host: Node) -> void:
 		replica.render(scene, 0.1)
 		t.ok(not AudioManager._last_played.has("crate_break"), "duplicate state cannot replay feedback")
 		packet.world.break_sequence += 1
+		packet.world.break_events[0].sequence += 1
 		t.ok(replica.accept(packet, 4, id), "accept reconnect world")
 		replica._event_received_at = replica.received_at - 1501
 		replica.render(scene, 0.1)
@@ -102,6 +124,45 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+
+
+func _mixed_break_feedback(t: TestHarness, host: Node) -> void:
+	var audio_enabled: bool = AudioManager.enabled
+	AudioManager.enabled = true
+	var cfg := MatchConfig.build("lab_crates", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 111)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game: Node = scene.controller
+	var replica = load("res://src/net/crate_replica.gd").new()
+	scene.ctx.world_root.add_child(replica)
+	var baseline: Dictionary = replica.capture(game, true)
+	replica.render(game, baseline, 0.016, true, false)
+	# Controlled feedback ordering, not a naturally played match.
+	game._record_break(3, Vector3(2, 1, 3))
+	game._record_break(0, Vector3(4, 1, 5))
+	var mixed: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(game, true)))
+	t.ok(replica.valid(mixed, 4, true), "actual mixed event capture survives strict JSON validation")
+	t.equal(int(mixed.break_events[3].sequence), 1, "volley lane survives a later normal break")
+	AudioManager._last_played.erase("shoot")
+	AudioManager._last_played.erase("crate_break")
+	replica.render(game, mixed, 0.016, false, true)
+	t.ok(AudioManager._last_played.has("shoot"), "later normal crate does not erase volley feedback")
+	t.ok(AudioManager._last_played.has("crate_break"), "mixed break snapshot retains normal crate feedback")
+	AudioManager._last_played.erase("shoot")
+	AudioManager._last_played.erase("crate_break")
+	replica.render(game, mixed, 0.016, false, true)
+	t.ok(not AudioManager._last_played.has("shoot") and not AudioManager._last_played.has("crate_break"), "mixed break duplicate cannot replay either feedback")
+	game._record_break(3, Vector3(6, 1, 7))
+	var resumed: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(game, true)))
+	replica.render(game, resumed, 0.016, true, false)
+	replica.render(game, resumed, 0.016, false, true)
+	t.ok(not AudioManager._last_played.has("shoot"), "reconnect baseline suppresses retained volley feedback")
+	AudioManager.enabled = audio_enabled
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _has_collision(node: Node) -> bool:
