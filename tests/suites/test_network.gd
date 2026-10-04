@@ -13,7 +13,29 @@ class QuietReplica extends RefCounted:
 		pass
 
 
+func _endpoint_policy(t: TestHarness) -> void:
+	t.suite("Network endpoint policy")
+	var transport = load("res://src/net/room_client.gd").new()
+	for url in ["wss://kras-pass-production.up.railway.app/multiplayer",
+			"ws://127.0.0.1:8080/multiplayer", "ws://localhost:1/multiplayer",
+			"ws://localhost:65535/multiplayer", "ws://127.0.0.1:08080/multiplayer?test=1"]:
+		t.ok(transport.allowed_endpoint(url), "allow encrypted or canonical loopback endpoint")
+	for url in ["", "http://localhost:8080/multiplayer", "ws://example.invalid/multiplayer",
+			"ws://127.0.0.1:8080@example.invalid/multiplayer",
+			"ws://localhost:8080@example.invalid/multiplayer",
+			"ws://localhost:8080@127.0.0.1/multiplayer",
+			"ws://localhost:8080.evil.invalid/multiplayer",
+			"ws://localhost:0/multiplayer", "ws://localhost:65536/multiplayer",
+			"ws://localhost:+8080/multiplayer", "ws://localhost:-1/multiplayer",
+			"ws://localhost:/multiplayer", "ws://localhost:8080\\@example.invalid/multiplayer"]:
+		t.ok(not transport.allowed_endpoint(url), "reject noncanonical plaintext authority")
+		t.equal(transport.connect_room(url, {}), ERR_INVALID_PARAMETER, "reject before connection")
+		t.equal(transport.socket, null, "rejection never creates socket")
+	transport.free()
+
+
 func run(t: TestHarness, host: Node) -> void:
+	_endpoint_policy(t)
 	_input_edges(t)
 	_input_buffer_limits(t)
 	_input_send_budget(t)
