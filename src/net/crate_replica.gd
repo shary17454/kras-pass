@@ -7,7 +7,7 @@ const SOUNDS := ["crate_break", "explode", "explode", "shoot", "score"]
 var crates := {}
 var shots := {}
 var initialized := false
-var last_break := -1
+var last_events: Array[int] = [-1, -1, -1, -1, -1]
 
 
 static func capture(game: Node, lab: bool) -> Dictionary:
@@ -22,16 +22,34 @@ static func capture(game: Node, lab: bool) -> Dictionary:
 			if is_instance_valid(shot) and shot.active:
 				projectiles.append({"id": str(shot.get_instance_id()), "position": _vec(shot.global_position),
 					"direction": _vec(shot.direction), "shooter": shot.shooter})
+	var events: Array = []
+	for event in game.break_events:
+		events.append({"sequence": event.sequence, "position": _vec(event.position)})
 	return {"crates": rows, "shots": projectiles, "break_sequence": game.break_sequence,
-		"break_kind": game.break_kind, "break_position": _vec(game.break_position)}
+		"break_kind": game.break_kind, "break_position": _vec(game.break_position), "break_events": events}
 
 
 static func valid(world: Variant, count: int, lab: bool) -> bool:
-	if count < 2 or count > 4 or not world is Dictionary or world.size() != 5:
+	if count < 2 or count > 4 or not world is Dictionary or world.size() != 6:
 		return false
 	if not _integer(world.get("break_sequence"), 0, 1000000) or not _integer(world.get("break_kind"), 0, 4 if lab else 1) or not _vector(world.get("break_position")):
 		return false
 	if not world.get("crates") is Array or world.crates.size() > 14 or not world.get("shots") is Array or world.shots.size() > (128 if lab else 0):
+		return false
+	if not world.get("break_events") is Array or world.break_events.size() != SOUNDS.size():
+		return false
+	var total := 0
+	for kind in SOUNDS.size():
+		var event = world.break_events[kind]
+		if not event is Dictionary or event.size() != 2 or not _integer(event.get("sequence"), 0, 1000000) or not _vector(event.get("position")):
+			return false
+		if not lab and kind >= 2 and event.sequence != 0:
+			return false
+		total += int(event.sequence)
+	if total != int(world.break_sequence):
+		return false
+	var latest: Dictionary = world.break_events[int(world.break_kind)]
+	if world.break_sequence > 0 and (latest.sequence == 0 or latest.position != world.break_position):
 		return false
 	var ids := {}
 	for row in world.crates:
@@ -102,15 +120,16 @@ func render(game: Node, world: Dictionary, delta: float, snap: bool, play_events
 		view.global_position = position if created or snap else view.global_position.lerp(position, clampf(delta * 22, 0, 1))
 		view.look_at(view.global_position + Vector3(row.direction[0], row.direction[1], row.direction[2]), Vector3.UP)
 	_prune(shots, present)
-	var sequence := int(world.break_sequence)
-	if play_events and last_break >= 0 and sequence > last_break:
-		var kind := int(world.break_kind)
-		var position := Vector3(world.break_position[0], world.break_position[1], world.break_position[2])
-		AudioManager.play_sfx(SOUNDS[kind], position)
-		var burst := MeshFactory.burst(ACCENTS[1] if kind == 1 else COLORS[2 if kind >= 2 else 0], 14)
-		add_child(burst)
-		burst.global_position = position
-	last_break = maxi(last_break, sequence)
+	for kind in SOUNDS.size():
+		var event: Dictionary = world.break_events[kind]
+		var sequence := int(event.sequence)
+		if play_events and last_events[kind] >= 0 and sequence > last_events[kind]:
+			var position := Vector3(event.position[0], event.position[1], event.position[2])
+			AudioManager.play_sfx(SOUNDS[kind], position)
+			var burst := MeshFactory.burst(ACCENTS[1] if kind == 1 else COLORS[2 if kind >= 2 else 0], 14)
+			add_child(burst)
+			burst.global_position = position
+		last_events[kind] = maxi(last_events[kind], sequence)
 
 
 func _prune(views: Dictionary, present: Dictionary) -> void:

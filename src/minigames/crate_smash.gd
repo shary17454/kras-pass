@@ -16,6 +16,12 @@ var _spawn_timer := 0.0
 var break_sequence := 0
 var break_kind := 0
 var break_position := Vector3.ZERO
+var break_events: Array[Dictionary] = []
+
+
+func _init() -> void:
+	for kind in 5:
+		break_events.append({"sequence": 0, "position": Vector3.ZERO})
 
 
 func configure() -> void:
@@ -143,6 +149,8 @@ func _record_break(kind: int, position: Vector3) -> void:
 	break_sequence += 1
 	break_kind = kind
 	break_position = position
+	break_events[kind].sequence += 1
+	break_events[kind].position = position
 
 
 func ai_script() -> Script:

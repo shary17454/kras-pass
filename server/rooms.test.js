@@ -424,7 +424,8 @@ test('crate rooms require their arena and host snapshots with game-specific weap
     const data = snapshot();
     assert.throws(() => host.send({op: 'snapshot', epoch, tick: 1, data}), /invalid_snapshot/);
     data.world = {crates: [{id: '10', kind: 0, position: [1, .75, 3]}], shots: [],
-      break_sequence: 0, break_kind: 0, break_position: [0, 0, 0]};
+      break_sequence: 0, break_kind: 0, break_position: [0, 0, 0],
+      break_events: Array.from({length: 5}, () => ({sequence: 0, position: [0, 0, 0]}))};
     assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}));
     host.send({op: 'snapshot', epoch, tick: 1, data});
     assert.deepEqual(guest.last('snapshot').data.world, data.world);

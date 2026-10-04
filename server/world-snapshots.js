@@ -246,10 +246,18 @@ export function validHurdleWorld(data, count) {
 export function validCrateWorld(data, count, lab = false) {
   const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
   if (!integer(count, 2, 4) || !data || typeof data !== 'object' || Array.isArray(data)
-    || Object.keys(data).length !== 5 || !integer(data.break_sequence, 0, 1000000)
+    || Object.keys(data).length !== 6 || !integer(data.break_sequence, 0, 1000000)
     || !integer(data.break_kind, 0, lab ? 4 : 1) || !vector(data.break_position)
     || !Array.isArray(data.crates) || data.crates.length > 14
-    || !Array.isArray(data.shots) || data.shots.length > (lab ? 128 : 0)) return false;
+    || !Array.isArray(data.shots) || data.shots.length > (lab ? 128 : 0)
+    || !Array.isArray(data.break_events) || data.break_events.length !== 5) return false;
+  if (!data.break_events.every((event, kind) => event && typeof event === 'object' && !Array.isArray(event)
+    && Object.keys(event).length === 2 && integer(event.sequence, 0, 1000000)
+    && vector(event.position) && (lab || kind < 2 || event.sequence === 0))) return false;
+  if (data.break_events.reduce((sum, event) => sum + event.sequence, 0) !== data.break_sequence) return false;
+  const latest = data.break_events[data.break_kind];
+  if (data.break_sequence > 0 && (latest.sequence === 0
+    || !latest.position.every((value, index) => value === data.break_position[index]))) return false;
   const ids = new Set();
   const id = value => {
     if (typeof value !== 'string' || !/^[1-9][0-9]{0,17}$/.test(value) || ids.has(value)) return false;

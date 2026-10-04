@@ -1711,7 +1711,8 @@ func _finished(result: MatchResult) -> void:
 		_fail("crate break or scoring was never observed")
 		return
 	if game_id == "lab_crates" and (not observed_lab_weapon or not observed_lab_shot):
-		_fail("lab weapon or volley was never observed")
+		var lab_world: Dictionary = load("res://src/net/crate_replica.gd").capture(game.controller, true) if host else game._network_replica.target.get("world", {})
+		_fail("lab weapon or volley was never observed: weapon=%s shot=%s events=%s" % [observed_lab_weapon, observed_lab_shot, JSON.stringify(lab_world.get("break_events", []))])
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
