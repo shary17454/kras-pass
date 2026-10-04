@@ -192,6 +192,29 @@ func _saves(t: TestHarness) -> void:
 	bad = encoded.duplicate(true)
 	bad["points"] = [-4, 3, 2, 1]
 	t.ok(TournamentSession.restore(bad) == null, "negative scores rejected")
+	for invalid in [true, 1.5, "1", null, NAN, INF, {}]:
+		for field in ["points", "cups"]:
+			bad = encoded.duplicate(true)
+			bad[field][0] = invalid
+			t.ok(TournamentSession.restore(bad) == null, "noninteger %s rejected" % field)
+	for invalid in [true, 2.5, "2"]:
+		bad = encoded.duplicate(true)
+		bad["version"] = invalid
+		t.ok(TournamentSession.restore(bad) == null, "noninteger save version rejected")
+	for field in ["index", "scoring_mode", "target_cups", "tiebreak_attempts"]:
+		for invalid in [true, "1", 0.5, null, INF]:
+			bad = encoded.duplicate(true)
+			bad[field] = invalid
+			t.ok(TournamentSession.restore(bad) == null, "invalid %s rejected before conversion" % field)
+	for field in ["games", "arenas", "mutators"]:
+		for invalid in [null, true, 1, {}]:
+			bad = encoded.duplicate(true)
+			bad[field] = [invalid]
+			t.ok(TournamentSession.restore(bad) == null, "nonstring %s entry rejected" % field)
+	for invalid in [true, "0", 0.5, null, INF]:
+		bad = encoded.duplicate(true)
+		bad["tiebreak_slots"] = [invalid]
+		t.ok(TournamentSession.restore(bad) == null, "invalid contender rejected before conversion")
 	s.checkpoint()
 	t.ok(TournamentSession.saved_session() != null, "checkpoint is available to home screen")
 	SaveSystem.set_shared_branch(TournamentSession.SAVE_BRANCH, {})
