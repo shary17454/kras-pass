@@ -13,7 +13,7 @@ var _opened := false
 func connect_room(url: String, first: Dictionary) -> Error:
 	close()
 	# Plaintext is only permitted on loopback for automated tests/development.
-	if not url.begins_with("wss://") and not url.begins_with("ws://127.0.0.1:") and not url.begins_with("ws://localhost:"):
+	if not allowed_endpoint(url):
 		return ERR_INVALID_PARAMETER
 	endpoint = url
 	_pending = first.duplicate(true)
@@ -23,6 +23,25 @@ func connect_room(url: String, first: Dictionary) -> Error:
 	socket.max_queued_packets = 256
 	_started = Time.get_ticks_msec()
 	return socket.connect_to_url(url)
+
+
+static func allowed_endpoint(url: String) -> bool:
+	if url.begins_with("wss://"):
+		return true
+	if not url.begins_with("ws://"):
+		return false
+	# Validate the complete authority: a loopback-looking username is not a host.
+	var authority := url.substr(5).get_slice("/", 0).get_slice("?", 0).get_slice("#", 0)
+	var parts := authority.split(":")
+	if parts.size() != 2 or parts[0] not in ["127.0.0.1", "localhost"]:
+		return false
+	var port := parts[1]
+	if port.is_empty() or port.length() > 5:
+		return false
+	for i in port.length():
+		if port.unicode_at(i) < 48 or port.unicode_at(i) > 57:
+			return false
+	return port.to_int() >= 1 and port.to_int() <= 65535
 
 
 func send(message: Dictionary) -> bool:
