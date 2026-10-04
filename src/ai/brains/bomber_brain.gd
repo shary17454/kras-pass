@@ -19,26 +19,63 @@ const THROW_RANGE := 6.5
 ## tiers disarm themselves the most and cost them the round (0.55 -> 0.43).
 const WORTH_ARMING := 13.0
 
+var _bomb_history: Array[Dictionary] = []
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_bomb_history.clear()
+
+
+func _record_history() -> void:
+	super._record_history()
+	if controller == null or not controller.has_method("bomb_states"):
+		return
+	_bomb_history.append({"time": _time, "bombs": controller.call("bomb_states").duplicate(true)})
+	if _bomb_history.size() > HISTORY_CAP:
+		_bomb_history.pop_front()
+
+
+func _observed_bombs() -> Array:
+	if controller == null or not controller.has_method("bomb_states"):
+		return []
+	var visible := {}
+	for cue in controller.call("bomb_states"):
+		visible[cue.id] = true
+	var want := _time - reaction_time + 0.000001
+	for index in range(_bomb_history.size() - 1, -1, -1):
+		var sample := _bomb_history[index]
+		if float(sample.time) > want:
+			continue
+		var observed := []
+		for cue in sample.bombs:
+			if visible.has(cue.id):
+				observed.append(cue.duplicate())
+		return observed
+	return []
+
 
 func decide(delta: float) -> void:
 	var me := self_body()
 	if me == null or controller == null or not controller.has_method("bomb_states"):
 		super.decide(delta)
 		return
-	var bombs: Array = controller.call("bomb_states")
+	var bombs := _observed_bombs()
 
 	if me.carrying > 0:
 		# Holding: throw at the nearest rival while there is still fuse, and
 		# throw at *anything* once there is not.
 		var mine := _held_by_me(bombs)
 		var fuse: float = float(mine.get("fuse", 99.0)) if not mine.is_empty() else 99.0
+		if fuse < 0.0:
+			fuse = 99.0
 		var target := priority_rival()
 		if target >= 0:
 			var spot := predict(target, 0.35)
 			steer_to(spot)
-			if distance_to(spot) < THROW_RANGE or fuse < PANIC_FUSE + reaction_time:
+			if distance_to(spot) < THROW_RANGE or fuse < PANIC_FUSE:
 				press(Btn.ATTACK)
-		elif fuse < PANIC_FUSE + reaction_time:
+		elif fuse < PANIC_FUSE:
 			press(Btn.ATTACK)
 		return
 
@@ -82,7 +119,7 @@ func _held_by_me(bombs: Array) -> Dictionary:
 func _hottest_near(bombs: Array, pos: Vector3) -> Dictionary:
 	var worst := {}
 	for b in bombs:
-		if float(b["fuse"]) > PANIC_FUSE + reaction_time:
+		if float(b["fuse"]) < 0.0 or float(b["fuse"]) > PANIC_FUSE:
 			continue
 		var d: float = pos.distance_to(b["pos"])
 		if d > 7.0:
@@ -102,7 +139,7 @@ func _best_pickup(bombs: Array, pos: Vector3) -> Dictionary:
 	# belongs to whoever is already standing next to it.
 	var best_d := 3.0
 	for b in bombs:
-		if int(b["held"]) >= 0 or float(b["fuse"]) < SAFE_PICKUP_FUSE + reaction_time:
+		if int(b["held"]) >= 0 or float(b["fuse"]) < SAFE_PICKUP_FUSE:
 			continue
 		var d: float = pos.distance_to(b["pos"])
 		if d < best_d:
