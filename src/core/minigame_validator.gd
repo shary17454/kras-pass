@@ -52,8 +52,12 @@ static func validate(def: MiniGameDef, check_localization: bool = true) -> Packe
 	if def.arena_ids.is_empty():
 		problems.append("%s: no arena" % tag)
 	for aid in def.arena_ids:
-		if Registry.arena(aid) == null:
+		var arena := Registry.arena(aid)
+		if arena == null:
 			problems.append("%s: unknown arena '%s'" % [tag, aid])
+		else:
+			problems.append_array(validate_preload_resources(arena.preload_resources, "arena " + aid))
+	problems.append_array(validate_preload_resources(def.preload_resources, tag))
 
 	# --- rules -------------------------------------------------------------
 	if def.duration <= 0.0:
@@ -93,6 +97,14 @@ static func validate(def: MiniGameDef, check_localization: bool = true) -> Packe
 		if not (brain is AIBrain):
 			problems.append("%s: bot policy does not extend AIBrain" % tag)
 	controller.free()
+	return problems
+
+
+static func validate_preload_resources(paths: PackedStringArray, tag: String) -> PackedStringArray:
+	var problems := PackedStringArray()
+	for path in paths:
+		if not path.begins_with("res://") or not ResourceLoader.exists(path):
+			problems.append("%s: invalid preload resource (%s)" % [tag, path])
 	return problems
 
 

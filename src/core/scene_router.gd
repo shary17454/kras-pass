@@ -10,6 +10,8 @@ extends Node
 signal screen_changed(id: String)
 signal transition_finished()
 
+const MatchResourcePreparation = preload("res://src/match/match_resource_preparation.gd")
+
 const SCREENS := {
 	"game_library": "res://src/ui/screens/game_library.gd",
 	"boot": "res://src/ui/screens/boot_screen.gd",
@@ -43,6 +45,7 @@ const SCREENS := {
 var holder_layer: CanvasLayer
 var holder: Control
 var overlay: ColorRect
+var loading_progress: ProgressBar
 var toast_layer: CanvasLayer
 var current_id := ""
 var current_node: Node
@@ -73,6 +76,17 @@ func _ready() -> void:
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(overlay)
+	loading_progress = ProgressBar.new()
+	loading_progress.show_percentage = false
+	loading_progress.max_value = 1.0
+	loading_progress.set_anchors_preset(Control.PRESET_CENTER)
+	loading_progress.offset_left = -100.0
+	loading_progress.offset_right = 100.0
+	loading_progress.offset_top = -5.0
+	loading_progress.offset_bottom = 5.0
+	loading_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	loading_progress.hide()
+	overlay.add_child(loading_progress)
 	toast_layer = CanvasLayer.new()
 	toast_layer.layer = 90
 	toast_layer.name = "ToastLayer"
@@ -90,13 +104,47 @@ func go_to(id: String, args: Dictionary = {}, push: bool = true, fade: float = 0
 	_busy = true
 	var previous_id := current_id
 	await _fade(1.0, fade)
-	var swapped := _swap(id, args)
+	var preparation: Node
+	var prepared := true
+	if id == "match":
+		preparation = MatchResourcePreparation.new()
+		add_child(preparation)
+		loading_progress.value = 0.0
+		loading_progress.show()
+		var previous_mode := Node.PROCESS_MODE_INHERIT
+		var previous_node := current_node
+		if is_instance_valid(previous_node):
+			previous_mode = previous_node.process_mode
+			previous_node.process_mode = Node.PROCESS_MODE_DISABLED
+		var config = args.get("config")
+		if config is MatchConfig:
+			prepared = await _prepare_match(preparation, config)
+		else:
+			Log.e("match resource preparation requires a config", "Router")
+			prepared = false
+		if is_instance_valid(previous_node):
+			previous_node.process_mode = previous_mode
+	var swapped := prepared and _swap(id, args)
+	loading_progress.hide()
+	if preparation != null:
+		preparation.release()
 	if swapped and push and previous_id != "" and previous_id != id:
 		_stack.append({"id": previous_id, "args": {}})
 	await _fade(0.0, fade)
 	_busy = false
 	transition_finished.emit()
 	return swapped
+
+
+func _prepare_match(preparation: Node, config: MatchConfig) -> bool:
+	var paths := MatchResourcePreparation.paths_for(config)
+	if paths.is_empty():
+		Log.e("match has no valid resource plan", "Router")
+		return false
+	var loaded: bool = await preparation.prepare(paths, func(value: float): loading_progress.value = value)
+	if not loaded:
+		Log.e("match resource preparation failed: %s" % preparation.error_path, "Router")
+	return loaded
 
 
 func replace(id: String, args: Dictionary = {}) -> void:

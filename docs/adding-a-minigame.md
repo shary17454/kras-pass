@@ -38,6 +38,14 @@ opponents, statistics, achievements and its own automated test for free.
 | `sudden_death` | Whether a tie at the whistle triggers overtime |
 | `controls` | Glyph keys for the pre-round card. **Also gates the verbs**: a game without `"jump"` disables jumping, without `"attack"` disables attacking |
 | `unlock` | Omit for a game available from the start |
+| `preload_resources` | Optional array of bundled `res://` resource paths loaded in the background before scene setup. The selected arena may declare its own array in `data/arenas.json`. Missing/external paths fail content validation. |
+
+Resources are retained only until the selected scene has been built, not in a
+permanent cache of all maps. The router shows loading progress and preserves
+the previous screen on failure. This moves resource I/O off the transition
+thread; procedural scene geometry and first-use GPU compilation still need
+their own performance qualification. See Godot's [background loading
+documentation](https://docs.godotengine.org/en/stable/tutorials/io/background_loading.html).
 
 ## 2. Write the rules
 

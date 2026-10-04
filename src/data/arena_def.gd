@@ -28,6 +28,7 @@ extends Resource
 ## one ring in five palettes. Kept as a free-form bag so a new shape never
 ## needs a schema change.
 @export var params: Dictionary = {}
+@export var preload_resources: PackedStringArray = []
 
 
 static func from_dict(d: Dictionary) -> ArenaDef:
@@ -50,6 +51,7 @@ static func from_dict(d: Dictionary) -> ArenaDef:
 	a.gravity_scale = float(d.get("gravity_scale", 1.0))
 	a.fall_y = float(d.get("fall_y", -14.0))
 	a.params = d.get("params", {})
+	a.preload_resources = PackedStringArray(d.get("preload_resources", []))
 	return a
 
 
