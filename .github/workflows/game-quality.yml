@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Colossus runs two ordinary (450s) and two tournament (800s) peer groups.
     # Kart: 2 x 960s ordinary + 3 x 1740s tournament/final + 10m setup < 130m.
-    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 130 || 30 }}
+    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 130 || matrix.scenario == 'fawda' && 45 || 30 }}
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -93,6 +93,10 @@ jobs:
           node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
           if [ "$GAME_ID" = zone_hold ]; then
             node network-smoke.js --game="$GAME_ID" --seed=438683058 2>&1 | tee "$RUNNER_TEMP/kras-network-zone-contest-regression.stdout"
+          fi
+          if [ "$GAME_ID" = fawda ]; then
+            node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --seed=1846961932 2>&1 | tee "$RUNNER_TEMP/kras-network-fawda-pursuit-regression.stdout"
+            node network-smoke.js --game="$GAME_ID" --humans=4 --seed=1846961932 2>&1 | tee "$RUNNER_TEMP/kras-network-fawda-four-player-regression.stdout"
           fi
           if [ "$GAME_ID" = hurdle_dash ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --seed=1032434731 2>&1 | tee "$RUNNER_TEMP/kras-network-hurdle-regression.stdout"

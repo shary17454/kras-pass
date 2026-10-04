@@ -45,6 +45,7 @@ var observed_tank_inventory := false
 var observed_scrap_ram := false
 var observed_scrap_damage := false
 var observed_fawda_events := {}
+var fawda_pickup_probe := {}
 var observed_kart_boost := false
 var observed_kart_rescue := false
 var fawda_arenas_seen := {}
@@ -385,6 +386,8 @@ func _start(cfg: MatchConfig) -> void:
 	if game_id == "fawda":
 		cfg.duration_override = 25.0
 		observed_fawda_events.clear()
+		fawda_pickup_probe = {"samples": 0, "slow_loose_observations": 0,
+			"in_range_pairs": 0, "minimum_distance": -1.0, "closest": {}}
 		fawda_arenas_seen[cfg.arena_id] = true
 	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
 		observed_kart_boost = false
@@ -452,6 +455,7 @@ func _physics_process(_delta: float) -> void:
 			observed_kart_rescue = observed_kart_rescue or float(progress) >= 0.0
 	if game_id == "fawda":
 		var world: Dictionary = _fawda_world()
+		_observe_fawda_pickup(world)
 		for kind in world.get("events", {}):
 			if int(world.events[kind].sequence) > 0:
 				observed_fawda_events[kind] = true
@@ -774,6 +778,10 @@ func _physics_process(_delta: float) -> void:
 			var direction := target - fighter.global_position
 			direction.y = 0.0
 			movement = Vector2(direction.x, direction.z).limit_length()
+			if fighter.carrying == 0 and nearest > 16.0 and nearest < INF \
+				and fighter.can_afford_dash() and fighter._dash_cd <= 0.0 \
+				and fighter.facing.dot(direction.normalized()) > 0.9:
+				buttons = InputFrame.Btn.DASH
 			if fighter.carrying > 0 and fighter.facing.dot(direction.normalized()) > 0.85 and (Time.get_ticks_msec() - started_at) % 600 < 150:
 				buttons = InputFrame.Btn.ATTACK
 		if game_id in ["turret_duel", "tank_arena", "scrap_karts"]:
@@ -931,6 +939,29 @@ func _fawda_world() -> Dictionary:
 	if host:
 		return load("res://src/net/fawda_replica.gd").capture(game.controller)
 	return game._network_replica.target.get("world", {})
+
+
+func _observe_fawda_pickup(world: Dictionary) -> void:
+	# Bounded read-only diagnostics; never move a fighter or alter bomb rules.
+	fawda_pickup_probe.samples += 1
+	for bomb in world.get("bombs", []):
+		var velocity := Vector3(bomb.velocity[0], bomb.velocity[1], bomb.velocity[2])
+		if int(bomb.held) >= 0 or velocity.length_squared() > 4.0:
+			continue
+		fawda_pickup_probe.slow_loose_observations += 1
+		var position := Vector3(bomb.position[0], bomb.position[1], bomb.position[2])
+		for fighter in game.ctx.fighters:
+			if not game.ctx.is_alive(fighter.slot) or fighter.carrying > 0:
+				continue
+			var distance: float = fighter.global_position.distance_to(position)
+			if distance <= 1.6:
+				fawda_pickup_probe.in_range_pairs += 1
+			if float(fawda_pickup_probe.minimum_distance) < 0.0 or distance < float(fawda_pickup_probe.minimum_distance):
+				fawda_pickup_probe.minimum_distance = distance
+				fawda_pickup_probe.closest = {"slot": fighter.slot, "bomb": bomb.id,
+					"round": game._round_index, "fuse": bomb.fuse,
+					"fighter": [fighter.global_position.x, fighter.global_position.y, fighter.global_position.z],
+					"position": bomb.position.duplicate()}
 
 
 func _tank_waypoint(origin: Vector3, target: Vector3) -> Vector3:
@@ -1171,6 +1202,9 @@ func _finished(result: MatchResult) -> void:
 					_fail("race host lap/time presentation diverged")
 					return
 	if game_id == "fawda":
+		print("NETWORK_FAWDA_PICKUP=" + JSON.stringify({"host": host,
+			"arena": game.config.arena_id, "seed": game.config.seed,
+			"observed_events": observed_fawda_events, "probe": fawda_pickup_probe}))
 		for kind in ["drop", "pickup", "throw", "explode"]:
 			if not observed_fawda_events.has(kind):
 				_fail("fawda real event missing: " + kind)

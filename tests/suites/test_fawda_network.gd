@@ -10,6 +10,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var source := _scene(host)
 	var guest := _scene(host)
 	var game: Node = source.controller
+	await _pickup_arbitration(t, source)
 	game._drop_bomb()
 	var bomb: Dictionary = game._bombs[0]
 	t.equal(bomb.id, 1, "actual drop assigns stable round-local identity")
@@ -162,6 +163,78 @@ func run(t: TestHarness, host: Node) -> void:
 	guest.queue_free()
 	AudioManager.enabled = enabled
 	await host.get_tree().process_frame
+
+
+func _pickup_arbitration(t: TestHarness, scene: Node) -> void:
+	var game: Node = scene.controller
+	var saved_rng: int = scene.ctx.rng.state
+	var positions: Array[Vector3] = []
+	for fighter in scene.ctx.fighters:
+		positions.append(fighter.global_position)
+	game._drop_bomb()
+	var bomb: Dictionary = game._bombs[0]
+	for slot in 4:
+		scene.ctx.fighter(slot).global_position = bomb.node.global_position + Vector3(30 + slot, 0, 0)
+	var first: Fighter = scene.ctx.fighter(0)
+	var closer: Fighter = scene.ctx.fighter(1)
+	first.global_position = bomb.node.global_position + Vector3(1.5, 0, 0)
+	closer.global_position = bomb.node.global_position + Vector3(0.1, 0, 0)
+	var rng_state: int = scene.ctx.rng.state
+	game._try_pickup(bomb, bomb.node)
+	t.equal(bomb.held, 1, "closer bomb collector wins even when a lower slot is in pickup range")
+	t.equal(scene.ctx.rng.state, rng_state, "unique nearest bomb collector does not consume tie randomness")
+	game._clear_bombs()
+	for condition in ["dead", "carrying", "fast"]:
+		game._drop_bomb()
+		bomb = game._bombs[0]
+		for slot in 4:
+			scene.ctx.fighter(slot).global_position = bomb.node.global_position + Vector3(30 + slot, 0, 0)
+		first.global_position = bomb.node.global_position + Vector3(1.5, 0, 0)
+		closer.global_position = bomb.node.global_position + Vector3(0.1, 0, 0)
+		if condition == "dead":
+			scene.ctx.eliminate(closer.slot)
+		closer.carrying = 1 if condition == "carrying" else 0
+		if condition == "fast":
+			bomb.vel = Vector3(2.1, 0, 0)
+		game._try_pickup(bomb, bomb.node)
+		t.equal(int(bomb.held), -1 if condition == "fast" else 0, "ineligible nearest player or fast bomb preserves pickup rules: " + condition)
+		if condition == "dead":
+			scene.ctx.revive(closer.slot)
+			closer.respawn_at(closer.global_position)
+			closer.set_physics_process(false)
+		game._clear_bombs()
+	var counts := [0, 0, 0, 0]
+	scene.ctx.rng.seed = 88419
+	var sequence: Array[int] = []
+	for sample in 256:
+		game._drop_bomb()
+		bomb = game._bombs[0]
+		for fighter in scene.ctx.fighters:
+			fighter.global_position = bomb.node.global_position + Vector3(0.5, 0, 0)
+		game._try_pickup(bomb, bomb.node)
+		sequence.append(int(bomb.held))
+		counts[int(bomb.held)] += 1
+		game._clear_bombs()
+		if sample % 16 == 0:
+			await scene.get_tree().process_frame
+	for slot in 4:
+		t.ok(counts[slot] >= 35 and counts[slot] <= 95, "seeded tied bomb pickups give every slot opportunities")
+	scene.ctx.fighters.reverse()
+	scene.ctx.rng.seed = 88419
+	for sample in 32:
+		game._drop_bomb()
+		bomb = game._bombs[0]
+		for fighter in scene.ctx.fighters:
+			fighter.global_position = bomb.node.global_position + Vector3(0.5, 0, 0)
+		game._try_pickup(bomb, bomb.node)
+		t.equal(int(bomb.held), sequence[sample], "same gameplay seed reproduces tied bomb collector despite reversed player order")
+		game._clear_bombs()
+	scene.ctx.fighters.reverse()
+	game._reset_feedback()
+	scene.ctx.rng.state = saved_rng
+	for slot in 4:
+		scene.ctx.fighter(slot).global_position = positions[slot]
+	await scene.get_tree().process_frame
 
 
 func _scene(host: Node) -> Node:
