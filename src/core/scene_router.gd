@@ -51,6 +51,10 @@ var current_id := ""
 var current_node: Node
 var _stack: Array = []
 var _busy := false
+var _prefetch_job: Node
+var _prefetch_paths := PackedStringArray()
+var _prefetch_ready := false
+var _prefetch_generation := 0
 
 
 func _ready() -> void:
@@ -160,10 +164,65 @@ func _prepare_match(preparation: Node, config: MatchConfig) -> bool:
 	if paths.is_empty():
 		Log.e("match has no valid resource plan", "Router")
 		return false
+	var job := _prefetch_job
+	if is_instance_valid(job) and _prefetch_paths == paths:
+		while is_instance_valid(job) and _prefetch_job == job and not _prefetch_ready:
+			await get_tree().process_frame
+		if is_instance_valid(job) and _prefetch_job == job and _prefetch_ready:
+			preparation.resources.assign(job.resources)
+			clear_match_prefetch()
+			loading_progress.value = 1.0
+			return true
+	clear_match_prefetch()
 	var loaded: bool = await preparation.prepare(paths, func(value: float): loading_progress.value = value)
 	if not loaded:
 		Log.e("match resource preparation failed: %s" % preparation.error_path, "Router")
 	return loaded
+
+
+func prefetch_match(config: MatchConfig) -> bool:
+	var paths := MatchResourcePreparation.paths_for(config)
+	if config == null or config.context != MatchConfig.Context.TOURNAMENT or paths.is_empty():
+		clear_match_prefetch()
+		return false
+	if is_instance_valid(_prefetch_job) and paths == _prefetch_paths:
+		return true
+	clear_match_prefetch()
+	_prefetch_paths = paths
+	_prefetch_job = _new_prefetch_job()
+	add_child(_prefetch_job)
+	_run_prefetch(_prefetch_job, paths, _prefetch_generation)
+	return true
+
+
+func _new_prefetch_job() -> Node:
+	return MatchResourcePreparation.new()
+
+
+func prefetch_from_screen(source: Node, config: MatchConfig) -> bool:
+	if not is_instance_valid(source) or source.is_queued_for_deletion() or current_node != source \
+			or current_id not in ["match", "standings"]:
+		return false
+	return prefetch_match(config)
+
+
+func _run_prefetch(job: Node, paths: PackedStringArray, generation: int) -> void:
+	var loaded: bool = await job.prepare(paths)
+	if generation != _prefetch_generation or not is_instance_valid(job) or _prefetch_job != job:
+		return
+	_prefetch_ready = loaded
+	if not loaded:
+		clear_match_prefetch()
+
+
+func clear_match_prefetch() -> void:
+	_prefetch_generation += 1
+	var job := _prefetch_job
+	_prefetch_job = null
+	_prefetch_paths.clear()
+	_prefetch_ready = false
+	if is_instance_valid(job):
+		job.release()
 
 
 func replace(id: String, args: Dictionary = {}) -> void:
@@ -191,7 +250,11 @@ func stack_depth() -> int:
 
 ## Convenience used by every mode entry point.
 func start_match(config: MatchConfig, on_finished: Callable = Callable()) -> void:
-	await go_to("match", {"config": config, "on_finished": on_finished})
+	var args := {"config": config, "on_finished": on_finished}
+	var session = on_finished.get_object() if on_finished.is_valid() else null
+	if session is TournamentSession and config != null and config.context == MatchConfig.Context.TOURNAMENT:
+		args["next_config"] = session.following_config()
+	await go_to("match", args)
 
 
 func _swap(id: String, args: Dictionary) -> bool:
@@ -206,6 +269,8 @@ func _swap(id: String, args: Dictionary) -> bool:
 		Log.e("screen script for '%s' is not a Node" % id, "Router")
 		return false
 	var node: Node = candidate
+	if id not in ["match", "standings"]:
+		clear_match_prefetch()
 	if current_node != null and is_instance_valid(current_node):
 		if current_node.has_method("teardown"):
 			current_node.call("teardown")

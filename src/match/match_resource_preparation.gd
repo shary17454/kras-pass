@@ -9,6 +9,8 @@ const MAX_WAIT_MSEC := 30000
 var resources: Array[Resource] = []
 var error_path := ""
 var _pending_path := ""
+var _preparing := false
+var _released := false
 
 
 static func paths_for(config: MatchConfig) -> PackedStringArray:
@@ -60,9 +62,22 @@ static func paths_for_definitions(definition: MiniGameDef, arena: ArenaDef) -> P
 
 
 func prepare(paths: PackedStringArray, progress: Callable = Callable()) -> bool:
+	if _released or _preparing:
+		return false
+	_preparing = true
+	var loaded := await _prepare_paths(paths, progress)
+	_preparing = false
+	if _released:
+		release()
+	return loaded and not _released
+
+
+func _prepare_paths(paths: PackedStringArray, progress: Callable) -> bool:
 	set_process(false)
 	var started := Time.get_ticks_msec()
 	for i in paths.size():
+		if _released:
+			return false
 		var path := paths[i]
 		if not path.begins_with("res://") or not ResourceLoader.exists(path) or _request(path) != OK:
 			error_path = path
@@ -70,10 +85,14 @@ func prepare(paths: PackedStringArray, progress: Callable = Callable()) -> bool:
 		_pending_path = path
 		# Never retrieve an in-progress resource: that would block the UI thread.
 		while _status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			if _released:
+				return false
 			if Time.get_ticks_msec() - started >= _wait_limit():
 				error_path = path
 				return false
 			await get_tree().process_frame
+		if _released:
+			return false
 		if _status(path) != ResourceLoader.THREAD_LOAD_LOADED:
 			error_path = path
 			return false
@@ -87,11 +106,16 @@ func prepare(paths: PackedStringArray, progress: Callable = Callable()) -> bool:
 			progress.call(float(i + 1) / paths.size())
 		# Yield even for cache hits, keeping the transition UI responsive.
 		await get_tree().process_frame
-	return true
+	return not _released
 
 
 func release() -> void:
+	_released = true
 	resources.clear()
+	if _preparing:
+		# The coroutine exits at its next frame boundary, then drains the one
+		# outstanding native request. Never free it while it is still awaiting.
+		return
 	if _pending_path.is_empty():
 		queue_free()
 	else:
@@ -101,6 +125,8 @@ func release() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _preparing:
+		return
 	if _pending_path.is_empty() or _status(_pending_path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 		return
 	_take(_pending_path)

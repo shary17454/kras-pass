@@ -56,6 +56,7 @@ var _countdown_value := 3
 var _paused := false
 var _pause_menu: CanvasLayer
 var _on_finished: Callable = Callable()
+var _next_match_config: MatchConfig
 var _tuning := {}
 var _replay: Array = []
 var _replay_enabled := false
@@ -111,6 +112,7 @@ func setup(args: Dictionary) -> void:
 	if playback != null:
 		config = playback.to_config()
 	_on_finished = args.get("on_finished", Callable())
+	_next_match_config = args.get("next_config")
 	if config == null:
 		Log.e("match started without a config", "Match")
 		SceneRouter.go_to("main_menu", {}, false)
@@ -439,6 +441,8 @@ func _enter_phase(p: int) -> void:
 			controller.on_sudden_death()
 			EventBus.sudden_death_started.emit()
 		P.FINISH:
+			if playback == null and _next_match_config != null and _round_index + 1 >= _total_rounds:
+				SceneRouter.prefetch_from_screen.call_deferred(self, _next_match_config)
 			_phase_timer = float(_tuning.get("finish_seconds", 2.2))
 			hud.announce(Loc.t("hud.finish"), UIKit.ACCENT_2, 1.2)
 			_announce_voice("announcer.finish")
