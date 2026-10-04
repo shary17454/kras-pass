@@ -157,6 +157,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_keeper_balls(t, scene)
 	_test_magnet_deadline(t, scene)
 	_test_bomb_states(t, scene)
+	_test_bomb_delay(t, scene)
 	_test_ball_delay(t, scene)
 	_test_relic(t, scene)
 	_test_tag(t, scene)
@@ -772,6 +773,53 @@ func _test_bomb_states(t: TestHarness, scene: Node) -> void:
 	controller.free()
 	for bomb in bombs:
 		if not bomb.is_queued_for_deletion(): bomb.queue_free()
+
+
+func _test_bomb_delay(t: TestHarness, scene: Node) -> void:
+	var controller = load("res://src/minigames/fawda.gd").new()
+	var visual: Dictionary = controller.make_bomb_visual()
+	var bomb: Node3D = visual.node
+	scene.add_child(bomb)
+	bomb.global_position = Vector3(2, 1, 0)
+	controller.update_bomb_visual(visual, 4.1)
+	controller._bombs.append({"node": bomb, "wick": visual.wick, "fuse": 0.01, "held": -1})
+	var brain = load("res://src/ai/brains/bomber_brain.gd").new()
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.controller = controller
+	brain.reaction_time = 0.2
+	var cues: Array = controller.bomb_states()
+	t.equal(cues[0].fuse, 4.0, "bomb cue estimates rendered wick rather than secret fuse")
+	t.equal(brain._observed_bombs().size(), 0, "unobserved bomb gives no live fallback")
+	brain._record_history()
+	t.equal(brain._observed_bombs().size(), 0, "new bomb waits for reaction delay")
+	brain._time = 0.1
+	bomb.global_position = Vector3(9, 1, 0)
+	controller.update_bomb_visual(visual, 1.0)
+	brain._record_history()
+	brain._time = 0.2
+	var observed: Array = brain._observed_bombs()
+	t.equal(observed.size(), 1, "mature bomb observation becomes available")
+	if not observed.is_empty():
+		t.equal(observed[0].pos, Vector3(2, 1, 0), "bomb pursuit uses delayed position")
+		t.equal(observed[0].fuse, 4.0, "bomb urgency uses delayed visible wick")
+	brain._time = 0.3
+	observed = brain._observed_bombs()
+	t.equal(observed[0].fuse, 1.0, "later wick cue respects same reaction delay")
+	bomb.hide()
+	t.equal(brain._observed_bombs().size(), 0, "hidden bomb cannot remain actionable through history")
+	bomb.show()
+	visual.wick.hide()
+	t.equal(controller.bomb_states()[0].fuse, -1.0, "hidden wick does not expose private countdown")
+	for index in AIBrain.HISTORY_CAP + 5:
+		brain._time += 0.05
+		brain._record_history()
+	t.equal(brain._bomb_history.size(), AIBrain.HISTORY_CAP, "bomb observation memory remains bounded")
+	brain.on_round_start()
+	t.equal(brain._observed_bombs().size(), 0, "round restart clears bomb observations")
+	bomb.queue_free()
+	t.equal(controller.bomb_states().size(), 0, "queued bomb cannot be observed")
+	brain.controller = null
+	controller.free()
 
 
 func _test_ball_delay(t: TestHarness, scene: Node) -> void:
