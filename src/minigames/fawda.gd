@@ -263,14 +263,18 @@ func ai_script() -> Script:
 	return load("res://src/ai/brains/bomber_brain.gd")
 
 
-## Live bombs the AI can see: position, fuse and whether it is in someone's
-## hands. All of it is on screen — the wick length is the fuse.
+## Rendered bomb cues, not the private fuse timer. The wick only gives an
+## approximate remaining duration; callers apply their own reaction delay.
 func bomb_states() -> Array:
 	var out: Array = []
 	for b in _bombs:
 		var node: Node3D = b["node"]
 		if is_instance_valid(node) and not node.is_queued_for_deletion() and node.is_visible_in_tree():
-			out.append({"pos": node.global_position, "fuse": float(b["fuse"]),
+			var wick: Node3D = b.get("wick")
+			var fuse := -1.0
+			if is_instance_valid(wick) and wick.is_visible_in_tree():
+				fuse = snappedf(clampf(wick.scale.y, 0.0, 1.0) * FUSE_TIME, 0.5)
+			out.append({"id": node.get_instance_id(), "pos": node.global_position, "fuse": fuse,
 				"held": int(b["held"])})
 	return out
 

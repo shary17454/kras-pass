@@ -231,6 +231,7 @@ func _build() -> void:
 		camera.local_target = _fighters[config.human_slots()[0]]
 		camera.mode = ArenaCamera.Mode.CHASE
 	camera.current = true
+	ctx.observation_camera = camera
 	if config.minigame_id == "tank_arena":
 		var radar_layer := CanvasLayer.new()
 		add_child(radar_layer)

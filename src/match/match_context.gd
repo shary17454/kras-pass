@@ -23,6 +23,7 @@ var details: Array = []           # per-slot dictionaries of extra stats
 var powerups: Node                # PowerUpSystem, may be null
 var machine: Node3D               # HoverMachine, null in games that refuse it
 var world_root: Node3D            # where a game parents its own objects
+var observation_camera: Camera3D
 
 ## Set by the controller when the round should end before the clock does.
 var early_finish := false

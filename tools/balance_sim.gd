@@ -1,7 +1,8 @@
 extends Node
 ## Bot-versus-bot balance simulation.
 ##
-##   godot --headless --fixed-fps 60 --path . tools/balance_sim.tscn -- --runs=8
+##   godot --headless --fixed-fps 60 --path . tools/balance_sim.tscn -- \
+##     --runs=8 --test-data-dir=/tmp/kras-balance-save
 ##
 ## Plays every mini-game many times with bots and writes a report to
 ## `build/balance/`. This is the instrument for the questions you cannot answer
@@ -45,6 +46,10 @@ var _log: FileAccess
 
 
 func _ready() -> void:
+	if not _storage_is_isolated(SaveSystem.storage_root):
+		push_error("Balance simulation requires --test-data-dir with an absolute directory outside player saves")
+		get_tree().quit(2)
+		return
 	if not _parse_args():
 		push_error("Invalid --seed-offset: expected an integer from 0 to 1000000000")
 		get_tree().quit(2)
@@ -54,6 +59,10 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 	_log = FileAccess.open(SaveSystem.storage_root.path_join("balance_progress.txt"), FileAccess.WRITE)
+	if _log == null:
+		push_error("Cannot write balance progress in the isolated save directory")
+		get_tree().quit(2)
+		return
 	_say("start runs=%d only=%s seed_offset=%d" % [runs, only, seed_offset])
 	_started = Time.get_ticks_msec()
 	# Shorter pre-round cards: this is a simulation, not a demo.
@@ -81,6 +90,15 @@ func _ready() -> void:
 	_write_reports()
 	print("\nfinished in %.1fs — %s/report.html" % [(Time.get_ticks_msec() - _started) / 1000.0, out_dir])
 	get_tree().quit(0 if _worst_severity() < 2 else 1)
+
+
+func _storage_is_isolated(root: String) -> bool:
+	if not root.is_absolute_path() or root.begins_with("user://") or root.begins_with("res://"):
+		return false
+	var directory := root.simplify_path().trim_suffix("/")
+	var player_directory := OS.get_user_data_dir().simplify_path().trim_suffix("/")
+	return not directory.is_empty() and not directory.ends_with(":") and directory != player_directory \
+		and not directory.begins_with(player_directory + "/")
 
 
 func _say(line: String) -> void:
