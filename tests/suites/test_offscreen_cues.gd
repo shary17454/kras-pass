@@ -16,6 +16,9 @@ func run(t: TestHarness, host: Node) -> void:
 		var behind := OffscreenPlayerCue.project(camera, Vector3(0, 0, 10), bounds)
 		t.ok(not behind.is_empty(), "behind-camera player retains a recovery cue")
 		t.ok(behind.direction.y > 0.0, "straight behind defaults to bottom, not a NaN direction")
+		var distant := OffscreenPlayerCue.project(camera, Vector3(0, 0, -camera.far * 2.0), bounds)
+		t.ok(not distant.is_empty(), "a player clipped by the far plane is not treated as visible")
+		t.ok(distant.direction.y < 0.0, "straight ahead but distant points forward, not backward")
 		for position in [Vector3(100, 0, -10), Vector3(-100, 0, -10), Vector3(0, 100, -10), Vector3(100, 100, 10)]:
 			var cue := OffscreenPlayerCue.project(camera, position, bounds)
 			t.ok(not cue.is_empty(), "outside viewport has a cue")
