@@ -78,6 +78,7 @@ const SUITES := [
 	"res://tests/suites/test_lab_smoke_budget.gd",
 	"res://tests/suites/test_fawda_network.gd",
 	"res://tests/suites/test_fawda_round_evidence.gd",
+	"res://tests/suites/test_fawda_final_evidence.gd",
 	"res://tests/suites/test_race_rounds.gd",
 	"res://tests/suites/test_kart_network.gd",
 	"res://tests/suites/test_armed_race_network.gd",
