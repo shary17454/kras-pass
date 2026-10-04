@@ -89,7 +89,11 @@ jobs:
         run: |
           set -euo pipefail
           npm ci --ignore-scripts
-          node network-smoke.js --game="$GAME_ID" 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
+          match_args=()
+          if [ "$GAME_ID" = kart_sprint ]; then
+            match_args+=(--seed=439903641)
+          fi
+          node network-smoke.js --game="$GAME_ID" "${match_args[@]}" 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
           node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
           if [ "$GAME_ID" = zone_hold ]; then
             node network-smoke.js --game="$GAME_ID" --seed=438683058 2>&1 | tee "$RUNNER_TEMP/kras-network-zone-contest-regression.stdout"
