@@ -98,14 +98,15 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.on_round_start()
 	for index in AIBrain.HISTORY_CAP + 4:
 		brain._time = float(index) * 0.05
-		hidden.global_position = Vector3(index, 1, 0)
+		hidden.global_position = Vector3(index * 0.25, 1, 0)
+		t.ok(brain.can_observe(hidden), "history wrap fixture stays inside the camera")
 		brain._record_history()
 	hidden.hide()
 	hidden.global_position = Vector3(9999, 1, 0)
 	brain._time += 0.05
 	brain._record_history()
 	brain._time += 0.05
-	t.equal(brain.perceive(1), Vector3(AIBrain.HISTORY_CAP + 3, 1, 0), "wrapped history retains newest last-seen position")
+	t.equal(brain.perceive(1), Vector3((AIBrain.HISTORY_CAP + 3) * 0.25, 1, 0), "wrapped history retains newest last-seen position")
 	t.equal(brain._history_count, AIBrain.HISTORY_CAP, "visibility history remains bounded")
 	hidden.mods["shield"] = 1.0
 	t.ok(not brain.is_empowered(1), "hidden powerup state cannot be inspected")
@@ -161,10 +162,79 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_ball_delay(t, scene)
 	_test_relic(t, scene)
 	_test_tag(t, scene)
+	_test_camera_bounds(t, scene)
 	_test_tied_leaders(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_camera_bounds(t: TestHarness, scene: Node) -> void:
+	var original: Camera3D = scene.ctx.observation_camera
+	var camera := ArenaCamera.new()
+	scene.add_child(camera)
+	camera.set_process(false)
+	camera.set_perspective(90.0, 0.1, 50.0)
+	camera.global_position = Vector3(0, 1, 10)
+	camera.look_at(Vector3(0, 1, 0), Vector3.UP)
+	scene.ctx.observation_camera = camera
+	var brain := AIBrain.new()
+	brain.configure(1, scene.ctx, 3, 119)
+	var marker := Node3D.new()
+	scene.add_child(marker)
+	marker.global_position = Vector3(0, 1, 0)
+	t.ok(brain.can_observe(marker), "camera observes an in-frame target before a render update")
+	marker.global_position = Vector3(100, 1, 0)
+	t.ok(not brain.can_observe(marker), "visible-in-tree target outside the frame is not observed")
+	marker.global_position = Vector3(0, 1, 20)
+	t.ok(not brain.can_observe(marker), "target behind camera is not observed")
+	marker.global_position = Vector3(0, 1, -100)
+	t.ok(not brain.can_observe(marker), "target beyond far plane is not observed")
+	marker.global_position = Vector3(0, 1, 9.99)
+	t.ok(not brain.can_observe(marker), "target before near plane is not observed")
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3.ONE
+	mesh.mesh = box
+	scene.add_child(mesh)
+	mesh.global_position = Vector3(10.0 / camera.get_camera_projection().x.x + 0.2, 1, 0)
+	t.ok(not brain._point_in_view(mesh.global_position), "partial mesh fixture origin is outside the viewport")
+	t.ok(brain.can_observe(mesh), "mesh corners preserve partial-frame visibility")
+	mesh.layers = 2
+	camera.cull_mask = 1
+	t.ok(not brain.can_observe(mesh), "camera-hidden visual layer cannot be observed")
+	var reference: Fighter = scene.ctx.fighter(0)
+	var me: Fighter = scene.ctx.fighter(1)
+	var reference_position := reference.global_position
+	var my_position := me.global_position
+	var reference_facing := reference.facing
+	var my_facing := me.facing
+	reference.global_position = Vector3(0, 1, 0)
+	reference.facing = Vector3.FORWARD
+	me.global_position = Vector3(100, 1, 100)
+	me.facing = Vector3.RIGHT
+	camera.local_target = reference
+	camera.mode = ArenaCamera.Mode.CHASE
+	marker.global_position = me.global_position + Vector3.RIGHT * 3
+	t.ok(brain.can_observe(marker), "follow-camera bot observes from its own position and heading")
+	marker.global_position = me.global_position + Vector3.LEFT * 100
+	t.ok(not brain.can_observe(marker), "bot cannot use another player's camera to see behind its own view")
+	camera.shared_world = true
+	marker.global_position = me.global_position + Vector3.RIGHT * 3
+	t.ok(not brain.can_observe(marker), "shared camera uses the shared frame rather than a private follow view")
+	camera.set_orthogonal(20.0, 0.1, 50.0)
+	marker.global_position = Vector3(0, 1, 0)
+	t.ok(brain.can_observe(marker), "orthographic camera retains its in-frame target")
+	marker.global_position = Vector3(30, 1, 0)
+	t.ok(not brain.can_observe(marker), "orthographic camera excludes out-of-frame target")
+	reference.global_position = reference_position
+	me.global_position = my_position
+	reference.facing = reference_facing
+	me.facing = my_facing
+	scene.ctx.observation_camera = original
+	mesh.queue_free()
+	marker.queue_free()
+	camera.queue_free()
 
 
 func _test_tied_leaders(t: TestHarness, scene: Node) -> void:
@@ -648,7 +718,10 @@ func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
 	hidden_ledge.global_position = Vector3(0, 104, 0)
 	visible_ledge.global_position = Vector3(1, 102, 0)
 	hidden_ledge.hide()
+	var view: Transform3D = scene.camera.global_transform
+	scene.camera.global_position += Vector3.UP * 100.0
 	t.equal(climber._find_higher_ground(Vector3(0, 100, 0)), Vector3(1, 103, 0), "climber ignores hidden higher geometry")
+	scene.camera.global_transform = view
 	hidden_ledge.queue_free()
 	visible_ledge.queue_free()
 
@@ -805,6 +878,11 @@ func _test_bomb_delay(t: TestHarness, scene: Node) -> void:
 	brain._time = 0.3
 	observed = brain._observed_bombs()
 	t.equal(observed[0].fuse, 1.0, "later wick cue respects same reaction delay")
+	bomb.global_position = Vector3(999, 1, 0)
+	t.equal(brain._observed_bombs().size(), 0, "out-of-frame bomb cannot remain actionable through history")
+	brain._record_history()
+	t.equal(brain._bomb_history.back().bombs.size(), 0, "out-of-frame bomb cannot enter observation history")
+	bomb.global_position = Vector3(9, 1, 0)
 	bomb.hide()
 	t.equal(brain._observed_bombs().size(), 0, "hidden bomb cannot remain actionable through history")
 	bomb.show()

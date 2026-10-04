@@ -31,7 +31,11 @@ func _record_history() -> void:
 	super._record_history()
 	if controller == null or not controller.has_method("bomb_states"):
 		return
-	_bomb_history.append({"time": _time, "bombs": controller.call("bomb_states").duplicate(true)})
+	var cues := []
+	for cue in controller.call("bomb_states"):
+		if can_observe(instance_from_id(int(cue.id)) as Node3D):
+			cues.append(cue.duplicate())
+	_bomb_history.append({"time": _time, "bombs": cues})
 	if _bomb_history.size() > HISTORY_CAP:
 		_bomb_history.pop_front()
 
@@ -41,7 +45,8 @@ func _observed_bombs() -> Array:
 		return []
 	var visible := {}
 	for cue in controller.call("bomb_states"):
-		visible[cue.id] = true
+		if can_observe(instance_from_id(int(cue.id)) as Node3D):
+			visible[cue.id] = true
 	var want := _time - reaction_time + 0.000001
 	for index in range(_bomb_history.size() - 1, -1, -1):
 		var sample := _bomb_history[index]
