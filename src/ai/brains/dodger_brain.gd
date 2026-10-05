@@ -11,8 +11,6 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## Everything it reads is on screen: the arm's angle, the direction it turns and
 ## how fast it is turning right now. It never looks at the hazard's schedule.
 
-## Leaving the ground this long before the arm arrives puts the apex on the hit.
-const JUMP_LEAD := 0.34
 ## Clear of the arm's reach by this much counts as standing safely outside it.
 const OUTSIDE_MARGIN := 1.2
 ## …but not so far out that the next knock sends you off the rim. The band has
@@ -95,7 +93,10 @@ func decide(delta: float) -> void:
 		# judges the moment; re-rolling every tick would let the bot stumble
 		# into a perfect jump by sheer repetition.
 		var slop: float = (1.0 - accuracy) * 0.5
-		_lead = clampf(JUMP_LEAD + rng.randfn(0.0, slop), 0.08, 0.75)
+		# Own movement capability is public to the player; hazard scheduling is
+		# not. A universal lead mistimes different characters and low gravity.
+		var apex := me.jump_velocity * float(me.mods["jump"]) / maxf(0.001, me._gravity())
+		_lead = clampf(apex + rng.randfn(0.0, slop), 0.08, maxf(0.75, apex + 0.25))
 
 	var origin: Vector3 = threat["origin"]
 	var hub_dist: float = (me.global_position - origin).length()
