@@ -7,6 +7,7 @@ var count := 4
 var announced := false
 var configured := false
 var preparing_match := false
+var match_preparation: Node
 var started := false
 var requested_ready := false
 var snapshots := 0
@@ -320,6 +321,8 @@ func _room() -> void:
 
 
 func _start(cfg: MatchConfig) -> void:
+	if failed or completed:
+		return
 	if game != null or preparing_match:
 		_fail("duplicate match")
 		return
@@ -327,6 +330,7 @@ func _start(cfg: MatchConfig) -> void:
 	var expected_epoch := Net.epoch
 	var expected_room := Net.room_code
 	var preparation := preload("res://src/match/match_resource_preparation.gd").new()
+	match_preparation = preparation
 	add_child(preparation)
 	var prepared: bool = await preparation.prepare(preparation.paths_for(cfg))
 	if not prepared or not SceneRouter._match_session_is_current(cfg, expected_epoch, expected_room):
@@ -440,6 +444,7 @@ func _start(cfg: MatchConfig) -> void:
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
 	preparation.release()
+	match_preparation = null
 	preparing_match = false
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		for fighter in game.ctx.fighters:
@@ -1813,6 +1818,13 @@ func _finish_cleanup() -> void:
 	get_tree().quit(0)
 
 
+static func drain_preparation(job: Node, tree: SceneTree) -> void:
+	if is_instance_valid(job):
+		job.release()
+	while is_instance_valid(job):
+		await tree.process_frame
+
+
 func _fail(reason: String) -> void:
 	if failed or completed:
 		return
@@ -1821,5 +1833,10 @@ func _fail(reason: String) -> void:
 	if game != null:
 		game.teardown()
 		game.queue_free()
+		game = null
 	Net.leave()
+	await drain_preparation(match_preparation, get_tree())
+	match_preparation = null
+	await get_tree().process_frame
+	await get_tree().process_frame
 	get_tree().quit(1)
