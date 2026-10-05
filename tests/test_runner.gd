@@ -21,6 +21,7 @@ const SUITES := [
 	"res://tests/suites/test_input_sources.gd",
 	"res://tests/suites/test_replay.gd",
 	"res://tests/suites/test_replay_schema.gd",
+	"res://tests/suites/test_replay_payload.gd",
 	"res://tests/suites/test_playlist.gd",
 	"res://tests/suites/test_party.gd",
 	"res://tests/suites/test_tournament_checkpoint.gd",

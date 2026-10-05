@@ -298,6 +298,10 @@ static func from_dict(d: Dictionary) -> ReplayData:
 	if v > VERSION:
 		Log.w("replay is from a newer build (v%d > v%d)" % [v, VERSION], "Replay")
 		return null
+	var payload := _validated_payload(d, v)
+	if payload.is_empty():
+		Log.w("replay binary channels are incomplete or invalid", "Replay")
+		return null
 	var r := ReplayData.new()
 	r.version = v
 	r.id = String(d.get("id", ""))
@@ -329,7 +333,7 @@ static func from_dict(d: Dictionary) -> ReplayData:
 		r.places.append(int(p))
 
 	var stride := maxi(1, r.players.size()) * InputFrame.BYTES
-	var flat := Marshalls.base64_to_raw(String(d.get("frames_b64", "")))
+	var flat: PackedByteArray = payload["frames"]
 	var count := int(d.get("tick_count", flat.size() / stride))
 	for i in count:
 		var from := i * stride
@@ -337,6 +341,53 @@ static func from_dict(d: Dictionary) -> ReplayData:
 			break
 		r.frames.append(flat.slice(from, from + stride))
 	return _migrate(r, v)
+
+
+static func _validated_payload(d: Dictionary, v: int) -> Dictionary:
+	var inputs: String = d.get("frames_b64", "")
+	var corrections: String = d.get("keyframes_b64", "")
+	if not _base64_shape(inputs) or not _base64_shape(corrections):
+		return {}
+	var flat := Marshalls.base64_to_raw(inputs)
+	var keys := Marshalls.base64_to_raw(corrections)
+	var encoded_inputs := "" if flat.is_empty() else Marshalls.raw_to_base64(flat)
+	var encoded_keys := "" if keys.is_empty() else Marshalls.raw_to_base64(keys)
+	if encoded_inputs != inputs or encoded_keys != corrections:
+		return {}
+	# Pre-v4 channels use obsolete packet layouts and are cleared by migration.
+	if v >= 4:
+		var stride := maxi(1, d.get("players", []).size()) * InputFrame.BYTES
+		if flat.size() % stride != 0:
+			return {}
+		var count := flat.size() / stride
+		if d.has("tick_count") and int(d["tick_count"]) != count:
+			return {}
+		if not keys.is_empty():
+			var ticks: Array = d.get("keyframe_ticks", [])
+			if keys.size() != ticks.size() * maxi(1, d.get("players", []).size()) * KEYFRAME_BYTES_PER_PLAYER:
+				return {}
+			var seen := {}
+			for tick in ticks:
+				var normalized := str(int(tick))
+				if seen.has(normalized):
+					return {}
+				seen[normalized] = true
+	return {"frames": flat}
+
+
+static func _base64_shape(value: String) -> bool:
+	if value.length() % 4 != 0:
+		return false
+	var padding := 0
+	for i in value.length():
+		var c := value[i]
+		if c == "=":
+			padding += 1
+			if i < value.length() - 2 or padding > 2:
+				return false
+		elif padding > 0 or not c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/":
+			return false
+	return true
 
 
 static func _valid_schema(d: Dictionary) -> bool:
