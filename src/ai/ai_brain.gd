@@ -282,9 +282,7 @@ func can_observe(node: Node3D) -> bool:
 			continue
 		if candidate is GeometryInstance3D:
 			has_geometry = true
-			var rendered: bool = candidate.is_visible_in_tree() and (not has_camera or candidate.layers & camera.cull_mask != 0)
-			if candidate is MeshInstance3D and candidate.mesh == null:
-				rendered = false
+			var rendered: bool = _geometry_has_visual_cue(candidate, camera.cull_mask if has_camera else 0xFFFFF)
 			if rendered:
 				if not has_camera:
 					return true
@@ -358,13 +356,48 @@ func _world_sight_clear(target: Node3D, point: Vector3) -> bool:
 func _has_visible_geometry(root: Node, cull_mask: int) -> bool:
 	if root is CollisionObject3D and root.has_meta("observation_mesh"):
 		var geometry := root.get_node_or_null(NodePath(root.get_meta("observation_mesh"))) as GeometryInstance3D
-		return geometry != null and geometry.is_visible_in_tree() and geometry.layers & cull_mask != 0
-	if root is GeometryInstance3D and root.is_visible_in_tree() and root.layers & cull_mask != 0:
+		return geometry != null and _geometry_has_visual_cue(geometry, cull_mask)
+	if root is GeometryInstance3D and _geometry_has_visual_cue(root, cull_mask):
 		return true
 	for child in root.get_children():
 		if _has_visible_geometry(child, cull_mask):
 			return true
 	return false
+
+
+func _geometry_has_visual_cue(geometry: GeometryInstance3D, cull_mask: int) -> bool:
+	if not geometry.is_visible_in_tree() or geometry.layers & cull_mask == 0:
+		return false
+	if not geometry is MeshInstance3D:
+		return true
+	var mesh := geometry as MeshInstance3D
+	if mesh.mesh == null or mesh.mesh.get_surface_count() == 0:
+		return false
+	if mesh.material_overlay != null and _material_has_visual_cue(mesh.material_overlay):
+		return true
+	if mesh.material_override != null:
+		return _material_has_visual_cue(mesh.material_override)
+	var surfaces := mesh.mesh.get_surface_count()
+	for surface in mini(surfaces, 32):
+		if _material_has_visual_cue(mesh.get_active_material(surface)):
+			return true
+	# Unknown shader/surface coverage must not erase a potentially visible body.
+	return surfaces > 32
+
+
+func _material_has_visual_cue(material: Material) -> bool:
+	if material == null:
+		return true
+	for pass_index in 4:
+		var standard := material as BaseMaterial3D
+		if standard == null or standard.blend_mode != BaseMaterial3D.BLEND_MODE_MIX \
+			or standard.transparency not in [BaseMaterial3D.TRANSPARENCY_ALPHA, BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS] \
+			or standard.albedo_color.a > 0.0:
+			return true
+		material = material.next_pass
+		if material == null:
+			return false
+	return true
 
 
 func _point_in_view(position: Vector3) -> bool:

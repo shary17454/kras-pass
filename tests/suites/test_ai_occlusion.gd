@@ -38,6 +38,14 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().physics_frame
 	await host.get_tree().physics_frame
 	t.ok(not brain.can_observe(target), "opaque world wall blocks an in-frame target")
+	var transparent := StandardMaterial3D.new()
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	transparent.albedo_color.a = 0.0
+	mesh.material_override = transparent
+	t.ok(brain.can_observe(target), "zero-alpha world wall does not occlude through its active collider")
+	transparent.albedo_color.a = 1.0
+	t.ok(not brain.can_observe(target), "restored opaque wall restores actual ray occlusion")
+	mesh.material_override = null
 	var partial := MeshInstance3D.new()
 	var partial_box := BoxMesh.new()
 	partial_box.size = Vector3(10, 1, 1)
@@ -87,6 +95,10 @@ func run(t: TestHarness, host: Node) -> void:
 	mesh.reparent(root, true)
 	wall.set_meta("observation_mesh", wall.get_path_to(mesh))
 	t.ok(not brain.can_observe(target), "sibling terrain mesh remains associated with its collider")
+	transparent.albedo_color.a = 0.0
+	mesh.material_override = transparent
+	t.ok(brain.can_observe(target), "transparent associated sibling terrain is not an occluder")
+	mesh.material_override = null
 	mesh.hide()
 	t.ok(brain.can_observe(target), "hidden sibling terrain is not a visual occluder")
 	mesh.show()

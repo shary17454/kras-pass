@@ -39,6 +39,43 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(not brain.can_observe(actor), "in-frame origin cannot reveal out-of-frame child geometry")
 	mesh.position = Vector3.ZERO
 	t.ok(brain.can_observe(actor), "body reappearance restores observation")
+	var transparent := StandardMaterial3D.new()
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	transparent.albedo_color.a = 0.0
+	mesh.material_override = transparent
+	t.ok(not brain.can_observe(actor), "zero-alpha body is not an observable cue")
+	t.ok(not brain._has_visible_geometry(actor, 1), "zero-alpha collision visual is not an occluding wall")
+	transparent.albedo_color.a = 0.25
+	t.ok(brain.can_observe(actor), "partially transparent body remains observable")
+	transparent.albedo_color.a = 0.0
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+	t.ok(brain.can_observe(actor), "opaque material ignores its unused alpha")
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var overlay := StandardMaterial3D.new()
+	mesh.material_overlay = overlay
+	t.ok(brain.can_observe(actor), "visible overlay preserves an otherwise transparent body cue")
+	mesh.material_overlay = null
+	transparent.next_pass = overlay
+	t.ok(brain.can_observe(actor), "visible additional material pass preserves observation")
+	transparent.next_pass = null
+	mesh.material_override = null
+	mesh.mesh.material = transparent
+	t.ok(not brain.can_observe(actor), "mesh surface material also respects zero alpha")
+	mesh.set_surface_override_material(0, overlay)
+	t.ok(brain.can_observe(actor), "surface override takes precedence over transparent mesh material")
+	mesh.set_surface_override_material(0, null)
+	context.observation_camera = null
+	t.ok(not brain.can_observe(actor), "camera-free simulation respects zero-alpha surface cues")
+	context.observation_camera = camera
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+	t.ok(not brain.can_observe(actor), "zero-alpha depth prepass body is not observable")
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	t.ok(brain.can_observe(actor), "unsupported cutoff coverage is not guessed invisible")
+	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	transparent.next_pass = transparent
+	t.ok(brain.can_observe(actor), "cyclic material passes have bounded conservative handling")
+	transparent.next_pass = null
+	mesh.mesh.material = null
 	var second := MeshInstance3D.new()
 	second.mesh = BoxMesh.new()
 	visuals.add_child(second)
