@@ -606,6 +606,8 @@ func _tick_countdown(delta: float) -> void:
 
 
 func _tick_live(delta: float) -> void:
+	var tick_started := DevTools.operations.begin()
+	var operation_started := DevTools.operations.begin()
 	_tick_index += 1
 	# 1. AI thinks — or, in playback, the recording speaks for it
 	if playback != null:
@@ -614,6 +616,8 @@ func _tick_live(delta: float) -> void:
 		for b in _brains:
 			if b != null:
 				b.tick(delta)
+	DevTools.operations.finish("match.ai", operation_started)
+	operation_started = DevTools.operations.begin()
 	# 2. fighters integrate (InputRouter has already refreshed frames)
 	for f in _fighters:
 		if is_instance_valid(f):
@@ -621,13 +625,19 @@ func _tick_live(delta: float) -> void:
 	# Body-to-body shoves are resolved here, after every body has moved, so the
 	# exchange does not depend on the order the fighters were ticked in.
 	Fighter.resolve_impacts(delta)
+	DevTools.operations.finish("match.fighters", operation_started)
+	operation_started = DevTools.operations.begin()
 	_record_replay_tick()
 	_apply_world_events()
 	_checkpoint_or_verify()
 	_record_or_apply_keyframe()
+	DevTools.operations.finish("match.replay", operation_started)
+	operation_started = DevTools.operations.begin()
 	# 3. arena
 	arena.tick(delta)
 	arena.check_water(_fighters)
+	DevTools.operations.finish("match.arena", operation_started)
+	operation_started = DevTools.operations.begin()
 	# 4. rules
 	controller.process_respawns(delta)
 	controller.tick(delta)
@@ -635,6 +645,8 @@ func _tick_live(delta: float) -> void:
 	if machine != null and is_instance_valid(machine):
 		machine.tick(delta)
 	mutators.tick(delta)
+	DevTools.operations.finish("match.rules", operation_started)
+	operation_started = DevTools.operations.begin()
 	# 5. bounds
 	_check_out_of_bounds()
 	_check_water_line()
@@ -650,6 +662,8 @@ func _tick_live(delta: float) -> void:
 	else:
 		hud.set_race_progress(controller.hud_primary_value())
 	_evaluate_end(delta)
+	DevTools.operations.finish("match.bounds_clock", operation_started)
+	DevTools.operations.finish("match.live_tick", tick_started)
 
 
 ## Let anyone already over the edge finish their fall while the round wraps up.

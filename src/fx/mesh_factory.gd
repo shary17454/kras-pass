@@ -118,6 +118,7 @@ static func toon(color: Color, emission := 0.0, rim := 0.35, uv_scale := Vector3
 	var key := "t%s_%.2f_%.2f_%.2f_%.2f" % [color.to_html(), emission, rim, uv_scale.x, uv_scale.y]
 	if _mat_cache.has(key):
 		return _mat_cache[key]
+	var operation_started := DevTools.operations.begin()
 	var m := StandardMaterial3D.new()
 	m.uv1_scale = uv_scale
 	var sd := _seed_for(color)
@@ -140,6 +141,7 @@ static func toon(color: Color, emission := 0.0, rim := 0.35, uv_scale := Vector3
 		m.emission = color
 		m.emission_energy_multiplier = emission * 0.85
 	_mat_cache[key] = m
+	DevTools.operations.finish("mesh.toon_miss", operation_started)
 	return m
 
 
@@ -419,14 +421,24 @@ static func cone(radius: float, height: float, color: Color) -> MeshInstance3D:
 
 static func sphere(radius: float, color: Color, emission := 0.0) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
+	mi.mesh = _sphere_mesh(radius)
+	mi.material_override = toon(color, emission)
+	return mi
+
+
+## Geometry is immutable and shared; animate instances with their transforms.
+static func _sphere_mesh(radius: float) -> SphereMesh:
+	# Keep the exact double bits: rounding can silently merge different sizes.
+	var key := "sp:" + PackedFloat64Array([radius]).to_byte_array().hex_encode()
+	if _mesh_cache.has(key):
+		return _mesh_cache[key]
 	var m := SphereMesh.new()
 	m.radius = radius
 	m.height = radius * 2.0
 	m.radial_segments = 36
 	m.rings = 18
-	mi.mesh = m
-	mi.material_override = toon(color, emission)
-	return mi
+	_mesh_cache[key] = m
+	return m
 
 
 static func capsule(radius: float, height: float, color: Color) -> MeshInstance3D:

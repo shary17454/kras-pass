@@ -315,6 +315,7 @@ func _sound(id: String) -> AudioStreamWAV:
 	id = SFX_ALIASES.get(id, id)
 	if _bank.has(id):
 		return _bank[id]
+	var operation_started := DevTools.operations.begin()
 	var buf = _render_sfx(id)
 	if buf == null:
 		Log.w("unknown sfx '%s'" % id, "Audio")
@@ -322,6 +323,7 @@ func _sound(id: String) -> AudioStreamWAV:
 		return null
 	var stream := Synth.to_stream(buf)
 	_bank[id] = stream
+	DevTools.operations.finish("audio.sfx_miss", operation_started)
 	return stream
 
 
@@ -489,11 +491,13 @@ func _fanfare(semitones: Array, step: float, gain: float) -> PackedFloat32Array:
 func _track(id: String) -> AudioStreamWAV:
 	if _tracks.has(id):
 		return _tracks[id]
+	var operation_started := DevTools.operations.begin()
 	var buf = _render_track(id)
 	if buf == null:
 		return null
 	var stream := Synth.to_stream(buf, true)
 	_tracks[id] = stream
+	DevTools.operations.finish("audio.track_miss", operation_started)
 	return stream
 
 

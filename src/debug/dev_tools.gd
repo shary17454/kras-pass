@@ -20,6 +20,7 @@ var freeze_timer := false
 var time_scale := 1.0
 var forced_ai_difficulty := -1
 var forced_bot_count := -1
+var operations := OperationTrace.new()
 
 var _panel: CanvasLayer
 var _visible := false
@@ -30,6 +31,7 @@ var _active_match: Node = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	operations.configure(available(), "--operation-trace" in OS.get_cmdline_user_args())
 	if not available():
 		return
 	set_process_input(true)

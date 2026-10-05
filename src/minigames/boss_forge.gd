@@ -61,6 +61,8 @@ func _lob_crate() -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
+	var operation_started := DevTools.operations.begin()
+	var part_started := DevTools.operations.begin()
 	var body := StaticBody3D.new()
 	body.collision_layer = 1
 	body.add_child(MeshFactory.crate(1.4, Color("#7d6a55"), Color("#ff8a3d")))
@@ -69,13 +71,19 @@ func _lob_crate() -> void:
 	box.size = Vector3(1.4, 1.4, 1.4)
 	cs.shape = box
 	body.add_child(cs)
+	DevTools.operations.finish("forge.crate_construct", part_started)
+	part_started = DevTools.operations.begin()
 	ctx.world_root.add_child(body)
+	DevTools.operations.finish("forge.crate_insert", part_started)
+	part_started = DevTools.operations.begin()
 	var ang := ctx.rng.randf() * TAU
 	var r := lerpf(4.0, arena.current_radius * 0.8, ctx.rng.randf())
 	body.global_position = arena.global_position + Vector3(cos(ang) * r, 0.7, sin(ang) * r)
+	DevTools.operations.finish("forge.crate_position", part_started)
 	body.add_to_group("crates")
 	_crates.append(body)
 	AudioManager.play_sfx("crate_break", body.global_position, 0.7)
+	DevTools.operations.finish("forge.lob_crate", operation_started)
 
 
 func _stomp() -> void:
@@ -128,11 +136,13 @@ func _check_feeding() -> void:
 func _spawn_slag(pos: Vector3, by: int) -> void:
 	if presentation_only:
 		return
+	var operation_started := DevTools.operations.begin()
 	var node := MeshFactory.sphere(0.6, Color("#ff8a3d"), 2.6)
 	node.position = pos
 	ctx.world_root.add_child(node)
 	_slag.append({"node": node, "life": SLAG_LIFE, "vel": Vector3.ZERO, "by": by})
 	AudioManager.play_sfx("crate_break", pos)
+	DevTools.operations.finish("forge.spawn_slag", operation_started)
 
 
 func _tick_slag(delta: float) -> void:

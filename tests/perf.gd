@@ -62,6 +62,7 @@ func _ready() -> void:
 	_start()
 
 func _start() -> void:
+	DevTools.operations.reset()
 	_build_msec = 0
 	_frames = 0
 	_elapsed = 0.0
@@ -180,6 +181,9 @@ func _pipeline_delta() -> Dictionary:
 
 func _finish(round_over: bool) -> void:
 	set_process(false)
+	if DevTools.operations.enabled:
+		print("PERF_OPERATIONS=" + JSON.stringify({"game": _games[_index],
+			"report": DevTools.operations.report(), "preparation_included": true}))
 	print("PERF_BUILD=" + JSON.stringify({"game": _games[_index], "milliseconds": _build_msec,
 		"preparation_milliseconds": _preparation_msec, "preparation_frames": _preparation_frames,
 		"wall_seconds": _elapsed, "live_frames": _frames, "samples": _samples.size(),
