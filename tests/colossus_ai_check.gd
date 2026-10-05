@@ -5,6 +5,8 @@ func _ready() -> void:
 	var seed_value := 9614
 	var game_id := "boss_colossus"
 	var trace := false
+	var difficulty := 3
+	var characters := ["sakhra", "fanoos", "ramla", "nabta"]
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--seed="):
 			seed_value = int(argument.trim_prefix("--seed="))
@@ -12,12 +14,25 @@ func _ready() -> void:
 			game_id = argument.trim_prefix("--game=")
 		elif argument == "--trace":
 			trace = true
+		elif argument.begins_with("--difficulty="):
+			var value := argument.trim_prefix("--difficulty=")
+			if not value.is_valid_int() or int(value) < 0 or int(value) > 3:
+				push_error("BOSS_AI: difficulty must be 0..3")
+				get_tree().quit(1)
+				return
+			difficulty = int(value)
+		elif argument.begins_with("--characters="):
+			characters = Array(argument.trim_prefix("--characters=").split(","))
+			if characters.size() != 4 or characters.any(func(id): return Registry.character(id) == null):
+				push_error("BOSS_AI: four registered characters required")
+				get_tree().quit(1)
+				return
 	if game_id not in ["boss_colossus", "boss_forge", "boss_dreadnought", "boss_sovereign"]:
 		push_error("BOSS_AI: unsupported game")
 		get_tree().quit(1)
 		return
 	var label := "COLOSSUS_AI" if game_id == "boss_colossus" else "BOSS_AI"
-	var cfg := MatchConfig.build(game_id, ["sakhra", "fanoos", "ramla", "nabta"], 0, 3, seed_value)
+	var cfg := MatchConfig.build(game_id, characters, 0, difficulty, seed_value)
 	cfg.rounds = 1
 	var scene = load("res://src/match/match_scene.gd").new()
 	add_child(scene)

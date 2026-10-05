@@ -55,6 +55,32 @@ func run(t: TestHarness, host: Node) -> void:
 			brain.perceived_weak_points()
 			brain.on_round_start()
 			t.empty(brain._weak_history, id + " round restart clears weak point history")
+			if id == "boss_colossus":
+				scene.controller._exposed = 0.0
+				fighter.global_position = Vector3(10.0, 0.5, 0.0)
+				brain.bits = 0
+				brain.decide(0.1)
+				t.ok(brain.move.x < 0.0, "closed Colossus opening repositions toward central safe ground")
+				t.equal(brain.bits & InputFrame.Btn.ATTACK, 0, "staging cannot attack a closed weak point")
+				var partner: Fighter = scene.ctx.fighter(1)
+				partner.global_position = fighter.global_position + Vector3(-1.0, 0.0, 0.0)
+				scene.ctx.fighter(2).hide()
+				scene.ctx.fighter(3).hide()
+				brain.reaction_time = 0.0
+				brain.aggression = 1.0
+				brain.edge_awareness = 0.0
+				brain._record_history()
+				brain.bits = 0
+				brain.decide(0.1)
+				t.equal(brain.bits & InputFrame.Btn.ATTACK, 0, "closed Colossus window does not switch to attacking nearby participants")
+				scene.controller._open_crater(Vector3.ZERO, 4.0)
+				fighter.global_position = Vector3(3.45, 0.5, 0.0)
+				brain.edge_awareness = 1.0
+				brain.dash_chance = 1.0
+				brain.bits = 0
+				brain.decide(0.1)
+				t.equal(brain.bits & InputFrame.Btn.DASH, 0, "a small persistent crater clearance correction does not request a long dash")
+				t.ok(brain.move.length() < 0.6, "persistent crater correction brakes near safe ground instead of fleeing at full speed")
 			if id == "boss_sovereign":
 				scene.controller._shielded = true
 				t.empty(brain.perceived_weak_points(), "shielded core is not a weak point")

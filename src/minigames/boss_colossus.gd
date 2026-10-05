@@ -185,6 +185,16 @@ func weak_point_nodes() -> Array:
 	return [_fist] if _exposed > 0.0 and is_instance_valid(_fist) else []
 
 
+func staging_point(heading: float) -> Vector3:
+	var arena := ctx.arena as Arena
+	if arena == null:
+		return ctx.arena_center()
+	# Spread participants around the middle without anticipating a future slam.
+	var radius := minf(5.0, arena.current_radius * 0.35)
+	var point := arena.global_position + Vector3(cos(heading), 0.0, sin(heading)) * radius
+	return arena.retreat_point(point)
+
+
 func attack_plan(from: Vector3, observed_spots: Variant = null) -> Dictionary:
 	var spots: Array = weak_points() if observed_spots == null else observed_spots
 	var arena := ctx.arena as Arena
@@ -215,7 +225,7 @@ func danger_zones() -> Array:
 	# Craters are permanent holes, so they are danger too — treat them as
 	# warnings that never expire.
 	for c in _craters:
-		out.append({"node": c["node"], "pos": c["pos"], "radius": float(c["radius"]), "left": 99.0, "margin": 0.5})
+		out.append({"node": c["node"], "pos": c["pos"], "radius": float(c["radius"]), "left": 99.0, "margin": 0.5, "persistent": true})
 	return out
 
 
