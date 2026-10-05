@@ -8,6 +8,9 @@ var _rock_meshes: Array[Mesh] = []
 var _tree_meshes: Array[Mesh] = []
 var _fern_meshes: Array[Mesh] = []
 var _road_material: StandardMaterial3D
+var _road_query_points := PackedVector3Array()
+var _road_query_bounds: Array[Rect2] = []
+const ROAD_QUERY_GROUP := 8
 
 
 func build(a: Arena) -> void:
@@ -69,17 +72,46 @@ func pbr(id: String, resolution: String, triplanar: bool) -> StandardMaterial3D:
 func _nearest(x: float, z: float) -> Vector3:
 	var best := INF
 	var result := Vector3.ZERO
-	for i in arena.circuit_line.size():
-		var a := arena.circuit_line[i]
-		var b := arena.circuit_line[(i + 1) % arena.circuit_line.size()]
-		var segment := Vector2(b.x - a.x, b.z - a.z)
-		var t := clampf(Vector2(x - a.x, z - a.z).dot(segment) / segment.length_squared(), 0.0, 1.0)
-		var p := a.lerp(b, t)
-		var d := Vector2(x, z).distance_squared_to(Vector2(p.x, p.z))
-		if d < best:
-			best = d
-			result = p
+	var points := arena.circuit_line
+	if points != _road_query_points:
+		_update_road_query(points)
+	var query := Vector2(x, z)
+	for group in _road_query_bounds.size():
+		var bounds := _road_query_bounds[group]
+		var closest := Vector2(clampf(query.x, bounds.position.x, bounds.end.x),
+			clampf(query.y, bounds.position.y, bounds.end.y))
+		if query.distance_squared_to(closest) > best:
+			continue
+		var start := group * ROAD_QUERY_GROUP
+		for i in range(start, mini(start + ROAD_QUERY_GROUP, points.size())):
+			var a := points[i]
+			var b := points[(i + 1) % points.size()]
+			var segment := Vector2(b.x - a.x, b.z - a.z)
+			var t := clampf(Vector2(x - a.x, z - a.z).dot(segment) / segment.length_squared(), 0.0, 1.0)
+			var p := a.lerp(b, t)
+			var d := query.distance_squared_to(Vector2(p.x, p.z))
+			if d < best:
+				best = d
+				result = p
 	return Vector3(sqrt(best), result.y, 0)
+
+
+func _update_road_query(points: PackedVector3Array) -> void:
+	_road_query_points = points
+	_road_query_bounds.clear()
+	for start in range(0, points.size(), ROAD_QUERY_GROUP):
+		var lower := Vector2(INF, INF)
+		var upper := Vector2(-INF, -INF)
+		for i in range(start, mini(start + ROAD_QUERY_GROUP, points.size()) + 1):
+			var p := points[i % points.size()]
+			lower.x = minf(lower.x, p.x)
+			lower.y = minf(lower.y, p.z)
+			upper.x = maxf(upper.x, p.x)
+			upper.y = maxf(upper.y, p.z)
+		# Keep rounded lerp endpoints inside the rejection box, including ties.
+		var magnitude := maxf(1.0, maxf(maxf(absf(lower.x), absf(lower.y)),
+			maxf(absf(upper.x), absf(upper.y))))
+		_road_query_bounds.append(Rect2(lower, upper - lower).grow(magnitude * 0.000002))
 
 
 func river_center_x() -> float:
