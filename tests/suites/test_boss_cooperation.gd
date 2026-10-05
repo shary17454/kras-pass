@@ -20,6 +20,13 @@ func run(t: TestHarness, host: Node) -> void:
 		t.ok(not victim.take_hit(0, Vector3.RIGHT, 11.0, 9.0), id + " ally attack is rejected")
 		t.equal(victim.health, health, id + " ally attack cannot lower health")
 		t.equal(victim._impulse, impulse, id + " ally attack cannot push another player into hazards")
+		var ally: Fighter = scene.ctx.fighter(0)
+		ally._pre_vel = Vector3.RIGHT * 12.0
+		victim._pre_vel = Vector3.ZERO
+		Fighter._contacts["0:1"] = {"a": ally, "b": victim, "into": Vector3.RIGHT}
+		Fighter.resolve_impacts(1.0 / 60.0)
+		t.equal(victim._impulse, impulse, id + " ally body impact cannot ram a teammate")
+		t.equal(victim.health, health, id + " ally body impact cannot damage a teammate")
 		victim._invuln = 0.0
 		var enemy_health := victim.health
 		t.ok(victim.take_hit(-1, Vector3.RIGHT, 11.0, 9.0, true), id + " boss/environment attacks remain effective")
@@ -48,6 +55,8 @@ func run(t: TestHarness, host: Node) -> void:
 			fighter.teammates.clear()
 		scene.controller.configure()
 		t.empty(victim.teammates, id + " controller preserves legacy replay combat")
+		victim._invuln = 0.0
+		t.ok(victim.take_hit(0, Vector3.RIGHT, 11.0, 9.0), id + " legacy replay still applies its recorded rival attack")
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
@@ -55,3 +64,15 @@ func run(t: TestHarness, host: Node) -> void:
 	var unrelated := ReplayData.new()
 	unrelated.minigame_id = "ring_rumble"
 	t.ok(not unrelated.to_config().rules.has("boss_cooperative"), "non-boss replay rules are unchanged")
+	var arena: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(arena)
+	arena.setup({"config": MatchConfig.build("ring_rumble", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 19), "on_finished": func(_r): pass})
+	arena.set_physics_process(false)
+	var rival: Fighter = arena.ctx.fighter(1)
+	rival._invuln = 0.0
+	t.empty(rival.teammates, "competitive arena does not inherit boss allies")
+	t.ok(rival.take_hit(0, Vector3.RIGHT, 11.0, 9.0), "competitive arena rival attacks remain effective")
+	arena.teardown()
+	arena.queue_free()
+	await host.get_tree().process_frame
+	await host.get_tree().process_frame
