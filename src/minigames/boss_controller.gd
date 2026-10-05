@@ -1,12 +1,9 @@
 extends MiniGameController
 ## Shared spine for the championship bosses.
 ##
-## A boss fight inverts the usual match: the four competitors are not each
-## other's problem, a scripted opponent is. But it is still a *party* game, so
-## they are not allies either — damage is scored per player, and the trophy goes
-## to whoever contributed most to the kill. That single rule keeps four players
-## shoving each other out of the good firing angle while a boss stomps the
-## arena, which is the tone the mode wants.
+## Players cooperate against the boss without damaging or ramming one another.
+## Contribution is still scored per player, so the trophy rewards performance
+## without letting a teammate's attack throw someone into a boss hazard.
 ##
 ## Subclasses implement `boss_build`, `boss_think` and `weak_points`; everything
 ## here is the part every boss shares: health, phases, telegraphs, the shared
@@ -39,6 +36,15 @@ var _spawn_transform := Transform3D.IDENTITY
 func configure() -> void:
 	eliminate_on_fall = false
 	lives_per_player = 99
+	if not ctx.config.rules.has("boss_cooperative"):
+		ctx.config.rules["boss_cooperative"] = true
+	if not bool(ctx.config.rule("boss_cooperative", true)):
+		return
+	for fighter in ctx.fighters:
+		fighter.teammates.clear()
+		for ally in ctx.fighters:
+			if ally.slot != fighter.slot:
+				fighter.teammates[ally.slot] = true
 
 
 func build() -> void:

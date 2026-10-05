@@ -135,6 +135,9 @@ func to_config() -> MatchConfig:
 	cfg.rounds = rounds
 	cfg.duration_override = duration_override
 	cfg.rules = rules.duplicate(true)
+	# Older boss recordings used rival attacks; retain that recorded behaviour.
+	if minigame_id.begins_with("boss_") and not cfg.rules.has("boss_cooperative"):
+		cfg.rules["boss_cooperative"] = false
 	cfg.allow_powerups = allow_powerups
 	cfg.sudden_death = sudden_death
 	cfg.mutators = mutators.duplicate()
