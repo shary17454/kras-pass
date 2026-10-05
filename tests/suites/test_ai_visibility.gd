@@ -956,7 +956,7 @@ func _test_ball_delay(t: TestHarness, scene: Node) -> void:
 	keeper._time = 1.21
 	keeper._record_history()
 	keeper._time = 1.5
-	t.equal(keeper.perceive_ball(balls[1]).get("radius"), 0.0, "hidden sphere does not reveal its size")
+	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "hidden sphere and fuse label expose no actionable ball observation")
 	balls[1]._mesh.show()
 	balls[1].hide()
 	t.ok(keeper.perceive_ball(balls[1]).is_empty(), "hidden ball cannot return an actionable old observation")
