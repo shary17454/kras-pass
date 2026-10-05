@@ -72,8 +72,14 @@ func run(t: TestHarness, host: Node) -> void:
 	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	t.ok(brain.can_observe(actor), "unsupported cutoff coverage is not guessed invisible")
 	transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	transparent.next_pass = transparent
-	t.ok(brain.can_observe(actor), "cyclic material passes have bounded conservative handling")
+	var tail: Material = transparent
+	for index in 4:
+		var next := StandardMaterial3D.new()
+		next.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		next.albedo_color.a = 0.0
+		tail.next_pass = next
+		tail = next
+	t.ok(brain.can_observe(actor), "long material pass chains have bounded conservative handling")
 	transparent.next_pass = null
 	mesh.mesh.material = null
 	var second := MeshInstance3D.new()
