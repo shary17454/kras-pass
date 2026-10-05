@@ -8,14 +8,43 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## `edge_awareness` how reliably it is respected, so the tiers separate on the
 ## thing the fight is actually about.
 
+var _danger_seen := {}
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_danger_seen.clear()
+
+
+func perceived_dangers() -> Array:
+	var observed := {}
+	var ready: Array = []
+	if controller == null or not controller.has_method("danger_zones"):
+		_danger_seen.clear()
+		return ready
+	for zone in controller.call("danger_zones"):
+		var cue = zone.get("node")
+		if not cue is Node3D or not can_observe(cue):
+			continue
+		var id: int = cue.get_instance_id()
+		var first_seen: float = _danger_seen.get(id, _time)
+		observed[id] = first_seen
+		if _time - first_seen + 0.000001 >= reaction_time:
+			ready.append(zone)
+	# A removed or hidden cue cannot carry reaction credit into a new warning.
+	_danger_seen = observed
+	return ready
+
+
 func decide(delta: float) -> void:
 	var me := self_body()
 	if me == null or controller == null:
 		super.decide(delta)
 		return
 
-	if controller.has_method("danger_zones") and rng.randf() < edge_awareness:
-		for z in controller.call("danger_zones"):
+	var dangers := perceived_dangers()
+	if rng.randf() < edge_awareness:
+		for z in dangers:
 			var pos: Vector3 = z["pos"]
 			var r: float = float(z["radius"])
 			# Only bail while there is still time to be somewhere else; a tier

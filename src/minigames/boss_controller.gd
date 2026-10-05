@@ -291,7 +291,7 @@ func on_phase_changed(_new_phase: int) -> void:
 func danger_zones() -> Array:
 	var out: Array = []
 	for t in _telegraphs:
-		out.append({"pos": t["pos"], "radius": float(t["radius"]), "left": float(t["left"])})
+		out.append({"node": t["node"], "pos": t["pos"], "radius": float(t["radius"]), "left": float(t["left"])})
 	return out
 
 

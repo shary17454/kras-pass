@@ -20,6 +20,8 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.edge_awareness = 1.0
 	brain.accuracy = 1.0
 	brain.attack_chance = 1.0
+	# This fixture isolates navigation; reaction delay has its own suite.
+	brain.reaction_time = 0.0
 	brain.decide(0.1)
 	t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, "bot attacks exposed fist from safe crater rim")
 	t.ok(scene.arena.is_inside(fighter.global_position, 0.5), "attacking position remains on real ground")
