@@ -1,5 +1,5 @@
 {
-  "_comment": "The eight competitors of the Kras Pass cup. Stats are 0..1 and every roster entry sums to 3.00 — enforced by tests/test_balance.gd — so no character is strictly better than another.",
+  "_comment": "The eight original competitors. Stats are 0..1 and each entry sums to 3.00. Actual movement/combat values including perks are checked separately by test_character_effective_budget.gd; equal stat totals alone do not prove fair win rates.",
   "characters": [
     {
       "id": "nabta",
