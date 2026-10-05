@@ -17,6 +17,20 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.set_physics_process(false)
 		preparation.release()
 		var world: Node3D = scene.controller.world
+		var cover_shapes := {}
+		for cover: StaticBody3D in world.buildings:
+			var visual: MeshInstance3D = cover.get_child(0)
+			var collider: CollisionShape3D = cover.get_child(1)
+			t.ok(collider.shape is ConvexPolygonShape3D, "rock retains convex collision: " + arena_id)
+			if cover_shapes.has(visual.mesh):
+				t.equal(collider.shape, cover_shapes[visual.mesh], "repeated rock mesh shares its immutable hull: " + arena_id)
+			else:
+				t.ok(not cover_shapes.values().has(collider.shape), "different rock meshes retain distinct hulls: " + arena_id)
+				cover_shapes[visual.mesh] = collider.shape
+				t.ok(collider.shape.points == visual.mesh.create_convex_shape().points, "shared hull preserves generated collision geometry: " + arena_id)
+			t.equal(collider.position, visual.position, "shared hull retains cover offset: " + arena_id)
+			t.equal(collider.scale, visual.scale, "shared hull retains cover scale: " + arena_id)
+		t.equal(world.buildings.size(), 16, "all authored rock obstacles remain: " + arena_id)
 		var terrain: MeshInstance3D = world.get_node("WoodlandTerrain")
 		var bodies: Array[StaticBody3D] = []
 		for child in world.get_children():
