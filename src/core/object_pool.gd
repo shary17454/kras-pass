@@ -48,7 +48,11 @@ func acquire(key: String) -> Node:
 	return n
 
 
-func release(key: String, node: Node) -> void:
+func has_pool(key: String) -> bool:
+	return _factories.has(key)
+
+
+func release(key: String, node: Node, max_idle: int = -1) -> void:
 	if node == null or not is_instance_valid(node):
 		return
 	# Deliberately does NOT reparent: removing a CollisionObject during a
@@ -61,8 +65,11 @@ func release(key: String, node: Node) -> void:
 		node.call("on_released")
 	if not _pools.has(key):
 		_pools[key] = []
-	_pools[key].append(node)
 	_live[key] = maxi(0, int(_live.get(key, 0)) - 1)
+	if max_idle >= 0 and _pools[key].size() >= max_idle:
+		node.queue_free()
+	else:
+		_pools[key].append(node)
 
 
 ## Memory pressure must not remove factories or checked-out bookkeeping.
