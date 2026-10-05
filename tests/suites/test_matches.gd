@@ -19,6 +19,9 @@ var _host: Node
 func run(t: TestHarness, host: Node) -> void:
 	_host = host
 	t.suite("matches (integration)")
+	if "--geometry-only" in OS.get_cmdline_user_args():
+		await _fantasy_world_rules(t)
+		return
 	if "--difficulty-only" in OS.get_cmdline_user_args():
 		await _difficulty_separation(t)
 		return
