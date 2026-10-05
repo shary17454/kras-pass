@@ -18,6 +18,7 @@ const SUITES := [
 	"res://tests/suites/test_content.gd",
 	"res://tests/suites/test_save.gd",
 	"res://tests/suites/test_systems.gd",
+	"res://tests/suites/test_memory_pressure.gd",
 	"res://tests/suites/test_input_sources.gd",
 	"res://tests/suites/test_replay.gd",
 	"res://tests/suites/test_replay_input_chunks.gd",

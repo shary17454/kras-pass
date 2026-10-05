@@ -161,7 +161,7 @@ func _on_foreground() -> void:
 
 func _on_memory_warning() -> void:
 	Log.w("OS memory warning — draining caches", "Platform")
-	Pool.drain()
+	Pool.trim_idle()
 	MeshFactory.clear_cache()
 	memory_warning.emit()
 

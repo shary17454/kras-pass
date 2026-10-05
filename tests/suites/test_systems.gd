@@ -119,11 +119,17 @@ func _platform(t: TestHarness) -> void:
 	t.ok(not AudioManager.is_suspended(), "and unsuspended")
 	AudioManager.set_suspended(was_suspended)
 
-	t.test("a memory warning drains the pools rather than dying")
+	t.test("a memory warning trims idle pools without disabling allocation")
 	Pool.define("warn_probe", func(): return Node3D.new(), 4)
 	t.at_least(int(Pool.stats().get("warn_probe", {}).get("free", 0)), 4, "the probe pool is warm")
 	Platform._on_memory_warning()
-	t.ok(not Pool.stats().has("warn_probe"), "the pool is gone after a memory warning")
+	t.equal(int(Pool.stats().get("warn_probe", {}).get("free", -1)), 0, "the unused instances are gone after a memory warning")
+	var replacement := Pool.acquire("warn_probe")
+	t.not_null(replacement, "the factory still creates instances after the warning")
+	if replacement != null:
+		Pool.release("warn_probe", replacement)
+	Pool.drain("warn_probe")
+	t.ok(not Pool.stats().has("warn_probe"), "final teardown still removes the whole pool")
 
 
 func _ai_profiles(t: TestHarness) -> void:
