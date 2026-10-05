@@ -228,6 +228,11 @@ func is_read_only(slot: String) -> bool:
 	return _read_only_paths.has(_path(slot))
 
 
+## Sidecar files must honor the slot's protection before touching disk.
+func can_write(slot: String) -> bool:
+	return not is_read_only(slot) and not _protect_newer_on_disk(slot)
+
+
 ## Persist every dirty slot immediately. Called on pause, on quit, and after
 ## any progression milestone so a crash cannot swallow a trophy.
 func flush() -> void:
