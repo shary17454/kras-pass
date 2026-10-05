@@ -102,6 +102,7 @@ var observed_lab_weapon := false
 var observed_lab_shot := false
 var crate_attack_clock := 0.0
 var colossus_attack_clock := 0.0
+var colossus_attack_ready := false
 var echo_serial := -1
 var echo_cues := {}
 var echo_leaving := false
@@ -472,6 +473,8 @@ func _physics_process(_delta: float) -> void:
 		return
 	if game_id == "boss_colossus":
 		colossus_attack_clock = next_colossus_attack_clock(colossus_attack_clock, _delta, game.phase)
+		if game.phase not in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
+			colossus_attack_ready = false
 	if game_id in ["crate_smash", "lab_crates"]:
 		if game.phase in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
 			crate_attack_clock = fmod(crate_attack_clock + _delta, 0.8)
@@ -703,6 +706,9 @@ func _physics_process(_delta: float) -> void:
 					target = fighter.global_position + (away.normalized() if away.length() > 0.1 else Vector3.RIGHT) * 5.0
 					break
 			movement = _colossus_movement(fighter.global_position, target)
+			var ready := not plan.is_empty() and bool(plan.get("attack", false))
+			colossus_attack_clock = colossus_opening_clock(colossus_attack_clock, colossus_attack_ready, ready)
+			colossus_attack_ready = ready
 			buttons = colossus_attack_buttons(plan, colossus_attack_clock)
 		if game_id == "boss_sovereign":
 			var fighter: Fighter = game.ctx.fighter(slot)
@@ -1107,6 +1113,11 @@ static func next_colossus_attack_clock(clock: float, delta: float, phase: int) -
 
 static func colossus_attack_buttons(plan: Dictionary, clock: float) -> int:
 	return InputFrame.Btn.ATTACK if not plan.is_empty() and plan.get("attack", false) and clock < 0.1 else 0
+
+
+static func colossus_opening_clock(clock: float, was_ready: bool, ready: bool) -> float:
+	# Press immediately on entering visible, safe reach; keep release pulses thereafter.
+	return 0.0 if ready and not was_ready else clock
 
 
 func _colossus_world() -> Dictionary:
