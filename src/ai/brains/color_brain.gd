@@ -40,7 +40,13 @@ func decide(_delta: float) -> void:
 		_committed = controller.call("safe_tile_near", me.global_position) if controller.has_method("safe_tile_near") else null
 	if _committed == null or not is_instance_valid(_committed):
 		return
-	steer_to(_committed.global_position)
-	var dist := distance_to(_committed.global_position)
+	var offset: Vector3 = _committed.global_position - me.global_position
+	var dist := Vector2(offset.x, offset.z).length()
+	if dist <= 0.2:
+		move = Vector2.ZERO
+		return
+	# Approach slowly enough to reach the center before the next decision.
+	var arrival_distance := maxf(0.8, me.top_speed * decision_interval * 1.5)
+	steer_to(_committed.global_position, minf(1.0, dist / arrival_distance))
 	if dist > 3.0:
 		maybe_dash(1.5)

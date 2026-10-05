@@ -30,6 +30,17 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(is_instance_valid(brain._committed), "visible call becomes actionable after reaction deadline")
 	if is_instance_valid(brain._committed):
 		t.equal(brain._committed.tag, scene.controller.called_tag(), "chosen tile matches the announced color")
+		var body: Fighter = scene.ctx.fighter(0)
+		var center: Vector3 = brain._committed.global_position
+		body.global_position = center + Vector3(0.15, 0.9, 0.0)
+		brain.decide(0.001)
+		t.equal(brain.move, Vector2.ZERO, "arrival holds a safe tile rather than commanding full speed across its center")
+		body.global_position = center + Vector3(0.5, 0.9, 0.0)
+		brain.decide(0.001)
+		t.ok(brain.move.length() > 0.0 and brain.move.length() < 0.8, "nearby safe tile requests a slower approach")
+		body.global_position = center + Vector3(4.0, 0.9, 0.0)
+		brain.decide(0.001)
+		t.near(brain.move.length(), 1.0, 0.0001, "distant tile retains full available movement speed")
 	var called: int = scene.controller._called
 	var previous = brain._committed
 	scene.controller._begin_call()
