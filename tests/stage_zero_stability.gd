@@ -25,6 +25,8 @@ func _ready() -> void:
 	_baseline_nodes = get_tree().get_node_count()
 	_baseline_orphans = int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
 	_connections = _signal_counts()
+	var baseline_memory := _memory_snapshot()
+	print("STABILITY BASELINE MEMORY: ", JSON.stringify(baseline_memory))
 	var passes: Array = []
 	for cycle in _cycles:
 		for game in Registry.all_minigames():
@@ -33,18 +35,27 @@ func _ready() -> void:
 			print("STABILITY %d/%d %s: %s" % [cycle + 1, _cycles, game.id, "PASS" if row.failures.is_empty() else row.failures])
 			for failure in row.failures:
 				_failures.append("%d/%s: %s" % [cycle, game.id, failure])
-		passes.append({"cycle": cycle, "memory_bytes": OS.get_static_memory_usage(),
-			"objects": Performance.get_monitor(Performance.OBJECT_COUNT),
-			"resources": Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT)})
+		var snapshot := _memory_snapshot()
+		snapshot["cycle"] = cycle
+		passes.append(snapshot)
 	# First pass warms immutable geometry/audio caches. Later counts should not
 	# grow per round; allow small lazy caches, but fail sustained large growth.
 	if passes.size() >= 3:
 		var growth := int(passes.back().memory_bytes) - int(passes[1].memory_bytes)
 		if growth > 16 * 1024 * 1024:
 			_failures.append("post-warmup memory growth exceeds 16 MiB")
+	var before_release := _memory_snapshot()
+	Platform._on_memory_warning()
+	await _settle()
+	var after_release := _memory_snapshot()
+	if not MeshFactory._mat_cache.is_empty() or not MeshFactory._tex_cache.is_empty() or not MeshFactory._mesh_cache.is_empty():
+		_failures.append("graphics caches remain after memory warning")
+	print("STABILITY CACHE RELEASE: ", JSON.stringify({"before": before_release, "after": after_release}))
 	var report := {"engine": Engine.get_version_info().string, "cycles": _cycles,
 		"scope": "4 AI, 39 default arenas, shortened timed rounds; race laps unchanged; not device performance",
 		"baseline_nodes": _baseline_nodes, "baseline_orphans": _baseline_orphans,
+		"baseline_memory": baseline_memory,
+		"cache_release": {"before": before_release, "after": after_release},
 		"passes": passes, "matches": _rows, "failures": _failures}
 	var f := FileAccess.open(SaveSystem.storage_root.path_join("stability.json"), FileAccess.WRITE)
 	if f == null:
@@ -54,6 +65,24 @@ func _ready() -> void:
 		f.close()
 	print("STABILITY COMPLETE: %d matches, %d failures" % [_rows.size(), _failures.size()])
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+
+func _memory_snapshot() -> Dictionary:
+	var snapshot := {"memory_bytes": OS.get_static_memory_usage(),
+		"objects": Performance.get_monitor(Performance.OBJECT_COUNT),
+		"resources": Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT),
+		"materials_cached": MeshFactory._mat_cache.size(),
+		"textures_cached": MeshFactory._tex_cache.size(),
+		"meshes_cached": MeshFactory._mesh_cache.size()}
+	var audio_bytes := 0
+	var seen := {}
+	for bank in [AudioManager._bank, AudioManager._tracks, AudioManager._ambience_bank]:
+		for stream in bank.values():
+			if stream is AudioStreamWAV and not seen.has(stream.get_instance_id()):
+				seen[stream.get_instance_id()] = true
+				audio_bytes += stream.data.size()
+	snapshot["audio_pcm_bytes_cached"] = audio_bytes
+	return snapshot
 
 
 func _play(game: MiniGameDef, cycle: int) -> Dictionary:
