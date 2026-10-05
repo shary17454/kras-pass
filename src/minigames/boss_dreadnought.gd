@@ -247,7 +247,7 @@ func danger_zones() -> Array:
 	var out: Array = super.danger_zones()
 	for m in _mines:
 		if is_instance_valid(m["node"]):
-			out.append({"pos": m["node"].global_position, "radius": 2.4, "left": 99.0})
+			out.append({"node": m["node"], "pos": m["node"].global_position, "radius": 2.4, "left": 99.0})
 	return out
 
 

@@ -211,7 +211,7 @@ func danger_zones() -> Array:
 	# Craters are permanent holes, so they are danger too — treat them as
 	# warnings that never expire.
 	for c in _craters:
-		out.append({"pos": c["pos"], "radius": float(c["radius"]), "left": 99.0, "margin": 0.5})
+		out.append({"node": c["node"], "pos": c["pos"], "radius": float(c["radius"]), "left": 99.0, "margin": 0.5})
 	return out
 
 
