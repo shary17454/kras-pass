@@ -4,6 +4,7 @@ extends "res://src/arenas/natural_valley.gd"
 var roads := AStar3D.new()
 var buildings: Array[StaticBody3D] = []
 var _variant := 0
+var _cover_shapes := {}
 
 
 func build(a: Arena) -> void:
@@ -85,7 +86,9 @@ func _cover(index: int, p: Vector3) -> void:
 	visual.scale = Vector3.ONE * scale_value
 	body.add_child(visual)
 	var shape := CollisionShape3D.new()
-	shape.shape = mesh.create_convex_shape()
+	if not _cover_shapes.has(mesh):
+		_cover_shapes[mesh] = mesh.create_convex_shape()
+	shape.shape = _cover_shapes[mesh]
 	shape.position = offset
 	shape.scale = Vector3.ONE * scale_value
 	body.add_child(shape)
