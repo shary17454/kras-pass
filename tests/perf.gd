@@ -34,6 +34,7 @@ var _preparation_msec := 0
 var _preparation_frames := 0
 var _slow_frames: Array[Dictionary] = []
 var _slow_frame_count := 0
+var _pipeline_start := {}
 
 func _ready() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -70,6 +71,7 @@ func _start() -> void:
 	_samples.clear()
 	_slow_frames.clear()
 	_slow_frame_count = 0
+	_pipeline_start = _pipeline_counts()
 	var cfg := MatchConfig.build(_games[_index], ["nabta","sakhra","barq","turs"], 0, 3, 11)
 	cfg.duration_override = 60.0
 	var preparation: Node
@@ -141,6 +143,7 @@ func _process(delta: float) -> void:
 					"memory_bytes": OS.get_static_memory_usage(),
 					"match_phase": _scene.phase,
 					"scores": _scene.ctx.scores.duplicate(),
+					"pipeline_compilations": _pipeline_delta(),
 				})
 	var round_over := _frames > 0 and not live
 	if _should_finish(round_over):
@@ -158,6 +161,23 @@ func _record_slow_frame(milliseconds: float, measurements: Dictionary) -> void:
 	if _slow_frames.size() > MAX_SLOW_FRAMES:
 		_slow_frames.resize(MAX_SLOW_FRAMES)
 
+
+func _pipeline_counts() -> Dictionary:
+	return {
+		"canvas": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS),
+		"mesh": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH),
+		"surface": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE),
+		"draw": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW),
+		"specialization": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION),
+	}
+
+
+func _pipeline_delta() -> Dictionary:
+	var result := _pipeline_counts()
+	for key in result:
+		result[key] -= int(_pipeline_start.get(key, 0))
+	return result
+
 func _finish(round_over: bool) -> void:
 	set_process(false)
 	print("PERF_BUILD=" + JSON.stringify({"game": _games[_index], "milliseconds": _build_msec,
@@ -171,7 +191,8 @@ func _finish(round_over: bool) -> void:
 		# is useful for investigation but is not a synchronous call-stack profile.
 		print("PERF_SLOW_FRAMES=" + JSON.stringify({"game": _games[_index],
 			"count": _slow_frame_count, "threshold_ms": SLOW_FRAME_MS,
-			"retained": _slow_frames, "monitor_scope": "frame-correlated-not-call-stack"}))
+			"retained": _slow_frames, "monitor_scope": "frame-correlated-not-call-stack",
+			"pipeline_scope": "since-probe-start-includes-preparation", "pipeline_compilations": _pipeline_delta()}))
 	if _samples.is_empty():
 		_failed = true
 		print("%-14s no live frames sampled in %.0fs — round never ran" % [_games[_index], _elapsed])
