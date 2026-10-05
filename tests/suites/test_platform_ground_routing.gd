@@ -61,6 +61,46 @@ func run(t: TestHarness, host: Node) -> void:
 			tile.hide()
 	t.equal(brain._solid_neighbours(arena, start), 0.0,
 		"a new decision cannot reuse tiles that have since become hidden")
+	start.build(2.0, 0.5, Color.GRAY)
+	body.position = Vector3(0.0, 0.01, 0.0)
+	for i in 12:
+		await host.get_tree().physics_frame
+		body.velocity = Vector3(0.0, -1.0, 0.0)
+		body.move_and_slide()
+	t.ok(body.is_on_floor(), "jump fixture contacts a real tile collider")
+	start.state = ArenaTile.State.WARNING
+	brain.edge_awareness = 1.0
+	brain.reaction_time = 0.25
+	brain._time = 1.0
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0, "a new visible warning respects the reaction delay")
+	brain._time += 0.26
+	brain.decide(0.1)
+	t.ok((brain.bits & InputFrame.Btn.JUMP) != 0, "visible shaking ground prompts a grounded bot to jump")
+	var frame := InputFrame.new()
+	frame.bits = brain.bits
+	body._handle_buttons(frame)
+	t.ok(body.velocity.y > 0.0, "the bot request uses the ordinary fighter jump impulse")
+	start.hide()
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0, "hidden floor state cannot prompt a jump")
+	start.show()
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0, "a newly visible warning does not reuse hidden observation credit")
+	start.state = ArenaTile.State.SOLID
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0, "solid floor does not prompt a panic jump")
+	start.state = ArenaTile.State.WARNING
+	body.can_jump = false
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0, "disabled jump capability is respected")
+	brain.on_round_start()
+	t.ok(brain._warning_tile == null and brain._target_tile == null, "round restart clears floor observation and routing state")
 	arena.queue_free()
 	await host.get_tree().process_frame
 

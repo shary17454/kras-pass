@@ -99,8 +99,13 @@ func decide(delta: float) -> void:
 			if float(z["left"]) > reaction_time * 0.8 and _flat(pos) < r + float(z.get("margin", 0.8)):
 				var away := me.global_position - pos
 				away.y = 0.0
-				_steer_on_ground(me.global_position + (away.normalized() if away.length() > 0.1 else Vector3.RIGHT) * 5.0)
-				maybe_dash(1.3)
+				var direction := away.normalized() if away.length() > 0.1 else Vector3.RIGHT
+				if bool(z.get("persistent", false)):
+					var target := pos + direction * (r + float(z.get("margin", 0.8)) + 0.15)
+					_steer_on_ground(target, clampf(_flat(target) * 0.8, 0.0, 1.0))
+				else:
+					_steer_on_ground(me.global_position + direction * 5.0)
+					maybe_dash(1.3)
 				return
 
 	if controller.has_method("attack_plan"):
@@ -115,6 +120,9 @@ func decide(delta: float) -> void:
 			_steer_on_ground(target, clampf(_flat(target) * 0.8, 0.0, 1.0))
 			if plan.attack and rng.randf() < attack_chance:
 				press(Btn.ATTACK)
+			return
+		if controller.has_method("staging_point"):
+			_steer_on_ground(controller.call("staging_point", _idle_phase + _time * 0.2), 0.6)
 			return
 
 	if controller.has_method("feeding_plan"):
