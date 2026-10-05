@@ -291,6 +291,9 @@ func to_dict() -> Dictionary:
 
 
 static func from_dict(d: Dictionary) -> ReplayData:
+	if not _valid_schema(d):
+		Log.w("replay metadata has an invalid schema", "Replay")
+		return null
 	var v := int(d.get("version", 1))
 	if v > VERSION:
 		Log.w("replay is from a newer build (v%d > v%d)" % [v, VERSION], "Replay")
@@ -334,6 +337,86 @@ static func from_dict(d: Dictionary) -> ReplayData:
 			break
 		r.frames.append(flat.slice(from, from + stride))
 	return _migrate(r, v)
+
+
+static func _valid_schema(d: Dictionary) -> bool:
+	for key in ["id", "engine_build", "minigame_id", "arena_id", "frames_b64", "keyframes_b64"]:
+		if d.has(key) and not d[key] is String:
+			return false
+	for key in ["version", "created_at", "seed", "rounds", "tick_rate", "tick_count"]:
+		if d.has(key) and not _integer_value(d[key]):
+			return false
+	for key in ["duration", "duration_override"]:
+		if d.has(key) and not _finite_number(d[key]):
+			return false
+	for key in ["allow_powerups", "sudden_death", "chaos"]:
+		if d.has(key) and not d[key] is bool:
+			return false
+	for key in ["rules", "hashes", "events"]:
+		if d.has(key) and not d[key] is Dictionary:
+			return false
+	for key in ["players", "mutators", "highlights", "scores", "places", "keyframe_ticks"]:
+		if d.has(key) and not d[key] is Array:
+			return false
+	if int(d.get("version", 1)) < 1 or int(d.get("tick_rate", 60)) <= 0:
+		return false
+	if int(d.get("tick_count", 0)) < 0 or int(d.get("rounds", 1)) < 1:
+		return false
+	var roster: Array = d.get("players", [])
+	if roster.size() > 4:
+		return false
+	var slots := {}
+	for player in roster:
+		if not player is Dictionary or not _integer_value(player.get("slot")):
+			return false
+		var slot := int(player["slot"])
+		if slot < 0 or slot > 3 or slots.has(slot) or not player.get("character") is String:
+			return false
+		slots[slot] = true
+		for key in ["name", "palette"]:
+			if player.has(key) and not player[key] is String:
+				return false
+		for key in ["team", "difficulty"]:
+			if player.has(key) and not _integer_value(player[key]):
+				return false
+		if player.has("human") and not player["human"] is bool:
+			return false
+	for modifier in d.get("mutators", []):
+		if not modifier is String:
+			return false
+	for key in ["scores", "places"]:
+		for value in d.get(key, []):
+			if not _integer_value(value):
+				return false
+	for tick in d.get("keyframe_ticks", []):
+		if not _tick_value(tick):
+			return false
+	for tick in d.get("hashes", {}):
+		if not _tick_value(tick) or not _integer_value(d["hashes"][tick]):
+			return false
+	for tick in d.get("events", {}):
+		if not _tick_value(tick) or not d["events"][tick] is Array:
+			return false
+	for highlight in d.get("highlights", []):
+		if not highlight is Dictionary or not highlight.get("kind") is String:
+			return false
+		if not _integer_value(highlight.get("tick")) or int(highlight["tick"]) < 0:
+			return false
+	return true
+
+
+static func _tick_value(value: Variant) -> bool:
+	if value is String:
+		return value.is_valid_int() and int(value) >= 0
+	return _integer_value(value) and int(value) >= 0
+
+
+static func _finite_number(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value))
+
+
+static func _integer_value(value: Variant) -> bool:
+	return _finite_number(value) and float(value) == floor(float(value))
 
 
 func _pack_keyframes() -> String:
