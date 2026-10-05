@@ -22,6 +22,7 @@ const SUITES := [
 	"res://tests/suites/test_replay.gd",
 	"res://tests/suites/test_replay_input_chunks.gd",
 	"res://tests/suites/test_replay_recovery.gd",
+	"res://tests/suites/test_replay_recovery_resume.gd",
 	"res://tests/suites/test_replay_schema.gd",
 	"res://tests/suites/test_replay_payload.gd",
 	"res://tests/suites/test_replay_storage.gd",

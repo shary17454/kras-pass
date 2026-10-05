@@ -10,6 +10,7 @@ signal library_changed()
 
 const DIR := "user://replays"
 const INDEX_BRANCH := "replays"
+const RECOVERY_BRANCH := "replay_recovery"
 const MAX_KEPT := 40
 const MAX_FILE_BYTES := 64 * 1024 * 1024
 const MAX_TOTAL_BYTES := 256 * 1024 * 1024
@@ -95,6 +96,24 @@ func recover_library(read_byte_limit: int = MAX_TOTAL_BYTES) -> Dictionary:
 	var files := DirAccess.get_files_at(folder)
 	files.sort()
 	files.reverse()
+	var marker = SaveSystem.shared_branch(RECOVERY_BRANCH, {})
+	var cursor := ""
+	var can_save_cursor: bool = marker is Dictionary and (marker.is_empty() or marker.get("version", 1) == 1)
+	if can_save_cursor and marker.get("cursor", "") is String:
+		var saved: String = marker.get("cursor", "")
+		if saved.ends_with(".json") and _valid_id(saved.trim_suffix(".json")):
+			cursor = saved
+	if not cursor.is_empty():
+		var remaining := PackedStringArray()
+		var wrapped := PackedStringArray()
+		for filename in files:
+			if filename < cursor:
+				remaining.append(filename)
+			else:
+				wrapped.append(filename)
+		remaining.append_array(wrapped)
+		files = remaining
+	var last_attempted := ""
 	var known := {}
 	for entry in _index:
 		known[String(entry.get("id", ""))] = true
@@ -115,12 +134,22 @@ func recover_library(read_byte_limit: int = MAX_TOTAL_BYTES) -> Dictionary:
 			report.deferred += 1
 			continue
 		report.read_bytes += bytes
+		last_attempted = filename
 		var replay := load_replay(id, true)
 		if replay != null and replay.id == id and not replay.frames.is_empty() and Registry.minigame(replay.minigame_id) != null:
 			recovered.append(_entry_for(replay))
 		await get_tree().process_frame
 	# A save or profile switch while yielding must not receive stale metadata.
-	if SaveSystem.storage_root == root and generation == _recovery_generation and _can_mutate() and not recovered.is_empty():
+	var current := SaveSystem.storage_root == root and generation == _recovery_generation and _can_mutate()
+	if current:
+		marker = SaveSystem.shared_branch(RECOVERY_BRANCH, {})
+		can_save_cursor = marker is Dictionary and (marker.is_empty() or marker.get("version", 1) == 1)
+	if current and can_save_cursor and not last_attempted.is_empty():
+		var updated: Dictionary = marker.duplicate(true)
+		updated["version"] = 1
+		updated["cursor"] = last_attempted
+		SaveSystem.set_shared_branch(RECOVERY_BRANCH, updated)
+	if current and not recovered.is_empty():
 		known.clear()
 		for entry in _index:
 			known[String(entry.get("id", ""))] = true
@@ -133,6 +162,8 @@ func recover_library(read_byte_limit: int = MAX_TOTAL_BYTES) -> Dictionary:
 		_prune()
 		_commit()
 		library_changed.emit()
+	elif current and can_save_cursor and not last_attempted.is_empty():
+		SaveSystem.flush()
 	_recovery_running = false
 	return report
 
