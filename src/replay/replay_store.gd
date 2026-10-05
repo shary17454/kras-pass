@@ -11,6 +11,8 @@ signal library_changed()
 const DIR := "user://replays"
 const INDEX_BRANCH := "replays"
 const MAX_KEPT := 40
+const MAX_FILE_BYTES := 64 * 1024 * 1024
+const MAX_TOTAL_BYTES := 256 * 1024 * 1024
 
 var _index: Array = []
 
@@ -27,14 +29,19 @@ func _load_index() -> void:
 	# leave the library full of ghosts.
 	var alive: Array = []
 	var seen := {}
+	var changed := false
 	for entry in _index:
 		if not entry is Dictionary:
 			continue
 		var id := String(entry.get("id", ""))
 		if _valid_id(id) and not seen.has(id) and FileAccess.file_exists(_path(id)):
+			var bytes := _file_bytes(id)
+			var stored_bytes = entry.get("bytes")
+			changed = changed or not (stored_bytes is int or stored_bytes is float) or stored_bytes != bytes
+			entry["bytes"] = bytes
 			alive.append(entry)
 			seen[id] = true
-	if alive.size() != _index.size():
+	if changed or alive.size() != _index.size():
 		_index = alive
 		_commit()
 
@@ -71,12 +78,8 @@ func count() -> int:
 func save(replay: ReplayData) -> bool:
 	if replay == null or replay.frames.is_empty() or not _valid_id(replay.id):
 		return false
-	var f := FileAccess.open(_path(replay.id), FileAccess.WRITE)
-	if f == null:
-		Log.e("cannot write replay %s" % replay.id, "Replay")
+	if not _write_atomic(replay.id, JSON.stringify(replay.to_dict())):
 		return false
-	f.store_string(JSON.stringify(replay.to_dict()))
-	f.close()
 	# A retry replaces its entry instead of leaving dangling index duplicates.
 	for i in range(_index.size() - 1, -1, -1):
 		if String(_index[i].get("id", "")) == replay.id:
@@ -89,20 +92,56 @@ func save(replay: ReplayData) -> bool:
 		"seconds": replay.length_seconds(),
 		"winner": replay.winner_name(),
 		"players": replay.player_count(),
-		"bytes": replay.approx_bytes(),
+		"bytes": _file_bytes(replay.id),
 		"highlights": replay.highlights.size(),
 	})
 	_prune()
 	_commit()
 	library_changed.emit()
-	Log.i("saved replay %s (%.1fs, %.1f KB)" % [replay.id, replay.length_seconds(), replay.approx_bytes() / 1024.0], "Replay")
+	Log.i("saved replay %s (%.1fs, %.1f KB)" % [replay.id, replay.length_seconds(), _file_bytes(replay.id) / 1024.0], "Replay")
 	return true
+
+
+func _write_atomic(id: String, payload: String, byte_limit: int = MAX_FILE_BYTES) -> bool:
+	if not _valid_id(id) or payload.length() > byte_limit:
+		return false
+	var bytes := payload.to_utf8_buffer()
+	if bytes.size() > byte_limit:
+		return false
+	var path := _path(id)
+	var tmp := path + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
+	if f == null:
+		Log.w("cannot prepare replay %s for write" % id, "Replay")
+		return false
+	f.store_buffer(bytes)
+	f.flush()
+	var write_error := f.get_error()
+	f.close()
+	if write_error == OK:
+		var directory := DirAccess.open(path.get_base_dir())
+		if directory != null and directory.rename(tmp.get_file(), path.get_file()) == OK:
+			return true
+	DirAccess.remove_absolute(tmp)
+	Log.w("cannot commit replay %s; previous recording retained" % id, "Replay")
+	return false
+
+
+func _file_bytes(id: String) -> int:
+	var file := FileAccess.open(_path(id), FileAccess.READ)
+	if file == null:
+		return 0
+	var bytes := file.get_length()
+	file.close()
+	return bytes
 
 
 ## Keep the library bounded. Oldest go first, but anything the highlight
 ## detector flagged survives longer — those are the ones worth keeping.
-func _prune() -> void:
-	while _index.size() > MAX_KEPT:
+func _prune(byte_limit: int = MAX_TOTAL_BYTES) -> void:
+	for entry in _index:
+		entry["bytes"] = _file_bytes(String(entry["id"]))
+	while not _index.is_empty() and (_index.size() > MAX_KEPT or total_bytes() > byte_limit):
 		var victim := 0
 		for i in _index.size():
 			if int(_index[i].get("highlights", 0)) == 0:
@@ -121,6 +160,10 @@ func load_replay(id: String) -> ReplayData:
 		return null
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
+		return null
+	if f.get_length() > MAX_FILE_BYTES:
+		f.close()
+		Log.w("replay %s exceeds the file read budget" % id, "Replay")
 		return null
 	var raw := f.get_as_text()
 	f.close()
