@@ -32,9 +32,11 @@ class Sweeper extends Node3D:
 		_area.collision_mask = 2
 		var cs := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = Vector3(length, 0.9, 0.8)
+		# Contact must agree with what players can actually see and clear.
+		var bounds := arm.mesh.get_aabb()
+		box.size = bounds.size
 		cs.shape = box
-		cs.position = Vector3(length * 0.5, arm_height, 0)
+		cs.position = arm.position + bounds.get_center()
 		_area.add_child(cs)
 		add_child(_area)
 
