@@ -115,6 +115,10 @@ func called_tag() -> String:
 	return COLOR_NAMES[_called]
 
 
+func called_serial() -> int:
+	return call_sequence
+
+
 func safe_tile_near(pos: Vector3) -> ArenaTile:
 	var best: ArenaTile = null
 	var best_d := INF
