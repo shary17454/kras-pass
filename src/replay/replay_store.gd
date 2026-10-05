@@ -151,15 +151,27 @@ func recover_library(read_byte_limit: int = MAX_TOTAL_BYTES) -> Dictionary:
 		SaveSystem.set_shared_branch(RECOVERY_BRANCH, updated)
 	if current and not recovered.is_empty():
 		known.clear()
+		var added := {}
 		for entry in _index:
 			known[String(entry.get("id", ""))] = true
 		for entry in recovered:
 			if not known.has(entry.id) and FileAccess.file_exists(_path(entry.id)) and _file_bytes(entry.id) == entry.bytes:
 				_index.append(entry)
 				known[entry.id] = true
-				report.recovered += 1
+				added[entry.id] = true
 		_index.sort_custom(func(a, b): return _entry_time(a) < _entry_time(b))
-		_prune()
+		# An interrupted newest save needs the same one-pass protection as save().
+		var keep_id := ""
+		var newest_time := 0
+		for entry in _index:
+			var timestamp := _entry_time(entry)
+			if keep_id.is_empty() or timestamp > newest_time or (timestamp == newest_time and added.has(entry.id)):
+				keep_id = String(entry.id)
+				newest_time = timestamp
+		_prune(MAX_TOTAL_BYTES, keep_id)
+		for entry in _index:
+			if added.has(entry.id):
+				report.recovered += 1
 		_commit()
 		library_changed.emit()
 	elif current and can_save_cursor and not last_attempted.is_empty():
@@ -194,7 +206,7 @@ func save(replay: ReplayData) -> bool:
 		if String(_index[i].get("id", "")) == replay.id:
 			_index.remove_at(i)
 	_index.append(_entry_for(replay))
-	_prune()
+	_prune(MAX_TOTAL_BYTES, replay.id)
 	_commit()
 	library_changed.emit()
 	Log.i("saved replay %s (%.1fs, %.1f KB)" % [replay.id, replay.length_seconds(), _file_bytes(replay.id) / 1024.0], "Replay")
@@ -239,17 +251,24 @@ func _file_bytes(id: String) -> int:
 
 ## Keep the library bounded. Oldest go first, but anything the highlight
 ## detector flagged survives longer — those are the ones worth keeping.
-func _prune(byte_limit: int = MAX_TOTAL_BYTES) -> void:
+func _prune(byte_limit: int = MAX_TOTAL_BYTES, keep_id: String = "") -> void:
 	if not _can_mutate():
 		return
 	for entry in _index:
 		entry["bytes"] = _file_bytes(String(entry["id"]))
 	while not _index.is_empty() and (_index.size() > MAX_KEPT or total_bytes() > byte_limit):
-		var victim := 0
+		var victim := -1
 		for i in _index.size():
+			if String(_index[i].get("id", "")) == keep_id:
+				continue
+			if victim < 0:
+				victim = i
 			if int(_index[i].get("highlights", 0)) == 0:
 				victim = i
 				break
+		# Protection cannot override a budget too small for the last recording.
+		if victim < 0:
+			victim = 0
 		var entry: Dictionary = _index[victim]
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(String(entry["id"]))))
 		_index.remove_at(victim)
