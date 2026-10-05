@@ -243,6 +243,10 @@ func weak_points() -> Array:
 	return [_vent.global_position] if _vent != null and is_instance_valid(_vent) else []
 
 
+func weak_point_nodes() -> Array:
+	return [_vent] if is_instance_valid(_vent) else []
+
+
 func danger_zones() -> Array:
 	var out: Array = super.danger_zones()
 	for m in _mines:

@@ -9,11 +9,38 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## thing the fight is actually about.
 
 var _danger_seen := {}
+var _weak_history := {}
 
 
 func on_round_start() -> void:
 	super.on_round_start()
 	_danger_seen.clear()
+	_weak_history.clear()
+
+
+func perceived_weak_points() -> Array:
+	var observed := {}
+	var ready: Array = []
+	if controller == null or not controller.has_method("weak_point_nodes"):
+		_weak_history.clear()
+		return ready
+	for cue in controller.call("weak_point_nodes"):
+		if not cue is Node3D or not can_observe(cue):
+			continue
+		var id: int = cue.get_instance_id()
+		var samples: Array = _weak_history.get(id, [])
+		if samples.is_empty() or float(samples.back().time) < _time:
+			samples.append({"time": _time, "pos": cue.global_position})
+		while samples.size() > HISTORY_CAP:
+			samples.pop_front()
+		observed[id] = samples
+		# Both target acquisition and later movement use delayed visible samples.
+		for index in range(samples.size() - 1, -1, -1):
+			if float(samples[index].time) <= _time - reaction_time + 0.000001:
+				ready.append(samples[index].pos)
+				break
+	_weak_history = observed
+	return ready
 
 
 func perceived_dangers() -> Array:
@@ -80,7 +107,7 @@ func decide(delta: float) -> void:
 	if not controller.has_method("weak_points"):
 		super.decide(delta)
 		return
-	var spots: Array = controller.call("weak_points")
+	var spots: Array = perceived_weak_points() if controller.has_method("weak_point_nodes") else controller.call("weak_points")
 	if spots.is_empty():
 		super.decide(delta)
 		return

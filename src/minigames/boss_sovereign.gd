@@ -291,18 +291,25 @@ func on_phase_changed(new_phase: int) -> void:
 
 
 func weak_points() -> Array:
+	var positions: Array = []
+	for node in weak_point_nodes():
+		positions.append(node.global_position)
+	return positions
+
+
+func weak_point_nodes() -> Array:
 	# Phase II: the orb you can reach is the objective, not the boss.
 	if phase == 1 and not _orbs.is_empty():
 		var out: Array = []
 		for o in _orbs:
 			if is_instance_valid(o["node"]) and not bool(o["returned"]):
-				out.append(o["node"].global_position)
+				out.append(o["node"])
 		if not out.is_empty():
 			return out
 	if _shielded:
 		return []
 	if _recover > 0.0 or phase >= 2:
-		return [_core.global_position] if _core != null and is_instance_valid(_core) else []
+		return [_core] if is_instance_valid(_core) else []
 	return []
 
 
