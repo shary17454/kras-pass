@@ -12,6 +12,8 @@ const SAMPLE_FRAMES := 400
 const WARMUP_SECONDS := 1.0
 const MIN_LIVE_SECONDS := 10.0
 const MAX_SECONDS := 25.0
+const SLOW_FRAME_MS := 25.0
+const MAX_SLOW_FRAMES := 8
 const ResourcePreparation = preload("res://src/match/match_resource_preparation.gd")
 
 var _scene: Node
@@ -30,6 +32,9 @@ var _failed := false
 var _preparing := false
 var _preparation_msec := 0
 var _preparation_frames := 0
+var _slow_frames: Array[Dictionary] = []
+var _slow_frame_count := 0
+var _pipeline_start := {}
 
 func _ready() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -64,6 +69,9 @@ func _start() -> void:
 	_initial_positions.clear()
 	_max_displacements.clear()
 	_samples.clear()
+	_slow_frames.clear()
+	_slow_frame_count = 0
+	_pipeline_start = _pipeline_counts()
 	var cfg := MatchConfig.build(_games[_index], ["nabta","sakhra","barq","turs"], 0, 3, 11)
 	cfg.duration_override = 60.0
 	var preparation: Node
@@ -124,9 +132,51 @@ func _process(delta: float) -> void:
 		_frames += 1
 		if _live_seconds >= WARMUP_SECONDS:
 			_samples.append(delta * 1000.0)
+			if "--slow-frame-trace" in OS.get_cmdline_user_args() and delta * 1000.0 >= SLOW_FRAME_MS:
+				_record_slow_frame(delta * 1000.0, {
+					"simulation_seconds": _live_seconds,
+					"physics_frame": Engine.get_physics_frames(),
+					"process_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+					"physics_ms": Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+					"draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+					"nodes": get_tree().get_node_count(),
+					"memory_bytes": OS.get_static_memory_usage(),
+					"match_phase": _scene.phase,
+					"scores": _scene.ctx.scores.duplicate(),
+					"pipeline_compilations": _pipeline_delta(),
+				})
 	var round_over := _frames > 0 and not live
 	if _should_finish(round_over):
 		await _finish(round_over)
+
+
+func _record_slow_frame(milliseconds: float, measurements: Dictionary) -> void:
+	if not is_finite(milliseconds) or milliseconds < SLOW_FRAME_MS:
+		return
+	_slow_frame_count += 1
+	var sample: Dictionary = measurements.duplicate(true)
+	sample["frame_ms"] = milliseconds
+	_slow_frames.append(sample)
+	_slow_frames.sort_custom(func(a, b): return a.frame_ms > b.frame_ms)
+	if _slow_frames.size() > MAX_SLOW_FRAMES:
+		_slow_frames.resize(MAX_SLOW_FRAMES)
+
+
+func _pipeline_counts() -> Dictionary:
+	return {
+		"canvas": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS),
+		"mesh": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH),
+		"surface": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE),
+		"draw": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW),
+		"specialization": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION),
+	}
+
+
+func _pipeline_delta() -> Dictionary:
+	var result := _pipeline_counts()
+	for key in result:
+		result[key] -= int(_pipeline_start.get(key, 0))
+	return result
 
 func _finish(round_over: bool) -> void:
 	set_process(false)
@@ -136,6 +186,13 @@ func _finish(round_over: bool) -> void:
 		"simulation_seconds": _live_seconds, "full_sample_budget": _sample_budget_met(),
 		"max_displacement": _max_displacements,
 		"display": DisplayServer.get_name(), "engine": Engine.get_version_info().string}))
+	if "--slow-frame-trace" in OS.get_cmdline_user_args():
+		# Engine monitors and scene state can lag the frame interval; correlation
+		# is useful for investigation but is not a synchronous call-stack profile.
+		print("PERF_SLOW_FRAMES=" + JSON.stringify({"game": _games[_index],
+			"count": _slow_frame_count, "threshold_ms": SLOW_FRAME_MS,
+			"retained": _slow_frames, "monitor_scope": "frame-correlated-not-call-stack",
+			"pipeline_scope": "since-probe-start-includes-preparation", "pipeline_compilations": _pipeline_delta()}))
 	if _samples.is_empty():
 		_failed = true
 		print("%-14s no live frames sampled in %.0fs — round never ran" % [_games[_index], _elapsed])
