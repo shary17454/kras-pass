@@ -60,7 +60,9 @@ func _capture_contract(t: TestHarness) -> void:
 	t.test("capture limit drops all channels instead of saving a partial match")
 	var match_node = load("res://src/match/match_scene.gd").new()
 	match_node._replay_enabled = true
-	match_node._replay.resize(60 * 60 * 4)
+	var full := PackedByteArray()
+	full.resize(match_node.REPLAY_MAX_TICKS * InputFrame.BYTES)
+	match_node._replay = ReplayInputBuffer.from_flat(full, InputFrame.BYTES)
 	match_node._checkpoints = {"0": 1}
 	match_node._keyframes = {"0": PackedByteArray([0])}
 	match_node._world_events = {"0": ["event"]}
@@ -229,7 +231,7 @@ func _record_and_replay_chaotic(t: TestHarness, host: Node) -> void:
 	Replays.erase(String(entry["id"]))
 
 
-func _play(host: Node, args: Dictionary) -> Dictionary:
+func _play(host: Node, args: Dictionary, budget_seconds := 90.0) -> Dictionary:
 	var errors_before := Log.error_count()
 	var script: Script = load("res://src/match/match_scene.gd")
 	var scene: Node = script.new()
@@ -243,7 +245,7 @@ func _play(host: Node, args: Dictionary) -> Dictionary:
 			captured.append(r))
 	var tree := host.get_tree()
 	var guard := 0
-	while captured.is_empty() and guard < 60 * 90:
+	while captured.is_empty() and guard < int(60 * budget_seconds):
 		await tree.physics_frame
 		guard += 1
 	var out := {

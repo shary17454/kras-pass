@@ -48,7 +48,7 @@ var tick_rate := 60
 
 # --- the recording ---------------------------------------------------------
 ## One entry per physics tick: `InputFrame.BYTES` per player, in slot order.
-var frames: Array[PackedByteArray] = []
+var frames := ReplayInputBuffer.new()
 ## tick -> state hash, every HASH_INTERVAL ticks.
 var hashes := {}
 ## tick -> the world decisions taken on that tick, in order.
@@ -71,7 +71,7 @@ var highlights: Array = []
 var duration := 0.0
 
 
-static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictionary,
+static func from_match(config: MatchConfig, captured, checkpoints: Dictionary,
 		keys: Dictionary, result: MatchResult, world_events: Dictionary = {}) -> ReplayData:
 	var r := ReplayData.new()
 	r.id = "%d_%s" % [Time.get_unix_time_from_system(), Crypto.new().generate_random_bytes(16).hex_encode()]
@@ -98,10 +98,11 @@ static func from_match(config: MatchConfig, captured: Array, checkpoints: Dictio
 			"team": p.team,
 			"palette": p.cosmetic_palette() if p.is_human or not p.palette_id.is_empty() else "classic",
 		})
-	# `captured` is an untyped Array; assigning it straight to a typed
-	# Array[PackedByteArray] fails at runtime, silently losing the recording.
-	for packet in captured:
-		r.frames.append(packet)
+	if captured is ReplayInputBuffer:
+		r.frames = captured.snapshot()
+	else:
+		for packet in captured:
+			r.frames.append(packet)
 	r.hashes = checkpoints.duplicate()
 	r.keyframes = keys.duplicate()
 	r.events = world_events
@@ -161,7 +162,7 @@ func to_config() -> MatchConfig:
 func apply_tick(tick: int, out: Array) -> bool:
 	if tick < 0 or tick >= frames.size():
 		return false
-	var packet: PackedByteArray = frames[tick]
+	var packet: PackedByteArray = frames.packet_at(tick)
 	for i in mini(out.size(), packet.size() / InputFrame.BYTES):
 		(out[i] as InputFrame).decode(packet, i * InputFrame.BYTES)
 	return true
@@ -249,10 +250,7 @@ func date_string() -> String:
 
 
 func approx_bytes() -> int:
-	var n := 0
-	for f in frames:
-		n += f.size()
-	return n
+	return frames.byte_size()
 
 
 # --- serialization ---------------------------------------------------------
@@ -260,9 +258,7 @@ func approx_bytes() -> int:
 func to_dict() -> Dictionary:
 	# Frames are one flat buffer, base64'd: an array of arrays in JSON would be
 	# roughly twenty times the size.
-	var flat := PackedByteArray()
-	for f in frames:
-		flat.append_array(f)
+	var flat := frames.flatten()
 	return {
 		"version": VERSION,
 		"id": id,
@@ -337,12 +333,7 @@ static func from_dict(d: Dictionary) -> ReplayData:
 
 	var stride := maxi(1, r.players.size()) * InputFrame.BYTES
 	var flat: PackedByteArray = payload["frames"]
-	var count := int(d.get("tick_count", flat.size() / stride))
-	for i in count:
-		var from := i * stride
-		if from + stride > flat.size():
-			break
-		r.frames.append(flat.slice(from, from + stride))
+	r.frames = ReplayInputBuffer.from_flat(flat, stride)
 	return _migrate(r, v)
 
 

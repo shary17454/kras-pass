@@ -58,7 +58,13 @@ var _pause_menu: CanvasLayer
 var _on_finished: Callable = Callable()
 var _next_match_config: MatchConfig
 var _tuning := {}
-var _replay: Array = []
+const REPLAY_MAX_TICKS := 60 * 60 * 30
+const REPLAY_INPUT_BYTE_LIMIT := 8 * 1024 * 1024
+const REPLAY_EVENT_BYTE_LIMIT := 4 * 1024 * 1024
+const REPLAY_EVENT_LIMIT := 30000
+var _replay := ReplayInputBuffer.new()
+var _replay_event_bytes := 0
+var _replay_event_count := 0
 var _replay_enabled := false
 ## tick -> state hash, written while recording and checked while replaying.
 var _checkpoints := {}
@@ -686,11 +692,17 @@ func _tick_time_warning() -> void:
 func _record_world_event(kind: String, data: Dictionary) -> void:
 	if playback != null or not _replay_enabled:
 		return
+	data["kind"] = kind
+	var bytes := JSON.stringify(data).to_utf8_buffer().size()
+	if _replay_event_count >= REPLAY_EVENT_LIMIT or bytes + _replay_event_bytes > REPLAY_EVENT_BYTE_LIMIT:
+		_discard_replay("world-event capture budget exceeded")
+		return
+	_replay_event_bytes += bytes
+	_replay_event_count += 1
 	var key := str(_tick_index)
 	if not _world_events.has(key):
 		_world_events[key] = []
-	data["kind"] = kind
-	_world_events[key].append(data)
+	_world_events[key].append(data.duplicate(true))
 
 
 ## Hands this tick's recorded decisions back to whoever made them. Inputs and
@@ -1004,7 +1016,7 @@ func _complete_match() -> void:
 		SceneRouter.go_to("results", {
 			"result": aggregate,
 			"config": config,
-			"replay": _replay if _replay_enabled else [],
+			"replay": _replay if _replay_enabled else null,
 		}, false)
 
 
@@ -1294,23 +1306,30 @@ func _on_device_lost(slot: int) -> void:
 func _record_replay_tick() -> void:
 	if not _replay_enabled:
 		return
-	if _replay.size() >= 60 * 60 * 4:
-		_replay_enabled = false
-		_replay.clear()
-		_checkpoints.clear()
-		_keyframes.clear()
-		_world_events.clear()
-		_timeline.clear()
-		Log.w("capture budget exceeded; this match will not be saved as a partial replay", "Replay")
+	if _replay.size() >= REPLAY_MAX_TICKS or _replay.byte_size() >= REPLAY_INPUT_BYTE_LIMIT:
+		_discard_replay("capture budget exceeded")
 		return
 	var packet := PackedByteArray()
 	for f in _fighters:
 		packet.append_array(InputRouter.frame(f.slot).encode())
-	_replay.append(packet)
+	if packet.size() + _replay.byte_size() > REPLAY_INPUT_BYTE_LIMIT or not _replay.append(packet):
+		_discard_replay("invalid or over-budget input")
+
+
+func _discard_replay(reason: String) -> void:
+	_replay_enabled = false
+	_replay.clear()
+	_checkpoints.clear()
+	_keyframes.clear()
+	_world_events.clear()
+	_timeline.clear()
+	_replay_event_bytes = 0
+	_replay_event_count = 0
+	Log.w(reason + "; this match will not be saved as a partial replay", "Replay")
 
 
 func replay_data() -> Array:
-	return _replay
+	return _replay.to_array()
 
 
 # --- debug hooks (called by DevTools) --------------------------------------
