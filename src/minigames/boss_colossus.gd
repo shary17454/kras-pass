@@ -181,8 +181,12 @@ func weak_points() -> Array:
 	return []
 
 
-func attack_plan(from: Vector3) -> Dictionary:
-	var spots := weak_points()
+func weak_point_nodes() -> Array:
+	return [_fist] if _exposed > 0.0 and is_instance_valid(_fist) else []
+
+
+func attack_plan(from: Vector3, observed_spots: Variant = null) -> Dictionary:
+	var spots: Array = weak_points() if observed_spots == null else observed_spots
 	var arena := ctx.arena as Arena
 	if spots.is_empty() or arena == null:
 		return {}
