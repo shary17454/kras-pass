@@ -192,16 +192,28 @@ func on_phase_changed(_new_phase: int) -> void:
 				func(pos: Vector3, radius: float): strike(pos, radius, 22.0))
 
 
-func feeding_plan(position: Vector3) -> Dictionary:
+func feeding_nodes() -> Dictionary:
+	var nodes := {"slag": [], "crates": []}
+	for item in _slag:
+		if is_instance_valid(item.node): nodes.slag.append(item.node)
+	for item in _crates:
+		if is_instance_valid(item): nodes.crates.append(item)
+	return nodes
+
+
+func feeding_plan(position: Vector3, observed: Variant = null) -> Dictionary:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return {}
 	var slag: Array = []
 	var crates: Array = []
-	for item in _slag:
-		if is_instance_valid(item.node): slag.append(item.node.global_position)
-	for item in _crates:
-		if is_instance_valid(item): crates.append(item.global_position)
+	if observed == null:
+		var nodes := feeding_nodes()
+		for node in nodes.slag: slag.append(node.global_position)
+		for node in nodes.crates: crates.append(node.global_position)
+	else:
+		slag = observed.get("slag", [])
+		crates = observed.get("crates", [])
 	return FeedingPlan.build(position, arena.global_position, arena.current_radius, slag, crates)
 
 
