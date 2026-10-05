@@ -47,6 +47,9 @@ func run(t: TestHarness, host: Node) -> void:
 			brain.edge_awareness = 1.0
 			brain.accuracy = 1.0
 			brain.attack_chance = 1.0
+			# Isolate the new warning's delay from the already observed fist.
+			brain.perceived_weak_points()
+			brain._time += brain.reaction_time
 			brain.bits = 0
 			brain.decide(0.1)
 			t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, "fresh warning does not bypass reaction delay in actual decision")

@@ -84,7 +84,11 @@ func decide(delta: float) -> void:
 				return
 
 	if controller.has_method("attack_plan"):
-		var plan: Dictionary = controller.call("attack_plan", me.global_position)
+		var plan: Dictionary
+		if controller.has_method("weak_point_nodes"):
+			plan = controller.call("attack_plan", me.global_position, perceived_weak_points())
+		else:
+			plan = controller.call("attack_plan", me.global_position)
 		move = Vector2.ZERO
 		if not plan.is_empty():
 			var target: Vector3 = plan.target

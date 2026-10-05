@@ -2,14 +2,16 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("boss weak point perception")
-	for id in ["boss_dreadnought", "boss_sovereign"]:
+	for id in ["boss_dreadnought", "boss_sovereign", "boss_colossus"]:
 		var scene: Node = load("res://src/match/match_scene.gd").new()
 		host.add_child(scene)
 		scene.setup({"config": MatchConfig.build(id, ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 901), "on_finished": func(_r): pass})
 		scene.set_physics_process(false)
 		for body in scene.ctx.fighters:
 			body.set_physics_process(false)
-		var cue: Node3D = scene.controller._vent if id == "boss_dreadnought" else scene.controller._core
+		var cue: Node3D = scene.controller._vent if id == "boss_dreadnought" else (scene.controller._fist if id == "boss_colossus" else scene.controller._core)
+		if id == "boss_colossus":
+			scene.controller._exposed = 2.0
 		if id == "boss_sovereign":
 			scene.controller._recover = 2.0
 		cue.global_position = Vector3(4, 1, 0)
