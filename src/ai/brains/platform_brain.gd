@@ -7,6 +7,15 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## routinely paint themselves into a corner.
 
 var _target_tile: ArenaTile
+var _warning_tile: ArenaTile
+var _warning_seen_at := 0.0
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_target_tile = null
+	_warning_tile = null
+	_warning_seen_at = 0.0
 
 
 func decide(_delta: float) -> void:
@@ -16,6 +25,14 @@ func decide(_delta: float) -> void:
 		return
 
 	var current := arena.tile_at(me.global_position)
+	if can_observe(current) and current.state == ArenaTile.State.WARNING:
+		if current != _warning_tile:
+			_warning_tile = current
+			_warning_seen_at = _time
+		if _time - _warning_seen_at >= reaction_time and me.is_on_floor():
+			maybe_jump(edge_awareness)
+	else:
+		_warning_tile = null
 	var unsafe := current == null or current.state != ArenaTile.State.SOLID
 	if not can_observe(_target_tile) or _target_tile.state != ArenaTile.State.SOLID \
 			or (unsafe and rng.randf() < edge_awareness):
