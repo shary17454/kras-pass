@@ -1037,8 +1037,21 @@ static func _accessory(kind: String, color: Color) -> Node3D:
 ## Simple burst of shards, used for hits, breaks and eliminations. Returns a
 ## node that removes itself; the caller does not need to track it.
 static func burst(color: Color, count := 10, spread := 2.4, life := 0.55) -> Node3D:
-	var root := Node3D.new()
-	var script := load("res://src/fx/burst.gd")
-	root.set_script(script)
+	var root: Node3D
+	# Large authored effects retain their full count without enlarging idle pools.
+	if count >= 0 and count <= 32:
+		if not Pool.has_pool("fx_burst"):
+			Pool.define("fx_burst", func():
+				var node := Node3D.new()
+				node.set_script(load("res://src/fx/burst.gd"))
+				node.pool_key = "fx_burst"
+				return node)
+		root = Pool.acquire("fx_burst") as Node3D
+		# This pool contains only visual nodes, never CollisionObjects.
+		if root.get_parent() != null:
+			root.get_parent().remove_child(root)
+	else:
+		root = Node3D.new()
+		root.set_script(load("res://src/fx/burst.gd"))
 	root.configure(color, count, spread, life)
 	return root
