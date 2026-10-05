@@ -35,7 +35,42 @@ Parent: `8c44a7c6f452b4c7d1acabacbb56cd2139c48ddb`.
   Evidence directory:
   `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-Wk02FA`.
 
-## Remaining Gates
+## Follow-up: resource preparation parity
+
+A second attempt without concurrent Godot test suites still failed in loading:
+`load_timeout`, then `session_expired`, with reported frame gaps 93,735 and
+161,990 ms. Evidence: `kras-network-smoke-huKuXo` under the same temporary root.
+
+The smoke peer bypassed the application's existing threaded resource-preparation
+path. It now awaits that same resource bank before constructing the match,
+retains it through setup, and checks the original epoch, room, config and seed
+using the router's existing session guard. A pending match rejects duplicate
+start signals. Failures release the bank and report the failed resource path.
+
+- Compile check: 358 scripts compiled, exit 0.
+  `/tmp/kras-colossus-preparation-compile.log`.
+- Final input-clock suite after adding preparation: 9 assertions passed, exit 0.
+  `/tmp/kras-colossus-preparation-clock-final.log`.
+- Existing session-guard suite: 43 assertions passed, exit 0.
+  `/tmp/kras-colossus-preparation-session.log`. This qualifies the shared guard,
+  not every smoke-peer coroutine path.
+- Native macOS CA startup error remains in both logs; intentional rejected
+  session cases also generate router warnings.
+- Real network retry with the same seed failed in resource preparation before
+  combat, exit 1. Maximum host frame gap reported 4,012 ms; server operation
+  maximum 5,222 ms. No game, snapshots or boss defeat was produced. Evidence:
+  `kras-network-smoke-M6X4n6` under the same temporary root.
+- That failed invocation also reported one ObjectDB instance leaked at exit.
+  Outstanding threaded-request cleanup on immediate test-process failure is
+  not yet qualified; do not call this an error-free run or a leak fix.
+
+The lower observed frame gap is not a controlled performance benchmark or proof
+of production responsiveness. The new driver follows the real preparation path
+but successful complete network combat remains a required gate.
+
+Draft source review: https://github.com/shary17454/kras-pass/pull/71.
+
+## Remaining release qualification
 
 The previous CI failure (run 37245701658) ended a natural fight with boss health
 30, without actual defeat. This local attempt did not reach that state and does

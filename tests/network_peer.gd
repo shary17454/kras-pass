@@ -6,6 +6,7 @@ var host := false
 var count := 4
 var announced := false
 var configured := false
+var preparing_match := false
 var started := false
 var requested_ready := false
 var snapshots := 0
@@ -319,8 +320,20 @@ func _room() -> void:
 
 
 func _start(cfg: MatchConfig) -> void:
-	if game != null:
+	if game != null or preparing_match:
 		_fail("duplicate match")
+		return
+	preparing_match = true
+	var expected_epoch := Net.epoch
+	var expected_room := Net.room_code
+	var preparation := preload("res://src/match/match_resource_preparation.gd").new()
+	add_child(preparation)
+	var prepared: bool = await preparation.prepare(preparation.paths_for(cfg))
+	if not prepared or not SceneRouter._match_session_is_current(cfg, expected_epoch, expected_room):
+		var failed_path: String = preparation.error_path
+		preparation.release()
+		preparing_match = false
+		_fail("network match resource preparation failed or session changed: %s" % failed_path)
 		return
 	game_id = cfg.minigame_id
 	draw_tap_sequence = -1
@@ -426,6 +439,8 @@ func _start(cfg: MatchConfig) -> void:
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
+	preparation.release()
+	preparing_match = false
 	if requested_game_id == "duo_clash" and game_id == "duel_pit":
 		for fighter in game.ctx.fighters:
 			if not fighter.teammates.is_empty():
