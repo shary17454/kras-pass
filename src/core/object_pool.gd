@@ -65,6 +65,15 @@ func release(key: String, node: Node) -> void:
 	_live[key] = maxi(0, int(_live.get(key, 0)) - 1)
 
 
+## Memory pressure must not remove factories or checked-out bookkeeping.
+func trim_idle() -> void:
+	for key in _pools:
+		for node in _pools[key]:
+			if is_instance_valid(node):
+				node.queue_free()
+		_pools[key].clear()
+
+
 ## Frees every pooled instance. Called when a match tears down so an arena's
 ## bespoke objects do not leak into the next one.
 func drain(key: String = "") -> void:
