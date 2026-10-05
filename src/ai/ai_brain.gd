@@ -266,41 +266,53 @@ func perceive_ball(ball: GameBall) -> Dictionary:
 func can_observe(node: Node3D) -> bool:
 	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion() or not node.is_visible_in_tree():
 		return false
-	if ctx == null or not is_instance_valid(ctx.observation_camera):
-		return true
-	var camera := ctx.observation_camera
-	if node is VisualInstance3D and node.layers & camera.cull_mask == 0:
-		return false
-	if _point_in_view(node.global_position) and _world_sight_clear(node, node.global_position):
-		return true
-	# Fighter origins are at ground contact, not at the visible body centre.
-	if node is Fighter:
-		var centre := node.global_position + Vector3.UP * 0.6
-		if _point_in_view(centre) and _world_sight_clear(node, centre):
-			return true
-	# Actor origins can be below a surface while their child mesh is exposed.
-	# Limit both hierarchy traversal and candidate rays independently.
+	var camera: Camera3D = ctx.observation_camera if ctx != null else null
+	var has_camera := is_instance_valid(camera)
+	var has_geometry := false
+	# Compound actor origins are not rendered cues. Inspect actual body parts;
+	# keep both hierarchy traversal and candidate rays independently bounded.
 	var pending: Array[Node] = [node]
 	var visited := 0
 	var points_left := 12
+	var truncated := false
 	while not pending.is_empty() and visited < 32 and points_left > 0:
 		var candidate: Node = pending.pop_back()
 		visited += 1
-		if candidate is MeshInstance3D and candidate.mesh != null and candidate.is_visible_in_tree() and candidate.layers & camera.cull_mask != 0:
-			var bounds: AABB = candidate.get_aabb()
-			for corner in 8:
-				points_left -= 1
-				var point: Vector3 = candidate.global_transform * bounds.get_endpoint(corner)
-				if _point_in_view(point) and _world_sight_clear(node, point):
+		if candidate.is_queued_for_deletion():
+			continue
+		if candidate is GeometryInstance3D:
+			has_geometry = true
+			var rendered: bool = candidate.is_visible_in_tree() and (not has_camera or candidate.layers & camera.cull_mask != 0)
+			if candidate is MeshInstance3D and candidate.mesh == null:
+				rendered = false
+			if rendered:
+				if not has_camera:
 					return true
-				if points_left <= 0:
-					break
+				points_left -= 1
+				if _point_in_view(candidate.global_position) and _world_sight_clear(node, candidate.global_position):
+					return true
+				if candidate is MeshInstance3D:
+					var bounds: AABB = candidate.get_aabb()
+					for corner in 8:
+						if points_left <= 0:
+							break
+						points_left -= 1
+						var point: Vector3 = candidate.global_transform * bounds.get_endpoint(corner)
+						if _point_in_view(point) and _world_sight_clear(node, point):
+							return true
 		# Preserve child order: the primary body mesh precedes accessories.
 		var children := candidate.get_children()
+		truncated = truncated or children.size() > 32 - visited
 		for index in range(mini(children.size(), 32 - visited) - 1, -1, -1):
 			if pending.size() + visited < 32:
 				pending.append(children[index])
-	return false
+			else:
+				truncated = true
+	# Geometry-free authored markers preserve their existing logical contract.
+	# Exhausting a traversal budget is not evidence that geometry is absent.
+	if has_geometry or truncated or not pending.is_empty():
+		return false
+	return not has_camera or (_point_in_view(node.global_position) and _world_sight_clear(node, node.global_position))
 
 
 func _world_sight_clear(target: Node3D, point: Vector3) -> bool:

@@ -93,6 +93,7 @@ const SUITES := [
 	"res://tests/suites/test_siege_network.gd",
 	"res://tests/suites/test_siege_final_evidence.gd",
 	"res://tests/suites/test_ai_visibility.gd",
+	"res://tests/suites/test_ai_compound_visibility.gd",
 	"res://tests/suites/test_ai_occlusion.gd",
 	"res://tests/suites/test_collector_observed_motion.gd",
 	"res://tests/suites/test_race_smoke_budget.gd",
