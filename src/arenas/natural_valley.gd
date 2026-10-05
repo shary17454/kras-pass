@@ -97,7 +97,8 @@ func _nearest(x: float, z: float) -> Vector3:
 
 
 func _update_road_query(points: PackedVector3Array) -> void:
-	_road_query_points = points
+	# Freeze the cache key so in-place route edits invalidate the bounds.
+	_road_query_points = points.duplicate()
 	_road_query_bounds.clear()
 	for start in range(0, points.size(), ROAD_QUERY_GROUP):
 		var lower := Vector2(INF, INF)
