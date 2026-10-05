@@ -9,6 +9,7 @@ extends Node
 const SUITES := [
 	"res://tests/suites/test_character_effective_budget.gd",
 	"res://tests/suites/test_dodger_jump_timing.gd",
+	"res://tests/suites/test_platform_ground_routing.gd",
 	"res://tests/suites/test_sweeper_visible_hitbox.gd",
 	"res://tests/suites/test_dodger_camera_visibility.gd",
 	"res://tests/suites/test_storm_warning_reaction.gd",

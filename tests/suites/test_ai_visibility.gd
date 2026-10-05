@@ -628,16 +628,24 @@ func _test_platform(t: TestHarness, scene: Node) -> void:
 	t.ok(brain._occupied(tile), "visible rival still marks a tile occupied")
 	var other := ArenaTile.new()
 	scene.add_child(other)
-	other.global_position = tile.global_position + Vector3(4, 0, 0)
+	var origin := ArenaTile.new()
+	scene.add_child(origin)
+	origin.global_position = scene.ctx.fighter(0).global_position
+	origin.state = ArenaTile.State.WARNING
+	tile.grid_z = 1
+	tile.global_position = origin.global_position + Vector3(0, 0, 2)
+	other.grid_x = 1
+	other.global_position = origin.global_position + Vector3(2, 0, 0)
 	var tiles: Array[ArenaTile] = scene.arena.tiles.duplicate()
 	scene.arena.tiles.clear()
 	scene.arena.tiles.append(tile)
 	scene.arena.tiles.append(other)
+	scene.arena.tiles.append(origin)
 	tile.hide()
-	t.equal(brain._pick_tile(scene.arena, tile.global_position), other, "hidden solid floor cannot become a platform target")
+	t.equal(brain._pick_tile(scene.arena, origin.global_position), other, "hidden solid floor cannot become a platform target")
 	t.equal(brain._solid_neighbours(scene.arena, other), 0.0, "hidden floor cannot improve a tile's neighbour score")
 	other.hide()
-	t.equal(brain._pick_tile(scene.arena, tile.global_position), null, "platform bot has no target when all tiles are hidden")
+	t.equal(brain._pick_tile(scene.arena, origin.global_position), null, "platform bot has no destination when all solid tiles are hidden")
 	brain._target_tile = tile
 	brain.decide(0.0)
 	t.equal(brain._target_tile, null, "platform bot discards a cached tile once it becomes hidden")
@@ -647,6 +655,7 @@ func _test_platform(t: TestHarness, scene: Node) -> void:
 	scene.arena.tiles = tiles
 	tile.queue_free()
 	other.queue_free()
+	origin.queue_free()
 
 
 func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
