@@ -48,14 +48,18 @@ func _ready() -> void:
 	Platform._on_memory_warning()
 	await _settle()
 	var after_release := _memory_snapshot()
+	var release_started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - release_started < 5000:
+		await get_tree().process_frame
+	var settled_release := _memory_snapshot()
 	if not MeshFactory._mat_cache.is_empty() or not MeshFactory._tex_cache.is_empty() or not MeshFactory._mesh_cache.is_empty():
 		_failures.append("graphics caches remain after memory warning")
-	print("STABILITY CACHE RELEASE: ", JSON.stringify({"before": before_release, "after": after_release}))
+	print("STABILITY CACHE RELEASE: ", JSON.stringify({"before": before_release, "after": after_release, "settled_5s": settled_release}))
 	var report := {"engine": Engine.get_version_info().string, "cycles": _cycles,
 		"scope": "4 AI, 39 default arenas, shortened timed rounds; race laps unchanged; not device performance",
 		"baseline_nodes": _baseline_nodes, "baseline_orphans": _baseline_orphans,
 		"baseline_memory": baseline_memory,
-		"cache_release": {"before": before_release, "after": after_release},
+		"cache_release": {"before": before_release, "after": after_release, "settled_5s": settled_release},
 		"passes": passes, "matches": _rows, "failures": _failures}
 	var f := FileAccess.open(SaveSystem.storage_root.path_join("stability.json"), FileAccess.WRITE)
 	if f == null:
