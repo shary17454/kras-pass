@@ -7,6 +7,7 @@ extends Node
 ## with a non-zero status on failure so CI can gate on it.
 
 const SUITES := [
+	"res://tests/suites/test_storm_warning_reaction.gd",
 	"res://tests/suites/test_storm_incoming_defense.gd",
 	"res://tests/suites/test_operation_trace.gd",
 	"res://tests/suites/test_sphere_mesh_reuse.gd",
