@@ -4,10 +4,11 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("body contacts expire after their physics tick")
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	host.add_child(scene)
-	scene.setup({"config": MatchConfig.build("boss_colossus", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 9614), "on_finished": func(_r): pass})
+	scene.setup({"config": MatchConfig.build("ring_rumble", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 9614), "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var a: Fighter = scene.ctx.fighter(0)
 	var b: Fighter = scene.ctx.fighter(1)
+	t.ok(not a.teammates.has(b.slot) and not b.teammates.has(a.slot), "contact lifetime fixture uses rivals, not protected cooperative allies")
 	Fighter.clear_impact_state()
 	a._pre_vel = Vector3(10, 0, 0)
 	b._pre_vel = Vector3.ZERO
