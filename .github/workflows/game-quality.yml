@@ -15,8 +15,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: game-quality-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep immutable main/manual qualification runs alive through later pushes.
+  # Superseded PR revisions can still be cancelled to avoid redundant work.
+  group: game-quality-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   balance:
