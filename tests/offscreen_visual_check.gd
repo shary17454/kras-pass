@@ -18,7 +18,9 @@ func _ready() -> void:
 				if player.is_human:
 					player.device_type = 2
 			SceneRouter.start_match(config)
-			await _settle()
+			if not await _wait_screen("match"):
+				get_tree().quit(1)
+				return
 			var scene: Node = SceneRouter.current_node
 			scene.set_physics_process(false)
 			scene.camera.set_process(false)
@@ -59,12 +61,15 @@ func _ready() -> void:
 			for cue in scene.hud._offscreen_cues:
 				if cue.visible:
 					_errors.append(label + ": result screen retains cue")
-			SceneRouter.go_to("main_menu", {}, false, 0)
+			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await _settle()
 	if SceneRouter.current_node != null:
 		SceneRouter.current_node.queue_free()
 		SceneRouter.current_node = null
 	await _settle()
+	AudioManager.shutdown()
+	await _settle()
+	OS.delay_msec(100)
 	for error in _errors:
 		print("FAIL: " + error)
 	print("OFFSCREEN VISUAL CHECK: %s failures" % _errors.size())
@@ -74,3 +79,14 @@ func _ready() -> void:
 func _settle() -> void:
 	for frame in 20:
 		await get_tree().process_frame
+
+
+func _wait_screen(id: String) -> bool:
+	var deadline := Time.get_ticks_msec() + 30000
+	while Time.get_ticks_msec() < deadline:
+		if not SceneRouter._busy and SceneRouter.current_id == id and is_instance_valid(SceneRouter.current_node):
+			await _settle()
+			return true
+		await get_tree().process_frame
+	print("FAIL: timed out preparing ", id)
+	return false
