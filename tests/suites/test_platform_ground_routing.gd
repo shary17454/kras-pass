@@ -1,7 +1,9 @@
 extends RefCounted
 
 class RoutingProbe extends "res://src/ai/brains/platform_brain.gd":
+	var observations := 0
 	func can_observe(node: Node3D) -> bool:
+		observations += 1
 		return is_instance_valid(node) and node.is_visible_in_tree()
 
 
@@ -46,6 +48,19 @@ func run(t: TestHarness, host: Node) -> void:
 	brain._target_tile = null
 	brain.decide(0.1)
 	t.equal(brain.move, Vector2.ZERO, "no visible walking route does not steer across holes toward the arena origin")
+	for tile in arena.tiles:
+		tile.state = ArenaTile.State.SOLID
+		tile.show()
+	brain.observations = 0
+	brain._pick_tile(arena, start.global_position)
+	t.ok(brain.observations <= arena.tiles.size() + 1,
+		"one planning decision observes each floor tile at most once plus its origin")
+	t.ok(brain._solid_neighbours(arena, start) > 0.0, "visible adjacent tiles contribute to the neighbour score")
+	for tile in arena.tiles:
+		if tile != start:
+			tile.hide()
+	t.equal(brain._solid_neighbours(arena, start), 0.0,
+		"a new decision cannot reuse tiles that have since become hidden")
 	arena.queue_free()
 	await host.get_tree().process_frame
 
