@@ -14,13 +14,31 @@ func _ready() -> void:
 	UserSettings.set_value("replay_capture", false)
 	UserSettings.set_value("announcer_enabled", false)
 	UserSettings.set_value("touch_controls", "on")
-	Loc.set_locale("ar")
+	var language := "ar"
+	var selected := PackedStringArray()
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--games="):
+			selected = argument.trim_prefix("--games=").split(",", false)
+		elif argument.begins_with("--locale="):
+			language = argument.trim_prefix("--locale=")
+	if not language in Loc.SUPPORTED:
+		push_error("Unsupported visual QA locale: " + language)
+		get_tree().quit(1)
+		return
+	for id in selected:
+		if Registry.minigame(id) == null:
+			push_error("Unknown visual QA game: " + id)
+			get_tree().quit(1)
+			return
+	Loc.set_locale(language)
 	var output := SaveSystem.storage_root.path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(output)
 	for resolution in [Vector2i(1280, 720), Vector2i(540, 960)]:
 		get_window().size = resolution
 		var orientation := "portrait" if resolution.x < resolution.y else "landscape"
 		for game in Registry.all_minigames():
+			if not selected.is_empty() and not game.id in selected:
+				continue
 			var errors_before := Log.error_count()
 			var cfg := MatchConfig.build(game.id, ["nabta", "sakhra", "fanoos", "ramla"], 1, 1, 250925)
 			cfg.players[0].device_type = 2
@@ -60,7 +78,8 @@ func _ready() -> void:
 		_failures.append("report write failed")
 	else:
 		report.store_string(JSON.stringify({"shots": _rows, "failures": _failures,
-			"scope": "39 games, default arena, Arabic, 1 human + 3 AI, 2 orientations; smoke only"}, "  "))
+			"scope": "%d games, default arena, %s, 1 human + 3 AI, 2 orientations; smoke only" % [
+				_rows.size() / 2, language]}, "  "))
 		report.close()
 	print("STAGE ZERO VISUAL: %d captures, %d failures" % [_rows.size(), _failures.size()])
 	get_tree().quit(0 if _failures.is_empty() else 1)

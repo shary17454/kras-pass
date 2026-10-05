@@ -15,6 +15,8 @@ var touch_sources: Array = []
 var _chips: Array = []
 var _timer_label: Label
 var _banner_label: Label
+var _boss_meter: ProgressBar
+var _fit_top_rows: Callable
 var _round_label: Label
 var _centre_label: Label
 var _rules_card: Control
@@ -66,6 +68,21 @@ func _build() -> void:
 	top.add_child(_round_label)
 	_banner_label = UIKit.centered("", UIKit.SIZE_BODY, UIKit.ACCENT_2, true)
 	top.add_child(_banner_label)
+	_boss_meter = ProgressBar.new()
+	_boss_meter.custom_minimum_size = Vector2(240, 10)
+	_boss_meter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_boss_meter.max_value = 1.0
+	_boss_meter.step = 0.0
+	_boss_meter.show_percentage = false
+	_boss_meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var meter_background := StyleBoxFlat.new()
+	meter_background.bg_color = UIKit.PANEL_HI
+	var meter_fill := StyleBoxFlat.new()
+	meter_fill.bg_color = UIKit.ACCENT_2
+	_boss_meter.add_theme_stylebox_override("background", meter_background)
+	_boss_meter.add_theme_stylebox_override("fill", meter_fill)
+	top.add_child(_boss_meter)
+	_boss_meter.hide()
 
 	# --- player chips ------------------------------------------------------
 	# The spec puts the four players along the top with the clock between them,
@@ -107,6 +124,8 @@ func _build() -> void:
 		var inset := Platform.safe_insets()
 		chips.columns = (4 if _compact_players() else 2) if portrait else 5
 		chips.offset_top = ((120 if _compact_players() else 180) if portrait else 14) + inset.y
+		if portrait and _boss_meter.visible:
+			chips.offset_top = maxf(chips.offset_top, 18 + inset.y + top.get_combined_minimum_size().y + 12)
 		chips.offset_left = 26 + inset.x
 		chips.offset_right = -26 - inset.z
 		top.offset_top = 18 + inset.y
@@ -115,6 +134,7 @@ func _build() -> void:
 		for chip in _chips:
 			chip["root"].size_flags_horizontal = Control.SIZE_EXPAND_FILL if portrait else Control.SIZE_SHRINK_CENTER
 	get_viewport().size_changed.connect(fit_chips)
+	_fit_top_rows = fit_chips
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_chips))
 	fit_chips.call()
 
@@ -460,8 +480,17 @@ func tick(delta: float) -> void:
 	_refresh_chips()
 	_refresh_offscreen_cues()
 	var banner := controller.hud_banner() if controller != null else ""
+	var progress := controller.hud_progress() if controller != null else -1.0
+	var meter_visible := is_finite(progress) and progress >= 0.0
+	var layout_changed: bool = _boss_meter.visible != meter_visible or (meter_visible and banner != _banner_label.text)
+	_boss_meter.visible = meter_visible
+	if meter_visible:
+		_boss_meter.value = clampf(progress, 0.0, 1.0)
+		_banner_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if banner != _banner_label.text:
 		_banner_label.text = banner
+	if layout_changed and _fit_top_rows.is_valid():
+		_fit_top_rows.call()
 
 
 func _refresh_offscreen_cues() -> void:

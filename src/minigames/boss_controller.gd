@@ -317,9 +317,14 @@ func hud_value(slot: int) -> String:
 
 
 func hud_banner() -> String:
-	var pct := int(round(boss_health / maxf(boss_max_health, 1.0) * 100.0))
-	var filled := int(round(pct / 10.0))
-	return "%s%s %d%%" % ["█".repeat(filled), "░".repeat(10 - filled), pct]
+	var fraction := hud_progress()
+	return Loc.t("hud.boss_health", {"value": int(round(fraction * 100.0))}) if fraction >= 0.0 else ""
+
+
+func hud_progress() -> float:
+	if not is_finite(boss_health) or not is_finite(boss_max_health) or boss_max_health <= 0.0:
+		return -1.0
+	return clampf(boss_health / boss_max_health, 0.0, 1.0)
 
 
 func ai_script() -> Script:

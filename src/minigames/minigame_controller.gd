@@ -213,6 +213,11 @@ func hud_banner() -> String:
 	return ""
 
 
+## Optional normalized shared meter. Negative values mean no meter.
+func hud_progress() -> float:
+	return -1.0
+
+
 ## Extra per-player stat rows on the results screen.
 func detail_rows() -> Array:
 	return []
