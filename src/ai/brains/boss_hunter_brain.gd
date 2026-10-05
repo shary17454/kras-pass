@@ -10,25 +10,44 @@ extends "res://src/ai/brains/generic_brain.gd"
 
 var _danger_seen := {}
 var _weak_history := {}
+var _feeding_history := {}
 
 
 func on_round_start() -> void:
 	super.on_round_start()
 	_danger_seen.clear()
 	_weak_history.clear()
+	_feeding_history.clear()
 
 
 func perceived_weak_points() -> Array:
-	var observed := {}
-	var ready: Array = []
 	if controller == null or not controller.has_method("weak_point_nodes"):
 		_weak_history.clear()
+		return []
+	return _delayed_visible_positions(controller.call("weak_point_nodes"), _weak_history)
+
+
+func perceived_feeding_targets() -> Dictionary:
+	var ready := {"slag": [], "crates": []}
+	if controller == null or not controller.has_method("feeding_nodes"):
+		_feeding_history.clear()
 		return ready
-	for cue in controller.call("weak_point_nodes"):
+	var cues: Dictionary = controller.call("feeding_nodes")
+	for group in ready:
+		var history: Dictionary = _feeding_history.get(group, {})
+		ready[group] = _delayed_visible_positions(cues.get(group, []), history)
+		_feeding_history[group] = history
+	return ready
+
+
+func _delayed_visible_positions(cues: Array, history: Dictionary) -> Array:
+	var observed := {}
+	var ready: Array = []
+	for cue in cues:
 		if not cue is Node3D or not can_observe(cue):
 			continue
 		var id: int = cue.get_instance_id()
-		var samples: Array = _weak_history.get(id, [])
+		var samples: Array = history.get(id, [])
 		if samples.is_empty() or float(samples.back().time) < _time:
 			samples.append({"time": _time, "pos": cue.global_position})
 		while samples.size() > HISTORY_CAP:
@@ -39,7 +58,8 @@ func perceived_weak_points() -> Array:
 			if float(samples[index].time) <= _time - reaction_time + 0.000001:
 				ready.append(samples[index].pos)
 				break
-	_weak_history = observed
+	history.clear()
+	history.merge(observed)
 	return ready
 
 
@@ -98,7 +118,11 @@ func decide(delta: float) -> void:
 			return
 
 	if controller.has_method("feeding_plan"):
-		var plan: Dictionary = controller.call("feeding_plan", me.global_position)
+		var plan: Dictionary
+		if controller.has_method("feeding_nodes"):
+			plan = controller.call("feeding_plan", me.global_position, perceived_feeding_targets())
+		else:
+			plan = controller.call("feeding_plan", me.global_position)
 		if plan.is_empty():
 			steer_to(ctx.arena_center(), 0.6)
 		else:
