@@ -8,6 +8,9 @@ var _cycles := 3
 var _baseline_nodes := 0
 var _baseline_orphans := 0
 var _connections := {}
+var _release_ui_cache := false
+var _watched_paths := PackedStringArray()
+const PREPARATION = preload("res://src/match/match_resource_preparation.gd")
 
 
 func _ready() -> void:
@@ -18,6 +21,13 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--cycles="):
 			_cycles = clampi(int(arg.trim_prefix("--cycles=")), 1, 20)
+		elif arg == "--profile-idle-ui":
+			_release_ui_cache = true
+	for game in Registry.all_minigames():
+		for arena_id in game.arena_ids:
+			for path in PREPARATION.paths_for_definitions(game, Registry.arena(arena_id)):
+				if not _watched_paths.has(path):
+					_watched_paths.append(path)
 	SaveSystem.enabled = false
 	UserSettings._values["replay_capture"] = false
 	UserSettings._values["announcer_enabled"] = false
@@ -52,6 +62,16 @@ func _ready() -> void:
 	while Time.get_ticks_msec() - release_started < 5000:
 		await get_tree().process_frame
 	var settled_release := _memory_snapshot()
+	var ui_release := {}
+	if _release_ui_cache:
+		UIKit.invalidate_theme()
+		UIKit._font = null
+		UIKit._font_bold = null
+		var ui_started := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - ui_started < 5000:
+			await get_tree().process_frame
+		ui_release = _memory_snapshot()
+		print("STABILITY IDLE UI RELEASE: ", JSON.stringify(ui_release))
 	if not MeshFactory._mat_cache.is_empty() or not MeshFactory._tex_cache.is_empty() or not MeshFactory._mesh_cache.is_empty():
 		_failures.append("graphics caches remain after memory warning")
 	print("STABILITY CACHE RELEASE: ", JSON.stringify({"before": before_release, "after": after_release, "settled_5s": settled_release}))
@@ -60,6 +80,7 @@ func _ready() -> void:
 		"baseline_nodes": _baseline_nodes, "baseline_orphans": _baseline_orphans,
 		"baseline_memory": baseline_memory,
 		"cache_release": {"before": before_release, "after": after_release, "settled_5s": settled_release},
+		"idle_ui_release": ui_release,
 		"passes": passes, "matches": _rows, "failures": _failures}
 	var f := FileAccess.open(SaveSystem.storage_root.path_join("stability.json"), FileAccess.WRITE)
 	if f == null:
@@ -86,6 +107,11 @@ func _memory_snapshot() -> Dictionary:
 				seen[stream.get_instance_id()] = true
 				audio_bytes += stream.data.size()
 	snapshot["audio_pcm_bytes_cached"] = audio_bytes
+	var cached := PackedStringArray()
+	for path in _watched_paths:
+		if ResourceLoader.has_cached(path):
+			cached.append(path)
+	snapshot["watched_resources_cached"] = cached
 	return snapshot
 
 
