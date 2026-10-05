@@ -59,6 +59,7 @@ const SUITES := [
 	"res://tests/suites/test_relay_floor.gd",
 	"res://tests/suites/test_crater_floor.gd",
 	"res://tests/suites/test_colossus_approach.gd",
+	"res://tests/suites/test_colossus_input_clock.gd",
 	"res://tests/suites/test_hurdle_rounds.gd",
 	"res://tests/suites/test_runner_recovery.gd",
 	"res://tests/suites/test_hurdle_network.gd",

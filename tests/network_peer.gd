@@ -99,6 +99,7 @@ var observed_crate_score := false
 var observed_lab_weapon := false
 var observed_lab_shot := false
 var crate_attack_clock := 0.0
+var colossus_attack_clock := 0.0
 var echo_serial := -1
 var echo_cues := {}
 var echo_leaving := false
@@ -449,6 +450,8 @@ func _on_sweeper_hit(attacker: int, _victim: int, strength: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if game == null or completed:
 		return
+	if game_id == "boss_colossus":
+		colossus_attack_clock = next_colossus_attack_clock(colossus_attack_clock, _delta, game.phase)
 	if game_id in ["crate_smash", "lab_crates"]:
 		if game.phase in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
 			crate_attack_clock = fmod(crate_attack_clock + _delta, 0.8)
@@ -680,8 +683,7 @@ func _physics_process(_delta: float) -> void:
 					target = fighter.global_position + (away.normalized() if away.length() > 0.1 else Vector3.RIGHT) * 5.0
 					break
 			movement = _colossus_movement(fighter.global_position, target)
-			if not plan.is_empty() and plan.attack and (Time.get_ticks_msec() - started_at) % 400 < 100:
-				buttons = InputFrame.Btn.ATTACK
+			buttons = colossus_attack_buttons(plan, colossus_attack_clock)
 		if game_id == "boss_sovereign":
 			var fighter: Fighter = game.ctx.fighter(slot)
 			var world := _sovereign_world()
@@ -1075,6 +1077,16 @@ func _dread_world() -> Dictionary:
 
 func _sovereign_world() -> Dictionary:
 	return load("res://src/net/sovereign_replica.gd").capture(game.controller) if host else game._network_replica.target.get("world", {})
+
+
+static func next_colossus_attack_clock(clock: float, delta: float, phase: int) -> float:
+	if phase not in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
+		return 0.0
+	return fmod(clock + delta, 0.4)
+
+
+static func colossus_attack_buttons(plan: Dictionary, clock: float) -> int:
+	return InputFrame.Btn.ATTACK if not plan.is_empty() and plan.get("attack", false) and clock < 0.1 else 0
 
 
 func _colossus_world() -> Dictionary:
