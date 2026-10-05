@@ -44,6 +44,8 @@ var _water: ArenaHazards.RisingWater
 var _static_root: Node3D
 var _light: DirectionalLight3D
 var _env: WorldEnvironment
+var _authored_glow := true
+var _authored_volumetric_fog := true
 ## Disc floor pieces, kept so a shrinking arena can move its real collision
 ## edge rather than only its painted one.
 var _floor_mesh: MeshInstance3D
@@ -415,14 +417,6 @@ func _build_environment() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = 0.74 if _is_arctic() else 0.85
 
-	var quality := int(UserSettings.get_value("graphics_quality"))
-	var reduced := bool(UserSettings.get_value("reduce_effects"))
-	# Desktop runs Forward+, phones run the mobile renderer. Screen-space
-	# effects only exist on the former, so they are asked for by name rather
-	# than set blind: on mobile these properties are silently inert, which
-	# hides which of them are actually doing anything.
-	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
-
 	# AgX rolls highlights off instead of clipping them, which is most of the
 	# difference between "bright colours" and "lit scene" on emissive pickups.
 	env.tonemap_mode = Environment.TONE_MAPPER_AGX
@@ -432,15 +426,12 @@ func _build_environment() -> void:
 	env.adjustment_contrast = 1.04
 	env.adjustment_saturation = 1.06
 
-	if not reduced:
-		env.glow_enabled = true
-		env.glow_intensity = 0.34 if _is_arctic() else 0.5
-		env.glow_bloom = 0.11 if _is_arctic() else 0.15
-		# Only genuinely bright surfaces should bloom; without a threshold the
-		# whole image hazes over and reads as fog, not light.
-		env.glow_hdr_threshold = 0.95
-		env.glow_hdr_scale = 2.0
-		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	env.glow_intensity = 0.34 if _is_arctic() else 0.5
+	env.glow_bloom = 0.11 if _is_arctic() else 0.15
+	# Configure disabled effects too, so a live quality increase can restore them.
+	env.glow_hdr_threshold = 0.95
+	env.glow_hdr_scale = 2.0
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.16, 0.42, 0.54) if _is_arctic() else def.sky_bottom
@@ -448,29 +439,21 @@ func _build_environment() -> void:
 	env.fog_sky_affect = 0.35
 	env.fog_aerial_perspective = 0.28
 
-	if rich and quality >= 1 and not reduced:
-		# Contact shadows. Procedural primitives read as stickers floating over
-		# the floor without them; this is the single biggest grounding cue.
-		env.ssao_enabled = true
-		env.ssao_radius = 1.1
-		env.ssao_intensity = 2.2 if quality >= 2 else 1.6
-		env.ssao_detail = 0.5
-		env.ssao_light_affect = 0.15
-	if rich and quality >= 2 and not reduced:
-		env.ssil_enabled = true
-		env.ssil_intensity = 0.7
-		env.ssr_enabled = true
-		env.ssr_max_steps = 32
-		env.ssr_fade_in = 0.2
-		env.ssr_fade_out = 6.0
-		env.volumetric_fog_enabled = true
-		env.volumetric_fog_density = 0.003 if _is_arctic() else 0.004
-		env.volumetric_fog_gi_inject = 0.6
-		env.volumetric_fog_length = 96.0
+	env.ssao_radius = 1.1
+	env.ssao_detail = 0.5
+	env.ssao_light_affect = 0.15
+	env.ssil_intensity = 0.7
+	env.ssr_max_steps = 32
+	env.ssr_fade_in = 0.2
+	env.ssr_fade_out = 6.0
+	env.volumetric_fog_density = 0.003 if _is_arctic() else 0.004
+	env.volumetric_fog_gi_inject = 0.6
+	env.volumetric_fog_length = 96.0
 
 	_env = WorldEnvironment.new()
 	_env.environment = env
 	add_child(_env)
+	_apply_environment_quality()
 
 	_light = DirectionalLight3D.new()
 	_light.rotation_degrees = Vector3(-52, 34, 0) if _is_arctic() else Vector3(-58, 38, 0)
@@ -499,8 +482,30 @@ func _build_environment() -> void:
 
 
 func _on_visual_settings_changed(key: String, _value) -> void:
-	if key in ["graphics_quality", "battery_saver", "*"]:
+	if key in ["graphics_quality", "battery_saver", "reduce_effects", "*"]:
 		_apply_shadow_quality()
+		_apply_environment_quality()
+
+
+func set_environment_effects(glow: bool, volumetric_fog: bool) -> void:
+	_authored_glow = glow
+	_authored_volumetric_fog = volumetric_fog
+	_apply_environment_quality()
+
+
+func _apply_environment_quality() -> void:
+	if not is_instance_valid(_env) or _env.environment == null:
+		return
+	var env := _env.environment
+	var quality := int(UserSettings.get_value("graphics_quality"))
+	var reduced := bool(UserSettings.get_value("reduce_effects"))
+	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
+	env.glow_enabled = _authored_glow and not reduced
+	env.ssao_enabled = rich and quality >= 1 and not reduced
+	env.ssao_intensity = 2.2 if quality >= 2 else 1.6
+	env.ssil_enabled = rich and quality >= 2 and not reduced
+	env.ssr_enabled = rich and quality >= 2 and not reduced
+	env.volumetric_fog_enabled = _authored_volumetric_fog and rich and quality >= 2 and not reduced
 
 
 func _apply_shadow_quality() -> void:

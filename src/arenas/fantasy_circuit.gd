@@ -16,7 +16,7 @@ func build(arena: Arena) -> void:
 	var accent := arena.def.accent_color
 	var env := arena._env.environment
 	env.fog_enabled = false
-	env.volumetric_fog_enabled = false
+	arena.set_environment_effects(true, false)
 	var sky_mat := env.sky.sky_material as ProceduralSkyMaterial
 	sky_mat.sky_top_color = Color("275ab2") if not lava else Color("45245d")
 	sky_mat.sky_horizon_color = Color("efb6cc") if sky else Color("94d9e6")

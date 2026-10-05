@@ -33,9 +33,8 @@ func _lighting() -> void:
 	env.fog_density = 0.0009
 	env.fog_light_color = Color("b6c8c5")
 	env.fog_aerial_perspective = 0.35
-	env.volumetric_fog_enabled = false
+	arena.set_environment_effects(false, false)
 	env.ambient_light_energy = 0.55
-	env.glow_enabled = false
 	env.adjustment_saturation = 0.97
 	env.tonemap_exposure = 1.1
 	var sky := env.sky.sky_material as ProceduralSkyMaterial
