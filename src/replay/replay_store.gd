@@ -24,7 +24,9 @@ func _ready() -> void:
 
 func _load_index() -> void:
 	var stored = SaveSystem.shared_branch(INDEX_BRANCH, [])
-	_index = stored if stored is Array else []
+	_index = stored.duplicate(true) if stored is Array else []
+	if not _can_mutate():
+		return
 	# Drop entries whose file has gone: a user deleting files by hand should not
 	# leave the library full of ghosts.
 	var alive: Array = []
@@ -47,6 +49,8 @@ func _load_index() -> void:
 
 
 func _commit() -> void:
+	if not _can_mutate():
+		return
 	SaveSystem.set_shared_branch(INDEX_BRANCH, _index)
 	SaveSystem.flush()
 
@@ -76,6 +80,8 @@ func count() -> int:
 
 
 func save(replay: ReplayData) -> bool:
+	if not _can_mutate():
+		return false
 	if replay == null or replay.frames.is_empty() or not _valid_id(replay.id):
 		return false
 	if not _write_atomic(replay.id, JSON.stringify(replay.to_dict())):
@@ -103,6 +109,8 @@ func save(replay: ReplayData) -> bool:
 
 
 func _write_atomic(id: String, payload: String, byte_limit: int = MAX_FILE_BYTES) -> bool:
+	if not _can_mutate():
+		return false
 	if not _valid_id(id) or payload.length() > byte_limit:
 		return false
 	var bytes := payload.to_utf8_buffer()
@@ -139,6 +147,8 @@ func _file_bytes(id: String) -> int:
 ## Keep the library bounded. Oldest go first, but anything the highlight
 ## detector flagged survives longer — those are the ones worth keeping.
 func _prune(byte_limit: int = MAX_TOTAL_BYTES) -> void:
+	if not _can_mutate():
+		return
 	for entry in _index:
 		entry["bytes"] = _file_bytes(String(entry["id"]))
 	while not _index.is_empty() and (_index.size() > MAX_KEPT or total_bytes() > byte_limit):
@@ -177,6 +187,8 @@ func load_replay(id: String) -> ReplayData:
 
 
 func erase(id: String) -> void:
+	if not _can_mutate():
+		return
 	if not _valid_id(id):
 		return
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(id)))
@@ -189,6 +201,8 @@ func erase(id: String) -> void:
 
 
 func erase_all() -> void:
+	if not _can_mutate():
+		return
 	for entry in _index:
 		var id := String(entry["id"])
 		if _valid_id(id):
@@ -203,3 +217,7 @@ func total_bytes() -> int:
 	for e in _index:
 		n += int(e.get("bytes", 0))
 	return n
+
+
+func _can_mutate() -> bool:
+	return SaveSystem.can_write(SaveSystem.PROFILE)
