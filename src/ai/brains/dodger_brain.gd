@@ -26,6 +26,7 @@ const BAND_MIN_WIDTH := 1.0
 var _dodge_until := 0.0
 var _lead := -1.0
 var _history_sweepers: Array[Dictionary] = []
+var _arm_seen_since: Dictionary = {}
 
 
 func on_round_start() -> void:
@@ -33,6 +34,7 @@ func on_round_start() -> void:
 	_lead = -1.0
 	_dodge_until = 0.0
 	_history_sweepers.clear()
+	_arm_seen_since.clear()
 
 
 func _record_history() -> void:
@@ -45,9 +47,11 @@ func _record_history() -> void:
 			if sweeper == null:
 				continue
 			var geometry := sweeper.visible_arm_geometry()
-			if geometry.is_empty():
+			if geometry.is_empty() or not can_observe(sweeper._arm_mesh):
 				continue
 			var id := sweeper.get_instance_id()
+			if not _arm_seen_since.has(id):
+				_arm_seen_since[id] = _time
 			var omega := 0.0
 			if previous >= 0:
 				var old: Dictionary = _history_sweepers[previous].get(id, {})
@@ -58,6 +62,10 @@ func _record_history() -> void:
 					omega = atan2(before.cross(after).y, before.dot(after)) / elapsed
 			geometry["omega"] = omega
 			snapshot[id] = geometry
+	# Only live, currently visible blades can retain observation credit.
+	for id in _arm_seen_since.keys():
+		if not snapshot.has(id):
+			_arm_seen_since.erase(id)
 	super._record_history()
 	if _history_sweepers.size() < HISTORY_CAP:
 		_history_sweepers.append(snapshot)
@@ -148,9 +156,13 @@ func _incoming_arm(arena: Arena, pos: Vector3) -> Dictionary:
 		var sweeper := child as ArenaHazards.Sweeper
 		if sweeper == null:
 			continue
-		if sweeper.visible_arm_geometry().is_empty():
+		var id := sweeper.get_instance_id()
+		if sweeper.visible_arm_geometry().is_empty() or not can_observe(sweeper._arm_mesh):
+			_arm_seen_since.erase(id)
 			continue
-		var sample: Dictionary = _history_sweepers[idx].get(sweeper.get_instance_id(), {})
+		if not _arm_seen_since.has(id) or float(_history_times[idx]) + 0.000001 < float(_arm_seen_since[id]):
+			continue
+		var sample: Dictionary = _history_sweepers[idx].get(id, {})
 		if sample.is_empty():
 			continue
 		var to: Vector3 = pos - Vector3(sample["origin"])
