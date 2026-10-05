@@ -41,6 +41,8 @@ func run(t: TestHarness, host: Node) -> void:
 		var contact: Vector3 = position + velocity * arrival
 		brain.ball.velocity = Vector3(999, 0, 999)
 		brain.decide(0.1)
+		brain._time += brain.reaction_time
+		brain.decide(0.1)
 		t.near((brain.target - brain._goal_pos).dot(axis), (contact - brain._goal_pos).dot(axis), 0.0001,
 			"windup must not override delayed incoming interception on side %d" % slot)
 		var fighter: Fighter = scene.ctx.fighter(slot)
