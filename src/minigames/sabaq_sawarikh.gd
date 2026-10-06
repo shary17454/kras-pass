@@ -398,8 +398,13 @@ func _spin_out(slot: int, by_slot: int, push: Vector3) -> void:
 	var f := ctx.fighter(slot)
 	if f == null or not is_instance_valid(f):
 		return
-	f.stun(SPIN_SECONDS)
-	f.apply_impulse(push.normalized() * 7.0 + Vector3.UP * 2.0)
+	# Keep neutral hits unchanged while applying the character's effective weight.
+	var tuning: Dictionary = Balance.table("tuning").get("fighter", {})
+	var neutral_resist := float(tuning.get("resist_base", 0.7)) + float(tuning.get("resist_range", 0.75)) * 0.5
+	var resistance := neutral_resist / maxf(0.3, f.knock_resist)
+	var recovery := f.data.perk_factor("recovery") if f.data != null else 1.0
+	f.stun(SPIN_SECONDS * recovery)
+	f.apply_impulse((push.normalized() * 7.0 + Vector3.UP * 2.0) * resistance)
 	ctx.bump_detail(slot, "spun")
 	if by_slot >= 0 and by_slot != slot:
 		ctx.bump_detail(by_slot, "hits")

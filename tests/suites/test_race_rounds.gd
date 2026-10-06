@@ -59,6 +59,55 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().process_frame
 	await _check_finished_collision(t, host)
 	await _check_finished_weapons(t, host)
+	await _check_weapon_character_response(t, host)
+
+
+func _check_weapon_character_response(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("sabaq_sawarikh", ["fanoos", "sakhra", "nabta", "barq"], 0, 1, 120)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	for rider in scene.ctx.fighters: rider.set_physics_process(false)
+	var game: Node = scene.controller
+	var neutral: Fighter = scene.ctx.fighter(0)
+	for slot in 4:
+		var rider: Fighter = scene.ctx.fighter(slot)
+		rider._stun = 0.0
+		rider._impulse = Vector3.ZERO
+		var health := rider.health
+		game._spin_out(slot, (slot + 1) % 4, Vector3.RIGHT)
+		t.near(rider._stun, game.SPIN_SECONDS * rider.data.perk_factor("recovery"), 0.00001, "race impact applies recovery for %s" % rider.data.id)
+		var expected := (Vector3.RIGHT * 7.0 + Vector3.UP * 2.0) * neutral.knock_resist / rider.knock_resist
+		t.ok(rider._impulse.is_equal_approx(expected), "race impulse applies character resistance for %s" % rider.data.id)
+		t.near(rider.health, health, 0.00001, "race impact retains no health damage")
+		t.equal(int(scene.ctx.details[slot].get("spun", 0)), 1, "race impact records one spin")
+	t.ok(scene.ctx.fighter(1)._impulse.length() < neutral._impulse.length(), "heavy racer receives less knockback than neutral")
+	t.ok(scene.ctx.fighter(3)._impulse.length() > neutral._impulse.length(), "light racer receives more knockback than neutral")
+	t.near(neutral._stun, game.SPIN_SECONDS, 0.00001, "neutral race stun remains unchanged")
+	t.ok(neutral._impulse.is_equal_approx(Vector3.RIGHT * 7.0 + Vector3.UP * 2.0), "neutral race impulse remains unchanged")
+	var light: Fighter = scene.ctx.fighter(3)
+	light._impulse = Vector3.ZERO
+	light._stun = 0.0
+	game.shielded[3] = 6.0
+	game._spin_out(3, 0, Vector3.RIGHT)
+	t.equal(light._impulse, Vector3.ZERO, "shield blocks all character-scaled knockback")
+	t.near(light._stun, 0.0, 0.00001, "shield blocks character-scaled stun")
+	t.near(game.shielded[3], 0.0, 0.00001, "shield is consumed once")
+	var neutral_resist := neutral.knock_resist
+	for character in Registry.characters():
+		neutral.data = character
+		neutral._apply_character()
+		neutral._impulse = Vector3.ZERO
+		neutral._stun = 0.0
+		game._spin_out(0, 1, Vector3.RIGHT)
+		var ratio := neutral_resist / neutral.knock_resist
+		t.ok(neutral._impulse.is_equal_approx((Vector3.RIGHT * 7.0 + Vector3.UP * 2.0) * ratio), "%s uses effective resistance including its perk" % character.id)
+		t.near(neutral._stun, game.SPIN_SECONDS * character.perk_factor("recovery"), 0.00001, "%s uses recovery without changing unrelated passives" % character.id)
+		t.ok(ratio >= 0.85 and ratio <= 1.15, "%s race knockback stays within the effective response budget" % character.id)
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _check_finished_weapons(t: TestHarness, host: Node) -> void:
