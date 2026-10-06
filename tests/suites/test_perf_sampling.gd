@@ -35,3 +35,16 @@ func run(t: TestHarness, _host: Node) -> void:
 	t.equal(probe._slow_frames[7].frame_ms, 37.0, "trace retains the eight worst intervals")
 	t.equal(probe._slow_frames[0].scores[0], 1, "later game state cannot mutate captured trace evidence")
 	probe.free()
+	var soak: Node = load("res://tests/soak_perf.gd").new()
+	for invalid in [NAN, INF, 50.0, -1.0]:
+		soak._record_slow_frame(invalid, {})
+	t.equal(soak.slow_frames.size(), 0, "soak ignores normal and invalid frame times")
+	var data := {"pipeline_delta": {"draw": 1}, "focused": true}
+	for index in 20:
+		soak._record_slow_frame(51.0 + index, data)
+	data.pipeline_delta.draw = 999
+	t.equal(soak.slow_frames.size(), 8, "soak diagnostics retain only eight slow frames")
+	t.equal(soak.slow_frames[0].frame_ms, 70.0, "soak retains worst frame first")
+	t.equal(soak.slow_frames[7].frame_ms, 63.0, "soak retains worst eight frames")
+	t.equal(soak.slow_frames[0].pipeline_delta.draw, 1, "soak copies nested diagnostics at capture")
+	soak.free()

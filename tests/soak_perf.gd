@@ -29,6 +29,10 @@ var process_ms := 0.0
 var physics_ms := 0.0
 var viewport_sizes: Array[String] = []
 var window_sizes: Array[String] = []
+var slow_frames: Array[Dictionary] = []
+var trace_started := false
+var pipeline_start := {}
+var previous_pipelines := {}
 
 
 func _ready() -> void:
@@ -90,6 +94,12 @@ func _process(_delta: float) -> void:
 	last_us = now
 	var live := scene.ctx != null and MatchPhase.is_live(scene.phase)
 	if live:
+		if not trace_started:
+			DevTools.operations.reset()
+			pipeline_start = _pipeline_counts()
+			previous_pipelines = pipeline_start.duplicate()
+			trace_started = true
+		var pipelines := _pipeline_counts()
 		var live_size := str(get_viewport().get_texture().get_size())
 		if not viewport_sizes.has(live_size):
 			viewport_sizes.append(live_size)
@@ -101,6 +111,16 @@ func _process(_delta: float) -> void:
 			cold_samples.append(ms)
 		else:
 			samples.append(ms)
+			if ms > 50.0:
+				var pipeline_delta := {}
+				for key in pipelines:
+					pipeline_delta[key] = int(pipelines[key]) - int(previous_pipelines.get(key, 0))
+				_record_slow_frame(ms, {"elapsed_seconds": live_seconds,
+					"process_frame": Engine.get_process_frames(),
+					"physics_frame": Engine.get_physics_frames(),
+					"process_monitor_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+					"physics_monitor_ms": Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+					"pipeline_delta": pipeline_delta, "focused": DisplayServer.window_is_focused()})
 			process_ms += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
 			physics_ms += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
 		memory_peak = maxf(memory_peak, OS.get_static_memory_usage() / 1048576.0)
@@ -115,6 +135,7 @@ func _process(_delta: float) -> void:
 			var p: Vector3 = scene.ctx.fighter(i).global_position
 			distances[i] += p.distance_to(positions[i])
 			positions[i] = p
+		previous_pipelines = pipelines
 	var elapsed := (now - start_us) / 1000000.0
 	if live_seconds >= seconds + 3.0 or (live_seconds > 0 and not live) or elapsed > seconds + 30:
 		_finish()
@@ -141,6 +162,27 @@ func _stats(values: Array[float]) -> Dictionary:
 		"frames_above_50ms": above_50, "frames_above_100ms": above_100}
 
 
+func _record_slow_frame(ms: float, measurements: Dictionary) -> void:
+	if not is_finite(ms) or ms <= 50.0:
+		return
+	var sample := measurements.duplicate(true)
+	sample["frame_ms"] = ms
+	slow_frames.append(sample)
+	slow_frames.sort_custom(func(a, b): return a.frame_ms > b.frame_ms)
+	if slow_frames.size() > 8:
+		slow_frames.resize(8)
+
+
+func _pipeline_counts() -> Dictionary:
+	return {
+		"canvas": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS),
+		"mesh": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH),
+		"surface": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE),
+		"draw": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW),
+		"specialization": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION),
+	}
+
+
 func _finish() -> void:
 	done = true
 	set_process(false)
@@ -157,6 +199,13 @@ func _finish() -> void:
 	report["peak_active_weapons"] = projectile_peak
 	report["process_mean_ms"] = process_ms / maxi(samples.size(), 1)
 	report["physics_mean_ms"] = physics_ms / maxi(samples.size(), 1)
+	report["slow_frame_samples"] = slow_frames
+	report["operations"] = DevTools.operations.report()
+	report["operation_trace_enabled"] = DevTools.operations.enabled
+	var pipeline_delta := _pipeline_counts()
+	for key in pipeline_delta:
+		pipeline_delta[key] -= int(pipeline_start.get(key, 0))
+	report["live_pipeline_compilations"] = pipeline_delta
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	report["startup_output_size"] = report["output_size"]

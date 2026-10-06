@@ -550,7 +550,9 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	if hud != null and is_instance_valid(hud) and ctx != null:
+		var started := DevTools.operations.begin()
 		hud.tick(delta)
+		DevTools.operations.finish("match.hud", started)
 
 
 ## Playback runs the same tick function, just more or fewer times per frame.
