@@ -39,7 +39,15 @@ func decide(_delta: float) -> void:
 		_target_tile = _pick_tile(arena, me.global_position)
 
 	if can_observe(_target_tile):
-		steer_to(_target_tile.global_position)
+		var offset := Vector2(_target_tile.global_position.x - me.global_position.x,
+			_target_tile.global_position.z - me.global_position.z)
+		var speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+		var planar_velocity := Vector2(me.velocity.x, me.velocity.z)
+		var control := 1.0 if me.is_on_floor() else me.air_control
+		var braking_distance := planar_velocity.length_squared() / maxf(2.0 * me.acceleration * control, 0.001)
+		# Input is held until the next ordinary decision; brake before overshooting.
+		var arrival_distance := maxf(0.25, speed * decision_interval * 1.15 + braking_distance)
+		steer_to(_target_tile.global_position, minf(1.0, offset.length() / arrival_distance))
 		if unsafe and distance_to(_target_tile.global_position) > 2.4:
 			maybe_dash(1.5)
 	else:
