@@ -36,6 +36,31 @@ func run(t: TestHarness, _host: Node) -> void:
 	t.equal(probe._slow_frames[0].scores[0], 1, "later game state cannot mutate captured trace evidence")
 	probe.free()
 	var soak: Node = load("res://tests/soak_perf.gd").new()
+	soak.game = "tank_arena"
+	soak.arena_id = "tank_oasis"
+	t.equal(soak._configuration_error(), "", "authored tank arena is accepted")
+	soak.arena_id = "dune_ruins"
+	t.ok(not soak._configuration_error().is_empty(), "unknown arena cannot silently qualify its fallback")
+	soak.arena_id = "sky_causeway"
+	t.ok(not soak._configuration_error().is_empty(), "valid arena for another game is rejected")
+	soak.arena_id = "tank_oasis"
+	soak.game = "missing_game"
+	t.ok(not soak._configuration_error().is_empty(), "unknown minigame is rejected before construction")
+	soak.game = "tank_arena"
+	for duration in [0.0, -1.0, NAN, INF]:
+		soak.seconds = duration
+		t.ok(not soak._configuration_error().is_empty(), "invalid duration cannot produce qualified evidence")
+	soak.seconds = 30.0
+	soak.cap = -1
+	t.ok(not soak._configuration_error().is_empty(), "negative frame limit is rejected")
+	soak.cap = 0
+	t.equal(soak._configuration_error(), "", "uncapped rendering remains available")
+	for tier in [-1, 4]:
+		soak.quality = tier
+		t.ok(not soak._configuration_error().is_empty(), "unknown quality tier is rejected")
+	soak.quality = 2
+	soak.arena_id = ""
+	t.equal(soak._configuration_error(), "", "empty arena selects the game's authored default")
 	for invalid in [NAN, INF, 50.0, -1.0]:
 		soak._record_slow_frame(invalid, {})
 	t.equal(soak.slow_frames.size(), 0, "soak ignores normal and invalid frame times")
