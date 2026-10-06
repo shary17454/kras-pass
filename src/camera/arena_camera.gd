@@ -46,6 +46,7 @@ var _intro_yaw := 0.0
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	var t := Balance.table("tuning").get("camera", {})
 	_distance = float(t.get("distance", 15.0))
 	_height = float(t.get("height", 15.5))
@@ -343,6 +344,67 @@ func _apply(weight: float, delta: float) -> void:
 	global_position = pos
 	look_at(look_focus, Vector3.UP)
 	rotation.x = clampf(rotation.x, deg_to_rad(-88.0), deg_to_rad(-8.0))
+	if mode in [Mode.ARENA, Mode.TOP_DOWN, Mode.ISOMETRIC] and arena != null:
+		_fit_arena_region()
+
+
+func arena_safe_rect(view: Vector2) -> Rect2:
+	var inset := Platform.safe_insets()
+	var top := maxf(view.y * 0.06, inset.y)
+	if shared_hud_bottom.is_valid():
+		top = maxf(top, float(shared_hud_bottom.call()) + 24.0)
+	var bottom := view.y * 0.92 - inset.w
+	if shared_touch_count > 1:
+		bottom = TouchSource.party_region(view, 0, shared_touch_count).position.y - 20.0
+	elif shared_touch_count == 1:
+		bottom = view.y * (0.76 if view.x < view.y else 0.80) - inset.w
+	var left := view.x * 0.06 + inset.x
+	var right := view.x * 0.94 - inset.z
+	return Rect2(Vector2(left, top), Vector2(maxf(32.0, right - left), maxf(32.0, bottom - top)))
+
+
+func _fit_arena_region() -> void:
+	var view := get_viewport().get_visible_rect().size
+	if view.x <= 0.0 or view.y <= 0.0:
+		return
+	if is_zero_approx(get_camera_projection().determinant()):
+		return
+	var safe := arena_safe_rect(view)
+	var points: Array[Vector3] = []
+	var radius := arena.current_radius
+	if arena.def.shape in ["square", "grid", "tiles"]:
+		for x in [-radius, radius]:
+			for z in [-radius, radius]:
+				for height in [0.0, 3.0]:
+					points.append(arena.global_position + Vector3(x, height, z))
+	else:
+		for index in 16:
+			var angle := TAU * index / 16.0
+			for height in [0.0, 3.0]:
+				points.append(arena.global_position + Vector3(cos(angle) * radius, height, sin(angle) * radius))
+	for target in _live_targets():
+		points.append(target.global_position + Vector3.UP * 1.8)
+	# Correct projection, not the world focus: retain the current viewing angle
+	# while fitting the whole playable rim above the on-screen controls.
+	for iteration in 4:
+		var inverse := get_camera_transform().affine_inverse()
+		var minimum_depth := INF
+		for point in points:
+			minimum_depth = minf(minimum_depth, -(inverse * point).z)
+		if minimum_depth <= near:
+			global_position += global_basis.z * (near - minimum_depth + maxf(radius, 1.0))
+			continue
+		var bounds := Rect2(unproject_position(points[0]), Vector2.ZERO)
+		var behind := false
+		for point in points:
+			behind = behind or is_position_behind(point)
+			bounds = bounds.expand(unproject_position(point))
+		var depth := maxf(1.0, -to_local(arena.global_position).z)
+		var ratio := maxf(bounds.size.x / safe.size.x, bounds.size.y / safe.size.y)
+		if behind or ratio > 0.98:
+			global_position += global_basis.z * depth * (clampf(ratio * 1.04, 1.04, 2.0) - 1.0)
+			continue
+		global_position += project_position(bounds.get_center(), depth) - project_position(safe.get_center(), depth)
 
 
 func _wanted_focus() -> Vector3:

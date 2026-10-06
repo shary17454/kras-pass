@@ -69,6 +69,7 @@ func _ready() -> void:
 	var touch := TouchSource.new()
 	layer.add_child(touch)
 	touch.setup(0, Registry.minigame(game))
+	scene.camera.shared_touch_count = maxi(scene.camera.shared_touch_count, 1)
 	touch.set_physics_process(false)
 	touch.set_process_input(false)
 	for fighter in scene.ctx.fighters:

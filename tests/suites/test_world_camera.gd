@@ -41,3 +41,79 @@ func run(t: TestHarness, host: Node) -> void:
 	for node in [driver, survivor, camera, arena]:
 		node.queue_free()
 	await host.get_tree().process_frame
+	await _shared_arena(t, host)
+	await _safe_shapes(t, host)
+
+
+func _shared_arena(t: TestHarness, host: Node) -> void:
+	var window := host.get_tree().root
+	var original := window.size
+	var arena := Arena.new()
+	arena.def = Registry.arena("star_meadow")
+	arena.current_radius = arena.def.radius
+	host.add_child(arena)
+	arena.global_position = Vector3(120, 5, -80)
+	var camera := ArenaCamera.new()
+	host.add_child(camera)
+	camera.set_process(false)
+	camera.configure(ArenaCamera.Mode.ARENA, arena)
+	var player := Node3D.new()
+	host.add_child(player)
+	player.global_position = arena.global_position + Vector3(-arena.current_radius * 0.6, 0, 0)
+	camera.targets = [player]
+	camera.shared_touch_count = 1
+	for resolution in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960)]:
+		window.size = resolution
+		await host.get_tree().process_frame
+		var view := host.get_viewport().get_visible_rect().size
+		var portrait := view.x < view.y
+		var hud_bottom := 240.0 if portrait else 110.0
+		camera.shared_hud_bottom = func(): return hud_bottom
+		camera._process(1.0 / 60.0)
+		for index in 32:
+			var angle := TAU * index / 32.0
+			for height in [0.0, 2.0]:
+				var point := arena.global_position + Vector3(cos(angle) * arena.current_radius, height, sin(angle) * arena.current_radius)
+				var screen := camera.unproject_position(point)
+				t.ok(not camera.is_position_behind(point), "arena boundary is in front of shared camera")
+				t.ok(screen.x >= view.x * 0.06 - 1 and screen.x <= view.x * 0.94 + 1, "clustered players cannot crop opposite arena edge")
+				t.ok(screen.y >= hud_bottom + 24 - 1 and screen.y <= view.y * (0.76 if portrait else 0.80) + 1, "arena boundary stays between HUD and touch controls")
+	for node in [player, camera, arena]:
+		node.queue_free()
+	await host.get_tree().process_frame
+	window.size = original
+
+
+func _safe_shapes(t: TestHarness, host: Node) -> void:
+	var window := host.get_tree().root
+	var original := window.size
+	for mode in [ArenaCamera.Mode.ARENA, ArenaCamera.Mode.TOP_DOWN, ArenaCamera.Mode.ISOMETRIC]:
+		var arena := Arena.new()
+		arena.def = Registry.arena("tank_foundry")
+		arena.current_radius = arena.def.radius
+		host.add_child(arena)
+		arena.global_position = Vector3(-80, 7, 120)
+		var camera := ArenaCamera.new()
+		host.add_child(camera)
+		camera.set_process(false)
+		camera.configure(mode, arena)
+		camera.shared_touch_count = 4
+		for resolution in [Vector2i(720, 1280), Vector2i(1280, 720)]:
+			window.size = resolution
+			await host.get_tree().process_frame
+			var view := host.get_viewport().get_visible_rect().size
+			camera.shared_hud_bottom = func(): return view.y * 0.22
+			camera._process(1.0 / 60.0)
+			var safe := camera.arena_safe_rect(view)
+			t.ok(safe.position.y >= view.y * 0.22 + 24.0, "safe region reserves HUD height")
+			t.ok(safe.end.y <= TouchSource.party_region(view, 0, 4).position.y, "safe region reserves four-player controls")
+			for x in [-arena.current_radius, arena.current_radius]:
+				for z in [-arena.current_radius, arena.current_radius]:
+					for height in [0.0, 3.0]:
+						var point := arena.global_position + Vector3(x, height, z)
+						t.ok(not camera.is_position_behind(point), "square corners remain in front of camera")
+						t.ok(safe.grow(1.0).has_point(camera.unproject_position(point)), "translated square fits safely in each shared viewing mode")
+		camera.queue_free()
+		arena.queue_free()
+		await host.get_tree().process_frame
+	window.size = original
