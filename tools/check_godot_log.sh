@@ -7,7 +7,7 @@ if [ ! -f "$log" ]; then
   printf 'Missing Godot log: %s\n' "$log" >&2
   exit 1
 fi
-if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Error importing|FAIL:|FAILED|Required object .* is null|ObjectDB instances (were )?leaked|resources still in use|RID allocations|PagedAllocator.*pages in use|Texture with GL ID.*leaked' "$log"; then
+if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Error importing|FAIL:|FAILED|Required object .* is null|ObjectDB instances? (was |were )?leaked|resources still in use|RID allocations|PagedAllocator.*pages in use|Texture with GL ID.*leaked' "$log"; then
   printf 'Godot failure in %s\n' "$log" >&2
   exit 1
 fi
