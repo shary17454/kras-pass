@@ -35,6 +35,19 @@ var pipeline_start := {}
 var previous_pipelines := {}
 
 
+func _configuration_error() -> String:
+	var definition := Registry.minigame(game)
+	if definition == null:
+		return "Unknown performance minigame: " + game
+	if not arena_id.is_empty() and (Registry.arena(arena_id) == null or not definition.arena_ids.has(arena_id)):
+		return "Invalid performance arena for %s: %s" % [game, arena_id]
+	if not is_finite(seconds) or seconds <= 0.0:
+		return "Performance duration must be finite and positive"
+	if cap < 0 or quality < 0 or quality > 3:
+		return "Invalid performance frame limit or quality tier"
+	return ""
+
+
 func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--seconds="): seconds = float(arg.get_slice("=", 1))
@@ -43,6 +56,15 @@ func _ready() -> void:
 		if arg.begins_with("--game="): game = arg.get_slice("=", 1)
 		if arg.begins_with("--arena="): arena_id = arg.get_slice("=", 1)
 		if arg.begins_with("--output="): output = arg.get_slice("=", 1)
+	var error := _configuration_error()
+	if not error.is_empty():
+		push_error(error)
+		get_tree().quit(1)
+		return
+	if DisplayServer.get_name() == "headless":
+		push_error("Rendered performance sampling requires a real window")
+		get_tree().quit(1)
+		return
 	UserSettings._values["replay_capture"] = false
 	UserSettings._values["graphics_quality"] = quality
 	UserSettings._values["fps_limit"] = cap
@@ -62,6 +84,13 @@ func _ready() -> void:
 	add_child(scene)
 	var setup_us := Time.get_ticks_usec()
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	# MatchScene has a production fallback; a benchmark must attest its real map.
+	if scene.arena == null or scene.arena.def == null or scene.arena.def.id != cfg.arena_id:
+		push_error("Performance scene did not build the requested arena")
+		scene.teardown()
+		scene.queue_free()
+		get_tree().quit(1)
+		return
 	var prepared_states := 0
 	for fighter in scene.ctx.fighters:
 		if is_instance_valid(fighter._state_fx):
@@ -91,6 +120,7 @@ func _ready() -> void:
 	last_us = start_us
 	print("SOAK_START ", game, " / ", cfg.arena_id, " cap=", cap, " quality=", quality)
 	report.merge({"game": game, "arena": cfg.arena_id, "engine": Engine.get_version_info().string,
+		"built_arena": scene.arena.def.id,
 		"os": OS.get_name(), "renderer": RenderingServer.get_current_rendering_method(),
 		"quality": quality, "cap": cap, "render_scale": get_viewport().scaling_3d_scale,
 		"output_size": str(get_viewport().get_texture().get_size()), "requested_seconds": seconds})
