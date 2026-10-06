@@ -8,6 +8,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_input_frames(t)
 	_music_toggle(t)
 	_original_music(t)
+	_original_sounds(t)
 	await _audio_shutdown(t, host)
 	_platform(t)
 	_ai_profiles(t)
@@ -65,6 +66,30 @@ func _original_music(t: TestHarness) -> void:
 		t.ok(AudioManager._track(id) == baked, id + " uses bundled resource")
 		t.ok(AudioManager._track(id) == baked, id + " reuses cached resource")
 	t.ok(AudioManager._track("unknown_music") == null, "unknown music remains unsupported")
+
+
+func _original_sounds(t: TestHarness) -> void:
+	t.test("baked original sounds retain PCM and cached playback")
+	var catalogue = load("res://tools/bake_original_sfx.gd")
+	for category in ["sfx", "ambience"]:
+		for id in catalogue.SOUNDS if category == "sfx" else catalogue.AMBIENCES:
+			var path: String = "res://assets/audio/" + category + "/" + id + ".res"
+			var baked := load(path) as AudioStreamWAV
+			t.not_null(baked, id + " is bundled")
+			if baked == null:
+				continue
+			var samples = AudioManager._render_sfx(id) if category == "sfx" else AudioManager._render_ambience(id)
+			var generated := Synth.to_stream(samples, category == "ambience")
+			t.ok(baked.data == generated.data, id + " preserves every PCM byte")
+			for property in ["format", "mix_rate", "stereo", "loop_mode", "loop_begin", "loop_end"]:
+				t.equal(baked.get(property), generated.get(property), id + " preserves " + property)
+			var played = AudioManager._sound(id) if category == "sfx" else AudioManager._ambience_stream(id)
+			t.ok(played == baked, id + " plays the bundled resource instead of synthesizing")
+			var cached = AudioManager._sound(id) if category == "sfx" else AudioManager._ambience_stream(id)
+			t.ok(cached == baked, id + " reuses the cached resource")
+	t.ok(AudioManager._sound("shoot") == AudioManager._sound("cannon_fire"), "shoot alias shares the original sound")
+	t.ok(AudioManager._sound("victory") == AudioManager._sound("win"), "victory alias shares the original sound")
+	t.ok(AudioManager._ambience_stream("unknown_ambience") == null, "unknown ambience stays unsupported")
 
 
 func _audio_shutdown(t: TestHarness, host: Node) -> void:
