@@ -15,12 +15,20 @@ func _ready() -> void:
 	UserSettings.set_value("announcer_enabled", false)
 	UserSettings.set_value("touch_controls", "on")
 	var language := "ar"
+	var play_seconds := 0.0
 	var selected := PackedStringArray()
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--games="):
 			selected = argument.trim_prefix("--games=").split(",", false)
 		elif argument.begins_with("--locale="):
 			language = argument.trim_prefix("--locale=")
+		elif argument.begins_with("--play-seconds="):
+			var value := argument.trim_prefix("--play-seconds=")
+			if not value.is_valid_float() or not is_finite(float(value)) or float(value) < 0.0 or float(value) > 10.0:
+				push_error("Visual play seconds must be finite and between zero and ten")
+				get_tree().quit(2)
+				return
+			play_seconds = float(value)
 	if not language in Loc.SUPPORTED:
 		push_error("Unsupported visual QA locale: " + language)
 		get_tree().quit(1)
@@ -57,6 +65,8 @@ func _ready() -> void:
 			scene.camera._intro_left = 0.0
 			for i in 24:
 				await get_tree().process_frame
+			if play_seconds > 0.0:
+				await get_tree().create_timer(play_seconds).timeout
 			await RenderingServer.frame_post_draw
 			var image := get_viewport().get_texture().get_image()
 			var file := output.path_join(game.id + "-" + orientation + ".png")
@@ -70,7 +80,9 @@ func _ready() -> void:
 			if game.id.begins_with("boss_") and resolution.x < resolution.y:
 				success = success and hud_bottom < image.get_height() * 0.35
 			_rows.append({"id": game.id, "arena": cfg.arena_id, "orientation": orientation,
-				"image": file, "nonblank_colors": colors.size(), "hud_bottom": hud_bottom, "passed": success})
+				"image": file, "nonblank_colors": colors.size(), "hud_bottom": hud_bottom, "passed": success,
+				"requested_play_seconds": play_seconds, "phase": scene.phase,
+				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count()})
 			if not success:
 				_failures.append(game.id + "/" + orientation)
 			print("STAGE ZERO VISUAL %s/%s: %s" % [game.id, orientation, "PASS" if success else "FAIL"])
@@ -81,8 +93,8 @@ func _ready() -> void:
 		_failures.append("report write failed")
 	else:
 		report.store_string(JSON.stringify({"shots": _rows, "failures": _failures,
-			"scope": "%d games, default arena, %s, 1 human + 3 AI, 2 orientations; smoke only" % [
-				_rows.size() / 2, language]}, "  "))
+			"scope": "%d games, default arena, %s, 1 human + 3 AI, 2 orientations, %.1f additional play seconds; smoke only" % [
+				_rows.size() / 2, language, play_seconds]}, "  "))
 		report.close()
 	print("STAGE ZERO VISUAL: %d captures, %d failures" % [_rows.size(), _failures.size()])
 	AudioManager.shutdown()
