@@ -180,7 +180,7 @@
   "common.total": "الإجمالي",
   "hud.time": "الوقت",
   "hud.round": "الجولة {n}",
-  "hud.round_of": "الجولة {n} / {total}",
+  "hud.round_of": "الجولة {n} من {total}",
   "hud.score": "النقاط",
   "hud.lives": "المحاولات",
   "hud.sudden_death": "الموت المفاجئ",
