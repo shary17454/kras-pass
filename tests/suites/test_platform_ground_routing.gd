@@ -11,6 +11,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("platform visible ground routing")
 	await _test_safe_first_step(t, host)
 	await _test_edge_support(t, host)
+	await _test_arrival_control(t, host)
 	var arena := Arena.new()
 	host.add_child(arena)
 	var body := Fighter.new()
@@ -173,6 +174,63 @@ func _test_edge_support(t: TestHarness, host: Node) -> void:
 	support.show()
 	body.position.y = 4.0
 	t.equal(brain._pick_tile(arena, body.global_position), null, "stale contact cannot plan from a different fighter position")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_arrival_control(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	var start := _tile(arena, 0, 0, ArenaTile.State.SOLID)
+	var destination := _tile(arena, 1, 0, ArenaTile.State.SOLID)
+	for tile in [start, destination]:
+		tile.build(2.0, 0.5, Color.GRAY)
+	var body := Fighter.new()
+	arena.add_child(body)
+	body.set_physics_process(false)
+	body.position = Vector3(1.8, 0.01, 0.0)
+	for tick in 12:
+		await host.get_tree().physics_frame
+		body.velocity = Vector3(0.0, -1.0, 0.0)
+		body.move_and_slide()
+	t.ok(body.is_on_floor(), "arrival fixture uses ordinary grounded fighter physics")
+	var ctx := MatchContext.new()
+	ctx.arena = arena
+	ctx.config = MatchConfig.build("crumble_court", ["fanoos"], 0, 1, 734)
+	ctx.fighters.append(body)
+	var brain := RoutingProbe.new()
+	brain.configure(0, ctx, 1, 734)
+	brain.accuracy = 1.0
+	brain.edge_awareness = 0.0
+	brain.decision_interval = 0.4
+	brain._target_tile = destination
+	brain.decide(0.1)
+	t.ok(brain.move.x > 0.0 and brain.move.length() < 0.2,
+		"near a tile centre, analog arrival does not keep requesting full speed")
+	var arrival_input := Vector3(brain.move.x, 0.0, brain.move.y)
+	for tick in 28:
+		await host.get_tree().physics_frame
+		body._integrate_walk(arrival_input, 1.0 / 60.0)
+		body.move_and_slide()
+	t.ok(body.is_on_floor() and absf(body.position.x - 2.0) < 0.6,
+		"held arrival input stays on its destination through the next decision horizon")
+	t.equal(arena.tile_at(body.global_position), destination,
+		"arrival cannot coast into a missing neighbouring tile")
+	body.position = Vector3(-3.0, 0.0, 0.0)
+	body.velocity = Vector3.ZERO
+	brain.decide(0.1)
+	t.ok(brain.move.length() > 0.99, "distant visible ground retains full movement input")
+	body.position = Vector3(1.8, 0.0, 0.0)
+	brain.decision_interval = 0.1
+	brain.decide(0.1)
+	var short_horizon := brain.move.length()
+	brain.decision_interval = 0.4
+	brain.decide(0.1)
+	t.ok(brain.move.length() < short_horizon,
+		"slower decision frequency accounts for longer held input, not extra speed")
+	destination.hide()
+	brain.decide(0.1)
+	t.equal(brain.move, Vector2.ZERO, "hidden arrival target cannot keep directing the player")
 	arena.queue_free()
 	await host.get_tree().process_frame
 
