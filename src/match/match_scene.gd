@@ -247,13 +247,6 @@ func _build() -> void:
 		camera.mode = ArenaCamera.Mode.CHASE
 	camera.current = true
 	ctx.observation_camera = camera
-	if config.minigame_id == "tank_arena":
-		var radar_layer := CanvasLayer.new()
-		add_child(radar_layer)
-		var radar: Control = load("res://src/ui/tank_radar.gd").new()
-		radar.ctx = ctx
-		radar_layer.add_child(radar)
-
 	hud = MatchHUD.new()
 	hud.name = "HUD"
 	add_child(hud)
@@ -263,6 +256,14 @@ func _build() -> void:
 		if phase == P.INSTRUCTIONS and (not _online() or Net.is_host):
 			_set_phase(P.COUNTDOWN))
 	hud.set_round(_round_index, _total_rounds)
+	if config.minigame_id == "tank_arena":
+		hud.reserve_auxiliary_overlay(120.0)
+		var radar_layer := CanvasLayer.new()
+		add_child(radar_layer)
+		var radar: Control = load("res://src/ui/tank_radar.gd").new()
+		radar.ctx = ctx
+		radar.hud = hud
+		radar_layer.add_child(radar)
 
 	_create_brains()
 	_assign_inputs()

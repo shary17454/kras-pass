@@ -9,6 +9,7 @@ extends CanvasLayer
 
 var ctx: MatchContext
 signal ready_requested()
+signal auxiliary_overlay_layout_changed()
 var controller: MiniGameController
 var touch_sources: Array = []
 
@@ -23,6 +24,7 @@ var _rules_card: Control
 var _hint_label: Label
 var _toast_box: VBoxContainer
 var _status_toasts: Dictionary = {}
+var _auxiliary_overlay_height := 0.0
 var _offscreen_cues: Array[OffscreenPlayerCue] = []
 ## Width of the per-player charge meter, in unscaled pixels.
 const METER_WIDTH := 118.0
@@ -344,9 +346,21 @@ func _fit_toasts() -> void:
 	_toast_box.offset_bottom = _toast_box.offset_top
 	if _hint_label != null and _hint_label.anchor_top == 0.0:
 		var hint_y := (230 if ctx.definition.id == "goal_guard" else 460) + inset.y
-		var messages_bottom := _toast_box.offset_top + _toast_box.get_combined_minimum_size().y
-		_hint_label.offset_top = maxf(hint_y, messages_bottom + 12.0)
+		var overlay_bottom := auxiliary_overlay_top() + _auxiliary_overlay_height
+		_hint_label.offset_top = maxf(hint_y, overlay_bottom + (12.0 if _auxiliary_overlay_height > 0.0 else 0.0))
 		_hint_label.offset_bottom = _hint_label.offset_top + 100.0
+	auxiliary_overlay_layout_changed.emit()
+
+
+func reserve_auxiliary_overlay(height: float) -> void:
+	_auxiliary_overlay_height = maxf(0.0, height)
+	_fit_toasts()
+
+
+func auxiliary_overlay_top() -> float:
+	if _toast_box == null:
+		return occupied_top() + 12.0
+	return _toast_box.offset_top + _toast_box.get_combined_minimum_size().y + 12.0
 
 
 ## Replace a UIKit panel's padding with something a HUD can live with, reusing
