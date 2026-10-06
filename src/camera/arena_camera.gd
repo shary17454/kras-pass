@@ -78,6 +78,7 @@ func configure(m: Mode, a: Arena) -> void:
 		Mode.TOP_DOWN:
 			_pitch = -78.0
 			_height = 22.0
+			_distance = _height / tan(deg_to_rad(absf(_pitch)))
 		Mode.ISOMETRIC:
 			_pitch = -38.0
 			_yaw = deg_to_rad(35.0)

@@ -43,6 +43,42 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().process_frame
 	await _shared_arena(t, host)
 	await _safe_shapes(t, host)
+	await _colossus_visibility(t, host)
+
+
+func _colossus_visibility(t: TestHarness, host: Node) -> void:
+	t.test("colossus rear spawn remains visible")
+	var window := host.get_tree().root
+	var original := window.size
+	var controller := load("res://src/minigames/boss_colossus.gd").new() as MiniGameController
+	t.ok(controller.camera_mode() == ArenaCamera.Mode.TOP_DOWN, "tall central boss requests an overhead gameplay view")
+	var arena := Arena.new()
+	arena.def = Registry.arena("vortex_ring")
+	arena.current_radius = arena.def.radius
+	host.add_child(arena)
+	var camera := ArenaCamera.new()
+	host.add_child(camera)
+	camera.set_process(false)
+	camera.configure(controller.camera_mode(), arena)
+	camera.shared_touch_count = 1
+	for resolution in [Vector2i(1280, 720), Vector2i(540, 960)]:
+		window.size = resolution
+		await host.get_tree().process_frame
+		camera.shared_hud_bottom = func(): return 110.0 if resolution.x > resolution.y else 270.0
+		camera._process(1.0 / 60.0)
+		t.ok(rad_to_deg(camera.rotation.x) <= -75.0, "overhead mode retains its steep gameplay angle after safe-area fitting")
+		# Rear spawn ray must clear the actual 8.8-metre top of the boss head.
+		var rear := arena.global_position + Vector3(0, 1.0, -7.44)
+		var crossing := (arena.global_position.z - rear.z) / (camera.global_position.z - rear.z)
+		var ray_height := lerpf(rear.y, camera.global_position.y, crossing)
+		t.ok(ray_height > arena.global_position.y + 8.8, "rear player sightline clears the central boss rather than relying on a HUD marker")
+		var view := host.get_viewport().get_visible_rect().size
+		t.ok(camera.arena_safe_rect(view).grow(1.0).has_point(camera.unproject_position(rear)), "rear player remains between HUD and controls")
+	controller.free()
+	camera.queue_free()
+	arena.queue_free()
+	await host.get_tree().process_frame
+	window.size = original
 
 
 func _shared_arena(t: TestHarness, host: Node) -> void:

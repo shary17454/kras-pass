@@ -149,6 +149,7 @@ func _build() -> void:
 			for effect in chip["effects"].get_children():
 				effect.add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 	get_viewport().size_changed.connect(fit_chips)
+	top.minimum_size_changed.connect(fit_chips)
 	_fit_top_rows = fit_chips
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_chips))
 	fit_chips.call()
@@ -281,6 +282,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	name_row.add_child(name_label)
 
 	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
+	value.text_direction = Control.TEXT_DIRECTION_LTR
 	value.name = "Value"
 	if _compact_players():
 		value.add_theme_font_size_override("font_size", 28)
