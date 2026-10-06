@@ -42,9 +42,45 @@ func run(t: TestHarness, host: Node) -> void:
 		b.velocity = -direction * 10.0 - Vector3.UP * 70.0
 		game._resolve_rams()
 		t.equal(game.ram_serial, 1, "rotated real closing contact still registers one ram")
-		t.near(game.health[0], game._max_health - game._ram_damage * 20.0 / game._threshold * 0.6, 0.001, "vertical speed cannot inflate normal contact damage")
-		t.near(game.health[1], game._max_health - game._ram_damage * 20.0 / game._threshold * game._backwash, 0.001, "correct head-on backwash remains unchanged")
+		var shared_damage: float = game._ram_damage * 20.0 / game._threshold * (0.6 + game._backwash) * 0.5
+		t.near(game.health[0], game._max_health - shared_damage, 0.001, "equal head-on contact shares damage without vertical inflation")
+		t.near(game.health[1], game.health[0], 0.001, "equal approach cannot choose an attacker by player slot")
 		game.on_round_start()
+	for pair in [[0, 1], [0, 3], [1, 2], [2, 3]]:
+		for swap in [false, true]:
+			for slot in 4:
+				scene.ctx.fighter(slot).global_position = Vector3(30 + slot * 10, 1, 30)
+			var first: Fighter = scene.ctx.fighter(pair[0])
+			var second: Fighter = scene.ctx.fighter(pair[1])
+			var direction := Vector3.RIGHT if not swap else Vector3.LEFT
+			first.global_position = -direction
+			second.global_position = direction
+			first.facing = direction
+			second.facing = -direction
+			first.velocity = direction * 10.0
+			second.velocity = -direction * 10.0
+			game._resolve_rams()
+			t.near(game.health[pair[0]], game.health[pair[1]], 0.001, "mirrored equal collision is independent of slots and world direction")
+			game.on_round_start()
+		for attacker in pair:
+			for slot in 4:
+				scene.ctx.fighter(slot).global_position = Vector3(30 + slot * 10, 1, 30)
+			var victim: int = pair[1] if attacker == pair[0] else pair[0]
+			var driver: Fighter = scene.ctx.fighter(attacker)
+			var parked: Fighter = scene.ctx.fighter(victim)
+			driver.global_position = Vector3.LEFT
+			parked.global_position = Vector3.RIGHT
+			driver.facing = Vector3.RIGHT
+			parked.facing = Vector3.LEFT
+			driver.velocity = Vector3.RIGHT * 10.0
+			parked.velocity = Vector3.ZERO
+			game._resolve_rams()
+			var damage: float = game._ram_damage * 10.0 / game._threshold
+			t.near(game.health[victim], game._max_health - damage * 0.6, 0.001, "unequal contact retains primary damage for the real victim")
+			t.near(game.health[attacker], game._max_health - damage * game._backwash, 0.001, "unequal contact retains backwash regardless of attacker slot")
+			game.on_round_start()
+	for slot in 4:
+		scene.ctx.fighter(slot).global_position = Vector3(30 + slot * 10, 1, 30)
 	a.global_position = Vector3(-1, 1, 0)
 	b.global_position = Vector3(1, 1, 0)
 	a.velocity = Vector3(10, 0, 0)
