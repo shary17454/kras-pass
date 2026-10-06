@@ -18,7 +18,7 @@ export function validColossusWorld(data, count) {
     || !validBossState(data.boss, 800, [.66, .33])
     || !vector(data.arm_rotation) || !data.arm_rotation.every(n => Math.abs(n) <= Math.PI)
     || !vector(data.fist_position) || !vector(data.fist_scale) || !data.fist_scale.every(n => n >= .8 && n <= 1.2)
-    || !Number.isFinite(data.exposed) || data.exposed < 0 || data.exposed > 2.4
+    || !Number.isFinite(data.exposed) || data.exposed < 0 || data.exposed > 3.2
     || !['warnings', 'craters'].every(group => Array.isArray(data[group]) && data[group].length <= 64)) return false;
   const ids = new Set();
   const row = (v, size) => {

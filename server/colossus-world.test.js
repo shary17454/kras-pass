@@ -26,7 +26,8 @@ test('colossus world bounds poses, holes, identity and authority state', () => {
     const data = world(); Object.assign(data.boss, {health, phase, defeated: health === 0});
     assert.ok(validColossusWorld(data, 4));
   }
-  for (const [key, values] of Object.entries({exposed: [-1, 2.41, true, NaN, Infinity, null],
+  for (const exposed of [0, 2.4, 3.2]) assert.ok(validColossusWorld({...world(), exposed}, 4));
+  for (const [key, values] of Object.entries({exposed: [-1, 3.21, true, NaN, Infinity, null],
     fist_scale: [[0, 1, 1], [1.21, 1, 1], [NaN, 1, 1], [1, 1]],
     arm_rotation: [[0, Math.PI + .1, 0], [Infinity, 0, 0]]})) {
     for (const value of values) {const data = world(); data[key] = value; assert.equal(validColossusWorld(data, 4), false);}

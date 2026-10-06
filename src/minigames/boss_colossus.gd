@@ -14,7 +14,7 @@ const SWEEP_PERIOD := 7.0
 const ARM_DAMAGE := 55.0
 ## Carved craters require an approach around the rim, not through the fist.
 ## This window includes that travel while retaining one hit per player.
-const EXPOSED_TIME := 2.4
+const EXPOSED_TIME := 3.2
 ## One strike per exposure, so the reward is arriving, not standing there.
 const HIT_PER_WINDOW := true
 

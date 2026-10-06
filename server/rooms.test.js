@@ -50,7 +50,7 @@ test('colossus room validates host authority and restores carved world and resul
   const data = {...snapshot(), world: colossusWorld()};
   assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
   host.send({op: 'snapshot', epoch, tick: 1, data});
-  for (const world of [undefined, {}, {...data.world, extra: 1}, {...data.world, exposed: 2.41},
+  for (const world of [undefined, {}, {...data.world, extra: 1}, {...data.world, exposed: 3.21},
     {...data.world, boss: {...data.world.boss, phase: 2}}, {...data.world, fist_scale: [0, 1, 1]},
     {...data.world, craters: [{...data.world.craters[0], id: '1'}]}]) {
     assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);

@@ -33,7 +33,7 @@ static func valid(world: Variant, count: int) -> bool:
 		or not Boss.valid_boss(world.get("boss"), 800.0, [0.66, 0.33]) \
 		or not Boss._valid_angles(world.get("arm_rotation")) \
 		or not Fields._vector(world.get("fist_position")) or not Fields._vector(world.get("fist_scale")) \
-		or not Fields.Number._number(world.get("exposed")) or world.exposed < 0.0 or world.exposed > 2.4:
+		or not Fields.Number._number(world.get("exposed")) or world.exposed < 0.0 or world.exposed > 3.2:
 		return false
 	for component in world.fist_scale:
 		if component < 0.8 or component > 1.2: return false
