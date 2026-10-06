@@ -54,3 +54,33 @@ end-to-end online readiness. No deployment was performed during this check.
 The full 39-game natural balance campaign remains separate from this export
 check. Device gameplay, performance, thermal/battery behavior, native bridge
 runtime and final release qualification remain outstanding.
+
+## Fresh Native Dependency Follow-Up
+
+The later check resolves the reused-native-binary provenance limitation for this
+compilation only. Source commit `48a17eae880e706510ae41178c294d06a7046db1`
+was checked out separately at `/tmp/kras-ios27-native-fresh-48a17ea`.
+A clean local clone of godot-cpp at the pinned revision was used, with SCons
+4.11.1 and Xcode 27. No previous native object files were copied into either
+checkout. `tools/build_apple_bridge.sh` completed with exit 0 for device arm64
+and simulator arm64/x86_64. Log: `/tmp/kras-ios27-native-fresh-48a17ea.stdout`.
+
+SHA256 evidence:
+
+- `apple_bridge.mm`: `61ca541d6def86c5c0918ce0b338c2c0a5c70ca0eb5312b06c86e03a4dbdd134`.
+- Device static library: `687c3e04947da83e44e0039f63c271402f1f139f1e2c3cb7c385b313b0e23749`.
+- Simulator static library: `96942d85006549ad3be4c2295ce573065d40da56d7550c692fac7ffa3b9240a6`.
+
+The fresh native library was exported and linked by a second local Release
+build, which completed with exit 0 and `BUILD SUCCEEDED`.
+The exported device library matches the newly built library byte-for-byte.
+`nm` confirms a defined `T _kras_apple_init` symbol in the final executable.
+
+- Export: `/tmp/kras-ios27-export-fresh-native-48a17ea`.
+- Logs: `/tmp/kras-ios27-evidence-fresh-native-48a17ea`.
+- App: `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/tmp.7sHG9e256C/Build/Products/Release-iphoneos/KrasPass.app`.
+
+Godot generated four untracked UID files during import; tracked source was
+unchanged. This check did not record the stricter iOS export source stamp and
+is not the final frozen release archive. Runtime Apple authentication, signing,
+upload and review remain unverified; no certificate operation occurred.
