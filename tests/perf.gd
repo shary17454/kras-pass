@@ -189,6 +189,12 @@ func _finish(round_over: bool) -> void:
 		"wall_seconds": _elapsed, "live_frames": _frames, "samples": _samples.size(),
 		"simulation_seconds": _live_seconds, "full_sample_budget": _sample_budget_met(),
 		"max_displacement": _max_displacements,
+		"rendering_method": RenderingServer.get_current_rendering_method(),
+		"rendering_driver": RenderingServer.get_current_rendering_driver_name(),
+		"viewport_size": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y],
+		"resolution_scale": get_viewport().scaling_3d_scale,
+		"fps_limit": Engine.max_fps,
+		"vsync_mode": DisplayServer.window_get_vsync_mode(),
 		"display": DisplayServer.get_name(), "engine": Engine.get_version_info().string}))
 	if "--slow-frame-trace" in OS.get_cmdline_user_args():
 		# Engine monitors and scene state can lag the frame interval; correlation
