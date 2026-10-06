@@ -63,6 +63,27 @@ func _ready() -> void:
 		_profiles.append(0)
 		_virtual_pending.append(InputFrame.new())
 	Input.joy_connection_changed.connect(_on_joy_changed)
+	UserSettings.changed.connect(_on_haptic_setting_changed)
+	Platform.app_backgrounded.connect(_cancel_handheld)
+	set_process(false)
+
+
+func _process(delta: float) -> void:
+	if not bool(UserSettings.get_value("vibration")) or Platform.is_backgrounded:
+		_cancel_handheld()
+		return
+	for index in range(_handheld_pending.size() - 1, -1, -1):
+		var beat: Dictionary = _handheld_pending[index]
+		beat.remaining -= delta
+		if float(beat.remaining) <= 0.0:
+			_handheld_pending.remove_at(index)
+			_pulse_handheld(int(beat.ms), float(beat.amp))
+	if _handheld_pending.is_empty():
+		set_process(false)
+
+
+func _exit_tree() -> void:
+	_cancel_handheld()
 
 
 func _physics_process(_delta: float) -> void:
@@ -131,6 +152,7 @@ func clear_slot(slot: int) -> void:
 
 
 func clear_all() -> void:
+	_cancel_handheld()
 	for slot in MAX_SLOTS:
 		clear_slot(slot)
 
@@ -226,6 +248,7 @@ const HANDHELD_GAP := 0.11
 
 var _handheld_until := 0.0
 var _handheld_level := -1
+var _handheld_pending: Array[Dictionary] = []
 
 
 ## Legacy entry point: a raw motor strength. Kept because Fighter feeds it a
@@ -264,21 +287,42 @@ func haptic(slot: int, kind: Haptic) -> void:
 
 
 func _handheld(kind: Haptic, spec: Dictionary) -> void:
+	if not bool(UserSettings.get_value("vibration")) or Platform.is_backgrounded:
+		_cancel_handheld()
+		return
 	var now := float(Time.get_ticks_msec()) / 1000.0
 	if now < _handheld_until and int(kind) <= _handheld_level:
 		return
 	_handheld_level = int(kind)
 	_handheld_until = now + HANDHELD_GAP
+	_handheld_pending.clear()
 	if kind == Haptic.SUCCESS:
 		for offset in SUCCESS_BEATS:
 			if offset <= 0.0:
-				Input.vibrate_handheld(int(spec["ms"]), float(spec["amp"]))
+				_pulse_handheld(int(spec["ms"]), float(spec["amp"]))
 			else:
-				var t := get_tree().create_timer(offset)
-				t.timeout.connect(func(): Input.vibrate_handheld(int(spec["ms"]), float(spec["amp"])))
+				_handheld_pending.append({"remaining": offset, "ms": int(spec["ms"]), "amp": float(spec["amp"])})
+		set_process(true)
 		_handheld_until = now + SUCCESS_BEATS[SUCCESS_BEATS.size() - 1] + HANDHELD_GAP
 		return
-	Input.vibrate_handheld(int(spec["ms"]), float(spec["amp"]))
+	_pulse_handheld(int(spec["ms"]), float(spec["amp"]))
+	set_process(false)
+
+
+func _on_haptic_setting_changed(key: String, _value) -> void:
+	if key in ["vibration", "*"] and not bool(UserSettings.get_value("vibration")):
+		_cancel_handheld()
+
+
+func _cancel_handheld() -> void:
+	_handheld_pending.clear()
+	_handheld_until = 0.0
+	_handheld_level = -1
+	set_process(false)
+
+
+func _pulse_handheld(milliseconds: int, amplitude: float) -> void:
+	Input.vibrate_handheld(milliseconds, amplitude)
 
 
 ## True for any slot this device can buzz — used to skip work for AI slots.

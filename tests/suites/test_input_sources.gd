@@ -1,4 +1,9 @@
 extends RefCounted
+
+class HapticProbe extends "res://src/input/input_router.gd":
+	var pulses: Array = []
+	func _pulse_handheld(milliseconds: int, amplitude: float) -> void:
+		pulses.append({"ms": milliseconds, "amp": amplitude})
 ## The central promise of the input layer: a mini-game cannot tell where a
 ## player's intent came from.
 ##
@@ -16,6 +21,55 @@ func run(t: TestHarness, host: Node) -> void:
 	_tank_controls(t)
 	_haptics(t)
 	_haptic_events(t)
+	await _delayed_haptic_cancellation(t, host)
+
+
+func _delayed_haptic_cancellation(t: TestHarness, host: Node) -> void:
+	t.test("delayed success haptics respect settings and background cancellation")
+	var vibration = UserSettings.get_value("vibration")
+	var backgrounded := Platform.is_backgrounded
+	UserSettings.set_value("vibration", true)
+	Platform.is_backgrounded = false
+	var probe := HapticProbe.new()
+	host.add_child(probe)
+	probe.set_physics_process(false)
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	t.equal(probe.pulses.size(), 1, "success emits its first beat immediately")
+	t.equal(probe._handheld_pending.size(), 2, "success retains only its two remaining beats")
+	UserSettings.set_value("vibration", false)
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 1, "turning vibration off cancels remaining beats")
+	t.ok(probe._handheld_pending.is_empty() and not probe.is_processing(), "cancelled pattern stops idle processing")
+	UserSettings.set_value("vibration", true)
+	probe.pulses.clear()
+	probe._handheld_until = 0.0
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	Platform.is_backgrounded = true
+	Platform.app_backgrounded.emit()
+	Platform.is_backgrounded = false
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 1, "returning to foreground does not replay cancelled beats")
+	probe.pulses.clear()
+	probe._handheld_until = 0.0
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 3, "uncancelled success retains the three-beat pattern")
+	t.ok(probe._handheld_pending.is_empty() and not probe.is_processing(), "completed pattern stops idle processing")
+	probe.pulses.clear()
+	probe._handheld_until = 0.0
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	probe.clear_all()
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 1, "ending device routing cancels the old pattern")
+	probe.pulses.clear()
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	var captured_pulses: Array = probe.pulses
+	probe.queue_free()
+	await host.get_tree().process_frame
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(captured_pulses.size(), 1, "freed router cannot deliver deferred pulses")
+	UserSettings.set_value("vibration", vibration)
+	Platform.is_backgrounded = backgrounded
 
 
 ## Drive one fighter from a virtual (AI) slot and another from a touch slot with
