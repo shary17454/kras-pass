@@ -15,7 +15,7 @@ static func capture(game: Node) -> Dictionary:
 	return {"tiles": rows}
 
 
-static func valid(world: Variant, tile_count: int = TILE_COUNT) -> bool:
+static func valid(world: Variant, tile_count: int = TILE_COUNT, warning_limit: float = ArenaTile.MAX_CRUMBLE_DELAY) -> bool:
 	if not world is Dictionary or not world.get("tiles") is Array or world.tiles.size() != tile_count:
 		return false
 	for row in world.tiles:
@@ -30,7 +30,7 @@ static func valid(world: Variant, tile_count: int = TILE_COUNT) -> bool:
 			return false
 		if row[0] == ArenaTile.State.SOLID and (row[1] != 0 or row[2] != 0):
 			return false
-		if row[0] == ArenaTile.State.WARNING and (row[1] > 0.9 or row[2] != 0):
+		if row[0] == ArenaTile.State.WARNING and (row[1] > warning_limit or row[2] != 0):
 			return false
 	return true
 

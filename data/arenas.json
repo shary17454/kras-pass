@@ -95,7 +95,7 @@
       "hazards": [
         {
           "type": "crumble",
-          "delay": 0.9,
+          "delay": 2.4,
           "respawn": 6.0
         }
       ]

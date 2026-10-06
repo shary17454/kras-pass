@@ -8,6 +8,8 @@ const make = () => ({tiles: Array.from({length: 121}, () => [0, 0, 0, 0]),
 
 test('color world requires a complete bounded quilt, call and phase', () => {
   assert.ok(validColorWorld(JSON.parse(JSON.stringify(make()))));
+  const overlongWarning = make(); overlongWarning.tiles[0] = [1, 2.4, 0, 0];
+  assert.equal(validColorWorld(overlongWarning), false, 'crumble timing cannot expand the color floor contract');
   for (const key of Object.keys(make())) {
     const data = make(); delete data[key]; assert.equal(validColorWorld(data), false, key);
   }

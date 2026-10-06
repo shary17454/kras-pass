@@ -3,6 +3,7 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("arena tiles")
+	await _authored_timing(t, host)
 	var tile := ArenaTile.new()
 	host.add_child(tile)
 	tile.build(2.0, 0.5, Color.SKY_BLUE)
@@ -113,3 +114,31 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _authored_timing(t: TestHarness, host: Node) -> void:
+	for crumbling in [true, false]:
+		var definition := ArenaDef.from_dict({"id": "authored_tile_fixture", "shape": "tiles" if crumbling else "grid",
+			"radius": 2.0, "hazards": [{"type": "crumble", "delay": 2.4, "respawn": 3.0}]})
+		var arena := Arena.new()
+		host.add_child(arena)
+		arena.build(definition)
+		var tile: ArenaTile = arena.tiles[0]
+		if crumbling:
+			t.near(tile.crumble_delay, 2.4, 0.00001, "crumbling ground uses its authored warning duration")
+			t.near(tile.respawn_time, 3.0, 0.00001, "crumbling ground uses its authored recovery duration")
+			tile.touch()
+			tile.tick(0.91)
+			t.equal(tile.state, ArenaTile.State.WARNING, "long authored warning cannot collapse at the global default")
+			tile.tick(1.5)
+			t.equal(tile.state, ArenaTile.State.FALLING, "authored warning still collapses on its actual deadline")
+			arena.reset_hazards()
+			t.near(tile.crumble_delay, 2.4, 0.00001, "round reset preserves authored warning timing")
+			t.equal(tile.state, ArenaTile.State.SOLID, "round reset clears the previous collapse")
+		else:
+			t.ok(not tile.crumbles, "ordinary grid never arms the crumbling hazard")
+			t.near(tile.crumble_delay, Balance.num("tuning", "arena.tile_break_delay", 0.9), 0.00001,
+				"ordinary grid preserves its existing warning limit")
+			t.near(tile.respawn_time, 0.0, 0.00001, "ordinary grid cannot grow a tile respawn rule")
+		arena.queue_free()
+		await host.get_tree().process_frame

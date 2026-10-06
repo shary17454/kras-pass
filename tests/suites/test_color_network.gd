@@ -22,6 +22,10 @@ func run(t: TestHarness, host: Node) -> void:
 	packet.phase = MatchPhase.P.PLAYING
 	packet.time = 30
 	t.ok(replica.accept(packet, 4, "color_stand"), "host quilt survives JSON")
+	var overlong_warning := packet.duplicate(true)
+	overlong_warning.world.tiles[0] = [1, 2.4, 0, 0]
+	t.ok(not replica.accept(overlong_warning, 4, "color_stand"),
+		"longer crumble warnings cannot expand the color floor contract")
 	for field in ["tiles", "colors", "called", "stage", "timer", "call_sequence", "drop_sequence"]:
 		var bad := packet.duplicate(true)
 		bad.world.erase(field)
