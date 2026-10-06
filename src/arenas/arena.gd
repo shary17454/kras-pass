@@ -880,10 +880,21 @@ func _build_islands() -> void:
 	# collection games readable for newcomers.
 	for i in satellites:
 		var ang := TAU * i / satellites
-		var body := _add_static_box(Vector3(1.6, def.thickness * 0.6, def.radius * 0.42),
-			Vector3(cos(ang) * def.radius * 0.5, -0.35, sin(ang) * def.radius * 0.5),
+		var direction := Vector3(cos(ang), 0, sin(ang))
+		# Start inside the central island so the highest ramp stays below
+		# the walking slope limit even for the heavier characters.
+		var start := direction * def.radius * 0.36
+		var finish := direction * def.radius * 0.52
+		finish.y = -0.2 + float(i % 3) * 0.9
+		var along := (finish - start).normalized()
+		var normal := (Vector3.UP - along * along.y).normalized()
+		var thickness := def.thickness * 0.6
+		# Align the top face with the floors, not the box center.
+		var body := _add_static_box(
+			Vector3(1.6, thickness, start.distance_to(finish) + 0.002),
+			(start + finish) * 0.5 - normal * thickness * 0.5,
 			def.accent_color.darkened(0.45))
-		body.rotation.y = -ang + PI * 0.5
+		body.basis = Basis(normal.cross(along), normal, along)
 
 
 func _build_walls() -> void:
