@@ -100,13 +100,17 @@ func _ball() -> GameBall:
 
 ## Prefer sending the bomb at whoever is nearest the ball but not us.
 func _best_victim(from: Vector3) -> int:
-	var best := -1
+	var candidates: Array[int] = []
 	var best_d := INF
 	for i in ctx.fighters.size():
 		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var d: float = perceive(i).distance_squared_to(from)
-		if d < best_d:
+		if is_equal_approx(d, best_d):
+			candidates.append(i)
+		elif d < best_d:
 			best_d = d
-			best = i
-	return best
+			candidates.assign([i])
+	if candidates.is_empty():
+		return -1
+	return candidates[0] if candidates.size() == 1 else candidates[rng.randi_range(0, candidates.size() - 1)]
