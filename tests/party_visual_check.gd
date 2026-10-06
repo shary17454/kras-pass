@@ -18,12 +18,12 @@ func _ready() -> void:
 		for locale in ["ar", "en"]:
 			Loc.set_locale(locale)
 			for id in ["main_menu", "tournament", "playlist_builder", "local_play", "profile", "touch_layout", "settings", "stats"]:
-				SceneRouter.go_to(id, {}, false, 0)
+				await SceneRouter.go_to(id, {}, false, 0)
 				await _settle()
 				_scan(SceneRouter.current_node, orientation + "/" + locale + "/" + id)
 				_capture("%s-%s-%s" % [orientation, locale, id])
 			SaveSystem._read_only_paths[SaveSystem._path(SaveSystem.PROFILE)] = true
-			SceneRouter.go_to("main_menu", {}, false, 0)
+			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/save-compatibility")
 			var notice := SceneRouter.current_node.find_child("SaveCompatibilityNotice", true, false) as Label
@@ -34,7 +34,7 @@ func _ready() -> void:
 			_capture("%s-%s-save-compatibility" % [orientation, locale])
 			SaveSystem._read_only_paths.erase(SaveSystem._path(SaveSystem.PROFILE))
 			var s := TournamentSession.from_preset("long", PartyRoster.last_players(), 22)
-			SceneRouter.go_to("standings", {"session": s}, false, 0)
+			await SceneRouter.go_to("standings", {"session": s}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/standings")
 			_capture("%s-%s-standings" % [orientation, locale])
@@ -45,7 +45,7 @@ func _ready() -> void:
 			final.resolved_champion = 0
 			final.performance[0] = {"knockouts": 4, "collected": 8}
 			final.performance[1] = {"falls": 3}
-			SceneRouter.go_to("standings", {"session": final}, false, 0)
+			await SceneRouter.go_to("standings", {"session": final}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/podium")
 			_capture("%s-%s-podium" % [orientation, locale])
@@ -53,7 +53,10 @@ func _ready() -> void:
 		var cfg := MatchConfig.build("ring_rumble", ["nabta", "sakhra", "fanoos", "ramla"], 4, 1, 742)
 		for p in cfg.players:
 			p.device_type = 2
-		SceneRouter.start_match(cfg)
+		await SceneRouter.start_match(cfg)
+		if not _match_loaded("ring_rumble"):
+			get_tree().quit(1)
+			return
 		await _settle()
 		var scene: Node = SceneRouter.current_node
 		if scene.phase == MatchPhase.P.INTRO:
@@ -67,13 +70,16 @@ func _ready() -> void:
 		for source in scene.touch_sources:
 			if scene.hud._hint_label.get_global_rect().intersects(source.get_global_rect()):
 				_errors.append(orientation + ": objective overlaps the touch regions")
-		SceneRouter.go_to("main_menu", {}, false, 0)
+		await SceneRouter.go_to("main_menu", {}, false, 0)
 		await _settle()
 		for game_id in ["tank_arena", "sabaq_sawarikh"]:
 			var shared := MatchConfig.build(game_id, ["nabta", "sakhra", "fanoos", "ramla"], 4, 1, 188)
 			for p in shared.players:
 				p.device_type = 2
-			SceneRouter.start_match(shared)
+			await SceneRouter.start_match(shared)
+			if not _match_loaded(game_id):
+				get_tree().quit(1)
+				return
 			await _settle()
 			var match_scene: Node = SceneRouter.current_node
 			match_scene._set_phase(MatchPhase.P.INSTRUCTIONS)
@@ -86,7 +92,7 @@ func _ready() -> void:
 				var pixel: Vector2 = match_scene.camera.unproject_position(fighter.global_position)
 				if pixel.y <= match_scene.hud.occupied_top() or pixel.y >= controls_top:
 					_errors.append(orientation + ": world player is hidden behind the HUD or controls")
-			SceneRouter.go_to("main_menu", {}, false, 0)
+			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await _settle()
 	if SceneRouter.current_node != null:
 		SceneRouter.current_node.queue_free()
@@ -96,6 +102,17 @@ func _ready() -> void:
 		print("FAIL: " + error)
 	print("PARTY VISUAL CHECK: %d failures" % _errors.size())
 	get_tree().quit(0 if _errors.is_empty() else 1)
+
+
+func _match_loaded(game_id: String) -> bool:
+	var scene: Node = SceneRouter.current_node
+	if SceneRouter.current_id != "match" or not is_instance_valid(scene) or not scene.has_method("_set_phase"):
+		push_error("Party visual QA did not load match: " + game_id)
+		return false
+	if scene.ctx == null or scene.ctx.config.minigame_id != game_id:
+		push_error("Party visual QA loaded the wrong match: " + game_id)
+		return false
+	return true
 
 
 func _settle() -> void:
