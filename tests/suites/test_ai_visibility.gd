@@ -165,6 +165,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_tag_strategy(t, scene)
 	_test_camera_bounds(t, scene)
 	_test_tied_leaders(t, scene)
+	_test_tied_nearest(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
@@ -236,6 +237,40 @@ func _test_camera_bounds(t: TestHarness, scene: Node) -> void:
 	mesh.queue_free()
 	marker.queue_free()
 	camera.queue_free()
+
+
+func _test_tied_nearest(t: TestHarness, scene: Node) -> void:
+	t.test("equal nearby rivals do not always select the lowest player ID")
+	scene.ctx.alive.fill(true)
+	for fighter in scene.ctx.fighters:
+		fighter.show()
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	scene.ctx.fighter(1).global_position = Vector3(3, 1, 0)
+	scene.ctx.fighter(2).global_position = Vector3(-3, 1, 0)
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 3)
+	var brain := AIBrain.new()
+	var replay_brain := AIBrain.new()
+	brain.configure(0, scene.ctx, 3, 8341)
+	replay_brain.configure(0, scene.ctx, 3, 8341)
+	var counts := [0, 0, 0, 0]
+	for sample in 900:
+		var selected := brain.nearest_rival()
+		t.ok(selected in [1, 2, 3], "equal nearest candidates exclude self")
+		t.equal(selected, replay_brain.nearest_rival(), "same seed reproduces nearest tie selection")
+		if selected in [1, 2, 3]:
+			counts[selected] += 1
+	for rival in [1, 2, 3]:
+		t.ok(counts[rival] >= 220 and counts[rival] <= 380, "nearest tie distributes across all equally close rivals")
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 1)
+	var state := brain.rng.state
+	for sample in 30:
+		t.equal(brain.nearest_rival(), 3, "unique closer rival takes priority over earlier equal candidates")
+	t.equal(brain.rng.state, state, "unique nearest rival does not consume tie randomness")
+	scene.ctx.fighter(3).hide()
+	scene.ctx.alive[1] = false
+	t.equal(brain.nearest_rival(), 2, "hidden and eliminated nearest rivals are excluded")
+	scene.ctx.fighter(2).hide()
+	t.equal(brain.nearest_rival(), -1, "no visible eligible nearest rival has no target")
 
 
 func _test_tied_leaders(t: TestHarness, scene: Node) -> void:
