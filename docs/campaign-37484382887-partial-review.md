@@ -56,3 +56,24 @@ older campaign cannot be relabeled as qualification of the changed source.
 The separate keeper/Blast Ball reports retain their limited before/after
 evidence and unresolved balance gates. No report here proves human gameplay,
 Internet multiplayer, iOS device performance or App Review readiness.
+
+## Later 33-Report Inspection
+
+Downloaded artifacts in `/tmp/kras-campaign-37484382887-partial-33` now contain
+33 game reports for the same frozen source. Six game reports remain absent.
+The same five games above retain flags; no additional flag was observed in
+the three newly available boss reports. Explicit baseline cooperative outcomes
+are important even when report flags are empty:
+
+| Boss | Defeated | Survived | Unknown | Baseline rounds |
+| --- | ---: | ---: | ---: | ---: |
+| boss_forge | 24 | 0 | 0 | 24 |
+| boss_dreadnought | 24 | 0 | 0 | 24 |
+| boss_sovereign | 21 | 3 | 0 | 24 |
+| boss_colossus | 15 | 9 | 0 | 24 |
+
+These are actual sampled cooperative outcomes, not proof that every difficulty
+or seed wins and not a result for later runtime changes. The live campaign
+was queued overall with three named simulations in progress and no failed
+completed jobs at inspection; it was not complete. No aggregate 39-game success
+or current-source READY promotion follows from this partial update.
