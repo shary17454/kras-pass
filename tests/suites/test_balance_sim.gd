@@ -2,6 +2,7 @@ extends RefCounted
 
 
 func run(t: TestHarness) -> void:
+	_evidence_policy(t)
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
 	for unsafe in ["", ".", "relative-save", "user://", "user://simulation", "res://build/save", "/", "C:/"]:
@@ -159,3 +160,37 @@ func _boss_outcomes(t: TestHarness, sim: Node) -> void:
 			[{"boss_outcome": "unknown"}, {"boss_outcome": "survived"}], [null, {"boss_outcome": "survived"}]]:
 		boss_row["difficulty_samples"] = bad_samples
 		t.ok(sim._flags(boss_def, boss_row).has("boss difficulty outcome evidence incomplete"), "incomplete difficulty outcome cannot appear qualified")
+
+
+func _evidence_policy(t: TestHarness) -> void:
+	t.suite("Balance evidence source policy")
+	var evidence = load("res://tools/balance_evidence.gd")
+	var a := "a".repeat(64)
+	var b := "b".repeat(64)
+	var fingerprint: String = evidence.fingerprint({"a.gd": a, "b.gd": b})
+	t.equal(fingerprint, evidence.fingerprint({"b.gd": b, "a.gd": a}), "file ordering does not change source identity")
+	t.ok(fingerprint != evidence.fingerprint({"a.gd": b, "b.gd": b}), "changed content changes identity")
+	t.ok(fingerprint != evidence.fingerprint({"a.gd": a}), "removed file changes identity")
+	t.ok(fingerprint != evidence.fingerprint({"renamed.gd": a, "b.gd": b}), "renamed file changes identity")
+	t.equal(evidence.fingerprint({"a.gd": "bad"}), "", "invalid file hash cannot form provenance")
+	var report := {"simulation_source_start": fingerprint, "simulation_source_end": fingerprint,
+		"engine_version": Engine.get_version_info().string, "sample_mode": "natural"}
+	var row := {"sample_mode": "natural", "attempted_runs": 24, "runs": 24,
+		"difficulty_attempted": 16, "difficulty_completed": 16,
+		"difficulty_pairing": "matched_seed_character", "flags": []}
+	t.ok(evidence.problems(report, row, fingerprint).is_empty(), "current completed natural evidence passes minimum source gate")
+	t.ok(not evidence.problems({}, {}, fingerprint).is_empty(), "missing evidence cannot look balanced")
+	t.ok(not evidence.problems(report, row, b).is_empty(), "old source report is rejected")
+	for field in ["simulation_source_start", "simulation_source_end", "engine_version", "sample_mode"]:
+		var changed := report.duplicate(true)
+		changed[field] = "invalid"
+		t.ok(not evidence.problems(changed, row, fingerprint).is_empty(), "reject invalid report " + field)
+	for field in ["attempted_runs", "runs", "difficulty_attempted", "difficulty_completed"]:
+		for value in [null, "24", true, 0, 15, 23.5, NAN, INF]:
+			var changed := row.duplicate(true)
+			changed[field] = value
+			t.ok(not evidence.problems(report, changed, fingerprint).is_empty(), "reject incomplete or malformed sample count")
+	for field in ["sample_mode", "difficulty_pairing", "flags"]:
+		var changed := row.duplicate(true)
+		changed[field] = "invalid"
+		t.ok(not evidence.problems(report, changed, fingerprint).is_empty(), "reject invalid sample " + field)

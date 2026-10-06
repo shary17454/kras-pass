@@ -43,6 +43,9 @@ var _started := 0
 ## Progress goes to a file as well as stdout: Godot buffers stdout when it is
 ## piped, which makes a long simulation look hung when it is merely quiet.
 var _log: FileAccess
+const Evidence = preload("res://tools/balance_evidence.gd")
+var _source_start := ""
+var _source_end := ""
 
 
 func _ready() -> void:
@@ -65,6 +68,11 @@ func _ready() -> void:
 		return
 	_say("start runs=%d only=%s seed_offset=%d" % [runs, only, seed_offset])
 	_started = Time.get_ticks_msec()
+	_source_start = Evidence.capture()
+	if _source_start.is_empty():
+		push_error("Cannot fingerprint balance simulation source")
+		get_tree().quit(2)
+		return
 	# Shorter pre-round cards: this is a simulation, not a demo.
 	UserSettings.set_value("show_control_hints", false)
 	UserSettings.set_value("replay_capture", false)
@@ -89,7 +97,9 @@ func _ready() -> void:
 			"   ⚠ " + ", ".join(mrow["flags"]) if not mrow["flags"].is_empty() else ""])
 	_write_reports()
 	print("\nfinished in %.1fs — %s/report.html" % [(Time.get_ticks_msec() - _started) / 1000.0, out_dir])
-	get_tree().quit(0 if _worst_severity() < 2 else 1)
+	if _source_end != _source_start:
+		push_error("Simulation source changed during balance run; report is unqualified")
+	get_tree().quit(0 if _worst_severity() < 2 and _source_end == _source_start else 1)
 
 
 func _storage_is_isolated(root: String) -> bool:
@@ -591,10 +601,14 @@ func _worst_severity() -> int:
 # --- output ----------------------------------------------------------------
 
 func _write_reports() -> void:
+	_source_end = Evidence.capture()
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var json := FileAccess.open("%s/report.json" % out_dir, FileAccess.WRITE)
 	if json != null:
 		json.store_string(JSON.stringify({
+			"simulation_source_start": _source_start,
+			"simulation_source_end": _source_end,
+			"engine_version": Engine.get_version_info().string,
 			"generated": Time.get_datetime_string_from_system(),
 			"seed_offset": seed_offset,
 			"runs_per_game": runs,
