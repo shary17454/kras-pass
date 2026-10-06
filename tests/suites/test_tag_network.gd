@@ -59,3 +59,51 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+	await _test_contact_selection(t, host)
+
+
+func _test_contact_selection(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("tag_hunt", ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 86)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	for closest in [3, 2, 1]:
+		game.on_round_start()
+		game._set_hunter(0)
+		game._grace = 0.0
+		scene.ctx.scores.fill(0)
+		scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+		for slot in [1, 2, 3]:
+			scene.ctx.fighter(slot).global_position = Vector3(1.5, 1, 0)
+		scene.ctx.fighter(closest).global_position = Vector3(0.8, 1, 0)
+		game.tick(0.01)
+		t.equal(game.hunter(), closest, "simultaneous contact chooses closest runner independent of slot order")
+		t.equal(scene.ctx.scores[0], game.TAG_POINTS, "one contact awards one tag")
+		t.equal(scene.ctx.scores[1] + scene.ctx.scores[2] + scene.ctx.scores[3], 0, "new hunter cannot tag again in same tick")
+		t.near(game.handover_grace(), game.HANDOVER_GRACE, 0.001, "closest contact keeps handover grace")
+		game.tick(0.01)
+		t.equal(game.hunter(), closest, "grace prevents immediate contact bounce back")
+	var tied_selections := {}
+	for seed_value in range(64):
+		var first_choice := -1
+		for repeat in 2:
+			game._set_hunter(0)
+			game._grace = 0.0
+			scene.ctx.rng.seed = seed_value
+			scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+			scene.ctx.fighter(1).global_position = Vector3(1, 1, 0)
+			scene.ctx.fighter(2).global_position = Vector3(-1, 1, 0)
+			scene.ctx.fighter(3).global_position = Vector3(0, 1, 4)
+			game.tick(0.01)
+			t.ok(game.hunter() in [1, 2], "only equally closest touching runners enter selection")
+			if repeat == 0:
+				first_choice = game.hunter()
+				tied_selections[first_choice] = true
+			else:
+				t.equal(game.hunter(), first_choice, "equal contact selection reproduces with same seed")
+	t.equal(tied_selections.size(), 2, "equal contacts do not always favor first slot across fixed seeds")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
