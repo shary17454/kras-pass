@@ -15,9 +15,9 @@ func build() -> void:
 	Net.rooms_received.connect(func(rooms):
 		_rooms = rooms
 		_schedule_refresh())
-	Net.online_error.connect(func(_code):
+	Net.online_error.connect(func(code):
 		if is_instance_valid(_status):
-			_status.text = Loc.t("online.failed"))
+			_status.text = Loc.t("online.version_mismatch" if code == "version_mismatch" else "online.failed"))
 	Net.connection_lost.connect(func(_reason): _schedule_refresh())
 	Net.match_start_requested.connect(_request_match)
 	SceneRouter.transition_finished.connect(_flush_pending_match, CONNECT_DEFERRED)
@@ -69,7 +69,11 @@ func _refresh() -> void:
 		add_menu_button(Loc.t("online.play_local"), func(): SceneRouter.go_to("local_play"))
 		return
 	if Net.room_code.is_empty():
+		if not Net.failure_key.is_empty():
+			_rooms.clear()
 		_browser()
+		if not Net.failure_key.is_empty():
+			_status.text = Loc.t(Net.failure_key)
 	else:
 		_lobby()
 
