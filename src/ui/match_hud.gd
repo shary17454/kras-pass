@@ -638,19 +638,22 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 func _refresh_effects(chip: Dictionary, slot: int) -> void:
 	var box: HBoxContainer = chip["effects"]
 	var effects: Array = ctx.powerups.active_effects_for(slot) if ctx.powerups != null else []
-	for label in chip["effect_labels"].values():
-		label.visible = false
+	var active := {}
 	var index := 0
 	for e in effects:
 		var label: Label = chip["effect_labels"].get(String(e["id"]))
 		if label == null:
 			continue
+		active[String(e["id"])] = true
 		label.text = String(e["glyph"])
 		label.add_theme_color_override("font_color", UIKit.adapt(e["color"]))
 		label.visible = true
 		if label.get_index() != index:
 			box.move_child(label, index)
 		index += 1
+	for id in chip["effect_labels"]:
+		if not active.has(id):
+			chip["effect_labels"][id].visible = false
 
 
 func _on_score_changed(slot: int, _value: int) -> void:
