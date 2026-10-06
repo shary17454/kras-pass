@@ -27,6 +27,11 @@ var _craters: Array = []
 var _hit_this_window := {}
 
 
+func camera_mode() -> int:
+	# The central head otherwise hides the rear fighter at the ordinary arena angle.
+	return ArenaCamera.Mode.TOP_DOWN
+
+
 func boss_build() -> void:
 	boss_max_health = 800.0
 	boss_health = 800.0
