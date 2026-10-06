@@ -16,6 +16,9 @@ for pattern in \
   'FAILED - 1 failed' \
   'Required object "obj" is null' \
   'WARNING: 2 ObjectDB instances were leaked at exit' \
+  'WARNING: 1 ObjectDB instance was leaked at exit' \
+  'WARNING: ObjectDB instance leaked at exit' \
+  'WARNING: ObjectDB instances leaked at exit' \
   'ERROR: 1 resources still in use at exit' \
   'ERROR: 1 RID allocations of type' \
   'ERROR: PagedAllocator: pages in use' \
@@ -29,4 +32,4 @@ if KRAS_FAKE_EXIT=2 sh tools/check_party.sh > "$OUT/exit.stdout" 2>&1; then
   printf 'FAILED: wrapper ignored an engine failure\n' >&2
   exit 1
 fi
-printf 'Wrapper checks passed: success path and 15 failure cases. Evidence: %s\n' "$OUT"
+printf 'Wrapper checks passed: success path and 18 failure cases. Evidence: %s\n' "$OUT"
