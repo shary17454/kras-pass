@@ -1048,16 +1048,40 @@ static func _accessory(kind: String, color: Color) -> Node3D:
 
 ## Simple burst of shards, used for hits, breaks and eliminations. Returns a
 ## node that removes itself; the caller does not need to track it.
+static func burst_shard(color: Color) -> MeshInstance3D:
+	var key := "burst_shard"
+	if not _mesh_cache.has(key):
+		_mesh_cache[key] = _rounded_box_mesh(Vector3.ONE * 0.16, 0.16 * 0.22, BEVEL_SEGMENTS)
+	var shard := MeshInstance3D.new()
+	shard.mesh = _mesh_cache[key]
+	shard.material_override = toon(color, 0.8)
+	return shard
+
+
+static func prepare_bursts(colors: Array[Color]) -> void:
+	_ensure_burst_pool(8, 32)
+	for color in colors:
+		toon(color, 0.8)
+
+
+static func _ensure_burst_pool(prewarm := 0, shards := 0) -> void:
+	if Pool.has_pool("fx_burst"):
+		return
+	Pool.define("fx_burst", func():
+		var node := Node3D.new()
+		node.set_script(load("res://src/fx/burst.gd"))
+		node.pool_key = "fx_burst"
+		if shards > 0:
+			node.configure(Color.WHITE, shards, 2.4, 0.55)
+			node.on_released()
+		return node, prewarm)
+
+
 static func burst(color: Color, count := 10, spread := 2.4, life := 0.55) -> Node3D:
 	var root: Node3D
 	# Large authored effects retain their full count without enlarging idle pools.
 	if count >= 0 and count <= 32:
-		if not Pool.has_pool("fx_burst"):
-			Pool.define("fx_burst", func():
-				var node := Node3D.new()
-				node.set_script(load("res://src/fx/burst.gd"))
-				node.pool_key = "fx_burst"
-				return node)
+		_ensure_burst_pool()
 		root = Pool.acquire("fx_burst") as Node3D
 		# This pool contains only visual nodes, never CollisionObjects.
 		if root.get_parent() != null:
