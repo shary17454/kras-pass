@@ -101,12 +101,13 @@ func _resolve_rams() -> void:
 			var key := "%d_%d" % [i, j]
 			if _hit_cooldown.has(key):
 				continue
-			var closing: float = (a.velocity - b.velocity).length()
+			var dir := offset.normalized()
+			# Only motion into the contact closes the gap; sliding past or separating does not.
+			var closing: float = maxf(0.0, (a.velocity - b.velocity).dot(dir))
 			if closing < _threshold:
 				continue
 			_hit_cooldown[key] = 0.5
 			# Whoever is driving *into* the contact deals the damage.
-			var dir := offset.normalized()
 			var a_into: float = a.velocity.dot(dir)
 			var b_into: float = -b.velocity.dot(dir)
 			var scale := closing / maxf(_threshold, 0.1)
