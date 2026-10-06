@@ -20,6 +20,8 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(chip.value.text_direction, Control.TEXT_DIRECTION_LTR, "numeric fractions retain their order in either locale: " + locale)
 		t.equal(chip.name.text_direction, Control.TEXT_DIRECTION_RTL if locale == "ar" else Control.TEXT_DIRECTION_LTR, "player names keep their localized direction: " + locale)
 		t.equal(chip.value.horizontal_alignment, HORIZONTAL_ALIGNMENT_RIGHT if locale == "ar" else HORIZONTAL_ALIGNMENT_LEFT, "numeric direction does not change localized alignment: " + locale)
+		scene.hud.set_round(0, 3)
+		t.equal(scene.hud._round_label.text, "الجولة 1 من 3" if locale == "ar" else "Round 1 / 3", "round progress is unambiguous in its localized sentence: " + locale)
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
