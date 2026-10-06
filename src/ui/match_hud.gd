@@ -551,8 +551,13 @@ func tick(delta: float) -> void:
 	if _accum < _period:
 		return
 	_accum = 0.0
+	var operation_started := DevTools.operations.begin()
 	_refresh_chips()
+	DevTools.operations.finish("hud.chips", operation_started)
+	operation_started = DevTools.operations.begin()
 	_refresh_offscreen_cues()
+	DevTools.operations.finish("hud.offscreen", operation_started)
+	operation_started = DevTools.operations.begin()
 	var banner := controller.hud_banner() if controller != null else ""
 	var progress := controller.hud_progress() if controller != null else -1.0
 	var meter_visible := is_finite(progress) and progress >= 0.0
@@ -566,6 +571,7 @@ func tick(delta: float) -> void:
 	if layout_changed and _fit_top_rows.is_valid():
 		_fit_top_rows.call()
 	_fit_toasts()
+	DevTools.operations.finish("hud.layout", operation_started)
 
 
 func _refresh_offscreen_cues() -> void:
@@ -591,12 +597,16 @@ func _refresh_offscreen_cues() -> void:
 
 func _refresh_chips() -> void:
 	for chip in _chips:
+		var operation_started := DevTools.operations.begin()
 		var slot: int = chip["slot"]
 		chip["value"].text = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
 		var alive: bool = ctx.is_alive(slot)
 		chip["root"].modulate = Color(1, 1, 1, 1.0 if alive else 0.4)
 		_refresh_meter(chip, slot)
+		DevTools.operations.finish("hud.chip_value", operation_started)
+		operation_started = DevTools.operations.begin()
 		_refresh_effects(chip, slot)
+		DevTools.operations.finish("hud.effects", operation_started)
 
 
 func _refresh_meter(chip: Dictionary, slot: int) -> void:

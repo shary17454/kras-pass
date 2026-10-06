@@ -297,8 +297,11 @@ func tick(frame: InputFrame, delta: float) -> void:
 	if _hitstop > 0.0:
 		_hitstop -= delta
 		velocity = Vector3.ZERO
+		var collision_started := DevTools.operations.begin()
 		move_and_slide()
+		DevTools.operations.finish("fighter.physics", collision_started)
 		return
+	var operation_started := DevTools.operations.begin()
 	_pre_vel = velocity
 	_advance_timers(delta)
 
@@ -320,14 +323,23 @@ func tick(frame: InputFrame, delta: float) -> void:
 
 	_apply_impulse(delta)
 	impact_speed = Vector2(velocity.x, velocity.z).length()
+	DevTools.operations.finish("fighter.integrate", operation_started)
+	operation_started = DevTools.operations.begin()
 	move_and_slide()
+	DevTools.operations.finish("fighter.physics", operation_started)
+	operation_started = DevTools.operations.begin()
 	_collect_body_contacts()
 	if not _was_on_floor and is_on_floor():
 		_squash = Vector3(1.22, 0.74, 1.22)
 		landed.emit()
 	_was_on_floor = is_on_floor()
+	DevTools.operations.finish("fighter.contacts", operation_started)
+	operation_started = DevTools.operations.begin()
 	_update_visual(delta, wish)
+	DevTools.operations.finish("fighter.visual", operation_started)
+	operation_started = DevTools.operations.begin()
 	_emit_ground_spray(delta)
+	DevTools.operations.finish("fighter.ground_fx", operation_started)
 
 
 func _advance_timers(delta: float) -> void:
@@ -802,7 +814,10 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 	else:
 		_visual.rotation.z = lerp(_visual.rotation.z, 0.0, clampf(10.0 * delta, 0.0, 1.0))
 	_update_markers(delta)
+	var operation_started := DevTools.operations.begin()
 	_update_state_fx(delta)
+	DevTools.operations.finish("fighter.state_fx", operation_started)
+	operation_started = DevTools.operations.begin()
 	_rig.tick(delta, {
 		"speed": speed_ratio(),
 		"on_floor": is_on_floor(),
@@ -812,6 +827,7 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 		"frozen": float(mods["frozen"]) > 0.0 or _shocked > 0.0,
 		"panic": clampf(1.0 - _edge_margin / 2.6, 0.0, 1.0) if is_on_floor() else 0.0,
 	})
+	DevTools.operations.finish("fighter.rig", operation_started)
 
 
 ## What is happening to this body, made visible. A power-up the player cannot
