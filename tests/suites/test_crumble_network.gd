@@ -25,6 +25,7 @@ func run(t: TestHarness, host: Node) -> void:
 		t.ok(scene.machine == null and scene.ctx.machine == null, "online scene cannot create unreplicated machine")
 		var tiles: Array = scene.arena.tiles
 		t.equal(tiles.size(), 113, "authored layout matches protocol tile count")
+		t.near(tiles[0].crumble_delay, 2.4, 0.00001, "host and guest build the same authored warning duration")
 		var index := 0
 		for x in range(-6, 7):
 			for z in range(-6, 7):
@@ -50,7 +51,7 @@ func run(t: TestHarness, host: Node) -> void:
 				var bad := packet.duplicate(true)
 				bad.world.tiles[0][column] = value
 				t.ok(not replica.accept(bad, count, "crumble_court"), "reject malformed tile field")
-		for row in [[0, 1, 0, 0], [0, 0, -1, 0], [1, 1, 0, 0], [1, 0.5, -1, 0], [1.5, 0, 0, 0], [2, 0, -1, 0.5]]:
+		for row in [[0, 1, 0, 0], [0, 0, -1, 0], [1, 2.401, 0, 0], [1, 0.5, -1, 0], [1.5, 0, 0, 0], [2, 0, -1, 0.5]]:
 			var bad := packet.duplicate(true)
 			bad.world.tiles[0] = row
 			t.ok(not replica.accept(bad, count, "crumble_court"), "reject inconsistent phase and fractional identifiers")

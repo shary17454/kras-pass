@@ -639,6 +639,14 @@ func _build_cross() -> void:
 func _build_tiles(crumbling: bool) -> void:
 	var span := int(ceil(def.radius / TILE_SIZE))
 	var t := Balance.table("tuning").get("arena", {})
+	var delay := float(t.get("tile_break_delay", 0.9))
+	var respawn := float(t.get("tile_respawn", 6.0)) if crumbling else 0.0
+	if crumbling:
+		for hazard in def.hazards:
+			if String(hazard.get("type", "")) == "crumble":
+				delay = clampf(float(hazard.get("delay", delay)), 0.1, ArenaTile.MAX_CRUMBLE_DELAY)
+				respawn = clampf(float(hazard.get("respawn", respawn)), 0.0, 10.0)
+				break
 	for gx in range(-span, span + 1):
 		for gz in range(-span, span + 1):
 			var pos := Vector3(gx * TILE_SIZE, 0.0, gz * TILE_SIZE)
@@ -650,8 +658,8 @@ func _build_tiles(crumbling: bool) -> void:
 			tile.grid_x = gx
 			tile.grid_z = gz
 			tile.crumbles = crumbling
-			tile.crumble_delay = float(t.get("tile_break_delay", 0.9))
-			tile.respawn_time = float(t.get("tile_respawn", 6.0)) if crumbling else 0.0
+			tile.crumble_delay = delay
+			tile.respawn_time = respawn
 			tile.position = pos
 			_static_root.add_child(tile)
 			var shade := def.floor_color.lightened(0.07) if (gx + gz) % 2 == 0 else def.floor_color

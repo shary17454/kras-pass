@@ -7,6 +7,7 @@ extends StaticBody3D
 signal collapsed(tile: ArenaTile)
 
 enum State { SOLID, WARNING, FALLING, GONE }
+const MAX_CRUMBLE_DELAY := 2.4
 
 var grid_x := 0
 var grid_z := 0
