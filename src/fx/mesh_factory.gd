@@ -1059,22 +1059,27 @@ static func burst_shard(color: Color) -> MeshInstance3D:
 
 
 static func prepare_bursts(colors: Array[Color]) -> void:
-	_ensure_burst_pool(8, 32)
+	if not Pool.has_pool("fx_burst"):
+		_ensure_burst_pool()
+		var prepared: Array[Node3D] = []
+		for index in 8:
+			var node := Pool.acquire("fx_burst") as Node3D
+			node.configure(Color.WHITE, 32, 2.4, 0.55)
+			prepared.append(node)
+		for node in prepared:
+			Pool.release("fx_burst", node, 8)
 	for color in colors:
 		toon(color, 0.8)
 
 
-static func _ensure_burst_pool(prewarm := 0, shards := 0) -> void:
+static func _ensure_burst_pool() -> void:
 	if Pool.has_pool("fx_burst"):
 		return
 	Pool.define("fx_burst", func():
 		var node := Node3D.new()
 		node.set_script(load("res://src/fx/burst.gd"))
 		node.pool_key = "fx_burst"
-		if shards > 0:
-			node.configure(Color.WHITE, shards, 2.4, 0.55)
-			node.on_released()
-		return node, prewarm)
+		return node)
 
 
 static func burst(color: Color, count := 10, spread := 2.4, life := 0.55) -> Node3D:
