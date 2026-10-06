@@ -666,6 +666,30 @@ func _test_ball(t: TestHarness, scene: Node) -> void:
 	t.equal(brain._best_victim(Vector3(1, 1, 0)), -1, "blast bot has no victim when rivals are hidden")
 	scene.ctx.fighter(1).show()
 	t.equal(brain._best_victim(Vector3(1, 1, 0)), 1, "blast bot can select a rival after it reappears")
+	for index in 4:
+		scene.ctx.fighter(index).show()
+	scene.ctx.fighter(1).global_position = Vector3(5, 1, 0)
+	scene.ctx.fighter(2).global_position = Vector3(-5, 1, 0)
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 5)
+	brain._record_history()
+	brain.rng.seed = 211
+	var counts := [0, 0, 0, 0]
+	for attempt in 900:
+		counts[brain._best_victim(Vector3(0, 1, 0))] += 1
+	for index in [1, 2, 3]:
+		t.ok(counts[index] > 200 and counts[index] < 400, "equal-distance blast victims are not selected by seat order")
+	brain.rng.seed = 212
+	var sequence := []
+	for attempt in 30:
+		sequence.append(brain._best_victim(Vector3(0, 1, 0)))
+	brain.rng.seed = 212
+	for attempt in 30:
+		t.equal(brain._best_victim(Vector3(0, 1, 0)), sequence[attempt], "victim ties reproduce from the match seed")
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 1)
+	brain._record_history()
+	var rng_state: int = brain.rng.state
+	t.equal(brain._best_victim(Vector3(0, 1, 0)), 3, "unique nearest victim wins even after earlier equal candidates")
+	t.equal(brain.rng.state, rng_state, "unique victim selection does not consume random state")
 	for ball in balls:
 		ball.remove_from_group("balls")
 		if not ball.is_queued_for_deletion(): ball.queue_free()
