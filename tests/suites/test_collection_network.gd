@@ -7,6 +7,7 @@ const Items = preload("res://src/net/collectible_replica.gd")
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("collection network")
 	await _gem_surface_placement(t, host)
+	await _island_bridge_walking(t, host)
 	for game_id in ["gem_grab", "star_rush", "crate_relay"]:
 		t.test("%s host-owned pickups and carrying" % game_id)
 		var cfg := MatchConfig.build(game_id, ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 86)
@@ -125,3 +126,52 @@ func _gem_surface_placement(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+
+
+func _island_bridge_walking(t: TestHarness, host: Node) -> void:
+	for arena_id in ["gem_hollow", "glass_terrace"]:
+		for characters in [["fanoos", "nabta", "ramla", "sakhra"], ["barq", "mowja", "ghaim", "turs"]]:
+			var cfg := MatchConfig.build("gem_grab", characters, 0, 1, 814)
+			cfg.arena_id = arena_id
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": cfg, "on_finished": func(_r): pass})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+				fighter.collision_layer = 0
+				fighter.collision_mask = 1
+				fighter.control_enabled = true
+				fighter.can_jump = false
+			await host.get_tree().physics_frame
+			await host.get_tree().physics_frame
+			for slot in 4:
+				var fighter: Fighter = scene.ctx.fighter(slot)
+				for island in 5:
+					var angle := TAU * island / 5.0
+					var direction := Vector3(cos(angle), 0, sin(angle))
+					var height := -0.2 + float(island % 3) * 0.9
+					for outbound in [true, false]:
+						t.test("%s %s island %d walking %s" % [arena_id, characters[slot], island, "out" if outbound else "back"])
+						var start: Vector3 = direction * scene.arena.def.radius * (0.38 if outbound else 0.62)
+						var target: Vector3 = direction * scene.arena.def.radius * (0.62 if outbound else 0.38)
+						fighter.global_position = scene.arena.global_position + start + Vector3.UP * ((0.0 if outbound else height) + 1.3)
+						fighter.velocity = Vector3.ZERO
+						var frame := InputFrame.new()
+						for step in 30:
+							await host.get_tree().physics_frame
+							fighter.tick(frame, 1.0 / 60.0)
+						frame.move = Vector2(direction.x, direction.z) * (1.0 if outbound else -1.0)
+						var reached := false
+						for step in 180:
+							await host.get_tree().physics_frame
+							fighter.tick(frame, 1.0 / 60.0)
+							var offset: Vector3 = fighter.global_position - scene.arena.global_position
+							if Vector2(offset.x - target.x, offset.z - target.z).length() < 0.25:
+								reached = true
+								break
+						t.ok(reached, "actual fighter crosses the bridge using movement only")
+						t.ok(fighter.is_on_floor(), "crossing ends on supporting ground")
+				scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
