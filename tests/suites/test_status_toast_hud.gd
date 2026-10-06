@@ -27,6 +27,11 @@ func run(t: TestHarness, host: Node) -> void:
 			t.equal(pooled_chip.effects.get_child_count(), count, "status changes reuse a bounded registry label set")
 			t.ok(pooled_chip.effect_labels[id].visible, "selected status remains visible")
 			t.equal(pooled_chip.effect_labels[id].get_theme_color("font_color"), UIKit.adapt(Registry.powerup(id).color), "status replacement preserves its color")
+		var visibility_changes := [0]
+		first.visibility_changed.connect(func(): visibility_changes[0] += 1)
+		hud._refresh_effects(pooled_chip, 0)
+		hud._refresh_effects(pooled_chip, 0)
+		t.equal(visibility_changes[0], 0, "unchanged status avoids hide/show layout churn")
 		scene.powerups._effects.clear()
 		hud._refresh_effects(pooled_chip, 0)
 		t.ok(not first.visible and not second.visible, "expired statuses hide without deletion")
