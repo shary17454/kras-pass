@@ -175,3 +175,58 @@ func _island_bridge_walking(t: TestHarness, host: Node) -> void:
 				scene.teardown()
 			scene.queue_free()
 			await host.get_tree().process_frame
+	await _island_ai_routes(t, host)
+
+
+func _island_ai_routes(t: TestHarness, host: Node) -> void:
+	for arena_id in ["gem_hollow", "glass_terrace"]:
+		for characters in [["fanoos", "nabta", "ramla", "sakhra"], ["barq", "mowja", "ghaim", "turs"]]:
+			var cfg := MatchConfig.build("gem_grab", characters, 0, 1, 814)
+			cfg.arena_id = arena_id
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": cfg, "on_finished": func(_r): pass})
+			scene.set_physics_process(false)
+			scene.arena.position = Vector3(30, 5, -20)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+				fighter.collision_layer = 0
+				fighter.collision_mask = 1
+				fighter.control_enabled = true
+				fighter.can_jump = false
+			await host.get_tree().physics_frame
+			await host.get_tree().physics_frame
+			for slot in 4:
+				var fighter: Fighter = scene.ctx.fighter(slot)
+				var brain := AIBrain.new()
+				brain.configure(slot, scene.ctx, 3, 814)
+				brain.accuracy = 1.0
+				for island in 5:
+					t.test("%s %s routing island %d" % [arena_id, characters[slot], island])
+					var angle := TAU * island / 5.0
+					var destination := (island + 2) % 5
+					var target_angle := TAU * destination / 5.0
+					var target: Vector3 = scene.arena.global_position + Vector3(cos(target_angle), 0, sin(target_angle)) * scene.arena.def.radius * 0.78
+					fighter.global_position = scene.arena.global_position + Vector3(cos(angle), 0, sin(angle)) * scene.arena.def.radius * 0.78
+					fighter.global_position.y += -0.2 + float(island % 3) * 0.9 + 1.3
+					fighter.velocity = Vector3.ZERO
+					var frame := InputFrame.new()
+					for step in 30:
+						await host.get_tree().physics_frame
+						fighter.tick(frame, 1.0 / 60.0)
+					var reached := false
+					for step in 600:
+						await host.get_tree().physics_frame
+						brain.steer_to(target)
+						frame.move = brain.move
+						fighter.tick(frame, 1.0 / 60.0)
+						var offset: Vector3 = fighter.global_position - target
+						if Vector2(offset.x, offset.z).length() < 0.4 and fighter.is_on_floor():
+							reached = true
+							break
+						if fighter.global_position.y < scene.arena.fall_y:
+							break
+					t.ok(reached, "shared AI steering reaches another island without falling or jumping")
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
