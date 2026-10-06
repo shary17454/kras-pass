@@ -27,6 +27,17 @@ class ApproachProbe extends "res://src/ai/brains/ball_brain.gd":
 		pass
 
 
+class EscapeProbe extends "res://src/ai/brains/ball_brain.gd":
+	var observed := {}
+	var observed_ball: GameBall
+	func _ball() -> GameBall:
+		return observed_ball
+	func perceive_ball(_ball: GameBall) -> Dictionary:
+		return observed
+	func maybe_dash(_scale: float = 1.0) -> void:
+		pass
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("blast ball lifecycle")
 	var ball := GameBall.new()
@@ -101,6 +112,22 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.controller = null
 	me.global_position = original_position
 	me.top_speed = original_speed
+	var escape := EscapeProbe.new()
+	escape.controller = game
+	escape.configure(0, scene.ctx, 3, 733)
+	escape.edge_awareness = 1.0
+	escape.observed_ball = game.ball
+	var arena: Arena = scene.ctx.arena
+	for direction in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
+		me.global_position = arena.global_position + direction * (arena.current_radius - 0.2) + Vector3.UP
+		escape.observed = {"position": arena.global_position + direction * (arena.current_radius - 2.5), "fuse": 0.2}
+		escape.decide(0.1)
+		var step := Vector3(escape.move.x, 0, escape.move.y)
+		var tangent := Vector3(-direction.z, 0, direction.x)
+		t.ok(absf(step.dot(tangent)) > 0.5, "escape follows the rim rather than steering back toward the observed bomb")
+		t.ok(arena.is_inside(me.global_position + step, 0.15), "escape step remains on playable floor")
+	escape.controller = null
+	me.global_position = original_position
 	var baseline := Balance.num("tuning", "ball.explosive_fuse", 5.0)
 	game.on_sudden_death()
 	game.ball.fuse = 0.2

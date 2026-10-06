@@ -51,11 +51,42 @@ func decide(_delta: float) -> void:
 			press(Btn.ATTACK)
 		if dist > 5.0:
 			maybe_dash(0.8)
+		keep_off_edge(2.4)
 	else:
-		steer_away(position)
+		_escape_observed_ball(position)
 		if dist < 5.0:
 			maybe_dash(1.3)
-	keep_off_edge(2.4)
+
+
+func _escape_observed_ball(position: Vector3) -> void:
+	steer_away(position)
+	if move.length_squared() < 0.001:
+		move = Vector2.RIGHT
+	var me := self_body()
+	var arena := ctx.arena as Arena
+	if me == null or arena == null or arena.edge_distance(me.global_position) > 2.4:
+		return
+	if rng.randf() > edge_awareness:
+		return
+	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	var step := maxf(0.75, walk_speed * decision_interval)
+	var best := Vector2.ZERO
+	var separation := -INF
+	# Edge correction must not blindly steer toward the approaching bomb.
+	# Compare bounded next steps using visible geometry and the observed cue.
+	for angle in [0.0, PI / 4.0, -PI / 4.0, PI / 2.0, -PI / 2.0, PI * 0.75, -PI * 0.75, PI]:
+		var direction := move.normalized().rotated(angle)
+		var target := me.global_position + Vector3(direction.x, 0, direction.y) * step
+		if not arena.is_inside(target, 0.15):
+			continue
+		var distance := target.distance_squared_to(position)
+		if distance > separation:
+			separation = distance
+			best = direction
+	if best != Vector2.ZERO:
+		move = best
+	else:
+		steer_to(arena.retreat_point(me.global_position))
 
 
 func _ball() -> GameBall:
