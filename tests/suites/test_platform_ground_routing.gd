@@ -12,6 +12,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_safe_first_step(t, host)
 	await _test_edge_support(t, host)
 	await _test_arrival_control(t, host)
+	await _test_walk_before_jump(t, host)
 	var arena := Arena.new()
 	host.add_child(arena)
 	var body := Fighter.new()
@@ -231,6 +232,56 @@ func _test_arrival_control(t: TestHarness, host: Node) -> void:
 	destination.hide()
 	brain.decide(0.1)
 	t.equal(brain.move, Vector2.ZERO, "hidden arrival target cannot keep directing the player")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_walk_before_jump(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	var start := _tile(arena, 0, 0, ArenaTile.State.WARNING)
+	start.build(2.0, 0.5, Color.GRAY)
+	var fresh := _tile(arena, -1, 0, ArenaTile.State.SOLID)
+	var shaking := _tile(arena, 1, 0, ArenaTile.State.WARNING)
+	_tile(arena, 2, 0, ArenaTile.State.SOLID)
+	var body := Fighter.new()
+	arena.add_child(body)
+	body.set_physics_process(false)
+	body.position = Vector3(0.0, 0.01, 0.0)
+	for tick in 12:
+		await host.get_tree().physics_frame
+		body.velocity = Vector3(0.0, -1.0, 0.0)
+		body.move_and_slide()
+	t.ok(body.is_on_floor(), "walk-or-jump fixture has actual grounded contact")
+	var ctx := MatchContext.new()
+	ctx.arena = arena
+	ctx.config = MatchConfig.build("crumble_court", ["fanoos"], 0, 3, 734)
+	ctx.fighters.append(body)
+	var brain := RoutingProbe.new()
+	brain.configure(0, ctx, 3, 734)
+	brain.edge_awareness = 1.0
+	brain.reaction_time = 0.25
+	brain._time = 1.0
+	brain.decide(0.1)
+	brain._time += 0.26
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain._target_tile, fresh, "escape decision keeps its fresh visible first step")
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0,
+		"visible fresh walking route avoids an unnecessary panic jump after reaction delay")
+	fresh.state = ArenaTile.State.WARNING
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain._target_tile, shaking, "only a shaking first step remains traversable")
+	t.ok((brain.bits & InputFrame.Btn.JUMP) != 0,
+		"a shaking escape route still allows an ordinary grounded rescue jump")
+	brain.on_round_start()
+	shaking.hide()
+	brain._time = 2.0
+	brain.bits = 0
+	brain.decide(0.1)
+	t.equal(brain.bits & InputFrame.Btn.JUMP, 0,
+		"losing a safe route does not bypass the new warning reaction clock")
 	arena.queue_free()
 	await host.get_tree().process_frame
 
