@@ -51,3 +51,31 @@ native rendering and verify on an actual supported iPhone. Heat, battery,
 four-human play and controller QA remain unverified. Earlier character balance
 flags and server/client rollout gates remain open. No archive, signing, upload,
 Railway deploy or App Review submission was performed by this change.
+
+## Native Metal comparison
+
+Two serial runs used `--rendering-method mobile --rendering-driver metal` on
+the same M5 and source gameplay. No quality settings or runtime rules changed.
+First run: `/tmp/kras-native-metal-perf.stdout`; race mean 16.70 ms, p95 17.08,
+worst 42.70; tank mean 16.76, p95 17.45, worst 56.53.
+
+The probe now records driver, rendering method, viewport size, resolution scale,
+actual engine FPS limit and requested VSync mode in each `PERF_BUILD` record.
+Repeated run: `/tmp/kras-metal-evidence-perf.stdout`:
+
+| Game | Samples | Live seconds | Mean ms | p95 ms | Worst ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| sabaq_sawarikh | 539 | 10.00 | 16.73 | 17.43 | 58.69 |
+| tank_arena | 536 | 10.00 | 16.82 | 18.04 | 49.62 |
+
+Both explicitly report driver `metal`, renderer `mobile`, viewport 1920x1080,
+resolution scale 1.0, Engine FPS limit 0 and requested VSync mode 0. These
+settings cannot prove that the OS compositor or driver never limits output.
+Both complete their sample budgets and return to the initial 51 nodes. Strict
+runtime log guard passes. Means are close to 60 FPS but do not establish the
+required smoothness gate: slow frames remain and an iPhone is not tested.
+
+Comparison with OpenGL demonstrates renderer sensitivity, not a runtime fix.
+Next investigation must identify frame-cost causes, distinguish CPU/GPU/OS
+costs, and measure the signed mobile build on actual hardware. No arbitrary
+visual downgrade or removal of gameplay was made to improve the numbers.
