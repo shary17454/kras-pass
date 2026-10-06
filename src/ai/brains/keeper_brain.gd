@@ -70,6 +70,8 @@ func _most_dangerous_ball() -> GameBall:
 		return null
 	var best: GameBall = null
 	var best_score := -INF
+	var incoming: GameBall = null
+	var earliest := INF
 	for node in _tree.get_nodes_in_group("balls"):
 		var b := node as GameBall
 		if not can_observe(b):
@@ -77,14 +79,33 @@ func _most_dangerous_ball() -> GameBall:
 		var observed := perceive_ball(b)
 		if observed.is_empty():
 			continue
-		var to: Vector3 = _goal_pos - Vector3(observed["position"])
+		var position: Vector3 = observed["position"]
+		var velocity: Vector3 = observed["velocity"]
+		var to: Vector3 = _goal_pos - position
 		var dist := to.length()
 		if dist < 0.01:
 			continue
 		# Threat = how directly it is travelling at our goal, over distance.
-		var heading: float = Vector3(observed["velocity"]).normalized().dot(to.normalized())
+		var heading: float = velocity.normalized().dot(to.normalized())
 		var score: float = heading * 12.0 - dist * 0.35
 		if score > best_score:
 			best_score = score
 			best = b
-	return best
+		# An imminent goal threat takes precedence over nearby slow traffic.
+		# Use the same observed sphere/shield contact plane as interception.
+		var normal_speed := velocity.dot(_goal_normal)
+		if normal_speed >= -0.001:
+			continue
+		var contact_plane := _goal_pos
+		var radius := float(observed.get("radius", 0.0))
+		if controller != null and controller.has_method("keeper_contact_offset"):
+			contact_plane += _goal_normal * controller.keeper_contact_offset(radius)
+		var arrival := (contact_plane - position).dot(_goal_normal) / normal_speed
+		if arrival <= 0.0 or arrival >= earliest:
+			continue
+		var crossing := position + velocity * arrival
+		if absf(_goal_axis.dot(crossing - _goal_pos)) > _lane_limit + radius:
+			continue
+		earliest = arrival
+		incoming = b
+	return incoming if incoming != null else best
