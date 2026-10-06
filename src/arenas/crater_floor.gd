@@ -137,19 +137,28 @@ func retreat_point(point: Vector3) -> Vector3:
 
 func _rebuild() -> void:
 	var cuts: Array[PackedVector2Array] = []
+	var cut_bounds: Array[Rect2] = []
 	for hole in holes:
 		var circle := PackedVector2Array()
 		for step in 48:
 			var angle := TAU * float(step) / 48.0
 			circle.append(hole.point + Vector2(cos(angle), sin(angle)) * float(hole.radius))
 		cuts.append(circle)
+		var extent := Vector2.ONE * float(hole.radius)
+		cut_bounds.append(Rect2(hole.point - extent, extent * 2.0))
 	var vertices := PackedVector3Array()
 	for sector in SECTORS:
 		var a := TAU * float(sector) / SECTORS
 		var b := TAU * float(sector + 1) / SECTORS
-		var pieces: Array[PackedVector2Array] = [PackedVector2Array([Vector2.ZERO,
-			Vector2(cos(a), sin(a)) * radius, Vector2(cos(b), sin(b)) * radius])]
-		for cut in cuts:
+		var triangle := PackedVector2Array([Vector2.ZERO,
+			Vector2(cos(a), sin(a)) * radius, Vector2(cos(b), sin(b)) * radius])
+		var bounds := Rect2(Vector2.ZERO, Vector2.ZERO).expand(triangle[1]).expand(triangle[2])
+		var pieces: Array[PackedVector2Array] = [triangle]
+		for cut_index in cuts.size():
+			# Every remaining piece lies inside this sector; disjoint bounds cannot cut it.
+			if not _cut_overlaps_sector(bounds, cut_bounds[cut_index]):
+				continue
+			var cut := cuts[cut_index]
 			var remaining: Array[PackedVector2Array] = []
 			for piece in pieces:
 				remaining.append_array(Geometry2D.clip_polygons(piece, cut))
@@ -185,3 +194,8 @@ func _rebuild() -> void:
 		arrays[Mesh.ARRAY_TEX_UV] = uvs
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	_mesh.mesh = mesh
+
+
+func _cut_overlaps_sector(sector: Rect2, cut: Rect2) -> bool:
+	# Keep tangencies and near-boundary polygon rounding on the exact clipping path.
+	return sector.grow(0.001).intersects(cut, true)

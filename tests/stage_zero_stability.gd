@@ -9,6 +9,7 @@ var _baseline_nodes := 0
 var _baseline_orphans := 0
 var _connections := {}
 var _release_ui_cache := false
+var _release_system_font_cache := false
 var _watched_paths := PackedStringArray()
 const PREPARATION = preload("res://src/match/match_resource_preparation.gd")
 
@@ -23,6 +24,12 @@ func _ready() -> void:
 			_cycles = clampi(int(arg.trim_prefix("--cycles=")), 1, 20)
 		elif arg == "--profile-idle-ui":
 			_release_ui_cache = true
+		elif arg == "--profile-system-font-cache":
+			_release_system_font_cache = true
+	if _release_system_font_cache and not _release_ui_cache:
+		push_error("System font attribution requires --profile-idle-ui after all matches are freed")
+		get_tree().quit(1)
+		return
 	for game in Registry.all_minigames():
 		for arena_id in game.arena_ids:
 			for path in PREPARATION.paths_for_definitions(game, Registry.arena(arena_id)):
@@ -63,6 +70,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 	var settled_release := _memory_snapshot()
 	var ui_release := {}
+	var system_font_release := {}
 	if _release_ui_cache:
 		UIKit.invalidate_theme()
 		UIKit._font = null
@@ -72,6 +80,14 @@ func _ready() -> void:
 			await get_tree().process_frame
 		ui_release = _memory_snapshot()
 		print("STABILITY IDLE UI RELEASE: ", JSON.stringify(ui_release))
+		if _release_system_font_cache:
+			# QA-only attribution after match nodes, labels and shared fonts are gone.
+			TextServerManager.get_primary_interface().font_clear_system_fallback_cache()
+			var system_started := Time.get_ticks_msec()
+			while Time.get_ticks_msec() - system_started < 5000:
+				await get_tree().process_frame
+			system_font_release = _memory_snapshot()
+			print("STABILITY SYSTEM FONT RELEASE: ", JSON.stringify(system_font_release))
 	if not MeshFactory._mat_cache.is_empty() or not MeshFactory._tex_cache.is_empty() or not MeshFactory._mesh_cache.is_empty():
 		_failures.append("graphics caches remain after memory warning")
 	print("STABILITY CACHE RELEASE: ", JSON.stringify({"before": before_release, "after": after_release, "settled_5s": settled_release}))
@@ -81,6 +97,7 @@ func _ready() -> void:
 		"baseline_memory": baseline_memory,
 		"cache_release": {"before": before_release, "after": after_release, "settled_5s": settled_release},
 		"idle_ui_release": ui_release,
+		"system_font_release": system_font_release,
 		"passes": passes, "matches": _rows, "failures": _failures}
 	var f := FileAccess.open(SaveSystem.storage_root.path_join("stability.json"), FileAccess.WRITE)
 	if f == null:

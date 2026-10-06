@@ -78,6 +78,7 @@ const SUITES := [
 	"res://tests/suites/test_relay_rounds.gd",
 	"res://tests/suites/test_relay_floor.gd",
 	"res://tests/suites/test_crater_floor.gd",
+	"res://tests/suites/test_crater_clipping_bounds.gd",
 	"res://tests/suites/test_colossus_approach.gd",
 	"res://tests/suites/test_boss_warning_perception.gd",
 	"res://tests/suites/test_boss_weak_point_perception.gd",
