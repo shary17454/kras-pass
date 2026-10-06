@@ -21,4 +21,31 @@ func run(t: TestHarness, host: Node) -> void:
 	for field in fields:
 		t.near(float(neutral.get(field)), float(expected[field]), 0.0001, "neutral %s is preserved" % field)
 	neutral.free()
+	var neutral_drive := Fighter.new()
+	neutral_drive.data = CharacterData.new()
+	neutral_drive.locomotion = Fighter.Locomotion.DRIVE
+	neutral_drive._apply_character()
+	var neutral_angle := _drive_angle(neutral_drive)
+	t.near(neutral_angle, 3.1 * (0.35 + 0.65 * 0.75) * 0.1, 0.00001, "neutral vehicle steering is preserved")
+	for character in Registry.characters():
+		var vehicle := Fighter.new()
+		vehicle.data = character
+		vehicle.locomotion = Fighter.Locomotion.DRIVE
+		vehicle._apply_character()
+		var angle := _drive_angle(vehicle)
+		var expected_ratio := vehicle.turn_rate / neutral_drive.turn_rate
+		t.near(angle / neutral_angle, expected_ratio, 0.00001, "%s vehicle applies handling including its turn perk" % character.id)
+		t.ok(angle / neutral_angle >= 0.85 and angle / neutral_angle <= 1.15, "%s vehicle steering stays within its effective budget" % character.id)
+		for field in ["top_speed", "acceleration"]:
+			var ratio := float(vehicle.get(field)) / float(neutral_drive.get(field))
+			t.ok(ratio >= 0.85 - 0.00001 and ratio <= 1.15 + 0.00001, "%s vehicle %s stays within its effective budget" % [character.id, field])
+		vehicle.free()
+	neutral_drive.free()
 	await host.get_tree().process_frame
+
+
+func _drive_angle(fighter: Fighter) -> float:
+	fighter._steer = 0.0
+	fighter.velocity = Vector3(0.0, 0.0, fighter.top_speed * 0.75)
+	fighter._integrate_drive(Vector3(1.0, 0.0, -1.0), 0.1)
+	return absf(fighter._steer)

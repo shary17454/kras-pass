@@ -684,7 +684,10 @@ func _integrate_drive(wish: Vector3, delta: float) -> void:
 	# what makes a vehicle arena feel different from a walking one even though
 	# both use the same actor.
 	var t := _tuning
-	var steer_rate := float(t.get("drive_steer", 3.0)) * (0.35 + 0.65 * clampf(speed_ratio(), 0.0, 1.0))
+	# Normalize against the neutral character to preserve established kart handling.
+	var neutral_turn := float(t.get("turn_base", 7.0)) + float(t.get("turn_range", 10.0)) * 0.5
+	var handling := turn_rate / maxf(neutral_turn, 0.0001)
+	var steer_rate := float(t.get("drive_steer", 3.0)) * handling * (0.35 + 0.65 * clampf(speed_ratio(), 0.0, 1.0))
 	_steer -= wish.x * steer_rate * delta
 	var forward := Vector3(sin(_steer), 0.0, cos(_steer))
 	var throttle := -wish.z
