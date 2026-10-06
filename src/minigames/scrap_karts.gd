@@ -120,7 +120,12 @@ func _resolve_rams() -> void:
 			# turned down. Angle is what precision buys.
 			var flank_a := _flank_multiplier(b, dir)
 			var flank_b := _flank_multiplier(a, -dir)
-			if a_into > b_into:
+			if is_equal_approx(a_into, b_into):
+				# Neither rider is the attacker in an equal closing contact.
+				# Share the existing primary/backwash budget, not the slot order.
+				_damage(j, i, _ram_damage * scale * (0.6 * flank_a + _backwash) * 0.5, dir)
+				_damage(i, j, _ram_damage * scale * (0.6 * flank_b + _backwash) * 0.5, -dir)
+			elif a_into > b_into:
 				_damage(j, i, _ram_damage * scale * 0.6 * flank_a, dir)
 				_damage(i, j, _ram_damage * scale * _backwash, -dir)
 			else:
