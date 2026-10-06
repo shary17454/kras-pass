@@ -25,7 +25,7 @@ func configure(color: Color, count: int, spread: float, life: float) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	while _shards.size() < _active_count:
-		var m := MeshFactory.box(Vector3(0.16, 0.16, 0.16), color, 0.8)
+		var m := MeshFactory.burst_shard(color)
 		add_child(m)
 		_shards.append(m)
 	for i in _shards.size():

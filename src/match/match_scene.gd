@@ -156,6 +156,13 @@ func _build() -> void:
 		return
 
 	AudioManager.warm_match_bank()
+	if DisplayServer.get_name() != "headless":
+		var burst_colors: Array[Color] = []
+		for player in config.players:
+			var character := player.character_with_cosmetics()
+			if character != null:
+				burst_colors.append(character.accent)
+		MeshFactory.prepare_bursts(burst_colors)
 
 	Fighter.clear_impact_state()
 	ctx = MatchContext.new()
@@ -626,7 +633,9 @@ func _tick_live(delta: float) -> void:
 			f.tick(InputRouter.frame(f.slot), delta)
 	# Body-to-body shoves are resolved here, after every body has moved, so the
 	# exchange does not depend on the order the fighters were ticked in.
+	var impacts_started := DevTools.operations.begin()
 	Fighter.resolve_impacts(delta)
+	DevTools.operations.finish("fighter.impacts", impacts_started)
 	DevTools.operations.finish("match.fighters", operation_started)
 	operation_started = DevTools.operations.begin()
 	_record_replay_tick()
