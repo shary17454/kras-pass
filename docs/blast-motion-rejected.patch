@@ -1,0 +1,80 @@
+diff --git a/src/ai/brains/ball_brain.gd b/src/ai/brains/ball_brain.gd
+index 72fec31..313bf1f 100644
+--- a/src/ai/brains/ball_brain.gd
++++ b/src/ai/brains/ball_brain.gd
+@@ -53,23 +53,30 @@ func decide(_delta: float) -> void:
+ 			maybe_dash(0.8)
+ 		keep_off_edge(2.4)
+ 	else:
+-		_escape_observed_ball(position)
++		_escape_observed_ball(position, observed.get("velocity", Vector3.ZERO))
+ 		if dist < 5.0:
+ 			maybe_dash(1.3)
+ 
+ 
+-func _escape_observed_ball(position: Vector3) -> void:
++func _escape_observed_ball(position: Vector3, observed_velocity: Vector3 = Vector3.ZERO) -> void:
+ 	steer_away(position)
+ 	if move.length_squared() < 0.001:
+ 		move = Vector2.RIGHT
+ 	var me := self_body()
+ 	var arena := ctx.arena as Arena
+-	if me == null or arena == null or arena.edge_distance(me.global_position) > 2.4:
++	if me == null or arena == null:
++		return
++	var near_edge := arena.edge_distance(me.global_position) <= 2.4
++	var ball_motion := Vector2(observed_velocity.x, observed_velocity.z)
++	var predict_motion := prediction > 0.0 and ball_motion.length_squared() > 0.01
++	if not near_edge and not predict_motion:
+ 		return
+-	if rng.randf() > edge_awareness:
++	if near_edge and rng.randf() > edge_awareness:
+ 		return
+ 	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+ 	var step := maxf(0.75, walk_speed * decision_interval)
++	var horizon := clampf(reaction_time + decision_interval, 0.05, 0.45) * prediction
++	var relative := Vector2(me.global_position.x - position.x, me.global_position.z - position.z)
+ 	var best := Vector2.ZERO
+ 	var separation := -INF
+ 	# Edge correction must not blindly steer toward the approaching bomb.
+@@ -80,6 +87,13 @@ func _escape_observed_ball(position: Vector3) -> void:
+ 		if not arena.is_inside(target, 0.15):
+ 			continue
+ 		var distance := target.distance_squared_to(position)
++		if predict_motion:
++			# Short linear estimate from delayed visible motion, not live ball state.
++			var relative_motion := direction * walk_speed - ball_motion
++			var closest_time := 0.0
++			if relative_motion.length_squared() > 0.001:
++				closest_time = clampf(-relative.dot(relative_motion) / relative_motion.length_squared(), 0.0, horizon)
++			distance = (relative + relative_motion * closest_time).length_squared()
+ 		if distance > separation:
+ 			separation = distance
+ 			best = direction
+diff --git a/tests/suites/test_blast_ball.gd b/tests/suites/test_blast_ball.gd
+index 10ffd43..d259c98 100644
+--- a/tests/suites/test_blast_ball.gd
++++ b/tests/suites/test_blast_ball.gd
+@@ -127,6 +127,22 @@ func run(t: TestHarness, host: Node) -> void:
+ 		var tangent := Vector3(-direction.z, 0, direction.x)
+ 		t.ok(absf(step.dot(tangent)) > 0.5, "escape follows the rim rather than steering back toward the observed bomb")
+ 		t.ok(arena.is_inside(me.global_position + step, 0.15), "escape step remains on playable floor")
++	me.top_speed = 5.0
++	escape.prediction = 1.0
++	for direction in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
++		me.global_position = arena.global_position + Vector3.UP
++		escape.observed = {"position": me.global_position + direction * 3.0,
++			"velocity": -direction * 16.0, "fuse": 0.2}
++		game.ball.velocity = direction * 16.0
++		escape.decide(0.1)
++		var step := Vector3(escape.move.x, 0, escape.move.y)
++		var tangent := Vector3(-direction.z, 0, direction.x)
++		t.ok(absf(step.dot(tangent)) > 0.5, "predicted escape moves aside from the delayed observed incoming path, not hidden current velocity")
++		t.ok(arena.is_inside(me.global_position + step, 0.15), "predicted escape remains inside the arena")
++	escape.prediction = 0.0
++	escape.decide(0.1)
++	t.ok(Vector3(escape.move.x, 0, escape.move.y).dot(Vector3.FORWARD) > 0.99, "zero prediction preserves position-only escape")
++	me.top_speed = original_speed
+ 	escape.controller = null
+ 	me.global_position = original_position
+ 	var baseline := Balance.num("tuning", "ball.explosive_fuse", 5.0)
