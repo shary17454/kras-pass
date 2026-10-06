@@ -499,6 +499,7 @@
   "online.create_private": "Private room",
   "online.refresh": "Refresh rooms",
   "online.failed": "Request failed. Check your connection, room code and player readiness.",
+  "online.version_mismatch": "This app version is incompatible with the online service. Check for an app update or try again later. Local play remains available offline.",
   "online.push_variant": "Push arena - online beta, without bombs or random items",
   "online.host": "Host",
   "online.ready_yes": "Ready",

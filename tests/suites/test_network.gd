@@ -13,6 +13,12 @@ class QuietReplica extends RefCounted:
 		pass
 
 
+class ClosingTransport extends RecordingTransport:
+	var closed := 0
+	func close() -> void:
+		closed += 1
+
+
 func _endpoint_policy(t: TestHarness) -> void:
 	t.suite("Network endpoint policy")
 	var transport = load("res://src/net/room_client.gd").new()
@@ -36,6 +42,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 
 func run(t: TestHarness, host: Node) -> void:
 	_protocol_policy(t)
+	await _protocol_terminal_state(t, host)
 	_endpoint_policy(t)
 	_input_edges(t)
 	_input_buffer_limits(t)
@@ -93,6 +100,64 @@ func run(t: TestHarness, host: Node) -> void:
 	Net.leave()
 	_player_mapping(t)
 	await _quick_draw_edges(t, host)
+
+
+func _protocol_terminal_state(t: TestHarness, host: Node) -> void:
+	t.suite("Network incompatible version recovery")
+	for transport_failure in [true, false]:
+		var service = load("res://src/net/net_service.gd").new()
+		var recorder := ClosingTransport.new()
+		service.transport = recorder
+		service._token = "test-only-resume-token"
+		service._retry_until = Time.get_ticks_msec() + 30000
+		service._retry_at = 1
+		service.room_code = "ABCDEF"
+		service.match_running = true
+		service.state = service.State.DISCONNECTED
+		service.mode = service.Mode.ONLINE_CLIENT
+		service.peers = {1: {"id": 1}}
+		var errors: Array = []
+		var closed: Array = []
+		service.online_error.connect(func(code): errors.append(code))
+		service.connection_lost.connect(func(reason): closed.append(reason))
+		if transport_failure:
+			service._transport_lost("protocol_mismatch")
+		else:
+			service._receive({"op": "error", "code": "version_mismatch"})
+		t.equal(recorder.closed, 1, "incompatible transport is closed")
+		t.equal(service._token, "", "resume token is cleared")
+		t.equal(service._retry_until, 0, "reconnect deadline is cancelled")
+		t.equal(service._retry_at, 0, "reconnect attempt is cancelled")
+		t.equal(service.state, service.State.OFFLINE, "terminal mismatch returns offline")
+		t.equal(service.mode, service.Mode.LOCAL, "local play is available")
+		t.equal(service.room_code, "", "stale room identity is cleared")
+		t.ok(service.peers.is_empty(), "stale roster is cleared")
+		t.ok(not service.match_running, "no phantom active match")
+		t.equal(errors, ["version_mismatch"], "specific error is emitted once")
+		t.equal(closed, ["version_mismatch"], "active match gets terminal closure")
+		t.equal(service.failure_key, "online.version_mismatch", "error persists for rebuilt room UI")
+		service.host_local(4)
+		t.equal(service.failure_key, "", "fresh local session clears previous error")
+		t.equal(service.state, service.State.LOBBY, "local lobby still starts")
+		service.free()
+		recorder.free()
+	var available := Net.online_available
+	var locale := Loc.locale
+	Net.reset()
+	Net.online_available = true
+	Net.failure_key = "online.version_mismatch"
+	var screen = load("res://src/ui/screens/online_screen.gd").new()
+	host.add_child(screen)
+	for code in ["ar", "en"]:
+		Loc.set_locale(code)
+		screen.setup({}) if screen.body == null else screen._refresh()
+		t.equal(screen._status.text, Loc.t("online.version_mismatch"), "rebuilt browser retains localized mismatch")
+		t.ok(not screen._status.text.contains("online.version_mismatch"), "message resolves localization key")
+	screen.queue_free()
+	await host.get_tree().process_frame
+	Net.reset()
+	Net.online_available = available
+	Loc.set_locale(locale)
 
 
 func _protocol_policy(t: TestHarness) -> void:

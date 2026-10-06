@@ -31,6 +31,7 @@ var match_data := {}
 var epoch := 0
 var match_running := false
 var ping_ms := 0
+var failure_key := ""
 var local_device_type := 0
 var local_device_id := 0
 var _token := ""
@@ -80,6 +81,7 @@ func reset() -> void:
 	if transport != null:
 		transport.close()
 	_token = ""
+	failure_key = ""
 	_retry_until = 0
 	_retry_at = 0
 	room_state = ""
@@ -403,7 +405,9 @@ func _receive(m: Dictionary) -> void:
 		"rooms": rooms_received.emit(m.get("rooms", []))
 		"error":
 			var code := String(m.get("code", "invalid_request"))
-			if code == "session_expired":
+			if code == "version_mismatch":
+				_protocol_rejected()
+			elif code == "session_expired":
 				reset()
 				connection_lost.emit(code)
 			elif code != "session_active":
@@ -467,8 +471,18 @@ func _receive(m: Dictionary) -> void:
 			connection_lost.emit(reason)
 
 
+func _protocol_rejected() -> void:
+	reset()
+	failure_key = "online.version_mismatch"
+	online_error.emit("version_mismatch")
+	connection_lost.emit("version_mismatch")
+
+
 func _transport_lost(reason := "connect_failed") -> void:
 	Log.w("online transport lost: " + reason, "Net")
+	if reason == "protocol_mismatch":
+		_protocol_rejected()
+		return
 	_clear_input_state()
 	if not _token.is_empty():
 		if _retry_until == 0:
