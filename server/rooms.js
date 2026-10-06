@@ -5,7 +5,8 @@ import {validResultScore} from './game-scoring.js';
 import {validCrateWorld, validHurdleWorld, validTideWorld, validSweeperWorld, validDuelWorld, validBumperWorld, validDuoWorld, validFloeWorld, validTurretWorld, validTankWorld, validScrapWorld, validFawdaWorld, validKartWorld, validArmedRaceWorld, validSiegeWorld, validForgeWorld, validDreadnoughtWorld, validSovereignWorld, validColossusWorld} from './world-snapshots.js';
 import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWorld, validTagWorld, validPaintWorld, validSaboteurWorld, validMagnetWorld, validStormWorld, validSkyWorld, validCrumbleWorld, validBlastWorld, validColorWorld, validDrawWorld, validEchoWorld} from './world-snapshots.js';
 
-export const PROTOCOL = 1;
+// Version 2 includes the expanded Colossus exposure snapshot contract.
+export const PROTOCOL = 2;
 export const ONLINE_ARENAS = Object.freeze({sabaq_sawarikh: ['dune_circuit', 'neon_spiral', 'frost_hairpin', 'magma_ring', 'sky_causeway', 'alula_rain', 'sinbad_coast', 'pharaoh_valley'], kart_sprint: ['circuit_loop'], fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
   boss_colossus: ['vortex_ring'], boss_sovereign: ['vortex_ring'], boss_dreadnought: ['iron_flats'], boss_forge: ['crate_yard'], base_siege: ['iron_flats', 'crate_yard'], gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],

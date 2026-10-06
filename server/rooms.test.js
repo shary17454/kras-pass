@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
 import {WebSocket} from 'ws';
-import {Rooms} from './rooms.js';
+import {Rooms, PROTOCOL} from './rooms.js';
 import {attachMultiplayer} from './multiplayer.js';
 
 const snapshot = () => ({phase: 4, round: 0, countdown: 0, radius: 10, time: 50,
@@ -271,7 +271,7 @@ test('wall clock adjustments cannot expire a live room', () => {
   try {
     const rooms = new Rooms();
     const client = rooms.connect(() => {});
-    rooms.handle(client, {v: 1, op: 'create', capacity: 4, public: true});
+    rooms.handle(client, {v: PROTOCOL, op: 'create', capacity: 4, public: true});
     wall += 86400000;
     rooms.sweep();
     assert.equal(rooms.rooms.size, 1);
@@ -287,7 +287,7 @@ function fixture(options = {}) {
   const client = () => {
     const messages = [];
     const c = rooms.connect(m => messages.push(structuredClone(m)));
-    return {c, messages, send: m => rooms.handle(c, {v: 1, ...m}), last: op => messages.findLast(m => m.op === op)};
+    return {c, messages, send: m => rooms.handle(c, {v: PROTOCOL, ...m}), last: op => messages.findLast(m => m.op === op)};
   };
   const host = client(); host.send({op: 'create', capacity: 4, public: true, name: 'Host'});
   return {rooms, host, client, advance: ms => { now += ms; rooms.sweep(); }};
@@ -1173,9 +1173,27 @@ test('host loss expires without fabricated winner, kick invalidates token', () =
   assert.equal(guest.last('result'), undefined);
 });
 
+test('incompatible protocols cannot create, join or resume a room', () => {
+  const {rooms, host, client} = fixture();
+  const token = host.last('welcome').token;
+  for (const version of [undefined, null, 0, 1, PROTOCOL + 1, 2.1, '2', true]) {
+    for (const message of [{op: 'create', capacity: 4, public: true},
+      {op: 'join', code: host.c.room.code}, {op: 'resume', token}]) {
+      const guest = client(), before = rooms.sessions.size;
+      assert.throws(() => rooms.handle(guest.c, {...message, v: version}), /version_mismatch/);
+      assert.equal(guest.c.room, null);
+      assert.equal(guest.c.player, null);
+      assert.equal(rooms.rooms.size, 1);
+      assert.equal(rooms.sessions.size, before);
+      assert.equal(guest.messages.length, 0);
+      assert.equal(host.c.player.connection, host.c);
+    }
+  }
+});
+
 test('protocol/config validation and bounded room resources', () => {
   const {host, rooms, client} = fixture();
-  assert.throws(() => rooms.handle(host.c, {op: 'start', v: 2}), /version_mismatch/);
+  assert.throws(() => rooms.handle(host.c, {op: 'start', v: PROTOCOL + 1}), /version_mismatch/);
   assert.throws(() => host.send({op: 'configure', config: {game: 'tank_arena'}}), /invalid_config/);
   assert.throws(() => host.send({op: 'ready', ready: 'true'}), /invalid_state/);
   assert.throws(() => host.send({op: 'character', character: 50}), /invalid_request/);
@@ -1310,10 +1328,15 @@ test('real WebSocket match, reconnect and closed-room input drain', async t => {
       waiters.push(waiter);
     });
     await Promise.all([once(socket, 'open'), wait('hello')]);
-    return {socket, messages, wait, send: m => socket.send(JSON.stringify({v: 1, ...m}))};
+    return {socket, messages, wait, send: m => socket.send(JSON.stringify({v: PROTOCOL, ...m}))};
   }
   const clients = await Promise.all(Array.from({length: 4}, connect));
+  assert.ok(clients.every(c => c.messages.find(m => m.op === 'hello')?.v === PROTOCOL));
   const host = clients[0];
+  const rejected = host.wait('error');
+  host.send({v: 1, op: 'create', capacity: 4, public: true});
+  assert.equal((await rejected).code, 'version_mismatch');
+  assert.equal(multiplayer.rooms.rooms.size, 0);
   let room = host.wait('room');
   host.send({op: 'create', capacity: 4, public: true}); const code = (await room).code;
   for (const c of clients.slice(1)) { const joined = c.wait('room'); c.send({op: 'join', code}); await joined; }

@@ -1,7 +1,7 @@
 extends Node
 ## Online play abstraction. Autoload name: `Net`.
 ##
-## Local sessions and protocol-v1 hosted rooms. Online is gated on a configured
+## Local sessions and versioned hosted rooms. Online is gated on a configured
 ## endpoint; the lobby server, not a client, assigns identities and slots.
 
 signal session_state_changed(state: int)

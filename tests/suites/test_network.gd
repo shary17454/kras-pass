@@ -35,6 +35,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 
 
 func run(t: TestHarness, host: Node) -> void:
+	_protocol_policy(t)
 	_endpoint_policy(t)
 	_input_edges(t)
 	_input_buffer_limits(t)
@@ -92,6 +93,18 @@ func run(t: TestHarness, host: Node) -> void:
 	Net.leave()
 	_player_mapping(t)
 	await _quick_draw_edges(t, host)
+
+
+func _protocol_policy(t: TestHarness) -> void:
+	t.suite("Network protocol compatibility")
+	var transport = load("res://src/net/room_client.gd").new()
+	t.equal(transport.PROTOCOL_VERSION, 2, "snapshot revision uses protocol two")
+	t.ok(transport.compatible_hello({"op": "hello", "v": 2}), "accept current server")
+	t.ok(transport.compatible_hello(JSON.parse_string('{"op":"hello","v":2}')), "accept JSON numeric version")
+	for version in [null, 0, 1, 3, 2.1, "2", true, false, NAN, INF]:
+		t.ok(not transport.compatible_hello({"op": "hello", "v": version}), "reject incompatible or malformed version")
+	t.ok(not transport.compatible_hello({"op": "welcome", "v": 2}), "require hello operation")
+	transport.free()
 
 
 func _input_edges(t: TestHarness) -> void:
