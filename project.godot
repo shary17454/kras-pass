@@ -21,6 +21,7 @@ general/text_to_speech=true
 [autoload]
 
 
+UITheme="*res://src/ui/ui_theme_bootstrap.gd"
 Log="*res://src/core/logger.gd"
 Balance="*res://src/core/balance.gd"
 Loc="*res://src/localization/loc.gd"
@@ -67,7 +68,7 @@ window/size/resizable=true
 
 [gui]
 
-theme/custom="res://assets/fonts/ui_theme.tres"
+theme/custom="res://assets/fonts/startup_theme.tres"
 
 [input]
 
