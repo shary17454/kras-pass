@@ -10,6 +10,7 @@ class RoutingProbe extends "res://src/ai/brains/platform_brain.gd":
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("platform visible ground routing")
 	await _test_safe_first_step(t, host)
+	await _test_edge_support(t, host)
 	var arena := Arena.new()
 	host.add_child(arena)
 	var body := Fighter.new()
@@ -133,6 +134,45 @@ func _test_safe_first_step(t: TestHarness, host: Node) -> void:
 	shaking.hide()
 	t.equal(brain._pick_tile(arena, start.global_position), null,
 		"hidden shaking ground cannot be used as an emergency route")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_edge_support(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	var fresh := _tile(arena, -1, 0, ArenaTile.State.SOLID)
+	var support := _tile(arena, 0, 0, ArenaTile.State.WARNING)
+	var gone := _tile(arena, 1, 0, ArenaTile.State.FALLING)
+	for tile in [fresh, support, gone]:
+		tile.build(2.0, 0.5, Color.GRAY)
+	gone.set_collision_layer_value(1, false)
+	var body := Fighter.new()
+	arena.add_child(body)
+	body.set_physics_process(false)
+	body.position = Vector3(1.1, 0.01, 0.0)
+	for tick in 12:
+		await host.get_tree().physics_frame
+		body.velocity = Vector3(0.0, -1.0, 0.0)
+		body.move_and_slide()
+	t.ok(body.is_on_floor(), "edge fixture has actual native floor support")
+	t.equal(arena.tile_at(body.global_position), gone, "nearest centre can be a falling tile beside the supporting collider")
+	var ctx := MatchContext.new()
+	ctx.arena = arena
+	ctx.config = MatchConfig.build("crumble_court", ["fanoos"], 0, 3, 734)
+	ctx.fighters.append(body)
+	var brain := RoutingProbe.new()
+	brain.configure(0, ctx, 3, 734)
+	brain.edge_awareness = 1.0
+	t.equal(brain._pick_tile(arena, body.global_position), fresh,
+		"a grounded capsule can route from its visible supporting tile at a missing neighbour's edge")
+	brain.decide(0.1)
+	t.equal(brain._warning_tile, support, "warning observation follows actual visible ground contact")
+	support.hide()
+	t.equal(brain._pick_tile(arena, body.global_position), null, "hidden contact cannot become a route origin")
+	support.show()
+	body.position.y = 4.0
+	t.equal(brain._pick_tile(arena, body.global_position), null, "stale contact cannot plan from a different fighter position")
 	arena.queue_free()
 	await host.get_tree().process_frame
 

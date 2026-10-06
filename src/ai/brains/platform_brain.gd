@@ -24,7 +24,7 @@ func decide(_delta: float) -> void:
 	if me == null or arena == null:
 		return
 
-	var current := arena.tile_at(me.global_position)
+	var current := _ground_tile(arena, me.global_position)
 	if can_observe(current) and current.state == ArenaTile.State.WARNING:
 		if current != _warning_tile:
 			_warning_tile = current
@@ -57,8 +57,8 @@ func decide(_delta: float) -> void:
 
 
 func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
-	var origin := arena.tile_at(from)
-	if not can_observe(origin) or not origin.is_standable():
+	var origin := _ground_tile(arena, from)
+	if origin == null:
 		return null
 	var visible_ground := {}
 	for tile in arena.tiles:
@@ -105,6 +105,30 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 			best_score = score
 			best = first_steps[cell]
 	return best
+
+
+func _ground_tile(arena: Arena, from: Vector3) -> ArenaTile:
+	var nearest := arena.tile_at(from)
+	if can_observe(nearest) and nearest.is_standable():
+		return nearest
+	var me := self_body()
+	if me == null or not me.is_on_floor() or me.global_position.distance_to(from) > 0.01:
+		return null
+	var reach := 0.52
+	var shape := me.get_node_or_null("Body") as CollisionShape3D
+	if shape != null and shape.shape is CapsuleShape3D:
+		reach = (shape.shape as CapsuleShape3D).radius + 0.1
+	# A capsule may still stand on the visible neighbour of the nearest hole.
+	# Read only its own current contact; stale/hidden support cannot form a route.
+	for index in me.get_slide_collision_count():
+		var contact := me.get_slide_collision(index)
+		if contact.get_normal().dot(me.up_direction) < cos(me.floor_max_angle) \
+				or contact.get_position().distance_to(from) > reach:
+			continue
+		var tile := contact.get_collider() as ArenaTile
+		if tile in arena.tiles and can_observe(tile) and tile.is_standable():
+			return tile
+	return null
 
 
 func _solid_neighbours(arena: Arena, tile: ArenaTile, visible_ground: Dictionary = {}) -> float:
