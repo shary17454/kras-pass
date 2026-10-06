@@ -51,16 +51,24 @@ func _random_spot(arena: Arena) -> Vector3:
 		var r := sqrt(ctx.rng.randf()) * arena.def.radius * 0.85
 		var p := arena.global_position + Vector3(cos(ang) * r, 1.1, sin(ang) * r)
 		# Islands arenas have holes; only accept a spot with ground beneath it.
-		if _has_ground(p):
-			return p
-	return arena.global_position + Vector3(0, 1.1, 0)
+		var supported := _surface_spot(p)
+		if supported != Vector3.INF:
+			return supported
+	var fallback := arena.global_position + Vector3(0, 1.1, 0)
+	var supported := _surface_spot(fallback)
+	return supported if supported != Vector3.INF else fallback
 
 
 func _has_ground(p: Vector3) -> bool:
+	return _surface_spot(p) != Vector3.INF
+
+
+func _surface_spot(p: Vector3) -> Vector3:
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(p + Vector3(0, 2, 0), p - Vector3(0, 6, 0))
 	q.collision_mask = 1
-	return not space.intersect_ray(q).is_empty()
+	var hit := space.intersect_ray(q)
+	return hit.position + Vector3.UP * 1.1 if not hit.is_empty() else Vector3.INF
 
 
 func tick(delta: float) -> void:

@@ -6,6 +6,7 @@ const Items = preload("res://src/net/collectible_replica.gd")
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("collection network")
+	await _gem_surface_placement(t, host)
 	for game_id in ["gem_grab", "star_rush", "crate_relay"]:
 		t.test("%s host-owned pickups and carrying" % game_id)
 		var cfg := MatchConfig.build(game_id, ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 86)
@@ -93,3 +94,34 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(JSON.stringify(rows).to_utf8_buffer().size() < 43000, "bounded rows leave space for players inside snapshot limit")
 	rows.append(rows[0].duplicate(true))
 	t.ok(not Items.valid(rows, "gem"), "oversized field rejected")
+
+
+func _gem_surface_placement(t: TestHarness, host: Node) -> void:
+	for arena_id in ["gem_hollow", "glass_terrace"]:
+		t.test("%s gems remain above actual island surfaces" % arena_id)
+		var cfg := MatchConfig.build("gem_grab", ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 814)
+		cfg.arena_id = arena_id
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": cfg, "on_finished": func(_r): pass})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		scene.arena.position = Vector3(30, 5, -20)
+		await host.get_tree().physics_frame
+		await host.get_tree().physics_frame
+		var raised := 0
+		for sample in 120:
+			var spot: Vector3 = scene.controller._random_spot(scene.arena)
+			var query := PhysicsRayQueryParameters3D.create(spot + Vector3.UP * 5, spot - Vector3.UP * 5, 1)
+			var hit: Dictionary = scene.get_world_3d().direct_space_state.intersect_ray(query)
+			t.ok(not hit.is_empty(), "random gem destination has a real supporting collider")
+			if not hit.is_empty():
+				t.near(spot.y, hit.position.y + 1.1, 0.001, "gem clearance follows floor height instead of arena origin")
+				if hit.position.y > scene.arena.global_position.y + 1.5:
+					raised += 1
+			t.ok(scene.controller._has_ground(spot), "raised gem retains its existing ground validity contract")
+		t.ok(raised > 0, "fixture actually covers the highest satellite island")
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
