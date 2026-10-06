@@ -16,6 +16,28 @@ func run(t: TestHarness, host: Node) -> void:
 			fighter.set_physics_process(false)
 		var game = scene.controller
 		var hud = scene.hud
+		var pooled_chip = hud._chips[0]
+		var effect_ids: Array = pooled_chip.effect_labels.keys()
+		var count: int = pooled_chip.effects.get_child_count()
+		var first: Label = pooled_chip.effect_labels[effect_ids[0]]
+		var second: Label = pooled_chip.effect_labels[effect_ids[1]]
+		for id in [effect_ids[0], effect_ids[1], effect_ids[0]]:
+			scene.powerups._effects = [{"slot": 0, "def": Registry.powerup(id), "remaining": 3.0}]
+			hud._refresh_effects(pooled_chip, 0)
+			t.equal(pooled_chip.effects.get_child_count(), count, "status changes reuse a bounded registry label set")
+			t.ok(pooled_chip.effect_labels[id].visible, "selected status remains visible")
+			t.equal(pooled_chip.effect_labels[id].get_theme_color("font_color"), UIKit.adapt(Registry.powerup(id).color), "status replacement preserves its color")
+		scene.powerups._effects.clear()
+		hud._refresh_effects(pooled_chip, 0)
+		t.ok(not first.visible and not second.visible, "expired statuses hide without deletion")
+		t.equal(pooled_chip.effect_labels[effect_ids[0]], first, "reappearing status keeps its label identity")
+		var fighter: Fighter = scene.ctx.fighter(0)
+		fighter._build_state_fx()
+		var state_fx := fighter._state_fx
+		fighter._build_state_fx()
+		t.equal(fighter._state_fx, state_fx, "preparing status visuals twice is idempotent")
+		for child in state_fx.get_children():
+			t.ok(not child.visible, "prepared state visuals start hidden")
 		for resolution in [Vector2i(1280, 720), Vector2i(720, 1280), Vector2i(540, 960), Vector2i(1280, 720)]:
 			window.size = resolution
 			game._set_hunter(-1)

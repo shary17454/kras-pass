@@ -104,7 +104,7 @@ var _rig := CharacterRig.new()   ## limbs and face, when this body has them
 var _markers: Node3D             ## ground ring + overhead pip, in player colour
 var _is_local := false
 var _shocked := 0.0         ## sparks + lost control from an electric hit
-var _state_fx: Node3D       ## persistent status visuals, built on first need
+var _state_fx: Node3D       ## persistent status visuals, prepared before play
 var _size_mutator := 1.0
 var _size_power := 1.0
 var _size_game := 1.0        ## per-mini-game baseline, independent of mutators/power-ups
@@ -154,6 +154,8 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 		friction *= 0.58
 		acceleration *= 0.9
 	_build_visual()
+	if DisplayServer.get_name() != "headless":
+		_build_state_fx()
 
 
 func _build_collision() -> void:
@@ -895,6 +897,8 @@ func _update_state_fx(delta: float) -> void:
 
 
 func _build_state_fx() -> void:
+	if is_instance_valid(_state_fx):
+		return
 	_state_fx = Node3D.new()
 	_state_fx.name = "StateFX"
 	add_child(_state_fx)

@@ -302,8 +302,15 @@ func _make_chip(p: PlayerConfig) -> Control:
 	effects.name = "Effects"
 	effects.add_theme_constant_override("separation", 6)
 	score_row.add_child(effects)
+	var effect_labels := {}
+	for definition in Registry.powerups():
+		var label := UIKit.label(definition.glyph, 22, UIKit.adapt(definition.color), true)
+		label.visible = false
+		effects.add_child(label)
+		effect_labels[definition.id] = label
 
 	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
+		"effect_labels": effect_labels,
 		"color": col, "meter": meter, "charge": -1.0,
 		"crown": crown, "name": name_label, "portrait": portrait})
 	return card
@@ -631,19 +638,19 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 func _refresh_effects(chip: Dictionary, slot: int) -> void:
 	var box: HBoxContainer = chip["effects"]
 	var effects: Array = ctx.powerups.active_effects_for(slot) if ctx.powerups != null else []
-	if box.get_child_count() == effects.size():
-		var i := 0
-		for e in effects:
-			var lbl := box.get_child(i) as Label
-			if lbl != null:
-				lbl.text = e["glyph"]
-			i += 1
-		return
-	for c in box.get_children():
-		c.queue_free()
+	for label in chip["effect_labels"].values():
+		label.visible = false
+	var index := 0
 	for e in effects:
-		var portrait := get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y
-		box.add_child(UIKit.label(String(e["glyph"]), 14 if portrait else 22, UIKit.adapt(e["color"]), true))
+		var label: Label = chip["effect_labels"].get(String(e["id"]))
+		if label == null:
+			continue
+		label.text = String(e["glyph"])
+		label.add_theme_color_override("font_color", UIKit.adapt(e["color"]))
+		label.visible = true
+		if label.get_index() != index:
+			box.move_child(label, index)
+		index += 1
 
 
 func _on_score_changed(slot: int, _value: int) -> void:
