@@ -12,9 +12,39 @@ func run(t: TestHarness, host: Node) -> void:
 	_platform(t)
 	_ai_profiles(t)
 	_pooling(t)
+	await _projectile_visual_reuse(t, host)
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _projectile_visual_reuse(t: TestHarness, host: Node) -> void:
+	t.test("pooled projectile retains visual instances across color changes")
+	var shot := Projectile.new()
+	host.add_child(shot)
+	shot.configure(Color.RED)
+	var root_id: int = shot._mesh.get_instance_id()
+	var core_id: int = shot._mesh.get_child(0).get_instance_id()
+	var tail_id: int = shot._mesh.get_child(1).get_instance_id()
+	var core_mesh: Mesh = shot._mesh.get_child(0).mesh
+	var tail_mesh: Mesh = shot._mesh.get_child(1).mesh
+	for index in 64:
+		shot.on_released()
+		shot.on_acquired()
+		shot.configure(Color.GREEN if index % 2 == 0 else Color.BLUE)
+		await host.get_tree().process_frame
+	t.equal(shot._mesh.get_instance_id(), root_id, "visual root reused after 64 pool cycles")
+	t.equal(shot._mesh.get_child(0).get_instance_id(), core_id, "core instance reused")
+	t.equal(shot._mesh.get_child(1).get_instance_id(), tail_id, "tail instance reused")
+	t.equal(shot._mesh.get_child_count(), 2, "no duplicate visual parts")
+	t.equal(shot.get_child_count(), 2, "only collision and one visual root remain")
+	t.equal(shot._mesh.get_child(0).mesh, core_mesh, "core geometry unchanged")
+	t.equal(shot._mesh.get_child(1).mesh, tail_mesh, "tail geometry unchanged")
+	t.equal(shot._mesh.get_child(0).material_override, MeshFactory.toon(Color.BLUE, 2.0), "core color and emission updated")
+	t.equal(shot._mesh.get_child(1).material_override, MeshFactory.toon(Color.BLUE, 1.4), "tail color and emission updated")
+	t.equal(shot._mesh.get_child(1).position, Vector3(0, 0, 0.5), "tail placement unchanged")
+	shot.queue_free()
+	await host.get_tree().process_frame
 
 
 func _original_music(t: TestHarness) -> void:
