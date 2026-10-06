@@ -1,6 +1,7 @@
 extends Control
 
 var ctx: MatchContext
+var hud: MatchHUD
 var _elapsed := 0.0
 
 
@@ -8,12 +9,15 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layout_direction = Control.LAYOUT_DIRECTION_LTR
 	get_viewport().size_changed.connect(_layout)
+	if is_instance_valid(hud):
+		hud.auxiliary_overlay_layout_changed.connect(_layout)
 	_layout()
 
 
 func _layout() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	position = Vector2(22, 450 if get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y else 150)
+	var top := hud.auxiliary_overlay_top() if is_instance_valid(hud) else 150.0
+	position = Vector2(22 + Platform.safe_insets().x, top)
 	size = Vector2(120, 120)
 
 
