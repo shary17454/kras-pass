@@ -127,9 +127,6 @@ func _attract(slot: int, delta: float) -> void:
 
 func _release(slot: int) -> void:
 	var f := ctx.fighter(slot)
-	if f == null or not is_instance_valid(f):
-		_held.clear()
-		return
 	var away := _away_from_goal(slot)
 	var released := 0
 	for b in balls:
@@ -146,7 +143,8 @@ func _release(slot: int) -> void:
 			_held.erase(k)
 	if released > 0:
 		ctx.bump_detail(slot, "volleys", released)
-		AudioManager.play_sfx("shoot", f.global_position)
+		if f != null and is_instance_valid(f):
+			AudioManager.play_sfx("shoot", f.global_position)
 
 
 ## Straight back across the court, away from this keeper's own wall.
