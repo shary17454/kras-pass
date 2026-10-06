@@ -9,6 +9,7 @@ class RoutingProbe extends "res://src/ai/brains/platform_brain.gd":
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("platform visible ground routing")
+	await _test_safe_first_step(t, host)
 	var arena := Arena.new()
 	host.add_child(arena)
 	var body := Fighter.new()
@@ -101,6 +102,37 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(brain.bits & InputFrame.Btn.JUMP, 0, "disabled jump capability is respected")
 	brain.on_round_start()
 	t.ok(brain._warning_tile == null and brain._target_tile == null, "round restart clears floor observation and routing state")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_safe_first_step(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	var body := Fighter.new()
+	arena.add_child(body)
+	body.set_physics_process(false)
+	var ctx := MatchContext.new()
+	ctx.arena = arena
+	ctx.config = MatchConfig.build("crumble_court", ["fanoos"], 0, 3, 734)
+	ctx.fighters.append(body)
+	var brain := RoutingProbe.new()
+	brain.configure(0, ctx, 3, 734)
+	brain.edge_awareness = 1.0
+	var start := _tile(arena, 0, 0, ArenaTile.State.WARNING)
+	var fresh := _tile(arena, -1, 0, ArenaTile.State.SOLID)
+	var shaking := _tile(arena, 1, 0, ArenaTile.State.WARNING)
+	for x in range(2, 5):
+		for z in range(-1, 2):
+			_tile(arena, x, z, ArenaTile.State.SOLID)
+	t.equal(brain._pick_tile(arena, start.global_position), fresh,
+		"fresh immediate ground beats a dense island reached over shaking ground")
+	fresh.state = ArenaTile.State.GONE
+	t.equal(brain._pick_tile(arena, start.global_position), shaking,
+		"shaking ground is still a last-resort route when no fresh first step exists")
+	shaking.hide()
+	t.equal(brain._pick_tile(arena, start.global_position), null,
+		"hidden shaking ground cannot be used as an emergency route")
 	arena.queue_free()
 	await host.get_tree().process_frame
 

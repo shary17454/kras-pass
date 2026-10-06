@@ -94,6 +94,11 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 		var score := -d
 		# Prefer tiles with solid neighbours: a lone island is a death sentence.
 		score += _solid_neighbours(arena, t, visible_ground) * lerp(0.4, 2.4, edge_awareness)
+		var step: ArenaTile = first_steps[cell]
+		# A promising destination cannot make its shaking first step safe.
+		# Keep it as a fallback, but favour escaping onto untouched ground.
+		if step.state == ArenaTile.State.WARNING:
+			score -= 24.0 * edge_awareness
 		if _occupied(t):
 			score -= 4.0
 		if score > best_score:
