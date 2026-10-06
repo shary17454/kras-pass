@@ -37,6 +37,12 @@ func decide(_delta: float) -> void:
 
 	var threat := perceive(hunter)
 	var gap := me.global_position.distance_to(threat)
+	if _seek_hunter_role():
+		# The public score rewards tags as well as escape. A trailing strategist
+		# can accept a role change, then earn points by passing it on normally.
+		steer_to(threat)
+		keep_off_edge(2.6)
+		return
 	if gap > 9.0:
 		# Far enough to breathe: drift toward open space near the middle rather
 		# than stand still, so there is somewhere to run when they arrive.
@@ -62,3 +68,11 @@ func decide(_delta: float) -> void:
 	if gap < 3.4:
 		maybe_dash(1.1)
 	keep_off_edge(2.6)
+
+
+func _seek_hunter_role() -> bool:
+	# Allow time for the incoming handover and a subsequent legitimate tag.
+	if strategy < 0.75 or ctx.time_left <= 6.0 or slot >= ctx.scores.size():
+		return false
+	var leader_score: int = ctx.scores.max()
+	return leader_score - ctx.scores[slot] >= 3

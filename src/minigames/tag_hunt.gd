@@ -65,16 +65,25 @@ func tick(delta: float) -> void:
 			ctx.add_score(i, maxi(1, int(round(ctx.powerups.point_multiplier(i)))))
 	if _grace > 0.0:
 		return
+	var contacts: Array[int] = []
+	var nearest_squared := TAG_RADIUS * TAG_RADIUS
 	for i in ctx.fighters.size():
 		if i == _hunter or not ctx.is_alive(i):
 			continue
 		var other := ctx.fighter(i)
 		if other == null or not is_instance_valid(other):
 			continue
-		if hunter.global_position.distance_to(other.global_position) > TAG_RADIUS:
+		var distance_squared := hunter.global_position.distance_squared_to(other.global_position)
+		if distance_squared > nearest_squared:
 			continue
-		_tag(i)
-		return
+		if distance_squared < nearest_squared:
+			contacts.clear()
+			nearest_squared = distance_squared
+		contacts.append(i)
+	if not contacts.is_empty():
+		# Equal contacts use match randomness, not a permanent low-slot advantage.
+		var choice := ctx.rng.randi_range(0, contacts.size() - 1) if contacts.size() > 1 else 0
+		_tag(contacts[choice])
 
 
 func _tag(victim: int) -> void:
