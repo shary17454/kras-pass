@@ -65,6 +65,10 @@ window/stretch/aspect="expand"
 window/handheld/orientation=6
 window/size/resizable=true
 
+[gui]
+
+theme/custom="res://assets/fonts/ui_theme.tres"
+
 [input]
 
 pause={

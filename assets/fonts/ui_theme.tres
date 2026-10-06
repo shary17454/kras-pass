@@ -1,0 +1,31 @@
+[gd_resource type="Theme" load_steps=11 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSans.ttf" id="1"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansArabic.ttf" id="2"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSymbols.ttf" id="3"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSymbols2.ttf" id="4"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoEmoji.ttf" id="5"]
+
+[sub_resource type="FontVariation" id="Arabic"]
+base_font = ExtResource("2")
+variation_opentype = {"wght": 400}
+
+[sub_resource type="FontVariation" id="Symbols"]
+base_font = ExtResource("3")
+variation_opentype = {"wght": 400}
+
+[sub_resource type="FontVariation" id="Symbols2"]
+base_font = ExtResource("4")
+
+[sub_resource type="FontVariation" id="Emoji"]
+base_font = ExtResource("5")
+variation_opentype = {"wght": 400}
+
+[sub_resource type="FontVariation" id="Regular"]
+base_font = ExtResource("1")
+variation_opentype = {"wght": 400}
+fallbacks = Array[Font]([SubResource("Arabic"), SubResource("Symbols"), SubResource("Symbols2"), SubResource("Emoji")])
+
+[resource]
+default_font = SubResource("Regular")
+default_font_size = 16

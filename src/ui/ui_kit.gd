@@ -4,9 +4,8 @@ extends RefCounted
 ##
 ## Two things this centralises that are easy to get wrong in a bilingual game:
 ##
-## 1. **Fonts.** Godot's bundled font has no Arabic glyphs. Using `SystemFont`
-##    with OS fallback gives correct Arabic shaping and bidi on macOS, Windows,
-##    iOS and Android without shipping — or licensing — a font file.
+## 1. **Fonts.** Explicit licensed fonts cover Arabic, Latin and game symbols
+##    without loading large, device-dependent system emoji fallback caches.
 ## 2. **Direction.** `Loc.is_rtl()` flips container layout, text alignment and
 ##    the meaning of "back", so the Arabic build is genuinely right-to-left
 ##    rather than left-to-right text that happens to be Arabic.
@@ -34,26 +33,73 @@ const SIZE_TINY := 20
 static var _theme: Theme
 static var _font: Font
 static var _font_bold: Font
+static var _user_font: Font
+static var _user_font_bold: Font
 
 
 static func font() -> Font:
 	if _font == null:
-		var f := SystemFont.new()
-		f.font_names = PackedStringArray(["SF Pro Display", "Helvetica Neue", "Segoe UI", "Noto Sans", "Arial"])
-		f.allow_system_fallback = true
-		f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
-		_font = f
+		_font = _bundled_font(400)
 	return _font
 
 
 static func font_bold() -> Font:
 	if _font_bold == null:
-		var f := SystemFont.new()
-		f.font_names = PackedStringArray(["SF Pro Display", "Helvetica Neue", "Segoe UI", "Noto Sans", "Arial"])
-		f.font_weight = 700
-		f.allow_system_fallback = true
-		_font_bold = f
+		_font_bold = _bundled_font(700)
 	return _font_bold
+
+
+static func _bundled_font(weight: int) -> FontVariation:
+	var result := _font_face("res://assets/fonts/NotoSans.ttf", weight)
+	result.fallbacks = [
+		_font_face("res://assets/fonts/NotoSansArabic.ttf", weight),
+		_font_face("res://assets/fonts/NotoSansSymbols.ttf", weight),
+		_font_face("res://assets/fonts/NotoSansSymbols2.ttf", 400),
+		_font_face("res://assets/fonts/NotoEmoji.ttf", weight),
+	]
+	return result
+
+
+static func _font_face(path: String, weight: int) -> FontVariation:
+	var file := load(path) as FontFile
+	file.allow_system_fallback = false
+	var variation := FontVariation.new()
+	variation.base_font = file
+	variation.variation_opentype = {"wght": weight}
+	return variation
+
+
+static func font_for_text(text: String, bold := false) -> Font:
+	var primary := font_bold() if bold else font()
+	var needs_user_fallback := false
+	for character in text:
+		var codepoint := character.unicode_at(0)
+		if codepoint >= 32 and codepoint not in [0x200D, 0xFE0E, 0xFE0F] and not primary.has_char(codepoint):
+			needs_user_fallback = true
+			break
+	if not needs_user_fallback:
+		return primary
+	var cached := _user_font_bold if bold else _user_font
+	if cached != null:
+		return cached
+	# Preserve the previous OS-dependent coverage for other user-name scripts
+	# without changing the ordinary bundled faces.
+	var extended := SystemFont.new()
+	extended.font_names = PackedStringArray(["SF Pro Display", "Helvetica Neue", "Segoe UI", "Noto Sans", "Arial"])
+	extended.font_weight = 700 if bold else 400
+	extended.allow_system_fallback = true
+	if bold:
+		_user_font_bold = extended
+	else:
+		_user_font = extended
+	return extended
+
+
+static func fit_input_font(field: LineEdit, initial_text := "") -> void:
+	field.add_theme_font_override("font", font_for_text(initial_text))
+	field.text = initial_text
+	field.text_changed.connect(func(value: String):
+		field.add_theme_font_override("font", font_for_text(value)))
 
 
 static func scale() -> float:
@@ -111,9 +157,9 @@ static func invalidate_theme() -> void:
 
 static func label(text: String, size: int = SIZE_BODY, color: Color = Color.TRANSPARENT, bold := false) -> Label:
 	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", font_bold() if bold else font())
+	l.add_theme_font_override("font", font_for_text(text, bold))
 	l.add_theme_font_size_override("font_size", int(size * scale()))
+	l.text = text
 	l.add_theme_color_override("font_color", text_color() if color == Color.TRANSPARENT else color)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
 	l.add_theme_constant_override("outline_size", 6)
@@ -176,9 +222,9 @@ static func panel(color: Color = PANEL, radius: int = 18) -> PanelContainer:
 
 static func button(text: String, size: int = SIZE_BODY) -> Button:
 	var b := Button.new()
-	b.text = text
-	b.add_theme_font_override("font", font_bold())
+	b.add_theme_font_override("font", font_for_text(text, true))
 	b.add_theme_font_size_override("font_size", int(size * scale()))
+	b.text = text
 	b.add_theme_color_override("font_color", text_color())
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
 	b.add_theme_color_override("font_focus_color", BG)
@@ -219,11 +265,11 @@ static func slider(value: float, lo: float, hi: float, step: float = 0.05) -> HS
 
 static func option(items: Array, selected: int) -> OptionButton:
 	var o := OptionButton.new()
+	o.add_theme_font_override("font", font_for_text(" ".join(items)))
+	o.add_theme_font_size_override("font_size", int(SIZE_BODY * scale()))
 	for it in items:
 		o.add_item(String(it))
 	o.selected = clampi(selected, 0, maxi(0, items.size() - 1))
-	o.add_theme_font_override("font", font())
-	o.add_theme_font_size_override("font_size", int(SIZE_BODY * scale()))
 	o.focus_mode = Control.FOCUS_ALL
 	o.custom_minimum_size = Vector2(330 * scale(), 64 * scale())
 	return o
@@ -231,10 +277,10 @@ static func option(items: Array, selected: int) -> OptionButton:
 
 static func checkbox(text: String, pressed: bool) -> CheckButton:
 	var c := CheckButton.new()
+	c.add_theme_font_override("font", font_for_text(text))
+	c.add_theme_font_size_override("font_size", int(SIZE_BODY * scale()))
 	c.text = text
 	c.button_pressed = pressed
-	c.add_theme_font_override("font", font())
-	c.add_theme_font_size_override("font_size", int(SIZE_BODY * scale()))
 	c.add_theme_color_override("font_color", text_color())
 	c.focus_mode = Control.FOCUS_ALL
 	return c

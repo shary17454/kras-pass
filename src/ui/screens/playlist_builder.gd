@@ -43,10 +43,10 @@ func build() -> void:
 			dialog.popup_centered())
 		header.add_child(remove)
 	_name = LineEdit.new()
+	UIKit.fit_input_font(_name, _plan["name"])
 	_name.max_length = 32
 	_name.custom_minimum_size.y = 64
 	_name.add_theme_font_size_override("font_size", UIKit.SIZE_BODY)
-	_name.text = _plan["name"]
 	_name.placeholder_text = Loc.t("playlist.name")
 	body.add_child(_name)
 	var presets := PlaylistGenerator.preset_ids()

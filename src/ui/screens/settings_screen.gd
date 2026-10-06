@@ -171,6 +171,7 @@ func _build_version_line(parent: VBoxContainer) -> void:
 	parent.add_child(_version_button)
 
 	_access_field = LineEdit.new()
+	UIKit.fit_input_font(_access_field)
 	_access_field.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_access_field.custom_minimum_size = Vector2(320, 0)
 	_access_field.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

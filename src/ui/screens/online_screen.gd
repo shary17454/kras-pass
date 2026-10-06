@@ -76,7 +76,7 @@ func _refresh() -> void:
 
 func _browser() -> void:
 	var name_field := LineEdit.new()
-	name_field.text = _name
+	UIKit.fit_input_font(name_field, _name)
 	name_field.max_length = 24
 	name_field.placeholder_text = Loc.t("online.player_name")
 	name_field.custom_minimum_size.y = 56
@@ -86,6 +86,7 @@ func _browser() -> void:
 	add_menu_button(Loc.t("online.create_private"), func(): Net.host_online(4, false, _name))
 	var row := UIKit.hbox(12)
 	var code := LineEdit.new()
+	UIKit.fit_input_font(code)
 	code.max_length = 6
 	code.placeholder_text = Loc.t("online.room_code")
 	code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
