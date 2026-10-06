@@ -162,6 +162,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_ball_delay(t, scene)
 	_test_relic(t, scene)
 	_test_tag(t, scene)
+	_test_tag_strategy(t, scene)
 	_test_camera_bounds(t, scene)
 	_test_tied_leaders(t, scene)
 	scene.teardown()
@@ -312,6 +313,8 @@ func _test_relic(t: TestHarness, scene: Node) -> void:
 
 
 func _test_tag(t: TestHarness, scene: Node) -> void:
+	var saved_scores: Array[int] = scene.ctx.scores.duplicate()
+	scene.ctx.scores.fill(0)
 	var brain := TagSteeringProbe.new()
 	var cue := TagCueProbe.new()
 	scene.add_child(cue)
@@ -366,6 +369,53 @@ func _test_tag(t: TestHarness, scene: Node) -> void:
 	brain._time += 0.3
 	t.ok(brain.has_observed(1), "actual origin position is a valid delayed observation")
 	t.ok(not brain.has_observed(-1) and not brain.has_observed(4), "invalid hunter slots cannot be observed")
+	scene.ctx.scores = saved_scores
+	cue.queue_free()
+
+
+func _test_tag_strategy(t: TestHarness, scene: Node) -> void:
+	var saved_scores: Array[int] = scene.ctx.scores.duplicate()
+	var saved_time: float = scene.ctx.time_left
+	var brain := TagSteeringProbe.new()
+	var cue := TagCueProbe.new()
+	scene.add_child(cue)
+	brain.configure(0, scene.ctx, 3, 119)
+	brain.controller = cue
+	brain.reaction_time = 0.0
+	brain.edge_awareness = 0.0
+	var me: Fighter = scene.ctx.fighter(0)
+	var hunter: Fighter = scene.ctx.fighter(1)
+	me.global_position = Vector3(0, 1, 0)
+	hunter.global_position = Vector3(5, 1, 0)
+	hunter.show()
+	scene.ctx.scores.fill(0)
+	scene.ctx.scores[2] = 6
+	scene.ctx.time_left = 30.0
+	brain._record_history()
+	brain.decide(0.0)
+	t.equal(brain.destination, Vector3(5, 1, 0), "trailing expert can challenge observed hunter to earn the next tag")
+	brain.strategy = 0.2
+	brain.decide(0.0)
+	t.ok(brain.destination.x < 0.0, "low-strategy runner retains simple escape behavior")
+	brain.strategy = 0.95
+	scene.ctx.scores[0] = 7
+	brain.decide(0.0)
+	t.ok(brain.destination.x < 0.0, "leading expert protects free-time points rather than farming roles")
+	scene.ctx.scores[0] = 0
+	scene.ctx.time_left = 1.0
+	brain.decide(0.0)
+	t.ok(brain.destination.x < 0.0, "insufficient remaining time prevents futile role challenge")
+	scene.ctx.time_left = 30.0
+	hunter.hide()
+	hunter.global_position = Vector3(-20, 1, 0)
+	brain._record_history()
+	brain.decide(0.0)
+	t.equal(brain.destination, Vector3(5, 1, 0), "catch-up strategy uses remembered cue not hidden hunter movement")
+	brain.on_round_start()
+	brain.decide(0.0)
+	t.equal(brain.destination, scene.arena.retreat_point(me.global_position), "scores cannot disclose never-observed hunter location")
+	scene.ctx.scores = saved_scores
+	scene.ctx.time_left = saved_time
 	cue.queue_free()
 
 
