@@ -7,6 +7,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("systems")
 	_input_frames(t)
 	_music_toggle(t)
+	_original_music(t)
 	await _audio_shutdown(t, host)
 	_platform(t)
 	_ai_profiles(t)
@@ -14,6 +15,26 @@ func run(t: TestHarness, host: Node) -> void:
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _original_music(t: TestHarness) -> void:
+	t.test("baked original music preserves synthesis and looping")
+	for id in ["menu", "arena", "arena_b", "tension", "victory", "adventure"]:
+		var baked := load("res://assets/audio/music/" + id + ".res") as AudioStreamWAV
+		t.not_null(baked, id + " is bundled")
+		if baked == null:
+			continue
+		var generated := Synth.to_stream(AudioManager._render_track(id), true)
+		t.ok(baked.data == generated.data, id + " retains every original PCM byte")
+		t.equal(baked.format, generated.format, id + " retains sample format")
+		t.equal(baked.mix_rate, generated.mix_rate, id + " retains sample rate")
+		t.equal(baked.stereo, generated.stereo, id + " retains channel layout")
+		t.equal(baked.loop_mode, generated.loop_mode, id + " retains looping")
+		t.equal(baked.loop_begin, generated.loop_begin, id + " retains loop start")
+		t.equal(baked.loop_end, generated.loop_end, id + " retains loop end")
+		t.ok(AudioManager._track(id) == baked, id + " uses bundled resource")
+		t.ok(AudioManager._track(id) == baked, id + " reuses cached resource")
+	t.ok(AudioManager._track("unknown_music") == null, "unknown music remains unsupported")
 
 
 func _audio_shutdown(t: TestHarness, host: Node) -> void:
