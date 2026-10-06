@@ -66,8 +66,11 @@ func _ready() -> void:
 					colors[image.get_pixel(x, y).to_html()] = true
 			var success: bool = image.save_png(file) == OK and colors.size() >= 15 \
 				and scene.ctx.fighters.size() == 4 and Log.error_count() == errors_before
+			var hud_bottom: float = scene.hud.occupied_top()
+			if game.id.begins_with("boss_") and resolution.x < resolution.y:
+				success = success and hud_bottom < image.get_height() * 0.35
 			_rows.append({"id": game.id, "arena": cfg.arena_id, "orientation": orientation,
-				"image": file, "nonblank_colors": colors.size(), "passed": success})
+				"image": file, "nonblank_colors": colors.size(), "hud_bottom": hud_bottom, "passed": success})
 			if not success:
 				_failures.append(game.id + "/" + orientation)
 			print("STAGE ZERO VISUAL %s/%s: %s" % [game.id, orientation, "PASS" if success else "FAIL"])
@@ -82,4 +85,8 @@ func _ready() -> void:
 				_rows.size() / 2, language]}, "  "))
 		report.close()
 	print("STAGE ZERO VISUAL: %d captures, %d failures" % [_rows.size(), _failures.size()])
+	AudioManager.shutdown()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	OS.delay_msec(100)
 	get_tree().quit(0 if _failures.is_empty() else 1)
