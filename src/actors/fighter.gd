@@ -104,7 +104,7 @@ var _rig := CharacterRig.new()   ## limbs and face, when this body has them
 var _markers: Node3D             ## ground ring + overhead pip, in player colour
 var _is_local := false
 var _shocked := 0.0         ## sparks + lost control from an electric hit
-var _state_fx: Node3D       ## persistent status visuals, built on first need
+var _state_fx: Node3D       ## persistent status visuals, prepared before play
 var _size_mutator := 1.0
 var _size_power := 1.0
 var _size_game := 1.0        ## per-mini-game baseline, independent of mutators/power-ups
@@ -154,6 +154,8 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 		friction *= 0.58
 		acceleration *= 0.9
 	_build_visual()
+	if DisplayServer.get_name() != "headless":
+		_build_state_fx()
 
 
 func _build_collision() -> void:
@@ -297,8 +299,11 @@ func tick(frame: InputFrame, delta: float) -> void:
 	if _hitstop > 0.0:
 		_hitstop -= delta
 		velocity = Vector3.ZERO
+		var collision_started := DevTools.operations.begin()
 		move_and_slide()
+		DevTools.operations.finish("fighter.physics", collision_started)
 		return
+	var operation_started := DevTools.operations.begin()
 	_pre_vel = velocity
 	_advance_timers(delta)
 
@@ -320,14 +325,23 @@ func tick(frame: InputFrame, delta: float) -> void:
 
 	_apply_impulse(delta)
 	impact_speed = Vector2(velocity.x, velocity.z).length()
+	DevTools.operations.finish("fighter.integrate", operation_started)
+	operation_started = DevTools.operations.begin()
 	move_and_slide()
+	DevTools.operations.finish("fighter.physics", operation_started)
+	operation_started = DevTools.operations.begin()
 	_collect_body_contacts()
 	if not _was_on_floor and is_on_floor():
 		_squash = Vector3(1.22, 0.74, 1.22)
 		landed.emit()
 	_was_on_floor = is_on_floor()
+	DevTools.operations.finish("fighter.contacts", operation_started)
+	operation_started = DevTools.operations.begin()
 	_update_visual(delta, wish)
+	DevTools.operations.finish("fighter.visual", operation_started)
+	operation_started = DevTools.operations.begin()
 	_emit_ground_spray(delta)
+	DevTools.operations.finish("fighter.ground_fx", operation_started)
 
 
 func _advance_timers(delta: float) -> void:
@@ -802,7 +816,10 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 	else:
 		_visual.rotation.z = lerp(_visual.rotation.z, 0.0, clampf(10.0 * delta, 0.0, 1.0))
 	_update_markers(delta)
+	var operation_started := DevTools.operations.begin()
 	_update_state_fx(delta)
+	DevTools.operations.finish("fighter.state_fx", operation_started)
+	operation_started = DevTools.operations.begin()
 	_rig.tick(delta, {
 		"speed": speed_ratio(),
 		"on_floor": is_on_floor(),
@@ -812,6 +829,7 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 		"frozen": float(mods["frozen"]) > 0.0 or _shocked > 0.0,
 		"panic": clampf(1.0 - _edge_margin / 2.6, 0.0, 1.0) if is_on_floor() else 0.0,
 	})
+	DevTools.operations.finish("fighter.rig", operation_started)
 
 
 ## What is happening to this body, made visible. A power-up the player cannot
@@ -879,6 +897,8 @@ func _update_state_fx(delta: float) -> void:
 
 
 func _build_state_fx() -> void:
+	if is_instance_valid(_state_fx):
+		return
 	_state_fx = Node3D.new()
 	_state_fx.name = "StateFX"
 	add_child(_state_fx)

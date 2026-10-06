@@ -62,6 +62,15 @@ func _ready() -> void:
 	add_child(scene)
 	var setup_us := Time.get_ticks_usec()
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	var prepared_states := 0
+	for fighter in scene.ctx.fighters:
+		if is_instance_valid(fighter._state_fx):
+			prepared_states += 1
+	report["prepared_state_visuals"] = prepared_states
+	var effect_label_pools := []
+	for chip in scene.hud._chips:
+		effect_label_pools.append(chip.effects.get_child_count())
+	report["prepared_effect_labels_per_player"] = effect_label_pools
 	report["setup_ms"] = (Time.get_ticks_usec() - setup_us) / 1000.0
 	if scene.arena.def.shape == "circuit":
 		scene.camera.mode = ArenaCamera.Mode.CHASE

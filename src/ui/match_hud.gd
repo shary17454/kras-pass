@@ -302,8 +302,15 @@ func _make_chip(p: PlayerConfig) -> Control:
 	effects.name = "Effects"
 	effects.add_theme_constant_override("separation", 6)
 	score_row.add_child(effects)
+	var effect_labels := {}
+	for definition in Registry.powerups():
+		var label := UIKit.label(definition.glyph, 22, UIKit.adapt(definition.color), true)
+		label.visible = false
+		effects.add_child(label)
+		effect_labels[definition.id] = label
 
 	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
+		"effect_labels": effect_labels,
 		"color": col, "meter": meter, "charge": -1.0,
 		"crown": crown, "name": name_label, "portrait": portrait})
 	return card
@@ -551,8 +558,13 @@ func tick(delta: float) -> void:
 	if _accum < _period:
 		return
 	_accum = 0.0
+	var operation_started := DevTools.operations.begin()
 	_refresh_chips()
+	DevTools.operations.finish("hud.chips", operation_started)
+	operation_started = DevTools.operations.begin()
 	_refresh_offscreen_cues()
+	DevTools.operations.finish("hud.offscreen", operation_started)
+	operation_started = DevTools.operations.begin()
 	var banner := controller.hud_banner() if controller != null else ""
 	var progress := controller.hud_progress() if controller != null else -1.0
 	var meter_visible := is_finite(progress) and progress >= 0.0
@@ -566,6 +578,7 @@ func tick(delta: float) -> void:
 	if layout_changed and _fit_top_rows.is_valid():
 		_fit_top_rows.call()
 	_fit_toasts()
+	DevTools.operations.finish("hud.layout", operation_started)
 
 
 func _refresh_offscreen_cues() -> void:
@@ -591,12 +604,16 @@ func _refresh_offscreen_cues() -> void:
 
 func _refresh_chips() -> void:
 	for chip in _chips:
+		var operation_started := DevTools.operations.begin()
 		var slot: int = chip["slot"]
 		chip["value"].text = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
 		var alive: bool = ctx.is_alive(slot)
 		chip["root"].modulate = Color(1, 1, 1, 1.0 if alive else 0.4)
 		_refresh_meter(chip, slot)
+		DevTools.operations.finish("hud.chip_value", operation_started)
+		operation_started = DevTools.operations.begin()
 		_refresh_effects(chip, slot)
+		DevTools.operations.finish("hud.effects", operation_started)
 
 
 func _refresh_meter(chip: Dictionary, slot: int) -> void:
@@ -621,19 +638,22 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 func _refresh_effects(chip: Dictionary, slot: int) -> void:
 	var box: HBoxContainer = chip["effects"]
 	var effects: Array = ctx.powerups.active_effects_for(slot) if ctx.powerups != null else []
-	if box.get_child_count() == effects.size():
-		var i := 0
-		for e in effects:
-			var lbl := box.get_child(i) as Label
-			if lbl != null:
-				lbl.text = e["glyph"]
-			i += 1
-		return
-	for c in box.get_children():
-		c.queue_free()
+	var active := {}
+	var index := 0
 	for e in effects:
-		var portrait := get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y
-		box.add_child(UIKit.label(String(e["glyph"]), 14 if portrait else 22, UIKit.adapt(e["color"]), true))
+		var label: Label = chip["effect_labels"].get(String(e["id"]))
+		if label == null:
+			continue
+		active[String(e["id"])] = true
+		label.text = String(e["glyph"])
+		label.add_theme_color_override("font_color", UIKit.adapt(e["color"]))
+		label.visible = true
+		if label.get_index() != index:
+			box.move_child(label, index)
+		index += 1
+	for id in chip["effect_labels"]:
+		if not active.has(id):
+			chip["effect_labels"][id].visible = false
 
 
 func _on_score_changed(slot: int, _value: int) -> void:
