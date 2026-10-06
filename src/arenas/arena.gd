@@ -16,6 +16,7 @@ signal fighter_submerged(fighter)
 const TILE_SIZE := 2.0
 const CraterFloor = preload("res://src/arenas/crater_floor.gd")
 var _crater_floor
+var _island_routes := AStar3D.new()
 
 var def: ArenaDef
 var tiles: Array[ArenaTile] = []
@@ -295,6 +296,60 @@ func annular_path_clear(from: Vector3, to: Vector3, margin: float = 0.6) -> bool
 	var inner := current_radius * (0.55 if def.shape == "oval" else 0.45)
 	var nearest := Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b)
 	return maxf(a.length(), b.length()) <= current_radius - margin and nearest.length() >= inner + margin
+
+
+## Public, static floor topology only; no opponent or pickup state is read.
+func walking_waypoint(from: Vector3, target: Vector3) -> Vector3:
+	if _island_routes.get_point_count() == 0 or def == null or def.shape != "islands":
+		return target
+	var start := from - global_position
+	var finish := target - global_position
+	if _island_path_clear(start, finish):
+		return target
+	var path := _island_routes.get_point_path(_island_nearest_node(start), _island_nearest_node(finish))
+	# Skip only waypoints with a supported straight approach, never cut a gap.
+	for index in range(path.size() - 1, -1, -1):
+		if _island_path_clear(start, path[index]):
+			return global_position + path[index]
+	return global_position + path[0] if not path.is_empty() else from
+
+
+func _island_nearest_node(point: Vector3) -> int:
+	var closest := 0
+	var distance := INF
+	for id in _island_routes.get_point_ids():
+		var offset := _island_routes.get_point_position(id) - point
+		var candidate := Vector2(offset.x, offset.z).length_squared()
+		if candidate < distance:
+			distance = candidate
+			closest = id
+	return closest
+
+
+func _island_path_clear(from: Vector3, target: Vector3) -> bool:
+	if not _island_floor_supported(Vector2(from.x, from.z)) or not _island_floor_supported(Vector2(target.x, target.z)):
+		return false
+	var count := maxi(1, ceili(Vector2(target.x - from.x, target.z - from.z).length() / 0.2))
+	for step in count + 1:
+		var point := from.lerp(target, float(step) / count)
+		if not _island_floor_supported(Vector2(point.x, point.z)):
+			return false
+	return true
+
+
+func _island_floor_supported(point: Vector2) -> bool:
+	if point.length() <= def.radius * 0.42:
+		return true
+	for island in 5:
+		var angle := TAU * island / 5.0
+		var direction := Vector2(cos(angle), sin(angle))
+		if point.distance_to(direction * def.radius * 0.78) <= def.radius * 0.26:
+			return true
+		var along := point.dot(direction)
+		var across := absf(point.cross(direction))
+		if along >= def.radius * 0.36 and along <= def.radius * 0.52 + 0.001 and across <= 0.6:
+			return true
+	return false
 
 
 func annular_waypoint(from: Vector3, target: Vector3, margin: float = 0.6) -> Vector3:
@@ -864,6 +919,8 @@ func _build_pit() -> void:
 
 
 func _build_islands() -> void:
+	_island_routes.clear()
+	_island_routes.add_point(0, Vector3.ZERO)
 	_add_static_cylinder(def.radius * 0.42, def.thickness, Vector3(0, -def.thickness * 0.5, 0), def.floor_color)
 	var satellites := 5
 	spawn_points.clear()
@@ -895,6 +952,18 @@ func _build_islands() -> void:
 			(start + finish) * 0.5 - normal * thickness * 0.5,
 			def.accent_color.darkened(0.45))
 		body.basis = Basis(normal.cross(along), normal, along)
+		var first := i * 3 + 1
+		var inner := direction * def.radius * 0.32
+		var outer := direction * def.radius * 0.62
+		outer.y = finish.y
+		var island_center := direction * def.radius * 0.78
+		island_center.y = finish.y
+		_island_routes.add_point(first, inner)
+		_island_routes.add_point(first + 1, outer)
+		_island_routes.add_point(first + 2, island_center)
+		_island_routes.connect_points(0, first)
+		_island_routes.connect_points(first, first + 1)
+		_island_routes.connect_points(first + 1, first + 2)
 
 
 func _build_walls() -> void:

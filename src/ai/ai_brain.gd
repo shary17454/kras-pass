@@ -655,6 +655,9 @@ func steer_to(target: Vector3, urgency: float = 1.0) -> void:
 	var me := self_body()
 	if me == null:
 		return
+	var arena := ctx.arena as Arena
+	if arena != null:
+		target = arena.walking_waypoint(me.global_position, target)
 	var to := target - me.global_position
 	move = Vector2(to.x, to.z)
 	if move.length() > 0.05:
