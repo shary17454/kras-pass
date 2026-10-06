@@ -18,6 +18,13 @@ if [[ -n "$(find "$OUT" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
 	echo "Export output must be an empty directory: $OUT" >&2
 	exit 1
 fi
+LOG_DIR="${KRAS_IOS_LOG_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/kras-ios-check.XXXXXX")}"
+mkdir -p "$LOG_DIR"
+if [[ -n "$(find "$LOG_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+	echo "Export log directory must be empty: $LOG_DIR" >&2
+	exit 1
+fi
+echo "==> Export evidence: $LOG_DIR"
 GODOT="${GODOT:-godot}"
 MANIFEST="$ROOT/build/ios/KrasPass.xcodeproj/xcshareddata/xcodecloud/manifest.json"
 MANIFEST_BACKUP=""
@@ -60,7 +67,8 @@ cleanup_apple_export() {
 	fi
 }
 trap cleanup_apple_export EXIT
-"$GODOT" --headless --editor --import --log-file /tmp/kraspass_apple_import.log --path . >/tmp/kraspass_apple_import_console.log 2>&1
+"$GODOT" --headless --editor --import --log-file "$LOG_DIR/import.log" --path . >"$LOG_DIR/import.stdout" 2>&1
+node "$ROOT/tools/check-ios-export-log.mjs" "$LOG_DIR/import.stdout"
 if [[ -f "$MANIFEST" ]]; then
 	MANIFEST_BACKUP="$(mktemp)"
 	cp "$MANIFEST" "$MANIFEST_BACKUP"
@@ -68,11 +76,12 @@ fi
 # Export into an isolated directory: the checked-in ios folder contains the
 # archive parts required by Xcode Cloud and must survive failed exports.
 KEEP_MARKERS=""
-"$GODOT" --headless --log-file /tmp/kraspass_export_godot.log --path . --export-release "iOS" "$OUT/KrasPass.ipa" >/tmp/kraspass_export.log 2>&1 || {
+"$GODOT" --headless --log-file "$LOG_DIR/export.log" --path . --export-release "iOS" "$OUT/KrasPass.ipa" >"$LOG_DIR/export.stdout" 2>&1 || {
 	echo "Godot export failed:" >&2
-	tail -30 /tmp/kraspass_export.log >&2
+	tail -30 "$LOG_DIR/export.stdout" >&2
 	exit 1
 }
+node "$ROOT/tools/check-ios-export-log.mjs" "$LOG_DIR/export.stdout"
 test -d "$OUT/KrasPass.xcodeproj" || { echo "no Xcode project produced" >&2; exit 1; }
 # Godot recreates the xcframework folders; the markers that keep them in git do
 # not survive, so put them back.
@@ -172,9 +181,9 @@ xcodebuild -project "$OUT/KrasPass.xcodeproj" \
 	-configuration Release \
 	-derivedDataPath "$DD" \
 	CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
-	"${EXTRA[@]+"${EXTRA[@]}"}" build >/tmp/kraspass_xcodebuild.log 2>&1 || {
+	"${EXTRA[@]+"${EXTRA[@]}"}" build >"$LOG_DIR/xcodebuild.stdout" 2>&1 || {
 	echo "xcodebuild failed:" >&2
-	grep -E "error:|BUILD FAILED" /tmp/kraspass_xcodebuild.log | tail -20 >&2
+	grep -E "error:|BUILD FAILED" "$LOG_DIR/xcodebuild.stdout" | tail -20 >&2
 	exit 1
 }
 

@@ -1,0 +1,34 @@
+# Partial Natural Campaign Review
+
+Run: `37484382887`, source `e5bd09499448b92b4cdc26b5d890526e156c3cc8`,
+seed offset `1500000`. The campaign was still live at inspection. Downloaded
+artifacts: `/tmp/kras-campaign-37484382887-partial-20261006`.
+
+Nine available reports each completed 24 baseline matches and 16 matched
+seed/character difficulty matches. This is partial evidence, not full 39-game
+qualification or permission to mark all games READY.
+
+| Game | Report flags |
+| --- | --- |
+| bumper_bowl | none |
+| crumble_court | none |
+| fawda | none |
+| goal_guard | none |
+| magnet_court | expert bots no better than easy |
+| ring_rumble | none |
+| sky_court | none |
+| storm_heart | none |
+| tank_arena | none |
+
+Magnet Court start/end simulation fingerprints both match
+`af354bc49e94b6c247269af1ca05bf5d4e0c263566d23fefae5b82fb49920813`.
+Its source sidecar names the exact commit, run and seed offset above.
+All 16 difficulty samples completed; Expert rank-point share is
+`0.519230769230769`. This is not a win rate or conclusive population estimate.
+Baseline ties and zero-score runs are both zero, slot bias 0.125 and character
+bias approximately 0.0833. Preserve the flag pending diagnosis and independent
+matched-seed comparison; no threshold or AI stat bonus was changed.
+
+The other reports' empty flags do not prove rendered polish, human input,
+online Internet sessions, thermal behavior or physical-device performance.
+Do not cancel/restart the live campaign solely for this partial review.
