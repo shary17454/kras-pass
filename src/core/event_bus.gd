@@ -40,6 +40,8 @@ signal minigame_unlocked(id: String)
 signal world_unlocked(id: String)
 signal reward_granted(kind: String, amount: int)
 signal notification_requested(text: String, icon: String)
+## A live status replaces the previous message with the same key; empty text clears it.
+signal status_notification_requested(key: String, text: String, icon: String)
 
 # --- input / devices -------------------------------------------------------
 signal device_connected(device_id: int)
