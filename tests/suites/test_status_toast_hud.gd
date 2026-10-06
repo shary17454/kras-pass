@@ -16,7 +16,7 @@ func run(t: TestHarness, host: Node) -> void:
 			fighter.set_physics_process(false)
 		var game = scene.controller
 		var hud = scene.hud
-		for resolution in [Vector2i(1280, 720), Vector2i(720, 1280)]:
+		for resolution in [Vector2i(1280, 720), Vector2i(720, 1280), Vector2i(540, 960), Vector2i(1280, 720)]:
 			window.size = resolution
 			game._set_hunter(-1)
 			for slot in [0, 1, 3, 2]:
@@ -26,6 +26,12 @@ func run(t: TestHarness, host: Node) -> void:
 				await host.get_tree().process_frame
 				hud.tick(1.0)
 				await host.get_tree().process_frame
+				for chip in hud._chips:
+					t.ok(not chip.root.get_global_rect().intersects(hud._banner_label.get_global_rect()), "player cards never cover the role banner")
+					var bounds: Rect2 = chip.root.get_global_rect()
+					t.ok(bounds.position.x >= 0 and bounds.end.x <= host.get_viewport().get_visible_rect().size.x, "player cards remain inside either viewport")
+					if resolution.x < resolution.y:
+						t.ok(chip.root.get_global_rect().end.y < resolution.y * 0.34, "portrait header leaves the central arena visible")
 				t.equal(hud._status_toasts.size(), 1, "rapid role changes retain one live message")
 				var card: Control = hud._status_toasts["tag.hunter"].card
 				t.equal(card.get_child(0).text, "☄  " + game.hud_banner(), "toast and live banner identify the same hunter")
@@ -48,5 +54,85 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+	Loc.set_locale(locale)
+	window.size = original_size
+	await _local_names(t, host)
+	await _catalog_layout(t, host)
+
+
+func _local_names(t: TestHarness, host: Node) -> void:
+	var window := host.get_tree().root
+	var original_size := window.size
+	var locale := Loc.locale
+	var text_scale = UserSettings.get_value("text_scale")
+	UserSettings._values["text_scale"] = 1.6
+	for language in ["ar", "en"]:
+		Loc.set_locale(language)
+		for game_id in ["tag_hunt", "goal_guard", "tank_arena"]:
+			var config := MatchConfig.build(game_id, ["fanoos", "nabta", "ramla", "sakhra"], 4, 1, 86)
+			for player in config.players:
+				player.display_name_override = "اللاعب صاحب الاسم الطويل جدًا / A player with a very long name"
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": config})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+			for resolution in [Vector2i(540, 960), Vector2i(1280, 720)]:
+				window.size = resolution
+				scene.hud.set_round(0, 3)
+				scene.hud.tick(1.0)
+				for frame in 4:
+					await host.get_tree().process_frame
+				for chip in scene.hud._chips:
+					var bounds: Rect2 = chip.root.get_global_rect()
+					t.ok(bounds.position.x >= 0 and bounds.end.x <= host.get_viewport().get_visible_rect().size.x, "long local names cannot resize player cards off screen")
+					t.ok(chip.name.clip_text, "long names are clipped without pushing score or controls")
+					t.ok(chip.value.visible and chip.effects.visible, "compact layout retains score and active effects")
+					t.equal(chip.name.get_theme_font_size("font_size"), int((14 if resolution.x < resolution.y else 22) * 1.6), "responsive HUD honors larger text setting")
+					if resolution.x < resolution.y:
+						t.ok(bounds.position.y >= scene.hud._round_label.get_global_rect().end.y, "tournament round label stays above local player cards")
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
+	Loc.set_locale(locale)
+	UserSettings._values["text_scale"] = text_scale
+	window.size = original_size
+
+
+func _catalog_layout(t: TestHarness, host: Node) -> void:
+	var window := host.get_tree().root
+	var original_size := window.size
+	var locale := Loc.locale
+	var baseline := host.get_tree().get_node_count()
+	for language in ["ar", "en"]:
+		Loc.set_locale(language)
+		for definition in Registry.minigames():
+			var context := MatchContext.new()
+			context.config = MatchConfig.build(definition.id, ["fanoos", "nabta", "ramla", "sakhra"], 1, 1, 86)
+			context.definition = definition
+			context.scores = [123, 24, 3, 1]
+			context.alive = [true, true, true, true]
+			var arena := Arena.new()
+			arena.def = Registry.arena(context.config.arena_id)
+			context.arena = arena
+			var hud := MatchHUD.new()
+			host.add_child(hud)
+			hud.setup(context, null)
+			hud.set_round(1, 3)
+			for resolution in [Vector2i(540, 960), Vector2i(720, 1280), Vector2i(1280, 720)]:
+				window.size = resolution
+				hud.tick(1.0)
+				for frame in 4:
+					await host.get_tree().process_frame
+				for chip in hud._chips:
+					var bounds: Rect2 = chip.root.get_global_rect()
+					t.ok(bounds.position.x >= 0 and bounds.end.x <= host.get_viewport().get_visible_rect().size.x, "catalog HUD cards fit: " + definition.id)
+					t.ok(not bounds.intersects(hud._timer_label.get_global_rect()), "catalog HUD timer is unobscured: " + definition.id)
+					t.ok(chip.value.get_global_rect().end.x <= bounds.end.x, "catalog score remains within its card: " + definition.id)
+			hud.queue_free()
+			arena.free()
+			await host.get_tree().process_frame
+			t.equal(host.get_tree().get_node_count(), baseline, "catalog HUD cleanup restores node baseline: " + definition.id)
 	Loc.set_locale(locale)
 	window.size = original_size

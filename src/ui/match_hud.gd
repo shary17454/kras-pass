@@ -111,7 +111,7 @@ func _build() -> void:
 		if i == half:
 			var gap := Control.new()
 			clock_gap = gap
-			gap.custom_minimum_size = Vector2(380, 0)
+			gap.custom_minimum_size = Vector2(180, 0)
 			gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			chips.add_child(gap)
@@ -124,10 +124,14 @@ func _build() -> void:
 	var fit_chips := func():
 		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
 		var inset := Platform.safe_insets()
-		chips.columns = (4 if _compact_players() else 2) if portrait else 5
-		chips.offset_top = ((120 if _compact_players() else 180) if portrait else 14) + inset.y
-		if portrait and _boss_meter.visible:
-			chips.offset_top = maxf(chips.offset_top, 18 + inset.y + top.get_combined_minimum_size().y + 12)
+		var text_scale := UIKit.scale()
+		chips.columns = 4 if portrait else 5
+		_timer_label.add_theme_font_size_override("font_size", int((40 if portrait else 48) * text_scale))
+		_round_label.add_theme_font_size_override("font_size", int((16 if portrait else 20) * text_scale))
+		_banner_label.add_theme_font_size_override("font_size", int((18 if portrait else 22) * text_scale))
+		_round_label.visible = not _round_label.text.is_empty()
+		_banner_label.visible = not _banner_label.text.is_empty()
+		chips.offset_top = 18 + inset.y + top.get_combined_minimum_size().y + 12 if portrait else 14 + inset.y
 		chips.offset_left = 26 + inset.x
 		chips.offset_right = -26 - inset.z
 		top.offset_top = 18 + inset.y
@@ -135,6 +139,15 @@ func _build() -> void:
 			clock_gap.visible = not portrait
 		for chip in _chips:
 			chip["root"].size_flags_horizontal = Control.SIZE_EXPAND_FILL if portrait else Control.SIZE_SHRINK_CENTER
+			chip["root"].custom_minimum_size.x = 0 if portrait else (150 if _compact_players() else 224)
+			chip["portrait"].visible = not portrait and not _compact_players()
+			chip["name"].custom_minimum_size.x = 0 if portrait or _compact_players() else 100
+			chip["name"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
+			chip["value"].add_theme_font_size_override("font_size", int((24 if portrait else 32) * text_scale))
+			chip["crown"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
+			chip["meter"].custom_minimum_size = Vector2(60 if portrait else METER_WIDTH, 6 if portrait else 16)
+			for effect in chip["effects"].get_children():
+				effect.add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 	get_viewport().size_changed.connect(fit_chips)
 	_fit_top_rows = fit_chips
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_chips))
@@ -272,7 +285,11 @@ func _make_chip(p: PlayerConfig) -> Control:
 	if _compact_players():
 		value.add_theme_font_size_override("font_size", 28)
 	value.clip_text = true
-	box.add_child(value)
+	var score_row := HBoxContainer.new()
+	score_row.add_theme_constant_override("separation", 6)
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	score_row.add_child(value)
+	box.add_child(score_row)
 
 	# The per-player meter the spec asks for. Where a game has no dash the bar
 	# would be a permanently full decoration, so it is hidden instead.
@@ -284,11 +301,11 @@ func _make_chip(p: PlayerConfig) -> Control:
 	var effects := HBoxContainer.new()
 	effects.name = "Effects"
 	effects.add_theme_constant_override("separation", 6)
-	box.add_child(effects)
+	score_row.add_child(effects)
 
 	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
 		"color": col, "meter": meter, "charge": -1.0,
-		"crown": crown})
+		"crown": crown, "name": name_label, "portrait": portrait})
 	return card
 
 
@@ -443,6 +460,8 @@ func set_time(remaining: float, hurry_threshold: float) -> void:
 
 func set_round(index: int, total: int) -> void:
 	_round_label.text = Loc.t("hud.round_of", {"n": index + 1, "total": total}) if total > 1 else ""
+	if _fit_top_rows.is_valid():
+		_fit_top_rows.call()
 
 
 func set_race_progress(value: String) -> void:
@@ -455,6 +474,8 @@ func set_race_progress(value: String) -> void:
 
 func set_banner(text: String) -> void:
 	_banner_label.text = text
+	if _fit_top_rows.is_valid():
+		_fit_top_rows.call()
 
 
 func show_rules(visible_: bool) -> void:
@@ -535,7 +556,7 @@ func tick(delta: float) -> void:
 	var banner := controller.hud_banner() if controller != null else ""
 	var progress := controller.hud_progress() if controller != null else -1.0
 	var meter_visible := is_finite(progress) and progress >= 0.0
-	var layout_changed: bool = _boss_meter.visible != meter_visible or (meter_visible and banner != _banner_label.text)
+	var layout_changed: bool = _boss_meter.visible != meter_visible or banner != _banner_label.text
 	_boss_meter.visible = meter_visible
 	if meter_visible:
 		_boss_meter.value = clampf(progress, 0.0, 1.0)
@@ -611,7 +632,8 @@ func _refresh_effects(chip: Dictionary, slot: int) -> void:
 	for c in box.get_children():
 		c.queue_free()
 	for e in effects:
-		box.add_child(UIKit.label(String(e["glyph"]), UIKit.SIZE_SMALL, UIKit.adapt(e["color"]), true))
+		var portrait := get_viewport().get_visible_rect().size.x < get_viewport().get_visible_rect().size.y
+		box.add_child(UIKit.label(String(e["glyph"]), 14 if portrait else 22, UIKit.adapt(e["color"]), true))
 
 
 func _on_score_changed(slot: int, _value: int) -> void:
