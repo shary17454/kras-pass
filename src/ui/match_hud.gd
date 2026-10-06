@@ -282,6 +282,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	name_row.add_child(name_label)
 
 	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
+	value.text_direction = Control.TEXT_DIRECTION_LTR
 	value.name = "Value"
 	if _compact_players():
 		value.add_theme_font_size_override("font_size", 28)
