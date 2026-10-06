@@ -3,7 +3,7 @@ extends Node
 ##
 ## Owns three buses (Music / SFX / UI) wired to the volume sliders, a pool of
 ## reusable players so a busy arena never allocates, and a bank of synthesized
-## sounds built on first request. Music cross-fades between tracks and ducks
+## original sounds loaded on first request. Music cross-fades between tracks and ducks
 ## under stingers.
 
 const SFX_VOICES := 16
@@ -220,11 +220,20 @@ func stop_ambience() -> void:
 func _ambience_stream(id: String) -> AudioStreamWAV:
 	if _ambience_bank.has(id):
 		return _ambience_bank[id]
+	var operation_started := DevTools.operations.begin()
+	var path := "res://assets/audio/ambience/" + id + ".res"
+	if ResourceLoader.exists(path):
+		var baked := load(path) as AudioStreamWAV
+		if baked != null:
+			_ambience_bank[id] = baked
+			DevTools.operations.finish("audio.ambience_load", operation_started)
+			return baked
 	var buf = _render_ambience(id)
 	if buf == null:
 		return null
 	var stream := Synth.to_stream(buf, true)
 	_ambience_bank[id] = stream
+	DevTools.operations.finish("audio.ambience_miss", operation_started)
 	return stream
 
 
@@ -316,6 +325,13 @@ func _sound(id: String) -> AudioStreamWAV:
 	if _bank.has(id):
 		return _bank[id]
 	var operation_started := DevTools.operations.begin()
+	var path := "res://assets/audio/sfx/" + id + ".res"
+	if ResourceLoader.exists(path):
+		var baked := load(path) as AudioStreamWAV
+		if baked != null:
+			_bank[id] = baked
+			DevTools.operations.finish("audio.sfx_load", operation_started)
+			return baked
 	var buf = _render_sfx(id)
 	if buf == null:
 		Log.w("unknown sfx '%s'" % id, "Audio")

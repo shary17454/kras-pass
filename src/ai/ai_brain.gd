@@ -498,16 +498,24 @@ func nearest_rival() -> int:
 	var me := self_body()
 	if me == null:
 		return -1
-	var best := -1
+	var candidates: Array[int] = []
 	var best_d := INF
 	for i in ctx.fighters.size():
 		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
 			continue
 		var d := me.global_position.distance_squared_to(perceive(i))
-		if d < best_d:
+		if candidates.is_empty() or (d < best_d and not is_equal_approx(d, best_d)):
 			best_d = d
-			best = i
-	return best
+			candidates.clear()
+			candidates.append(i)
+		elif is_equal_approx(d, best_d):
+			candidates.append(i)
+	if candidates.is_empty():
+		return -1
+	if candidates.size() == 1:
+		return candidates[0]
+	# Resolve only the final nearest tie so a unique target consumes no RNG.
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
 ## Rival with the highest score — the one a strategic AI should target.
