@@ -6,6 +6,27 @@ class ContactProbe extends GameBall:
 		checks += 1
 
 
+class ApproachProbe extends "res://src/ai/brains/ball_brain.gd":
+	var observed := {}
+	var observed_ball: GameBall
+	var target := Vector3.INF
+	var escaped := false
+	func _ball() -> GameBall:
+		return observed_ball
+	func perceive_ball(_ball: GameBall) -> Dictionary:
+		return observed
+	func _best_victim(_position: Vector3) -> int:
+		return -1
+	func steer_to(point: Vector3, _urgency: float = 1.0) -> void:
+		target = point
+	func steer_away(_point: Vector3, _urgency: float = 1.0) -> void:
+		escaped = true
+	func maybe_dash(_scale: float = 1.0) -> void:
+		pass
+	func keep_off_edge(_threshold: float = 3.0) -> void:
+		pass
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("blast ball lifecycle")
 	var ball := GameBall.new()
@@ -50,6 +71,36 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	var brain := ApproachProbe.new()
+	brain.controller = game
+	brain.configure(0, scene.ctx, 3, 733)
+	brain.aggression = 1.0
+	brain.risk = 1.0
+	brain.reaction_time = 0.12
+	brain.observed_ball = game.ball
+	var me: Fighter = scene.ctx.fighter(0)
+	var original_position := me.global_position
+	var original_speed := me.top_speed
+	me.global_position = Vector3(0, 1.0, 0)
+	me.top_speed = 5.0
+	brain.observed = {"position": Vector3(8, 1.0, 0), "fuse": 1.8}
+	game.ball.fuse = 999.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "distant short-fuse ball is not approached when travel consumes the remaining commit window")
+	brain.escaped = false
+	brain.target = Vector3.INF
+	brain.observed["fuse"] = 5.0
+	brain.decide(0.1)
+	t.equal(brain.target, brain.observed["position"], "long visible fuse still permits an offensive approach")
+	t.ok(not brain.escaped, "a viable approach is not replaced with unconditional retreat")
+	brain.escaped = false
+	brain.observed["position"] = Vector3(2.5, 1.0, 0)
+	brain.observed["fuse"] = 1.8
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "ball already in strike range does not incur a distant approach penalty")
+	brain.controller = null
+	me.global_position = original_position
+	me.top_speed = original_speed
 	var baseline := Balance.num("tuning", "ball.explosive_fuse", 5.0)
 	game.on_sudden_death()
 	game.ball.fuse = 0.2

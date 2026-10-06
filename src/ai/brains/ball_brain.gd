@@ -32,8 +32,12 @@ func decide(_delta: float) -> void:
 	# How long a bot is willing to stay near the bomb scales with risk and with
 	# how quickly it can react if things go wrong.
 	var commit_window: float = lerp(2.4, 1.1, risk) + reaction_time
+	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	# Reserve time to reach the existing strike range before spending the
+	# remaining fuse on a risky approach. Own movement stats are not secret.
+	var travel_time := maxf(0.0, dist - 3.0) / maxf(walk_speed, 0.1)
 
-	if fuse > commit_window and dist < 9.0 and rng.randf() < aggression + 0.25:
+	if fuse > commit_window + travel_time and dist < 9.0 and rng.randf() < aggression + 0.25:
 		# Approach from the side opposite the rival we want to send it toward.
 		var victim := _best_victim(position)
 		var push_from: Vector3 = position
