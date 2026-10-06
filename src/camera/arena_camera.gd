@@ -112,6 +112,12 @@ func is_intro_active() -> bool:
 
 
 func _process(delta: float) -> void:
+	var started := DevTools.operations.begin()
+	_update_camera(delta)
+	DevTools.operations.finish("camera.update", started)
+
+
+func _update_camera(delta: float) -> void:
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	var view := get_viewport().get_visible_rect().size
 	keep_aspect = Camera3D.KEEP_WIDTH if view.x < view.y else Camera3D.KEEP_HEIGHT
