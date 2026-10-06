@@ -16,6 +16,7 @@ func build() -> void:
 	body.add_child(UIKit.row(Loc.t("party.local_profile"), select))
 	var new_profile := UIKit.hbox(12)
 	var name_field := LineEdit.new()
+	UIKit.fit_input_font(name_field)
 	name_field.max_length = 24
 	name_field.custom_minimum_size.y = 64
 	name_field.add_theme_font_size_override("font_size", UIKit.SIZE_BODY)
