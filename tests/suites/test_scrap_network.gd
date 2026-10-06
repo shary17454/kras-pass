@@ -19,6 +19,34 @@ func run(t: TestHarness, host: Node) -> void:
 	var b: Fighter = scene.ctx.fighter(1)
 	a.global_position = Vector3(-1, 1, 0)
 	b.global_position = Vector3(1, 1, 0)
+	for velocities in [
+		[Vector3(-10, 0, 0), Vector3(10, 0, 0)],
+		[Vector3(0, 0, 10), Vector3(0, 0, -10)],
+		[Vector3(0, 20, 0), Vector3.ZERO],
+		[Vector3(3, 0, 15), Vector3.ZERO],
+	]:
+		a.velocity = velocities[0]
+		b.velocity = velocities[1]
+		game._resolve_rams()
+		t.equal(game.ram_serial, 0, "separating, lateral, vertical and subthreshold closing cannot register a ram")
+		t.equal(game.health[0], game._max_health, "nonclosing movement cannot injure first rider")
+		t.equal(game.health[1], game._max_health, "nonclosing movement cannot injure second rider")
+		t.ok(game._hit_cooldown.is_empty(), "noncontact cannot consume pair contact cooldown")
+		game.on_round_start()
+	for direction in [Vector3.RIGHT, Vector3.FORWARD]:
+		a.global_position = -direction
+		b.global_position = direction
+		a.facing = direction
+		b.facing = -direction
+		a.velocity = direction * 10.0 + Vector3.UP * 70.0
+		b.velocity = -direction * 10.0 - Vector3.UP * 70.0
+		game._resolve_rams()
+		t.equal(game.ram_serial, 1, "rotated real closing contact still registers one ram")
+		t.near(game.health[0], game._max_health - game._ram_damage * 20.0 / game._threshold * 0.6, 0.001, "vertical speed cannot inflate normal contact damage")
+		t.near(game.health[1], game._max_health - game._ram_damage * 20.0 / game._threshold * game._backwash, 0.001, "correct head-on backwash remains unchanged")
+		game.on_round_start()
+	a.global_position = Vector3(-1, 1, 0)
+	b.global_position = Vector3(1, 1, 0)
 	a.velocity = Vector3(10, 0, 0)
 	b.velocity = Vector3(-10, 0, 0)
 	game._resolve_rams()
