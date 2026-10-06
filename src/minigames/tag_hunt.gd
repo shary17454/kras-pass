@@ -12,11 +12,9 @@ const FREE_SECONDS := 2.6
 const TAG_RADIUS := 1.7
 const HANDOVER_GRACE := 1.3
 const HUNTER_SPEED := 1.13
-const TAG_TOAST_COOLDOWN := 1.6
 
 var _hunter := -1
 var _grace := 0.0
-var _toast_cooldown := 0.0
 var _free_accum: Array[float] = []
 var _mark: Node3D
 var _base_speed := {}
@@ -44,7 +42,6 @@ func on_round_start() -> void:
 
 func tick(delta: float) -> void:
 	_grace = maxf(0.0, _grace - delta)
-	_toast_cooldown = maxf(0.0, _toast_cooldown - delta)
 	if _hunter < 0 or not ctx.is_alive(_hunter):
 		_set_hunter(_pick_any_alive())
 		return
@@ -97,9 +94,6 @@ func _tag(victim: int) -> void:
 		AudioManager.play_sfx("bounce", f.global_position)
 	InputRouter.rumble(victim, 0.7, 0.18)
 	InputRouter.rumble(scorer, 0.45, 0.12)
-	if _toast_cooldown <= 0.0:
-		EventBus.notify(Loc.t("tag.passed", {"name": player_name(victim)}), "☄")
-		_toast_cooldown = TAG_TOAST_COOLDOWN
 	_set_hunter(victim)
 	_grace = HANDOVER_GRACE
 
@@ -110,11 +104,14 @@ func _tag(victim: int) -> void:
 ## and rebuilt from scratch whenever they change, so a game that borrowed one
 ## would have its role bonus quietly erased by the next pickup.
 func _set_hunter(slot: int) -> void:
+	var changed := slot != _hunter
 	if _hunter >= 0:
 		var previous := ctx.fighter(_hunter)
 		if previous != null and is_instance_valid(previous):
 			previous.top_speed = float(_base_speed.get(_hunter, previous.top_speed))
 	_hunter = slot
+	if changed:
+		EventBus.status_notification_requested.emit("tag.hunter", hud_banner(), "☄" if slot >= 0 else "")
 	if _hunter < 0:
 		_clear_mark()
 		return

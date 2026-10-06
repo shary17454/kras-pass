@@ -27,6 +27,8 @@ var primitives_peak := 0.0
 var projectile_peak := 0
 var process_ms := 0.0
 var physics_ms := 0.0
+var viewport_sizes: Array[String] = []
+var window_sizes: Array[String] = []
 
 
 func _ready() -> void:
@@ -87,6 +89,12 @@ func _process(_delta: float) -> void:
 	last_us = now
 	var live := scene.ctx != null and MatchPhase.is_live(scene.phase)
 	if live:
+		var live_size := str(get_viewport().get_texture().get_size())
+		if not viewport_sizes.has(live_size):
+			viewport_sizes.append(live_size)
+		var window_size := str(DisplayServer.window_get_size())
+		if not window_sizes.has(window_size):
+			window_sizes.append(window_size)
 		live_seconds += ms / 1000.0
 		if live_seconds < 3.0:
 			cold_samples.append(ms)
@@ -149,7 +157,12 @@ func _finish() -> void:
 	report["process_mean_ms"] = process_ms / maxi(samples.size(), 1)
 	report["physics_mean_ms"] = physics_ms / maxi(samples.size(), 1)
 	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png(output.trim_suffix(".json") + ".png")
+	var image := get_viewport().get_texture().get_image()
+	report["startup_output_size"] = report["output_size"]
+	report["output_size"] = str(image.get_size())
+	report["live_texture_reported_sizes"] = viewport_sizes
+	report["live_window_sizes"] = window_sizes
+	image.save_png(output.trim_suffix(".json") + ".png")
 	scene.teardown()
 	scene.queue_free()
 	scene = null

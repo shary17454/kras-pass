@@ -22,6 +22,7 @@ var _centre_label: Label
 var _rules_card: Control
 var _hint_label: Label
 var _toast_box: VBoxContainer
+var _status_toasts: Dictionary = {}
 var _offscreen_cues: Array[OffscreenPlayerCue] = []
 ## Width of the per-player charge meter, in unscaled pixels.
 const METER_WIDTH := 118.0
@@ -40,6 +41,7 @@ func setup(context: MatchContext, ctrl: MiniGameController) -> void:
 	EventBus.score_changed.connect(_on_score_changed)
 	EventBus.player_eliminated.connect(_on_eliminated)
 	EventBus.notification_requested.connect(show_toast)
+	EventBus.status_notification_requested.connect(show_status_toast)
 	EventBus.lead_changed.connect(_on_lead_changed)
 
 
@@ -200,6 +202,9 @@ func _build() -> void:
 	_toast_box.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_toast_box)
+	get_viewport().size_changed.connect(_fit_toasts)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(_fit_toasts))
+	_fit_toasts()
 
 
 func _make_chip(p: PlayerConfig) -> Control:
@@ -296,7 +301,26 @@ func occupied_top() -> float:
 	var bottom := 0.0
 	for chip in _chips:
 		bottom = maxf(bottom, chip["root"].get_global_rect().end.y)
+	for label in [_timer_label, _round_label, _banner_label, _boss_meter]:
+		if label != null and label.visible:
+			bottom = maxf(bottom, label.get_global_rect().end.y)
 	return bottom
+
+
+func _fit_toasts() -> void:
+	if _toast_box == null:
+		return
+	var inset := Platform.safe_insets()
+	var width := minf(476.0, get_viewport().get_visible_rect().size.x - inset.x - inset.z - 48.0)
+	_toast_box.offset_left = 24 + inset.x if Loc.is_rtl() else -24 - inset.z - width
+	_toast_box.offset_right = 24 + inset.x + width if Loc.is_rtl() else -24 - inset.z
+	_toast_box.offset_top = occupied_top() + 12.0
+	_toast_box.offset_bottom = _toast_box.offset_top
+	if _hint_label != null and _hint_label.anchor_top == 0.0:
+		var hint_y := (230 if ctx.definition.id == "goal_guard" else 460) + inset.y
+		var messages_bottom := _toast_box.offset_top + _toast_box.get_combined_minimum_size().y
+		_hint_label.offset_top = maxf(hint_y, messages_bottom + 12.0)
+		_hint_label.offset_bottom = _hint_label.offset_top + 100.0
 
 
 ## Replace a UIKit panel's padding with something a HUD can live with, reusing
@@ -457,11 +481,40 @@ func announce(text: String, color: Color = UIKit.ACCENT, hold := 0.75) -> void:
 	tw.tween_property(_centre_label, "modulate:a", 0.0, 0.25)
 
 
-func show_toast(text: String, icon: String = "") -> void:
+func _make_toast(text: String, icon: String) -> Control:
 	var card := UIKit.panel(Color(UIKit.PANEL_HI.r, UIKit.PANEL_HI.g, UIKit.PANEL_HI.b, 0.92), 12)
 	var l := UIKit.label(("%s  %s" % [icon, text]).strip_edges(), UIKit.SIZE_SMALL)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	card.add_child(l)
 	_toast_box.add_child(card)
+	_fit_toasts()
+	return card
+
+
+func show_status_toast(key: String, text: String, icon: String = "") -> void:
+	if _status_toasts.has(key):
+		var previous: Dictionary = _status_toasts[key]
+		if previous.tween != null and previous.tween.is_valid():
+			previous.tween.kill()
+		if is_instance_valid(previous.card):
+			_toast_box.remove_child(previous.card)
+			previous.card.queue_free()
+		_status_toasts.erase(key)
+	if text.is_empty():
+		return
+	var card := _make_toast(text, icon)
+	UIKit.animate_in(card)
+	var tw := create_tween()
+	_status_toasts[key] = {"card": card, "tween": tw}
+	tw.tween_interval(2.6)
+	tw.tween_property(card, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(func():
+		_status_toasts.erase(key)
+		card.queue_free())
+
+
+func show_toast(text: String, icon: String = "") -> void:
+	var card := _make_toast(text, icon)
 	if DisplayServer.get_name() == "headless":
 		card.queue_free()
 		return
@@ -491,6 +544,7 @@ func tick(delta: float) -> void:
 		_banner_label.text = banner
 	if layout_changed and _fit_top_rows.is_valid():
 		_fit_top_rows.call()
+	_fit_toasts()
 
 
 func _refresh_offscreen_cues() -> void:

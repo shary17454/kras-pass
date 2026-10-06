@@ -45,6 +45,7 @@ const SUITES := [
 	"res://tests/suites/test_perf_sampling.gd",
 	"res://tests/suites/test_burst_reuse.gd",
 	"res://tests/suites/test_boss_health_hud.gd",
+	"res://tests/suites/test_status_toast_hud.gd",
 	"res://tests/suites/test_road_query.gd",
 	"res://tests/suites/test_road_query_boundaries.gd",
 	"res://tests/suites/test_live_shadow_quality.gd",
