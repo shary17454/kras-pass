@@ -82,6 +82,7 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	_check_homing_ties(t, scene)
 	var brain := ApproachProbe.new()
 	brain.controller = game
 	brain.configure(0, scene.ctx, 3, 733)
@@ -262,3 +263,43 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _check_homing_ties(t: TestHarness, scene: Node) -> void:
+	var game = scene.controller
+	var ctx: MatchContext = scene.ctx
+	var positions: Array[Vector3] = []
+	var living = ctx.alive.duplicate()
+	var saved_state := ctx.rng.state
+	var center: Vector3 = scene.arena.global_position + Vector3.UP
+	var directions := [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]
+	for slot in 4:
+		positions.append(ctx.fighter(slot).global_position)
+		ctx.fighter(slot).global_position = center + directions[slot] * 4.0
+		ctx.alive[slot] = slot != 2
+	ctx.rng.seed = 82173
+	var sequence: Array[int] = []
+	var counts := [0, 0, 0, 0]
+	for attempt in 256:
+		var target: int = game._nearest_alive_to(center)
+		sequence.append(target)
+		counts[target] += 1
+	t.equal(counts[2], 0, "dead equally near competitor is never selected")
+	for slot in [0, 1, 3]:
+		t.ok(counts[slot] > 40 and counts[slot] < 130, "equally near live competitors do not inherit slot-order priority")
+	ctx.rng.seed = 82173
+	for expected in sequence:
+		t.equal(game._nearest_alive_to(center), expected, "tie selection repeats from the round seed")
+	ctx.alive[2] = true
+	ctx.fighter(2).global_position = center + Vector3.FORWARD
+	var unique_state := ctx.rng.state
+	t.equal(game._nearest_alive_to(center), 2, "a later unique nearest competitor replaces earlier tied candidates")
+	t.equal(ctx.rng.state, unique_state, "unique nearest selection does not consume random state")
+	for slot in 4:
+		ctx.alive[slot] = false
+	t.equal(game._nearest_alive_to(center), -1, "empty live set has no homing or blast victim")
+	t.equal(ctx.rng.state, unique_state, "empty live set does not consume random state")
+	for slot in 4:
+		ctx.fighter(slot).global_position = positions[slot]
+	ctx.alive = living
+	ctx.rng.state = saved_state

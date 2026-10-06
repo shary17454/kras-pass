@@ -68,7 +68,7 @@ func tick(delta: float) -> void:
 
 
 func _nearest_alive_to(p: Vector3) -> int:
-	var best := -1
+	var candidates: Array[int] = []
 	var best_d := INF
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
@@ -77,10 +77,15 @@ func _nearest_alive_to(p: Vector3) -> int:
 		if f == null or not is_instance_valid(f):
 			continue
 		var d: float = f.global_position.distance_squared_to(p)
-		if d < best_d:
+		if is_equal_approx(d, best_d):
+			candidates.append(i)
+		elif d < best_d:
 			best_d = d
-			best = i
-	return best
+			candidates.assign([i])
+	if candidates.is_empty():
+		return -1
+	# Only final equal-distance ties consume the authoritative round RNG.
+	return candidates[0] if candidates.size() == 1 else candidates[ctx.rng.randi_range(0, candidates.size() - 1)]
 
 
 func _on_exploded(_b: GameBall, position: Vector3) -> void:
