@@ -492,6 +492,13 @@ func _track(id: String) -> AudioStreamWAV:
 	if _tracks.has(id):
 		return _tracks[id]
 	var operation_started := DevTools.operations.begin()
+	var path := "res://assets/audio/music/" + id + ".res"
+	if ResourceLoader.exists(path):
+		var baked := load(path) as AudioStreamWAV
+		if baked != null:
+			_tracks[id] = baked
+			DevTools.operations.finish("audio.track_load", operation_started)
+			return baked
 	var buf = _render_track(id)
 	if buf == null:
 		return null
