@@ -4,6 +4,7 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("magnet network")
 	await _physics(t, host)
+	await _missing_keeper_release(t, host)
 	for count in [2, 3, 4]:
 		var cfg := MatchConfig.build("magnet_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 73)
 		cfg.players.resize(count)
@@ -87,6 +88,38 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+
+
+func _missing_keeper_release(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("magnet_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 75)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	game._spawn_ball(true)
+	var departing: GameBall = game.balls[0]
+	var retained: GameBall = game.balls[1]
+	game._held[departing.get_instance_id()] = 0
+	game._held[retained.get_instance_id()] = 1
+	game._park_ball(departing, 0)
+	game._park_ball(retained, 1)
+	var generation := departing.launch_generation
+	var retained_position := retained.global_position
+	var keeper: Fighter = scene.ctx.fighter(0)
+	scene.ctx.fighters[0] = null
+	game._release(0)
+	scene.ctx.fighters[0] = keeper
+	t.ok(not game._held.has(departing.get_instance_id()), "missing keeper releases only its own ownership")
+	t.equal(game._held.get(retained.get_instance_id()), 1, "missing keeper preserves another keeper's catch")
+	t.ok(departing.launch_generation > generation, "missing keeper relaunches its ball instead of stranding it")
+	t.near(departing.speed, game.RELEASE_SPEED, 0.001, "missing keeper release restores ordinary shot speed")
+	t.equal(departing.last_toucher, 0, "missing keeper retains last-touch scoring credit")
+	t.equal(retained.global_position, retained_position, "other keeper's held ball is not moved")
+	t.equal(retained.velocity, Vector3.ZERO, "other keeper's held ball remains parked")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _physics(t: TestHarness, host: Node) -> void:
