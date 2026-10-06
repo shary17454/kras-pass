@@ -77,3 +77,22 @@ or seed wins and not a result for later runtime changes. The live campaign
 was queued overall with three named simulations in progress and no failed
 completed jobs at inspection; it was not complete. No aggregate 39-game success
 or current-source READY promotion follows from this partial update.
+
+## Final Campaign Result
+
+Run `37484382887` subsequently reached `completed/success`: all 41 jobs
+completed, including the 39 simulations, catalogue and summary. The official
+artifact in `/tmp/kras-campaign-37484382887-complete/campaign-summary/balance-summary.json`
+records all 39 games and 1638 completed matches with verified paired difficulty
+coverage and no missing games. Re-running `tools/balance-report.mjs` locally
+with the exact commit/run/seed arguments succeeded; deep comparison matched the
+official summary. All 39 reports have matching start/end runtime fingerprint
+`af354bc49e94b6c247269af1ca05bf5d4e0c263566d23fefae5b82fb49920813`.
+
+The final summary retains six games for review: the five above plus
+`sabaq_sawarikh` (`character advantage`). The other 33 reports have empty flags
+in this sample. `balanceReviewComplete=false` and `releaseReady=false` are
+explicitly retained; workflow success proves complete evidence, not completed
+balancing or Apple readiness. Later keeper, Blast Ball and paint changes are
+different runtime sources and need their own qualification. No READY promotion,
+main merge or production rollout follows from the old-source campaign.
