@@ -81,7 +81,21 @@ returned failure and stopped before the race/boss/stability stages. Evidence:
 The leak cause is not established. It must not be dismissed as harmless or
 silenced, and a focused verbose reproduction is required. The earlier bf9d831
 full gate does not qualify a640663.
+The subsequent meaningful-leader suite under `--verbose` passed 1165 assertions
+with a passing strict log guard and no leak warning. Evidence:
+`/tmp/kras-rng-verbose-focused.stdout`. This does not reproduce or clear the
+full-suite leak; broader verbose diagnosis remains necessary.
 Raw reports are retained in `docs/qa/ai-tap-target-rng-2026-10-07/`.
+
+## Delivery
+
+The isolated branch was pushed successfully after the earlier write failures.
+Draft PR: https://github.com/shary17454/kras-pass/pull/187
+Base: `fix/kras-survivor-winner-contract`, not main. The PR body explicitly
+records the balance regression and the failed full gate. Automatic task
+attachment failed because the thread has reached its 100-attachment limit;
+existing attachments were not deleted. This is engineering review, not Apple
+App Review, and no release readiness is claimed.
 
 ## Remaining gates
 
