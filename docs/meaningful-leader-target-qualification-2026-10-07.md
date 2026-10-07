@@ -99,3 +99,13 @@ No main merge, protected database action, Railway rollout, phone replacement,
 new archive, Apple upload or submission. Complete balance/polish, current native
 device and production acceptance, then freeze a new release commit and use local
 Xcode 27 Distribution signing. Existing archives predate this repair.
+
+## GitHub Delivery Status
+
+The branch was pushed and its remote SHA verified. Draft PR creation did not
+succeed: two GraphQL attempts returned GitHub internal execution errors
+(2026-10-07 15:07:25/15:08:18 UTC); a REST attempt returned an empty/unparseable
+response. Read-only REST checks after these unknown outcomes returned no PR
+for this head. Do not claim a PR exists or blindly create duplicates. No merge
+or branch protection override occurred. The prepared PR body is preserved at
+`/tmp/kras-leader-pr-body.md` for a later verified retry.
