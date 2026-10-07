@@ -67,6 +67,58 @@ Fresh server tests used all six real world captures from this exact gate:
 `/tmp/kras-boss-weakpoint-server-tests.log`.
 The runtime and test files remained identical to 43b68a1 during qualification.
 
+## Natural balance on the frozen runtime
+
+Both samples completed on `193826b5c1aa778754ee762508dfa830b4324cb5`,
+whose runtime and test files are identical to 43b68a1. Each includes 24 natural
+baseline matches, 16 matched-seed/character difficulty matches and two stress
+checks: 84 matches total. Independent validation confirmed all eight difficulty
+pairs and identical start/end hashes for 272 source files. Fingerprint:
+`17ed23ad30959bf5285ae4fda9ce7d5954de44f17675a3c04d997d3212c2cc08`.
+Both processes exited zero and passed their strict log guards. Seed offset:
+1200000; no balance thresholds, seeds or authored rules were changed.
+
+| Game | Expert share | Character bias | Seat bias | Baseline ties |
+| --- | --- | --- | --- | --- |
+| Dreadnought | 0.690909 | 0.150862 | 0.060345 | 0.208333 |
+| Sovereign | 0.690909 | 0.035000 | 0.070000 | 0.041667 |
+
+No automatic balance warnings were produced. In each game the boss was defeated
+in all 24 baseline and 16 difficulty matches. Both mutated/chaos stress bosses
+survived; successful execution is not a boss-defeat claim. The baseline ties
+are retained, not treated as missing winners. These two samples do not establish
+all-game balance review or release readiness; the validator reports both false.
+Raw reports: `docs/qa/boss-weakpoint-tap-2026-10-07/`.
+Logs: `/tmp/kras-weakpoint-boss_dreadnought-1200000.log` and
+`/tmp/kras-weakpoint-boss_sovereign-1200000.log`.
+
+## Current-runtime four-client Dreadnought network check
+
+Four real Godot processes and a local WebSocket service completed the authored
+boss match with scripted human inputs, seed 309004. Host and one guest resumed
+their sessions; all clients agreed on scores `[605,540,515,540]`. Guests received
+901/901/882 world snapshots. The fixture requires real damage, shells and boss
+defeat, and rejects guest-side authoritative simulation or divergent health.
+The process exited zero; all four client stdout files passed strict log guards.
+Evidence: `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-VVlTzI`.
+Maximum server event-loop delay: 78 ms. Cumulative client maximum frame gaps:
+1753/1725/1780/1797 ms, including startup/transitions. Their cause and steady-state
+frame times are not qualified. This is not Internet, physical-player, mobile
+FPS, battery or thermal evidence. Full client logs are not committed because
+they may contain temporary reconnection credentials.
+
+Sovereign also passed with four real clients, the same frozen runtime and seed
+309004. Authored boss duration was retained. All clients agreed on scores
+`[960,840,720,480]`; host and one guest resumed. Guests received 2329/2310/2329
+world snapshots. The fixture requires damage, orb return, shield and defeat,
+and rejects guest-side authoritative objects or divergent health. Exit zero
+and all four strict stdout guards passed. Evidence directory:
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-QMLsel`.
+Maximum server event-loop delay was 139 ms. Cumulative maximum client frame
+gaps were 2752/2763/2770/2785 ms, including startup/transitions; this does not
+establish steady 60 FPS. Both network runs are single local matches, not
+tournament-final, public Internet, adverse-network or physical-device coverage.
+
 ## Qualification not yet established
 
 The full regression gate is not natural balance, online or physical-device
