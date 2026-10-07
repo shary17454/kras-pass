@@ -24,6 +24,12 @@ class StationarySiege:
 		return true
 
 
+class StationaryArmedRacer:
+	extends "res://src/ai/brains/racer_armed_brain.gd"
+	func drive_to(_target: Vector3, _reverse_when_stuck: bool = true) -> void:
+		move = Vector2.ZERO
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI one-shot action requests")
 	for difficulty in 4:
@@ -68,6 +74,49 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_bomber(t, host)
 	await _test_melee(t, host)
 	await _test_siege(t, host)
+	await _test_armed_race(t, host)
+
+
+func _test_armed_race(t: TestHarness, host: Node) -> void:
+	for difficulty in 4:
+		for item in range(1, 5):
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": MatchConfig.build("sabaq_sawarikh", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 853)})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+			var brain := StationaryArmedRacer.new()
+			brain.controller = scene.controller
+			brain.configure(0, scene.ctx, difficulty, 853)
+			brain.on_round_start()
+			brain.reaction_time = 0.0
+			brain.decision_interval = 0.1
+			brain.mistake_chance = 0.0
+			brain.input_noise = 0.0
+			brain.strategy = 0.0
+			brain.press(InputFrame.Btn.ATTACK)
+			brain._publish()
+			InputRouter._physics_process(0.0)
+			var uses := 0
+			for tick in 181:
+				if scene.controller.item_of(0) == 0 and uses < 3:
+					scene.controller.held[0] = item
+				brain.tick(1.0 / 60.0)
+				InputRouter._physics_process(1.0 / 60.0)
+				var held: int = scene.controller.item_of(0)
+				scene.controller._tick_items(1.0 / 60.0)
+				if held != 0 and scene.controller.item_of(0) == 0:
+					uses += 1
+				if uses == 3:
+					break
+			t.equal(uses, 3, "tier %d item %d can consume consecutive pickups after a held action" % [difficulty, item])
+			brain._publish()
+			InputRouter._physics_process(0.0)
+			t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "tier %d item %d request is not stuck held" % [difficulty, item])
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
 
 
 func _test_siege(t: TestHarness, host: Node) -> void:
