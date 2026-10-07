@@ -39,6 +39,27 @@ func run(t: TestHarness, _host: Node) -> void:
 	soak.game = "tank_arena"
 	soak.arena_id = "tank_oasis"
 	t.equal(soak._configuration_error(), "", "authored tank arena is accepted")
+	for humans in range(5):
+		soak.humans = humans
+		t.equal(soak._configuration_error(), "", "zero to four local input slots are valid for vehicle sampling")
+	for humans in [-1, 5]:
+		soak.humans = humans
+		t.ok(not soak._configuration_error().is_empty(), "invalid human count cannot mislabel the sampled workload")
+	soak.humans = 4
+	soak.game = "ring_rumble"
+	soak.arena_id = ""
+	t.ok(not soak._configuration_error().is_empty(), "driving fixture cannot qualify nonvehicle controls")
+	var touch := TouchSource.new()
+	for time in [0.0, 3.0, 100.0]:
+		soak.drive_touch(touch, time)
+		t.near(touch._move.length(), 1.0, 0.001, "scripted joystick retains normal movement magnitude")
+		t.ok(absf(touch._steer) <= 0.6, "scripted steering stays inside ordinary input range")
+		t.equal(touch._throttle, 1.0, "steering control scheme receives throttle")
+		t.equal(touch._bits, 0, "drive-only sample does not claim a projectile stress test")
+	touch.free()
+	soak.humans = 0
+	soak.game = "tank_arena"
+	soak.arena_id = "tank_oasis"
 	soak.arena_id = "dune_ruins"
 	t.ok(not soak._configuration_error().is_empty(), "unknown arena cannot silently qualify its fallback")
 	soak.arena_id = "sky_causeway"

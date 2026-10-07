@@ -8,6 +8,7 @@ var quality := 2
 var game := "sabaq_sawarikh"
 var arena_id := "sky_causeway"
 var output := "/tmp/kras-soak.json"
+var humans := 0
 var scene: Node
 var samples: Array[float] = []
 var cold_samples: Array[float] = []
@@ -45,6 +46,10 @@ func _configuration_error() -> String:
 		return "Performance duration must be finite and positive"
 	if cap < 0 or quality < 0 or quality > 3:
 		return "Invalid performance frame limit or quality tier"
+	if humans < 0 or humans > 4:
+		return "Local human view count must be between zero and four"
+	if humans > 0 and game not in ["tank_arena", "sabaq_sawarikh"]:
+		return "Scripted local driving is only supported by vehicle probes"
 	return ""
 
 
@@ -56,6 +61,7 @@ func _ready() -> void:
 		if arg.begins_with("--game="): game = arg.get_slice("=", 1)
 		if arg.begins_with("--arena="): arena_id = arg.get_slice("=", 1)
 		if arg.begins_with("--output="): output = arg.get_slice("=", 1)
+		if arg.begins_with("--humans="): humans = int(arg.get_slice("=", 1))
 	var error := _configuration_error()
 	if not error.is_empty():
 		push_error(error)
@@ -68,6 +74,8 @@ func _ready() -> void:
 	UserSettings._values["replay_capture"] = false
 	UserSettings._values["graphics_quality"] = quality
 	UserSettings._values["fps_limit"] = cap
+	if humans > 0:
+		UserSettings._values["touch_controls"] = "on"
 	UserSettings._apply_engine_settings()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	# Measure render throughput independently of the connected monitor's refresh.
@@ -77,7 +85,10 @@ func _ready() -> void:
 	Loc.set_locale("ar")
 	nodes_before = get_tree().get_node_count()
 	memory_before = OS.get_static_memory_usage() / 1048576.0
-	var cfg := MatchConfig.build(game, ["fanoos", "mowja", "ramla", "nabta"], 0, 3, 72)
+	var cfg := MatchConfig.build(game, ["fanoos", "mowja", "ramla", "nabta"], humans, 3, 72)
+	for player in cfg.players:
+		if player.is_human:
+			player.device_type = 2
 	if not arena_id.is_empty(): cfg.arena_id = arena_id
 	cfg.duration_override = seconds + 15.0
 	scene = load("res://src/match/match_scene.gd").new()
@@ -101,29 +112,49 @@ func _ready() -> void:
 		effect_label_pools.append(chip.effects.get_child_count())
 	report["prepared_effect_labels_per_player"] = effect_label_pools
 	report["setup_ms"] = (Time.get_ticks_usec() - setup_us) / 1000.0
-	if scene.arena.def.shape == "circuit":
+	if scene.arena.def.shape == "circuit" and scene.vehicle_views == null:
 		scene.camera.mode = ArenaCamera.Mode.CHASE
 		scene.camera.local_target = scene.ctx.fighter(0)
-	# Render identical touch controls without overriding the four active AI inputs.
-	var layer := CanvasLayer.new()
-	layer.layer = 8
-	scene.add_child(layer)
-	var touch := TouchSource.new()
-	layer.add_child(touch)
-	touch.setup(0, Registry.minigame(game))
-	scene.camera.shared_touch_count = maxi(scene.camera.shared_touch_count, 1)
-	touch.set_physics_process(false)
-	touch.set_process_input(false)
+	# All-Bot probes retain the previous presentation-only phone controls.
+	if humans == 0:
+		var layer := CanvasLayer.new()
+		layer.layer = 8
+		scene.add_child(layer)
+		var touch := TouchSource.new()
+		layer.add_child(touch)
+		touch.setup(0, Registry.minigame(game))
+		scene.camera.shared_touch_count = maxi(scene.camera.shared_touch_count, 1)
+		touch.set_physics_process(false)
+		touch.set_process_input(false)
 	for fighter in scene.ctx.fighters:
 		positions.append(fighter.global_position)
 	start_us = Time.get_ticks_usec()
 	last_us = start_us
 	print("SOAK_START ", game, " / ", cfg.arena_id, " cap=", cap, " quality=", quality)
 	report.merge({"game": game, "arena": cfg.arena_id, "engine": Engine.get_version_info().string,
+		"human_slots": cfg.human_slots(), "bot_count": 4 - humans,
+		"personal_view_count": scene.vehicle_views.viewports.size() if scene.vehicle_views != null else 0,
+		"input_fixture": "scripted_touch_driving" if humans > 0 else "four_bots",
 		"built_arena": scene.arena.def.id,
 		"os": OS.get_name(), "renderer": RenderingServer.get_current_rendering_method(),
 		"quality": quality, "cap": cap, "render_scale": get_viewport().scaling_3d_scale,
 		"output_size": str(get_viewport().get_texture().get_size()), "requested_seconds": seconds})
+
+
+func _physics_process(_delta: float) -> void:
+	if scene == null or scene._paused or not MatchPhase.is_live(scene.phase):
+		return
+	for source in scene.touch_sources:
+		drive_touch(source, live_seconds)
+
+
+static func drive_touch(source: TouchSource, elapsed: float) -> void:
+	# Repeatable workload, not a claim of human skill or a race-finishing agent.
+	var steering := sin(elapsed * 0.5) * 0.6
+	source._move = Vector2(steering, -1.0).normalized()
+	source._steer = steering
+	source._throttle = 1.0
+	source._bits = 0
 
 
 func _process(_delta: float) -> void:
@@ -131,7 +162,7 @@ func _process(_delta: float) -> void:
 	var now := Time.get_ticks_usec()
 	var ms := (now - last_us) / 1000.0
 	last_us = now
-	var live := scene.ctx != null and MatchPhase.is_live(scene.phase)
+	var live: bool = scene.ctx != null and not scene._paused and MatchPhase.is_live(scene.phase)
 	if live:
 		if not trace_started:
 			DevTools.operations.reset()
@@ -228,6 +259,7 @@ func _finish() -> void:
 	report["steady"] = _stats(samples)
 	report["first_3_seconds"] = _stats(cold_samples)
 	report["live_seconds"] = live_seconds
+	report["simulation_seconds"] = scene._round_elapsed
 	report["complete_duration"] = live_seconds >= seconds + 3.0
 	report["distance_per_player_m"] = distances
 	report["static_memory_before_mb"] = memory_before
