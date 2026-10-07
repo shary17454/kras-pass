@@ -144,7 +144,7 @@ func _build() -> void:
 			clock_gap.visible = not portrait
 		for chip in _chips:
 			chip["root"].size_flags_horizontal = Control.SIZE_EXPAND_FILL if portrait else Control.SIZE_SHRINK_CENTER
-			chip["root"].custom_minimum_size.x = 0 if portrait else (150 if _compact_players() else 224)
+			chip["root"].custom_minimum_size.x = 0 if portrait else (150 if _compact_players() else 224) * text_scale
 			chip["portrait"].visible = not portrait and not _compact_players()
 			chip["name"].custom_minimum_size.x = 0 if portrait or _compact_players() else 100
 			chip["name"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
@@ -317,7 +317,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail.visible = false
-	box.add_child(detail)
+	contents.add_child(detail)
 
 	# The per-player meter the spec asks for. Where a game has no dash the bar
 	# would be a permanently full decoration, so it is hidden instead.

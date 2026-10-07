@@ -9,7 +9,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var original_scale = UserSettings.get_value("text_scale")
 	for locale in ["ar", "en"]:
 		Loc.set_locale(locale)
-		UserSettings.set_value("text_scale", 1.4)
+		UserSettings.set_value("text_scale", 1.6)
 		for humans in [1, 4]:
 			var cfg := MatchConfig.build("tank_arena", ["nabta", "sakhra", "fanoos", "ramla"], humans, 1, 802)
 			for player in cfg.players:
@@ -48,6 +48,7 @@ func run(t: TestHarness, host: Node) -> void:
 						if detail != null:
 							t.equal(value.text + "\n" + detail.text, scene.controller.hud_value(chip.slot), "presentation preserves the complete controller value")
 							t.ok(not detail.clip_text, "secondary status does not silently clip")
+							t.equal(detail.get_visible_line_count(), detail.get_line_count(), "all status lines remain visible at maximum text scale")
 							t.ok(detail.get_combined_minimum_size().y <= detail.size.y + 1.0, "wrapped status receives its required height")
 							t.ok(chip.root.get_global_rect().encloses(detail.get_global_rect()), "full status region remains inside the player chip")
 					if DisplayServer.get_name() != "headless":

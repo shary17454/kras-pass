@@ -9,7 +9,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var original_scale = UserSettings.get_value("text_scale")
 	for locale in ["ar", "en"]:
 		Loc.set_locale(locale)
-		UserSettings.set_value("text_scale", 1.4)
+		UserSettings.set_value("text_scale", 1.6)
 		for humans in [1, 4]:
 			var cfg := MatchConfig.build("base_siege", ["nabta", "sakhra", "fanoos", "ramla"], humans, 1, 802)
 			for player in cfg.players:
@@ -46,6 +46,7 @@ func run(t: TestHarness, host: Node) -> void:
 						if detail != null:
 							t.equal(value.text + "\n" + detail.text, scene.controller.hud_value(chip.slot), "all score and health text survives presentation")
 							t.ok(not detail.clip_text, "health does not silently clip")
+							t.equal(detail.get_line_count(), 1, "percentage stays together on one line at maximum text scale")
 							var detail_font := detail.get_theme_font("font")
 							var detail_size := detail.get_theme_font_size("font_size")
 							t.ok(detail_font.get_string_size(detail.text, HORIZONTAL_ALIGNMENT_LEFT, -1, detail_size).x <= detail.size.x + 1.0, "full health percentage fits its region")
