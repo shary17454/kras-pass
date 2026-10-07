@@ -27,7 +27,7 @@ func decide(_delta: float) -> void:
 		if obstacle < jump_at:
 			press(Btn.JUMP)
 	if rng.randf() < dash_chance * 0.4:
-		press(Btn.DASH)
+		tap(Btn.DASH)
 
 
 func _distance_to_obstacle(me) -> float:
