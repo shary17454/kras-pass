@@ -8,6 +8,7 @@ class TimingProbe extends "res://src/ai/brains/dodger_brain.gd":
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("dodger own jump timing")
 	var arena := Arena.new()
+	arena.def = ArenaDef.new()
 	host.add_child(arena)
 	arena.current_radius = 10.0
 	var body := Fighter.new()

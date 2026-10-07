@@ -12,6 +12,7 @@ const SUITES := [
 	"res://tests/suites/test_shared_pickup_perception.gd",
 	"res://tests/suites/test_tank_crate_perception.gd",
 	"res://tests/suites/test_driver_engagement.gd",
+	"res://tests/suites/test_vehicle_dash_projection.gd",
 	"res://tests/suites/test_tide_step_access.gd",
 	"res://tests/suites/test_climber_ground_perception.gd",
 	"res://tests/suites/test_round_announcement_fit.gd",

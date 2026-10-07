@@ -827,7 +827,7 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 	if fall_is_lethal and rng.randf() < edge_awareness:
 		var arena := ctx.arena as Arena
 		if arena != null:
-			var dir := Vector3(move.x, 0.0, move.y)
+			var dir := me.dash_direction(move)
 			if dir.length_squared() > 0.05:
 				var land: Vector3 = me.global_position + dir.normalized() * 5.0
 				if arena.edge_distance(land) < 1.2:
