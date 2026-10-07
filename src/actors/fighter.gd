@@ -388,6 +388,13 @@ func can_afford_dash() -> bool:
 	return charge >= float(_tuning.get("dash_cost", 0.34))
 
 
+func dash_direction(input_move: Vector2) -> Vector3:
+	var dir := Vector3(input_move.x, 0, input_move.y)
+	if locomotion == Locomotion.DRIVE or dir.length_squared() < 0.05:
+		dir = facing
+	return dir.normalized()
+
+
 func _do_dash(frame: InputFrame) -> void:
 	if not can_afford_dash():
 		return
@@ -398,10 +405,7 @@ func _do_dash(frame: InputFrame) -> void:
 	# every kart boost toward world -Z regardless of heading — half the lap the
 	# boost was a brake, and the tiers that boost most paid the most for it. A
 	# vehicle boost goes where the nose points.
-	var dir := Vector3(frame.move.x, 0, frame.move.y)
-	if locomotion == Locomotion.DRIVE or dir.length_squared() < 0.05:
-		dir = facing
-	dir = dir.normalized()
+	var dir := dash_direction(frame.move)
 	var t := _tuning
 	_impulse += dir * float(t.get("dash_impulse", 15.0)) * float(mods["speed"])
 	_dash_cd = float(t.get("dash_cooldown", 0.85)) / maxf(0.2, float(mods["dash"]))
