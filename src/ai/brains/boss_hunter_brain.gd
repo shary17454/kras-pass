@@ -185,7 +185,7 @@ func _steer_on_ground(target: Vector3, urgency := 1.0) -> void:
 
 
 func _publish_output(movement: Vector2) -> void:
-	var actions := bits
+	var actions := _take_actions()
 	var me := self_body()
 	var arena := ctx.arena as Arena
 	if (actions & Btn.DASH) != 0 and me != null and arena != null and is_instance_valid(arena._crater_floor):

@@ -48,6 +48,7 @@ var personality := "balanced"
 var move := Vector2.ZERO
 var aim := Vector2.ZERO
 var bits := 0
+var _tap_bits := 0
 
 var _decision_clock := 0.0
 var _history_times := PackedFloat32Array()
@@ -71,6 +72,7 @@ var _noise_phase := 0.0
 
 func configure(player_slot: int, context: MatchContext, difficulty: int, seed_value: int) -> void:
 	_object_history.clear()
+	_tap_bits = 0
 	slot = player_slot
 	ctx = context
 	rng.seed = seed_value + player_slot * 7919
@@ -137,6 +139,7 @@ func on_round_start() -> void:
 	_history_sample_clock = 0.0
 	move = Vector2.ZERO
 	bits = 0
+	_tap_bits = 0
 
 
 ## Called every physics tick by MatchScene.
@@ -183,7 +186,13 @@ func _publish() -> void:
 
 ## Game-specific safety checks must see the final noisy input, not a proposal.
 func _publish_output(movement: Vector2) -> void:
-	InputRouter.push_virtual(slot, movement, aim, bits)
+	InputRouter.push_virtual(slot, movement, aim, _take_actions())
+
+
+func _take_actions() -> int:
+	var actions := bits | _tap_bits
+	_tap_bits = 0
+	return actions
 
 
 # --- perception ------------------------------------------------------------
@@ -799,6 +808,11 @@ func keep_off_edge(threshold: float = 3.0) -> void:
 
 func press(button: int) -> void:
 	bits |= button
+
+
+## One physics-frame request for actions consumed through just_pressed().
+func tap(button: int) -> void:
+	_tap_bits |= button
 
 
 func maybe_dash(chance_scale: float = 1.0) -> void:
