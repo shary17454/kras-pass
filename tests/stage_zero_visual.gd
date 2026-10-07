@@ -40,6 +40,7 @@ func _ready() -> void:
 			return
 	Loc.set_locale(language)
 	var output := SaveSystem.storage_root.path_join("screenshots")
+	var initial_errors := Log.error_count()
 	DirAccess.make_dir_recursive_absolute(output)
 	for resolution in [Vector2i(1280, 720), Vector2i(540, 960)]:
 		get_window().size = resolution
@@ -88,6 +89,11 @@ func _ready() -> void:
 			print("STAGE ZERO VISUAL %s/%s: %s" % [game.id, orientation, "PASS" if success else "FAIL"])
 			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await get_tree().process_frame
+			if Log.error_count() != errors_before:
+				_rows[-1]["passed"] = false
+				_failures.append(game.id + "/" + orientation + "/cleanup")
+	if Log.error_count() != initial_errors and _failures.is_empty():
+		_failures.append("runtime errors outside capture window")
 	var report := FileAccess.open(SaveSystem.storage_root.path_join("visual-report.json"), FileAccess.WRITE)
 	if report == null:
 		_failures.append("report write failed")

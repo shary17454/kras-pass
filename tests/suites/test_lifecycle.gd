@@ -12,6 +12,37 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("lifecycle")
 	_background_flushes_and_is_idempotent(t)
 	await _match_pauses_on_real_background_signal(t)
+	await _teardown_retires_live_match(t)
+
+
+func _teardown_retires_live_match(t: TestHarness) -> void:
+	t.test("teardown stops live callbacks before draining pools and is idempotent")
+	var cfg := MatchConfig.build("ring_rumble", _characters(), 0, PlayerConfig.Difficulty.EASY, 78)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	_host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	for next in [MatchPhase.P.INSTRUCTIONS, MatchPhase.P.COUNTDOWN, MatchPhase.P.PLAYING]:
+		scene._set_phase(next)
+	scene.powerups.enabled = true
+	scene.powerups._spawn_timer = -1.0
+	var errors_before := Log.error_count()
+	var remaining: float = scene.ctx.time_left
+	var elapsed: float = scene._round_elapsed
+	scene.teardown()
+	t.equal(scene.process_mode, Node.PROCESS_MODE_DISABLED, "retired subtree cannot process while awaiting deletion")
+	t.ok(not Pool.has_pool(PowerUpSystem.POOL_KEY), "match pools are drained")
+	scene._physics_process(1.0)
+	scene._process(1.0)
+	await _host.get_tree().physics_frame
+	t.equal(scene.ctx.time_left, remaining, "retired match cannot advance its clock")
+	t.equal(scene._round_elapsed, elapsed, "retired match cannot simulate another tick")
+	t.equal(Log.error_count(), errors_before, "retired match cannot acquire from a drained pool")
+	Pool.define("teardown_successor_probe", func(): return Node.new())
+	scene.teardown()
+	t.ok(Pool.has_pool("teardown_successor_probe"), "repeated teardown cannot drain a successor's pools")
+	Pool.drain("teardown_successor_probe")
+	scene.queue_free()
+	await _host.get_tree().process_frame
 
 
 func _background_flushes_and_is_idempotent(t: TestHarness) -> void:
