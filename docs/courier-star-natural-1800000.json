@@ -1,0 +1,652 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 95.0194444444403,
+      "avg_score": 19.59375,
+      "baseline_seeds": [
+        1809001,
+        1809614,
+        1810227,
+        1810840,
+        1811453,
+        1812066,
+        1812679,
+        1813292,
+        1813905,
+        1814518,
+        1815131,
+        1815744,
+        1816357,
+        1816970,
+        1817583,
+        1818196,
+        1818809,
+        1819422,
+        1820035,
+        1820648,
+        1821261,
+        1821874,
+        1822487,
+        1823100
+      ],
+      "category": "collect",
+      "character_bias": 0.134259259259259,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 27
+            },
+            {
+              "deposits": 23
+            },
+            {
+              "deposits": 10
+            },
+            {
+              "deposits": 15
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            27,
+            23,
+            10,
+            15
+          ],
+          "seed": 1804242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 11
+            },
+            {
+              "deposits": 8
+            },
+            {
+              "deposits": 30
+            },
+            {
+              "deposits": 24
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            11,
+            8,
+            30,
+            24
+          ],
+          "seed": 1804242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 26
+            },
+            {
+              "deposits": 23
+            },
+            {
+              "deposits": 7
+            },
+            {
+              "deposits": 15
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            26,
+            23,
+            7,
+            15
+          ],
+          "seed": 1804339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 8
+            },
+            {
+              "deposits": 8
+            },
+            {
+              "deposits": 30
+            },
+            {
+              "deposits": 28
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            8,
+            8,
+            30,
+            28
+          ],
+          "seed": 1804339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 27
+            },
+            {
+              "deposits": 28
+            },
+            {
+              "deposits": 12
+            },
+            {
+              "deposits": 4
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            27,
+            28,
+            12,
+            4
+          ],
+          "seed": 1804436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 15
+            },
+            {
+              "deposits": 7
+            },
+            {
+              "deposits": 24
+            },
+            {
+              "deposits": 28
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            15,
+            7,
+            24,
+            28
+          ],
+          "seed": 1804436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 38,
+              "knockouts": 1
+            },
+            {
+              "deposits": 37
+            },
+            {
+              "deposits": 11
+            },
+            {
+              "deposits": 12
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            38,
+            37,
+            11,
+            12
+          ],
+          "seed": 1804533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 9
+            },
+            {
+              "deposits": 8
+            },
+            {
+              "deposits": 30
+            },
+            {
+              "deposits": 27
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            9,
+            8,
+            30,
+            27
+          ],
+          "seed": 1804533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 34
+            },
+            {
+              "deposits": 27
+            },
+            {
+              "deposits": 4
+            },
+            {
+              "deposits": 9
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            34,
+            27,
+            4,
+            9
+          ],
+          "seed": 1804630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 11
+            },
+            {
+              "deposits": 7
+            },
+            {
+              "deposits": 26
+            },
+            {
+              "deposits": 28
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            11,
+            7,
+            26,
+            28
+          ],
+          "seed": 1804630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 26
+            },
+            {
+              "deposits": 27
+            },
+            {
+              "deposits": 12
+            },
+            {
+              "deposits": 9
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            26,
+            27,
+            12,
+            9
+          ],
+          "seed": 1804727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 7
+            },
+            {
+              "deposits": 6
+            },
+            {
+              "deposits": 31
+            },
+            {
+              "deposits": 27
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            7,
+            6,
+            31,
+            27
+          ],
+          "seed": 1804727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 29
+            },
+            {
+              "deposits": 28
+            },
+            {
+              "deposits": 10
+            },
+            {
+              "deposits": 7
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "scores": [
+            29,
+            28,
+            10,
+            7
+          ],
+          "seed": 1804824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 7
+            },
+            {
+              "deposits": 9
+            },
+            {
+              "deposits": 28
+            },
+            {
+              "deposits": 25
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            7,
+            9,
+            28,
+            25
+          ],
+          "seed": 1804824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 25
+            },
+            {
+              "deposits": 28
+            },
+            {
+              "deposits": 9
+            },
+            {
+              "deposits": 10
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            4,
+            3
+          ],
+          "scores": [
+            25,
+            28,
+            9,
+            10
+          ],
+          "seed": 1804921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "deposits": 10
+            },
+            {
+              "deposits": 7
+            },
+            {
+              "deposits": 27
+            },
+            {
+              "deposits": 25
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            10,
+            7,
+            27,
+            25
+          ],
+          "seed": 1804921
+        }
+      ],
+      "expert_edge": 0.695652173913043,
+      "flags": [],
+      "id": "star_rush",
+      "name": "اندفاع النجوم",
+      "round_window": 90.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 1800000,
+      "severity": 0,
+      "slot_bias": 0.0462962962962963,
+      "tie_rate": 0.125,
+      "wins_by_character": {
+        "barq": 7,
+        "fanoos": 3,
+        "ghaim": 3,
+        "mowja": 3,
+        "nabta": 4,
+        "ramla": 4,
+        "sakhra": 2,
+        "turs": 1
+      },
+      "wins_by_slot": [
+        5,
+        8,
+        6,
+        8
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-07T10:03:36",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 1805502,
+      "flags": [],
+      "id": "star_rush",
+      "mutated_ok": true,
+      "mutated_seed": 1805501,
+      "name": "اندفاع النجوم",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 1800000,
+  "simulation_source_end": "fdfa206ff2e6882166652b1bafbc09fe3b7602871046eecaa16199cf0d6ed2dc",
+  "simulation_source_start": "fdfa206ff2e6882166652b1bafbc09fe3b7602871046eecaa16199cf0d6ed2dc"
+}
