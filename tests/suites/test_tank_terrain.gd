@@ -3,6 +3,50 @@ extends RefCounted
 const Preparation = preload("res://src/match/match_resource_preparation.gd")
 
 
+func _subset_hull(original: ConvexPolygonShape3D, world_scale: float, budget: int) -> ConvexPolygonShape3D:
+	var directions: Array[Vector3] = []
+	var supports: Array[float] = []
+	var indices: Array[int] = []
+	var retained := PackedVector3Array()
+	for latitude in range(-16, 17):
+		for longitude in 64:
+			var phi := PI * float(latitude) / 32.0
+			var theta := TAU * float(longitude) / 64.0
+			var direction := Vector3(cos(phi) * cos(theta), sin(phi), cos(phi) * sin(theta))
+			var support := -INF
+			var index := 0
+			for i in original.points.size():
+				var value := original.points[i].dot(direction)
+				if value > support:
+					support = value
+					index = i
+			directions.append(direction)
+			supports.append(support)
+			indices.append(index)
+	var candidate_supports: Array[float] = []
+	candidate_supports.resize(directions.size())
+	candidate_supports.fill(-INF)
+	while retained.size() < budget:
+		var worst := -INF
+		var worst_index := 0
+		for i in directions.size():
+			var deficit := supports[i] - candidate_supports[i]
+			if deficit > worst:
+				worst = deficit
+				worst_index = i
+		if retained.size() >= 4 and worst * world_scale <= 0.01:
+			break
+		var point := original.points[indices[worst_index]]
+		if retained.has(point):
+			break
+		retained.append(point)
+		for i in directions.size():
+			candidate_supports[i] = maxf(candidate_supports[i], point.dot(directions[i]))
+	var shape := ConvexPolygonShape3D.new()
+	shape.points = retained
+	return shape
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tank terrain collision ownership")
 	for arena_id in ["tank_foundry", "tank_oasis", "tank_frost"]:
@@ -21,6 +65,95 @@ func run(t: TestHarness, host: Node) -> void:
 		for cover: StaticBody3D in world.buildings:
 			var visual: MeshInstance3D = cover.get_child(0)
 			var collider: CollisionShape3D = cover.get_child(1)
+			if OS.get_cmdline_user_args().has("--cover-hull-probe") and not cover_shapes.has(visual.mesh):
+				var simplified: ConvexPolygonShape3D = visual.mesh.create_convex_shape(true, true)
+				for argument in OS.get_cmdline_user_args():
+					if argument.begins_with("--cover-hull-vertices="):
+						var settings := MeshConvexDecompositionSettings.new()
+						settings.max_num_vertices_per_convex_hull = argument.trim_prefix("--cover-hull-vertices=").to_int()
+						settings.resolution = 1000000
+						settings.convex_hull_approximation = false
+						var proxy := MeshInstance3D.new()
+						proxy.mesh = visual.mesh
+						proxy.create_multiple_convex_collisions(settings)
+						t.equal(proxy.get_child_count(), 1, "hull probe produces one collision body")
+						if proxy.get_child_count() == 1 and proxy.get_child(0).get_child_count() == 1:
+							simplified = proxy.get_child(0).get_child(0).shape
+						else:
+							t.ok(false, "hull probe must retain one convex shape")
+						proxy.free()
+				var original: ConvexPolygonShape3D = collider.shape
+				for argument in OS.get_cmdline_user_args():
+					if argument.begins_with("--cover-subset-vertices="):
+						simplified = _subset_hull(original, collider.scale.x, argument.trim_prefix("--cover-subset-vertices=").to_int())
+						var probe_body := StaticBody3D.new()
+						probe_body.collision_layer = 1 << 19
+						probe_body.collision_mask = 0
+						var probe_shape := CollisionShape3D.new()
+						probe_shape.shape = simplified
+						probe_shape.scale = collider.scale
+						probe_body.add_child(probe_shape)
+						world.add_child(probe_body)
+						probe_body.global_position = Vector3(1000, 0, 1000)
+						await host.get_tree().physics_frame
+						await host.get_tree().physics_frame
+						var sphere := SphereShape3D.new()
+						sphere.radius = 0.05
+						var query := PhysicsShapeQueryParameters3D.new()
+						query.shape = sphere
+						query.collision_mask = probe_body.collision_layer
+						var misses := 0
+						for repair in 4:
+							misses = 0
+							var missing := PackedVector3Array()
+							for point in original.points:
+								query.transform = Transform3D(Basis.IDENTITY, probe_body.global_position + point * collider.scale.x)
+								if world.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty():
+									misses += 1
+									missing.append(point)
+							if misses == 0 or repair == 3:
+								break
+							var repaired := simplified.points
+							for point in missing:
+								if not repaired.has(point):
+									repaired.append(point)
+							simplified.points = repaired
+							await host.get_tree().physics_frame
+							await host.get_tree().physics_frame
+						print("COVER_SUBSET_CLEARANCE ", arena_id, " cover=", cover.name, " vertices_outside_5cm=", misses)
+						if misses > 0:
+							probe_shape.shape = original
+							await host.get_tree().physics_frame
+							await host.get_tree().physics_frame
+							var control_misses := 0
+							for point in original.points:
+								query.transform = Transform3D(Basis.IDENTITY, probe_body.global_position + point * collider.scale.x)
+								if world.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty():
+									control_misses += 1
+							print("COVER_ORIGINAL_CLEARANCE ", arena_id, " cover=", cover.name, " vertices_outside_5cm=", control_misses)
+						t.equal(misses, 0, "every original hull vertex remains within 5cm of candidate")
+						for point in simplified.points:
+							t.ok(original.points.has(point), "subset hull never introduces an external vertex")
+						probe_body.free()
+				var max_error := 0.0
+				var min_error := 0.0
+				for latitude in range(-8, 9):
+					for longitude in 32:
+						var phi := PI * float(latitude) / 16.0
+						var theta := TAU * float(longitude) / 32.0
+						var direction := Vector3(cos(phi) * cos(theta), sin(phi), cos(phi) * sin(theta))
+						var a := -INF
+						var b := -INF
+						for point in original.points:
+							a = maxf(a, point.dot(direction))
+						for point in simplified.points:
+							b = maxf(b, point.dot(direction))
+						var error := (b - a) * collider.scale.x
+						max_error = maxf(max_error, error)
+						min_error = minf(min_error, error)
+				print("COVER_HULL_PROBE ", arena_id, " cover=", cover.name,
+					" original=", original.points.size(), " simplified=", simplified.points.size(),
+					" support_error_world_m=", [min_error, max_error])
 			t.ok(collider.shape is ConvexPolygonShape3D, "rock retains convex collision: " + arena_id)
 			if cover_shapes.has(visual.mesh):
 				t.equal(collider.shape, cover_shapes[visual.mesh], "repeated rock mesh shares its immutable hull: " + arena_id)
