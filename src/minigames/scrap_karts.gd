@@ -89,6 +89,8 @@ func _resolve_rams() -> void:
 		if a == null or not is_instance_valid(a):
 			continue
 		for j in range(i + 1, ctx.fighters.size()):
+			if not ctx.is_alive(i):
+				break
 			if not ctx.is_alive(j):
 				continue
 			var b := ctx.fighter(j)
