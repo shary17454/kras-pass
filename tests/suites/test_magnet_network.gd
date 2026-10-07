@@ -4,6 +4,7 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("magnet network")
 	await _physics(t, host)
+	await _capture_order(t, host)
 	await _missing_keeper_release(t, host)
 	for count in [2, 3, 4]:
 		var cfg := MatchConfig.build("magnet_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 73)
@@ -88,6 +89,55 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+
+
+func _capture_order(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("magnet_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 76)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	for fps in [30, 60, 120]:
+		game.on_round_start()
+		# Adjacent keepers near the shared corner, both within their legal lanes.
+		scene.ctx.fighter(0).global_position = Vector3(-10, 1.3, 9.8)
+		scene.ctx.fighter(1).global_position = Vector3(-9.8, 1.3, 9)
+		game._activate(0)
+		game._activate(1)
+		var ball: GameBall = game.balls[0]
+		ball.launch(Vector3(-9.8, 0.9, 7.4), Vector3.BACK, 26.0)
+		game._tick_ball(ball, 1.0 / fps)
+		t.equal(game._held.get(ball.get_instance_id()), 1, "first contact wins rather than lower slot at %d FPS" % fps)
+		t.equal(ball.last_toucher, 1, "first-contact keeper receives release credit")
+		t.equal(ball.velocity, Vector3.ZERO, "first-contact capture parks the ball")
+		game._held.clear()
+		ball.launch(Vector3(-9.8, 0.9, 12.15), Vector3.FORWARD, 26.0)
+		game._tick_ball(ball, 1.0 / fps)
+		t.equal(game._held.get(ball.get_instance_id()), 0, "reverse travel selects the opposite first contact")
+	t.near(game._capture_fraction(Vector3(-3, 0, 0), Vector3(3, 0, 0), Vector3.ZERO),
+		(3.0 - game.CATCH_RADIUS) / 6.0, 0.000001, "capture uses entry rather than closest approach")
+	t.ok(is_inf(game._capture_fraction(Vector3(3, 0, 0), Vector3(4, 0, 0), Vector3.ZERO)), "outward travel cannot capture")
+	t.ok(is_inf(game._capture_fraction(Vector3(3, 0, 0), Vector3(3, 0, 0), Vector3.ZERO)), "stationary ball outside magnet cannot capture")
+	t.equal(game._capture_fraction(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO), 0.0, "stationary overlapping ball captures immediately")
+	var tied_winners := {}
+	for seed_value in 64:
+		var winners: Array = []
+		for repeat in 2:
+			game._held.clear()
+			game.ctx.rng.seed = seed_value
+			var ball: GameBall = game.balls[0]
+			ball.launch(Vector3(-9.8, 0.9, 9.4), Vector3.ZERO, 0.0)
+			game._tick_ball(ball, 1.0 / 60.0)
+			winners.append(game._held.get(ball.get_instance_id()))
+		t.equal(winners[0], winners[1], "simultaneous contact is reproducible from match seed")
+		tied_winners[winners[0]] = true
+	t.ok(tied_winners.has(0) and tied_winners.has(1), "simultaneous contact does not always favor the first slot")
+	if DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _missing_keeper_release(t: TestHarness, host: Node) -> void:

@@ -1,0 +1,776 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 35.1680555555549,
+      "avg_score": 0.90625,
+      "baseline_seeds": [
+        1509001,
+        1509614,
+        1510227,
+        1510840,
+        1511453,
+        1512066,
+        1512679,
+        1513292,
+        1513905,
+        1514518,
+        1515131,
+        1515744,
+        1516357,
+        1516970,
+        1517583,
+        1518196,
+        1518809,
+        1519422,
+        1520035,
+        1520648,
+        1521261,
+        1521874,
+        1522487,
+        1523100
+      ],
+      "category": "ball_zone",
+      "character_bias": 0.125,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 4,
+              "saves": 6,
+              "volleys": 3
+            },
+            {
+              "conceded": 8,
+              "saves": 9,
+              "volleys": 5
+            },
+            {
+              "conceded": 10,
+              "volleys": 2
+            },
+            {
+              "conceded": 11,
+              "saves": 13,
+              "volleys": 6
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            2,
+            2
+          ],
+          "scores": [
+            6,
+            0,
+            0,
+            0
+          ],
+          "seed": 1504242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 10,
+              "saves": 3,
+              "volleys": 3
+            },
+            {
+              "conceded": 10,
+              "saves": 3,
+              "volleys": 4
+            },
+            {
+              "conceded": 5,
+              "saves": 7,
+              "volleys": 6
+            },
+            {
+              "conceded": 8,
+              "saves": 4,
+              "volleys": 4
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            1,
+            2
+          ],
+          "scores": [
+            0,
+            0,
+            5,
+            0
+          ],
+          "seed": 1504242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 8,
+              "saves": 11,
+              "volleys": 5
+            },
+            {
+              "conceded": 9,
+              "saves": 8,
+              "volleys": 6
+            },
+            {
+              "conceded": 8,
+              "saves": 4,
+              "volleys": 2
+            },
+            {
+              "conceded": 10,
+              "saves": 7,
+              "volleys": 1
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            2,
+            2
+          ],
+          "scores": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "seed": 1504339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 10,
+              "saves": 4,
+              "volleys": 3
+            },
+            {
+              "conceded": 9,
+              "saves": 5,
+              "volleys": 3
+            },
+            {
+              "conceded": 7,
+              "saves": 11,
+              "volleys": 7
+            },
+            {
+              "conceded": 10,
+              "saves": 6,
+              "volleys": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            1,
+            2
+          ],
+          "scores": [
+            0,
+            0,
+            3,
+            0
+          ],
+          "seed": 1504339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 8,
+              "saves": 10,
+              "volleys": 7
+            },
+            {
+              "conceded": 7,
+              "saves": 6,
+              "volleys": 5
+            },
+            {
+              "conceded": 8,
+              "saves": 5,
+              "volleys": 3
+            },
+            {
+              "conceded": 9,
+              "saves": 9,
+              "volleys": 1
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            2,
+            2
+          ],
+          "scores": [
+            0,
+            3,
+            0,
+            0
+          ],
+          "seed": 1504436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 8,
+              "saves": 10,
+              "volleys": 2
+            },
+            {
+              "conceded": 9,
+              "saves": 9,
+              "volleys": 5
+            },
+            {
+              "conceded": 9,
+              "saves": 7,
+              "volleys": 6
+            },
+            {
+              "conceded": 7,
+              "saves": 14,
+              "volleys": 8
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "seed": 1504436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 10,
+              "saves": 11,
+              "volleys": 3
+            },
+            {
+              "conceded": 10,
+              "saves": 5,
+              "volleys": 3
+            },
+            {
+              "conceded": 9,
+              "saves": 6,
+              "volleys": 2
+            },
+            {
+              "conceded": 10,
+              "saves": 1,
+              "volleys": 1
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            2,
+            2
+          ],
+          "scores": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "seed": 1504533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 10,
+              "saves": 2
+            },
+            {
+              "conceded": 9,
+              "saves": 5,
+              "volleys": 3
+            },
+            {
+              "conceded": 7,
+              "saves": 6,
+              "volleys": 5
+            },
+            {
+              "conceded": 9,
+              "saves": 7,
+              "volleys": 6
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            1,
+            2
+          ],
+          "scores": [
+            0,
+            0,
+            4,
+            0
+          ],
+          "seed": 1504533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 5,
+              "saves": 5,
+              "volleys": 4
+            },
+            {
+              "conceded": 7,
+              "saves": 8,
+              "volleys": 6
+            },
+            {
+              "conceded": 10,
+              "saves": 2,
+              "volleys": 1
+            },
+            {
+              "conceded": 8,
+              "saves": 8,
+              "volleys": 3
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            2,
+            2
+          ],
+          "scores": [
+            5,
+            0,
+            0,
+            0
+          ],
+          "seed": 1504630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 10,
+              "saves": 3,
+              "volleys": 2
+            },
+            {
+              "conceded": 10,
+              "volleys": 1
+            },
+            {
+              "conceded": 7,
+              "saves": 11,
+              "volleys": 5
+            },
+            {
+              "conceded": 9,
+              "saves": 5,
+              "volleys": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            1,
+            2
+          ],
+          "scores": [
+            0,
+            0,
+            2,
+            0
+          ],
+          "seed": 1504630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 3,
+              "saves": 6,
+              "volleys": 7
+            },
+            {
+              "conceded": 9,
+              "saves": 3,
+              "volleys": 1
+            },
+            {
+              "conceded": 10,
+              "saves": 5,
+              "volleys": 4
+            },
+            {
+              "conceded": 8,
+              "saves": 7,
+              "volleys": 3
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            2,
+            2
+          ],
+          "scores": [
+            6,
+            0,
+            0,
+            0
+          ],
+          "seed": 1504727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 6,
+              "saves": 4,
+              "volleys": 4
+            },
+            {
+              "conceded": 10,
+              "saves": 3,
+              "volleys": 3
+            },
+            {
+              "conceded": 9,
+              "saves": 5,
+              "volleys": 3
+            },
+            {
+              "conceded": 8,
+              "saves": 11,
+              "volleys": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            1,
+            2,
+            2,
+            2
+          ],
+          "scores": [
+            4,
+            0,
+            0,
+            0
+          ],
+          "seed": 1504727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 7,
+              "saves": 10,
+              "volleys": 6
+            },
+            {
+              "conceded": 5,
+              "saves": 8,
+              "volleys": 5
+            },
+            {
+              "conceded": 10,
+              "saves": 5,
+              "volleys": 2
+            },
+            {
+              "conceded": 10,
+              "saves": 3,
+              "volleys": 2
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            2,
+            2
+          ],
+          "scores": [
+            0,
+            4,
+            0,
+            0
+          ],
+          "seed": 1504824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 10,
+              "saves": 11,
+              "volleys": 3
+            },
+            {
+              "conceded": 9,
+              "saves": 5,
+              "volleys": 4
+            },
+            {
+              "conceded": 7,
+              "saves": 9,
+              "volleys": 8
+            },
+            {
+              "conceded": 10,
+              "saves": 10,
+              "volleys": 3
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            1,
+            2
+          ],
+          "scores": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "seed": 1504824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 7,
+              "saves": 10,
+              "volleys": 7
+            },
+            {
+              "conceded": 10,
+              "saves": 14,
+              "volleys": 8
+            },
+            {
+              "conceded": 9,
+              "saves": 6,
+              "volleys": 3
+            },
+            {
+              "conceded": 8,
+              "saves": 2,
+              "volleys": 2
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            2,
+            2
+          ],
+          "scores": [
+            3,
+            0,
+            0,
+            0
+          ],
+          "seed": 1504921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "conceded": 8,
+              "saves": 2,
+              "volleys": 1
+            },
+            {
+              "conceded": 9,
+              "saves": 5,
+              "volleys": 3
+            },
+            {
+              "conceded": 9,
+              "saves": 7,
+              "volleys": 11
+            },
+            {
+              "conceded": 6,
+              "saves": 9,
+              "volleys": 7
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            2,
+            2,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            0,
+            0,
+            5
+          ],
+          "seed": 1504921
+        }
+      ],
+      "expert_edge": 0.533653846153846,
+      "flags": [],
+      "id": "magnet_court",
+      "name": "المغناطيس",
+      "round_window": 100.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 1500000,
+      "severity": 0,
+      "slot_bias": 0.125,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "barq": 1,
+        "fanoos": 4,
+        "ghaim": 6,
+        "mowja": 3,
+        "nabta": 2,
+        "ramla": 3,
+        "sakhra": 3,
+        "turs": 2
+      },
+      "wins_by_slot": [
+        3,
+        9,
+        8,
+        4
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-08T02:13:16",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 1505502,
+      "flags": [],
+      "id": "magnet_court",
+      "mutated_ok": true,
+      "mutated_seed": 1505501,
+      "name": "المغناطيس",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 1500000,
+  "simulation_source_end": "9661604bb8d963284bc45a54e27144ccce923fc2491140069a7315f0a516804f",
+  "simulation_source_start": "9661604bb8d963284bc45a54e27144ccce923fc2491140069a7315f0a516804f"
+}
