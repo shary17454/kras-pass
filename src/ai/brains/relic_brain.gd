@@ -52,7 +52,7 @@ func decide(_delta: float) -> void:
 		keep_off_edge(2.6)
 		return
 	# The controller's fallback position is not a visible prize.
-	var target := relic.global_position
+	var target := perceived_object_position(relic)
 	steer_to(target)
 	if distance_to(target) > 4.0:
 		maybe_dash(0.7)
@@ -61,4 +61,4 @@ func decide(_delta: float) -> void:
 
 func _loose_relic() -> Node3D:
 	var relic: Node3D = controller.call("loose_relic")
-	return relic if can_observe(relic) else null
+	return relic if perceived_object_position(relic) != Vector3.INF else null

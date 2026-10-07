@@ -143,6 +143,8 @@ func run(t: TestHarness, host: Node) -> void:
 		probes.append(probe)
 	probes[0].hide()
 	probes[2].available = false
+	# Availability/visibility fixture; real pickup timing has its own suite.
+	brain.reaction_time = 0.0
 	t.equal(brain.nearest_in_group("test_ai_visible_pickups", host.get_tree()), probes[3], "hidden or unavailable pickups cannot become targets")
 	t.equal(probes[0].queries, 0, "hidden pickup availability is never queried")
 	t.equal(probes[1].queries, 0, "hidden parent suppresses child availability queries")
@@ -543,6 +545,8 @@ func _test_duo(t: TestHarness, scene: Node) -> void:
 func _test_smasher(t: TestHarness, scene: Node) -> void:
 	var smasher = load("res://src/ai/brains/smasher_brain.gd").new()
 	smasher.configure(0, scene.ctx, 3, 119)
+	# This fixture isolates visible colour classification, not reaction timing.
+	smasher.reaction_time = 0.0
 	smasher.accuracy = 1.0
 	var controller = load("res://src/minigames/crate_smash.gd").new()
 	smasher.controller = controller
