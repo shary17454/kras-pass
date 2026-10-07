@@ -153,6 +153,9 @@ func _incoming_arm(arena: Arena, pos: Vector3) -> Dictionary:
 		return {}
 	var warn: float = lerp(0.5, 1.4, edge_awareness)
 	var best := {}
+	var me := self_body()
+	var own_velocity := me.velocity if me != null else Vector3.ZERO
+	own_velocity.y = 0.0
 	for child in arena.get_children():
 		var sweeper := child as ArenaHazards.Sweeper
 		if sweeper == null:
@@ -178,6 +181,11 @@ func _incoming_arm(arena: Arena, pos: Vector3) -> Dictionary:
 		var omega: float = sample["omega"]
 		if absf(omega) < 0.001:
 			continue
+		# Own tangential motion changes when the observed blade catches us.
+		var target_omega := to.cross(own_velocity).y / to.length_squared()
+		var closing_omega := omega - target_omega
+		if absf(closing_omega) < 0.001:
+			continue
 		# Estimate the present angle only from observed motion, not scheduling.
 		var age := clampf(_time - float(_history_times[idx]), 0.0, reaction_time + HISTORY_SAMPLE_INTERVAL)
 		arm = arm.rotated(Vector3.UP, omega * age * clampf(prediction, 0.0, 1.0))
@@ -189,10 +197,10 @@ func _incoming_arm(arena: Arena, pos: Vector3) -> Dictionary:
 		# nearly a full turn and is correctly ignored.
 		var a := arm.normalized()
 		var t := to.normalized()
-		var travel := atan2(a.cross(t).y, a.dot(t)) * signf(omega)
+		var travel := atan2(a.cross(t).y, a.dot(t)) * signf(closing_omega)
 		if travel < 0.0:
 			travel += TAU
-		var eta := travel / absf(omega)
+		var eta := travel / absf(closing_omega)
 		if eta >= warn:
 			continue
 		if best.is_empty() or eta < float(best["eta"]):
