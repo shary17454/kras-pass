@@ -51,7 +51,7 @@ func _intruder_at_home() -> int:
 	var best := -1
 	var best_d := 5.0
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var d := home.distance_to(perceive(i))
 		if d < best_d:

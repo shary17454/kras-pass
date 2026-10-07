@@ -37,7 +37,7 @@ func _rival_above() -> int:
 	if me == null:
 		return -1
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var p := perceive(i)
 		if p.y > me.global_position.y + 0.8 and Vector2(p.x - me.global_position.x, p.z - me.global_position.z).length() < 4.0:

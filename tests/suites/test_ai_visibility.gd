@@ -257,6 +257,9 @@ func _test_tied_nearest(t: TestHarness, scene: Node) -> void:
 	var replay_brain := AIBrain.new()
 	brain.configure(0, scene.ctx, 3, 8341)
 	replay_brain.configure(0, scene.ctx, 3, 8341)
+	for observer in [brain, replay_brain]:
+		observer._record_history()
+		observer._time += observer.reaction_time
 	var counts := [0, 0, 0, 0]
 	for sample in 900:
 		var selected := brain.nearest_rival()
@@ -267,6 +270,8 @@ func _test_tied_nearest(t: TestHarness, scene: Node) -> void:
 	for rival in [1, 2, 3]:
 		t.ok(counts[rival] >= 220 and counts[rival] <= 380, "nearest tie distributes across all equally close rivals")
 	scene.ctx.fighter(3).global_position = Vector3(0, 1, 1)
+	brain._record_history()
+	brain._time += brain.reaction_time
 	var state := brain.rng.state
 	for sample in 30:
 		t.equal(brain.nearest_rival(), 3, "unique closer rival takes priority over earlier equal candidates")
@@ -288,6 +293,9 @@ func _test_tied_leaders(t: TestHarness, scene: Node) -> void:
 	var replay_brain := AIBrain.new()
 	brain.configure(0, scene.ctx, 3, 5319)
 	replay_brain.configure(0, scene.ctx, 3, 5319)
+	for observer in [brain, replay_brain]:
+		observer._record_history()
+		observer._time += observer.reaction_time
 	var counts := [0, 0, 0, 0]
 	for sample in 900:
 		var selected := brain.leader_rival()

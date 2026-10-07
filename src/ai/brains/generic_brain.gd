@@ -65,7 +65,7 @@ func decide(_delta: float) -> void:
 			steer_to(predict(victim, 0.4))
 			maybe_dash(1.2)
 			return
-	elif marked >= 0 and rng.randf() < edge_awareness:
+	elif can_target(marked) and rng.randf() < edge_awareness:
 		# Somebody else is carrying it. Do not be the person they touch.
 		steer_away(perceive(marked))
 		keep_off_edge(panic_margin)

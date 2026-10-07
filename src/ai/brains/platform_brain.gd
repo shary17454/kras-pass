@@ -183,7 +183,7 @@ func _solid_neighbours(arena: Arena, tile: ArenaTile, visible_ground: Dictionary
 
 func _occupied(tile: ArenaTile) -> bool:
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		if perceive(i).distance_to(tile.global_position) < 1.2:
 			return true
