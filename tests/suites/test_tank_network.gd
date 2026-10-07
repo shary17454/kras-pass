@@ -216,6 +216,9 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 	t.equal(game.crate_target(0), second.global_position, "hidden ammo cannot displace a visible target")
 	var brain := AmmoSteeringProbe.new()
 	brain.configure(0, scene.ctx, 3, 117)
+	# This fixture isolates steering/availability; difficulty delays are tested
+	# with all four profiles in test_tank_crate_perception.gd.
+	brain.reaction_time = 0.0
 	brain.controller = game
 	t.ok(brain.can_observe(second), "ammo fixture's visible crate is inside the observation view")
 	brain.decide(0.0)
