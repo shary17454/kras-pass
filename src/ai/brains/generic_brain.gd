@@ -80,9 +80,10 @@ func decide(_delta: float) -> void:
 	#    to be worth the detour.
 	var pickup := nearest_in_group("powerups", _tree) if _tree != null else null
 	if pickup != null and rng.randf() < powerup_interest:
-		var d := distance_to(pickup.global_position)
+		var position := perceived_object_position(pickup)
+		var d := distance_to(position)
 		if d < 9.0:
-			steer_to(pickup.global_position)
+			steer_to(position)
 			if d > 4.0:
 				maybe_dash(0.6)
 			return

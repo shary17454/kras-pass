@@ -63,11 +63,13 @@ var _history_head := 0
 var _history_count := 0
 var _history_sample_clock := 0.0
 var _time := 0.0
+var _object_history := {}
 var _mistake_timer := 0.0
 var _noise_phase := 0.0
 
 
 func configure(player_slot: int, context: MatchContext, difficulty: int, seed_value: int) -> void:
+	_object_history.clear()
 	slot = player_slot
 	ctx = context
 	rng.seed = seed_value + player_slot * 7919
@@ -119,6 +121,7 @@ func on_configured() -> void:
 
 
 func on_round_start() -> void:
+	_object_history.clear()
 	_decision_clock = 0.0
 	_history_times.clear()
 	_history_positions.clear()
@@ -184,6 +187,12 @@ func _publish_output(movement: Vector2) -> void:
 # --- perception ------------------------------------------------------------
 
 func _record_history() -> void:
+	for id in _object_history.keys():
+		var node := instance_from_id(int(id)) as Node3D
+		if is_instance_valid(node):
+			perceived_object_position(node)
+		else:
+			_object_history.erase(id)
 	if _first_seen_times.size() != ctx.fighters.size():
 		_first_seen_times.resize(ctx.fighters.size())
 		_first_seen_times.fill(INF)
@@ -840,12 +849,34 @@ func nearest_in_group(group: String, tree: SceneTree) -> Node3D:
 	for n in tree.get_nodes_in_group(group):
 		if not (n is Node3D) or not is_instance_valid(n):
 			continue
-		if not can_observe(n):
+		var position := perceived_object_position(n)
+		if position == Vector3.INF:
 			continue
-		if n.has_method("is_available") and not n.call("is_available"):
-			continue
-		var d: float = me.global_position.distance_squared_to(n.global_position)
+		var d: float = me.global_position.distance_squared_to(position)
 		if d < best_d:
 			best_d = d
 			best = n
 	return best
+
+
+## Shared visible-object positions: first acquisition and subsequent motion
+## both use the same profile delay as rival perception.
+func perceived_object_position(node: Node3D) -> Vector3:
+	if not is_instance_valid(node):
+		return Vector3.INF
+	var id := node.get_instance_id()
+	if not can_observe(node) or (node.has_method("is_available") and not node.call("is_available")):
+		_object_history.erase(id)
+		return Vector3.INF
+	var history: Array = _object_history.get(id, [])
+	if history.is_empty() or float(history.back().time) < _time:
+		history.append({"time": _time, "position": node.global_position})
+		if history.size() > HISTORY_CAP:
+			history.pop_front()
+	_object_history[id] = history
+	if reaction_time <= 0.0:
+		return node.global_position
+	for index in range(history.size() - 1, -1, -1):
+		if float(history[index].time) <= _time - reaction_time + 0.000001:
+			return history[index].position
+	return Vector3.INF

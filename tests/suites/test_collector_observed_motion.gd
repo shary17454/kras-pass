@@ -26,6 +26,11 @@ func run(t: TestHarness, host: Node) -> void:
 	var brain = load("res://src/ai/brains/collector_brain.gd").new()
 	brain.configure(0, context, 3, 451)
 	brain.reaction_time = 0.2
+	# The stationary loot is already known before the rival first appears.
+	brain._time = -0.3
+	brain.perceived_object_position(near)
+	brain.perceived_object_position(far)
+	brain._time = 0.0
 	t.equal(brain._preferred_loot(), near, "unknown competitor does not reveal immediate competition")
 	brain._record_history()
 	brain._time = 0.3

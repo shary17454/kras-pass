@@ -11,6 +11,11 @@ const BOMB_COLOR := Color("#3a2b3f")
 var _judgements := {}
 
 
+func on_configured() -> void:
+	super.on_configured()
+	_judgements.clear()
+
+
 func on_round_start() -> void:
 	super.on_round_start()
 	_judgements.clear()
@@ -24,7 +29,7 @@ func decide(_delta: float) -> void:
 	if target == null:
 		super.decide(_delta)
 		return
-	var pos: Vector3 = target.global_position
+	var pos := perceived_object_position(target)
 	steer_to(pos)
 	if distance_to(pos) < 2.4:
 		press(Btn.ATTACK)
@@ -43,7 +48,8 @@ func _pick_crate() -> Node3D:
 	var observed := {}
 	for entry in entries:
 		var node: Node3D = entry["node"]
-		if not can_observe(node):
+		var position := perceived_object_position(node)
+		if position == Vector3.INF:
 			continue
 		var cue := _visible_bomb_cue(node)
 		if cue < 0:
@@ -56,7 +62,7 @@ func _pick_crate() -> Node3D:
 			_judgements[id] = reads_bomb
 		if bool(_judgements[id]):
 			continue
-		var d: float = me.global_position.distance_squared_to(node.global_position)
+		var d: float = me.global_position.distance_squared_to(position)
 		if d < best_d:
 			best_d = d
 			best = node

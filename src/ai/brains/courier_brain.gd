@@ -28,8 +28,9 @@ func decide(_delta: float) -> void:
 
 	var loot := nearest_in_group("pickups", _tree) if _tree != null else null
 	if loot != null:
-		steer_to(loot.global_position)
-		if distance_to(loot.global_position) > 5.5:
+		var position := perceived_object_position(loot)
+		steer_to(position)
+		if distance_to(position) > 5.5:
 			maybe_dash(0.5)
 		keep_off_edge()
 		return
