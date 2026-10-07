@@ -64,3 +64,47 @@ still reports multiplayer_enabled=false. Current-source full balance, Crumble
 investigation, physical iPhone/iPad controls/performance/energy, production
 connection/auth/subscription, and App Store session/build selection remain
 release gates. No merge, Railway change, upload or App Review submission occurred.
+
+## Follow-up: Crumble Independent Sample
+
+No runtime change was made. At documentation source
+693de60d606caae98939b45aa7fb6dcfdacab832, a natural trace with seed 1209001
+and the original first-baseline roster [nabta,sakhra,fanoos,ramla] finished
+in 10.0667 simulated seconds with scores [6,2,10,4]. Initial spawn positions
+were cardinally symmetric. This single trace does not establish the cause of
+the observed campaign seat distribution.
+
+Trace log: /tmp/kras-crumble-current-trace-1209001.log. Its engine log passed
+the strict import-mode guard. The surviving fighter continues falling during
+FINISH after the round has already resolved; this is presentation evidence,
+not a second elimination or evidence that its awarded result is wrong.
+
+An independent natural sample used offset 1500000, unchanged runtime,
+24 rotated-character baselines, 16 matched-seed/character difficulty matches,
+and two mutator stress matches. Exit 0, official Godot 4.7.1, unchanged
+start/end runtime fingerprint, strict engine guard passes, both stress runs pass.
+Baseline seat wins [6,9,5,4], seat bias 0.125, character bias 0.083333,
+no ties, average duration 13.5 seconds, Expert edge 0.50625. The report retains
+the warning "expert bots no better than easy". The original sample's seat
+warning was NOT replaced or declared fixed. One changed leading seat is not
+proof of fair spawning; it does weaken the claim of a single established cause.
+
+Independent log: /tmp/kras-crumble-heldout-1500000.log. Raw independent and
+original reports are retained under docs/qa/crumble-current-2026-10-08/.
+No thresholds, game rules, timing, physics, AI perception or RNG were altered.
+Route/escape decisions and difficulty separation require investigation before
+a qualified behavior change can be accepted.
+
+The current campaign also completed bumper_bowl, fawda and goal_guard.
+Six reports now pass exact source/run/offset and paired-difficulty validation:
+252 matches, six of 39 games. Of these reports, only Crumble records a balance
+warning. New simulation logs pass the strict engine guard. The campaign remains
+live and incomplete; no restart/cancellation was performed.
+
+Current-source content audit incorporating those six reports and the existing
+Hurdle report: READY 0, NEEDS_POLISH 6, NEEDS_BALANCE 33, REWORK 0, BROKEN 0.
+The local-session audit and strict guard passed:
+/tmp/kras-current-six-audit.log and /tmp/kras-current-six-audit-engine.log.
+Missing/currently inadequate evidence does not mean all 33 games are proven
+unbalanced. Real-device approval/QA, source promotion, production qualification,
+and App Store Connect availability remain open. No release submission occurred.
