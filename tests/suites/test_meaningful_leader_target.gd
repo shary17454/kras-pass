@@ -20,7 +20,9 @@ func run(t: TestHarness, host: Node) -> void:
 		brain.strategy = 1.0
 		scene.ctx.scores.fill(0)
 		var reference := RandomNumberGenerator.new()
+		reference.seed = brain.rng.seed
 		reference.state = brain.rng.state
+		reference.randi_range(0, 2) # Three visible co-leaders in this fixture.
 		reference.randf()
 		brain.priority_rival()
 		t.equal(brain.rng.state, reference.state, "tied target selection preserves the established random draw budget")
