@@ -91,8 +91,5 @@ func decide(delta: float) -> void:
 		_state = "backoff"
 		_state_timer = 0.9
 		_backoff_target = target
-	# DRIVE boosts follow the nose, not the steering input requested above.
-	var approach := spot - me.global_position
-	approach.y = 0.0
-	if dist >= 0.2 and dist < 10.0 and me.speed_ratio() > 0.6 and me.facing.dot(approach.normalized()) >= 0.8:
+	if dist < 10.0 and me.speed_ratio() > 0.6:
 		maybe_dash(1.2)
