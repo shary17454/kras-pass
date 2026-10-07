@@ -72,7 +72,11 @@ func decide(_delta: float) -> void:
 
 	if _was_airborne and me.is_on_floor():
 		_prepare_jump = true
+		_ledge_target = Vector3.INF
 	_was_airborne = not me.is_on_floor()
+	if _ledge_target == Vector3.INF and not me.is_on_floor():
+		move = Vector2.ZERO
+		return
 	if _ledge_target == Vector3.INF or (me.is_on_floor() and me.global_position.distance_to(_ledge_target) < 0.8):
 		_ledge_target = _find_higher_ground(me.global_position)
 		_prepare_jump = true
@@ -136,10 +140,8 @@ func _find_higher_ground(from: Vector3) -> Vector3:
 		var dist := Vector2(p.x - from.x, p.z - from.z).length()
 		if dist > 14.0:
 			continue
-		var score := (p.y - from.y) * 2.0 - dist * 0.5
+		var score := -(p.y - from.y) * 2.0 - dist * 0.5
 		if score > best_score:
 			best_score = score
 			best = p
-	if best == from:
-		return arena.global_position + Vector3(0, from.y, 0)
 	return best

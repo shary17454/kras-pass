@@ -73,24 +73,27 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(brain._find_higher_ground(body.global_position), body.global_position, "disabled jump does not plan an elevated route")
 		body.can_jump = true
 		brain.reaction_time = reaction
-		brain.on_round_start()
-		var reached := false
-		var last_bits := 0
-		for tick in 1200:
-			await host.get_tree().physics_frame
-			brain._time += 1.0 / 60.0
-			brain.bits = 0
-			brain.decide(1.0 / 60.0)
-			var frame := InputFrame.new()
-			frame.move = brain.move
-			frame.bits = brain.bits
-			frame.prev_bits = last_bits
-			last_bits = frame.bits
-			body.tick(frame, 1.0 / 60.0)
-			if body.is_on_floor() and body.global_position.y >= steps.back().position.y + 0.2:
-				reached = true
-				break
-		t.ok(reached, "%s AI climbs actual geometry with ordinary input, y=%.2f" % [character.id, body.global_position.y])
+		for spawn in 4:
+			brain.on_round_start()
+			body.respawn_at(scene.arena.spawn_points[spawn])
+			body.control_enabled = true
+			var reached := false
+			var last_bits := 0
+			for tick in 1200:
+				await host.get_tree().physics_frame
+				brain._time += 1.0 / 60.0
+				brain.bits = 0
+				brain.decide(1.0 / 60.0)
+				var frame := InputFrame.new()
+				frame.move = brain.move
+				frame.bits = brain.bits
+				frame.prev_bits = last_bits
+				last_bits = frame.bits
+				body.tick(frame, 1.0 / 60.0)
+				if body.is_on_floor() and body.global_position.y >= steps.back().position.y + 0.2:
+					reached = true
+					break
+			t.ok(reached, "%s AI climbs from actual spawn %d, y=%.2f" % [character.id, spawn, body.global_position.y])
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
