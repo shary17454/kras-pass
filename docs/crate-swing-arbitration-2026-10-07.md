@@ -67,6 +67,53 @@ passed. Expert score share 0.682926829, character bias 0.1666667, seat bias
 0.0416667, zero ties and no report flags. Raw report:
 `docs/qa/crate-swing-2026-10-07/crate-smash-after.json`.
 
-A full current-source QA gate,
-native device/performance checks, production validation and App Review submission
-are not completed. No main merge or production/Apple action was performed.
+## Full source gate and four-client integration
+
+Frozen tested checkout: `6dcc15525894364635cb6149fa0448c1cd726744`.
+The 272-file simulation fingerprint remains the candidate fingerprint above.
+`GODOT_BIN=/opt/homebrew/bin/godot TMPDIR=/tmp sh tools/check_party.sh`
+completed with exit 0. Evidence: `/tmp/kras-crate-full-gate.stdout` and
+`/tmp/kras-party-check.3LJw1F`.
+
+- 420 scripts compiled; inventory: 519 resources, 22 autoloads, 27 routes,
+  8 characters, zero issues.
+- 390091 assertions passed (310.8 seconds), followed by the actual three-lap
+  race, six boss regressions and 39 stability matches with zero failures.
+- All stage log guards passed. This is one stability cycle, not a long soak
+  or physical-device battery/thermal qualification.
+- Fresh server tests used all six world fixtures captured by this run:
+  204 passed, zero failed/cancelled/skipped/todo, 843.469708 ms.
+  Evidence: `/tmp/kras-crate-server-tests.log`.
+- Dependency audit reported zero vulnerabilities in
+  `/tmp/kras-crate-audit.json`; this is not a complete security audit.
+
+`node network-smoke.js --game=lab_crates --humans=4 --seed=309001`
+completed with exit 0 using four real Godot processes, scripted inputs and a
+local WebSocket service. The authored 90-second rounds were not shortened.
+All clients agreed on `[71,29,62,24]`; host and one guest reconnected.
+Guest world snapshot counts were 4108, 4108 and 4089. All four client logs
+passed the separate strict runtime log guard. This is not four human players
+or a production Internet test.
+
+Evidence: `/tmp/kras-crate-lab-four-network.stdout` and
+`/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-KWT50U`.
+Server maximum event-loop delay was 222 ms. Cumulative maximum frame gaps by
+process suffix 0/1/2/3 were 820/827/815/824 ms. The measurement includes loading
+and transitions; it does not establish the stall's cause or steady-play FPS.
+These results must not be advertised as smooth 60 FPS or phone performance.
+
+An earlier parent full gate failed its exit ObjectDB leak guard. This source
+did not reproduce that leak, but its cause remains unidentified; the previous
+failure is not erased or represented as fixed.
+
+## Release gates still open
+
+Native device/performance checks, production validation and App Review
+submission are not completed. The existing local Xcode 27.0 (27A266a) and
+Distribution identity were verified, but identity availability is not archive,
+signature verification or upload evidence. Older archives exclude this repair.
+Railway health returned ok/authentication_ready true and multiplayer_enabled
+false; that does not qualify production online play or latest-source sync.
+App Store Connect returned to login with authResult=FAILED during the fresh
+browser check, so current build inventory and submission status are unverified.
+No main merge or production/Apple state-changing action was performed.
