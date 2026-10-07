@@ -53,8 +53,9 @@ those harness fixes. No valid complete pre-fix red-suite count is claimed.
 
 Rendering: local Godot 4.7.1 official, Metal 4.0 Forward+, Apple M5.
 This is not physical iPhone/iPad performance, battery or thermal testing.
-The full all-game regression has not been rerun on this changed runtime;
-older all-game balance/release reports are not promoted to current proof.
+The subsequent full regression on commit `3c4bbdb` is recorded in
+`hud-full-regression-2026-10-07.md`; older balance/release reports are not
+promoted to current proof.
 
 ## Release Gates
 
