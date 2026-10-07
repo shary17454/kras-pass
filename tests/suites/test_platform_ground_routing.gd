@@ -13,6 +13,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_edge_support(t, host)
 	await _test_arrival_control(t, host)
 	await _test_walk_before_jump(t, host)
+	await _test_equal_routes(t, host)
 	var arena := Arena.new()
 	host.add_child(arena)
 	var body := Fighter.new()
@@ -282,6 +283,43 @@ func _test_walk_before_jump(t: TestHarness, host: Node) -> void:
 	brain.decide(0.1)
 	t.equal(brain.bits & InputFrame.Btn.JUMP, 0,
 		"losing a safe route does not bypass the new warning reaction clock")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_equal_routes(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	var ctx := MatchContext.new()
+	ctx.arena = arena
+	ctx.config = MatchConfig.build("crumble_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 734)
+	for slot in 4:
+		var body := Fighter.new()
+		arena.add_child(body)
+		body.set_physics_process(false)
+		body.hide()
+		ctx.fighters.append(body)
+	_tile(arena, 0, 0, ArenaTile.State.WARNING)
+	var left := _tile(arena, -1, 0, ArenaTile.State.SOLID)
+	var right := _tile(arena, 1, 0, ArenaTile.State.SOLID)
+	for slot in 4:
+		var counts := [0, 0]
+		for seed_value in range(1000, 1128):
+			var brain := RoutingProbe.new()
+			brain.configure(slot, ctx, 3, seed_value)
+			var pick := brain._pick_tile(arena, Vector3.ZERO)
+			t.ok(pick in [left, right], "equal route remains an intact cardinal step")
+			counts[0 if pick == left else 1] += 1
+			var repeated := RoutingProbe.new()
+			repeated.configure(slot, ctx, 3, seed_value)
+			t.equal(repeated._pick_tile(arena, Vector3.ZERO), pick, "same seed and seat reproduce the route tie")
+		t.ok(counts[0] >= 40 and counts[1] >= 40, "seat %d does not always choose the first equal route: %s" % [slot, counts])
+	var unique := RoutingProbe.new()
+	unique.configure(0, ctx, 3, 734)
+	left.hide()
+	var rng_before := unique.rng.state
+	t.equal(unique._pick_tile(arena, Vector3.ZERO), right, "hidden equal route cannot enter tie selection")
+	t.equal(unique.rng.state, rng_before, "a unique best route consumes no tie RNG")
 	arena.queue_free()
 	await host.get_tree().process_frame
 
