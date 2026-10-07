@@ -42,7 +42,8 @@ func _should_use(item: int, me: Fighter) -> bool:
 		Race.Item.BOOST:  # Only worth it pointing down the road, not at a wall.
 			return _aimed_at_line(me) and me.speed_ratio() > 0.55
 		Race.Item.MISSILE:  # Needs somebody ahead on the road, not merely near.
-			var target: int = controller.call("rival_ahead", slot) \
+			# Filter before ranking so a hidden rival cannot mask a visible one.
+			var target: int = controller.call("rival_ahead", slot, Callable(self, "can_target")) \
 				if controller.has_method("rival_ahead") else -1
 			if not can_target(target):
 				return false

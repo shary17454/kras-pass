@@ -8,8 +8,8 @@ class PickupProbe extends Node3D:
 		return available
 
 class RaceCueProbe extends MiniGameController:
-	func rival_ahead(_slot: int) -> int:
-		return 1
+	func rival_ahead(_slot: int, targetable: Callable = Callable()) -> int:
+		return 1 if not targetable.is_valid() or targetable.call(1) else -1
 
 class MagnetCueProbe extends MiniGameController:
 	var charge_ready := true
@@ -204,6 +204,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_courier(t, scene)
 	_test_platform(t, scene)
 	_test_remaining_rivals(t, scene)
+	_test_race_visible_alternative(t, scene)
 	_test_keeper_balls(t, scene)
 	_test_magnet_deadline(t, scene)
 	_test_bomb_states(t, scene)
@@ -954,6 +955,46 @@ func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
 	scene.camera.global_transform = view
 	hidden_ledge.queue_free()
 	visible_ledge.queue_free()
+
+
+func _test_race_visible_alternative(t: TestHarness, scene: Node) -> void:
+	var game = load("res://src/minigames/sabaq_sawarikh.gd").new()
+	game.ctx = scene.ctx
+	game.lap.assign([0, 0, 0, 0])
+	game._next_cp.assign([0, 1, 2, 3])
+	game._started.assign([false, false, false, false])
+	game.finish_times.resize(4)
+	game.finish_times.fill(game.UNFINISHED)
+	game._checkpoints.assign([Vector3.ZERO, Vector3.RIGHT, Vector3.FORWARD, Vector3.LEFT])
+	for difficulty in 4:
+		for slot in 4:
+			scene.ctx.fighter(slot).show()
+			scene.ctx.fighter(slot).global_position = Vector3(slot, 1, 0)
+		var brain = load("res://src/ai/brains/racer_armed_brain.gd").new()
+		brain.configure(0, scene.ctx, difficulty, 119)
+		brain.controller = game
+		brain.strategy = 1.0
+		brain._record_history()
+		brain._time = brain.reaction_time + 1.0
+		scene.ctx.fighter(1).hide()
+		scene.ctx.fighter(3).hide()
+		game._next_cp[0] = 0
+		t.equal(game.rival_ahead(0), 1, "unfiltered player missile selection remains unchanged")
+		t.ok(brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d visible racer ahead is not masked by a hidden nearer-ranked rival" % difficulty)
+		game._next_cp[0] = 3
+		t.ok(brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d leader can choose a visible trailing racer despite a hidden first slot" % difficulty)
+		game.finish_times[2] = 1234
+		t.ok(not brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d finished visible racers cannot become missile targets" % difficulty)
+		game.finish_times[2] = game.UNFINISHED
+		scene.ctx.fighter(2).hide()
+		t.ok(not brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d all hidden racers cannot trigger a missile" % difficulty)
+		scene.ctx.fighter(2).show()
+		brain._record_history()
+		t.ok(not brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d visible alternative still waits for reacquisition reaction delay" % difficulty)
+		brain._time += brain.reaction_time + 0.1
+		t.ok(brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d reacquired alternative is available after reaction delay" % difficulty)
+		brain.controller = null
+	game.free()
 
 
 func _test_keeper_balls(t: TestHarness, scene: Node) -> void:
