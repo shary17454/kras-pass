@@ -56,6 +56,7 @@ var _history_velocities: Array[PackedVector3Array] = []
 var _history_damage: Array[PackedFloat32Array] = []
 var _history_balls: Array[Dictionary] = []
 var _first_seen_times := PackedFloat64Array()
+var _machine_cue_history := {}
 var _tracks_balls := false
 var _tracks_damage := false
 var _history_head := 0
@@ -125,6 +126,7 @@ func on_round_start() -> void:
 	_history_damage.clear()
 	_history_balls.clear()
 	_first_seen_times.clear()
+	_machine_cue_history.clear()
 	_history_head = 0
 	_history_count = 0
 	_history_sample_clock = 0.0
@@ -621,40 +623,64 @@ func leader_gap() -> float:
 
 
 # --- the hover machine, as seen from the ground ----------------------------
-## Everything below is visible: the drone, the beam it is lining up, and the
-## marker over somebody's head.
+## Only currently observable rendered cues can enter the delayed cue history.
 
 func machine() -> Node:
 	return ctx.machine
 
 
-## True when the drone is lining up something unpleasant on this bot. The
-## reaction is deliberately gated on `accuracy`, so a low tier stands in the
-## beam and a high tier steps out of it.
+## A mature red warning near this bot, with difficulty-specific accuracy.
 func machine_threatens_me() -> bool:
-	var m := ctx.machine
-	if m == null or not is_instance_valid(m):
+	var cue := _machine_cue("warning")
+	if cue.is_empty() or not cue.penalty or self_body() == null:
 		return false
-	if not m.is_telegraphing() or not m.target_is_penalty():
-		return false
-	if m.target_slot() != slot:
+	var offset: Vector3 = self_body().global_position - cue.point
+	offset.y = 0.0
+	if offset.length() > 0.75:
 		return false
 	return rng.randf() < accuracy
 
 
 ## The floor spot the drone is about to drop something on, or ZERO.
 func machine_drop_point() -> Vector3:
-	var m := ctx.machine
-	if m == null or not is_instance_valid(m) or not m.is_telegraphing():
-		return Vector3.ZERO
-	if m.target_slot() >= 0 or m.target_is_penalty():
-		return Vector3.ZERO
-	return m.target_point()
+	var cue := _machine_cue("warning")
+	return cue.point if not cue.is_empty() and cue.drop else Vector3.ZERO
 
 
 func marked_slot() -> int:
+	var cue := _machine_cue("mark")
+	return int(cue.slot) if not cue.is_empty() else -1
+
+
+func machine_origin_point() -> Vector3:
+	var cue := _machine_cue("warning")
+	return cue.origin if not cue.is_empty() else Vector3.ZERO
+
+
+func _machine_cue(kind: String) -> Dictionary:
 	var m := ctx.machine
-	return m.marked_slot() if m != null and is_instance_valid(m) else -1
+	if not is_instance_valid(m) or not m.has_method("visual_observation"):
+		_machine_cue_history.erase(kind)
+		return {}
+	var observed: Dictionary = m.visual_observation(kind, Callable(self, "can_observe"))
+	if observed.is_empty():
+		_machine_cue_history.erase(kind)
+		return {}
+	var history: Array = _machine_cue_history.get(kind, [])
+	if not history.is_empty():
+		var previous: Dictionary = history.back().cue
+		if previous.id != observed.id or previous.get("penalty") != observed.get("penalty") \
+				or previous.get("drop") != observed.get("drop"):
+			history.clear()
+	if history.is_empty() or float(history.back().time) != _time:
+		history.append({"time": _time, "cue": observed})
+		if history.size() > HISTORY_CAP:
+			history.pop_front()
+	_machine_cue_history[kind] = history
+	for i in range(history.size() - 1, -1, -1):
+		if float(history[i].time) <= _time - reaction_time + 0.000001:
+			return history[i].cue
+	return {}
 
 
 func distance_to(pos: Vector3) -> float:

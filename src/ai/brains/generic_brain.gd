@@ -49,7 +49,7 @@ func decide(_delta: float) -> void:
 	if drone != null and machine_threatens_me():
 		# Sidestep, not retreat: running straight in or straight out keeps you
 		# under a beam that tracks. Cutting across it is what gets you clear.
-		var away: Vector3 = me.global_position - drone.global_position
+		var away: Vector3 = me.global_position - machine_origin_point()
 		away.y = 0.0
 		if away.length() > 0.1:
 			steer_to(me.global_position + away.normalized().cross(Vector3.UP) * 4.0)
