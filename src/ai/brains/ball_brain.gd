@@ -103,7 +103,7 @@ func _best_victim(from: Vector3) -> int:
 	var candidates: Array[int] = []
 	var best_d := INF
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var d: float = perceive(i).distance_squared_to(from)
 		if is_equal_approx(d, best_d):

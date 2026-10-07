@@ -31,7 +31,7 @@ func decide(_delta: float) -> void:
 		keep_off_edge(4.0)
 		return
 
-	if holder >= 0 and can_observe(ctx.fighter(holder)):
+	if can_target(holder):
 		# Somebody else has it. Line the shove up outward so the steal also
 		# threatens a ring-out.
 		var spot := predict(holder, 0.3)

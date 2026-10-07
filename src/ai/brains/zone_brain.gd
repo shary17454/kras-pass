@@ -107,7 +107,7 @@ func decide(_delta: float) -> void:
 
 func _rival_in_zone(zone: Vector3, radius: float) -> int:
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		if perceive(i).distance_to(zone) <= radius:
 			return i

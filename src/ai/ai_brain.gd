@@ -439,14 +439,25 @@ func _history_index(want: float) -> int:
 ## Distinguish unknown locations from valid origin coordinates and last-seen
 ## memory. New knowledge becomes actionable only after the reaction delay.
 func has_observed(target_slot: int) -> bool:
-	if target_slot < 0 or target_slot >= _first_seen_times.size():
+	if target_slot < 0 or target_slot >= ctx.fighters.size():
 		return false
-	return _first_seen_times[target_slot] <= _time - reaction_time + 0.000001
+	if target_slot < _first_seen_times.size() \
+			and _first_seen_times[target_slot] <= _time - reaction_time + 0.000001:
+		return true
+	return false
+
+
+func can_target(target_slot: int) -> bool:
+	return target_slot >= 0 and target_slot < ctx.fighters.size() \
+		and ctx.is_alive(target_slot) and can_observe(ctx.fighter(target_slot)) \
+		and (reaction_time <= 0.0 or has_observed(target_slot))
 
 
 ## Delayed observed position, or a visible fallback before the first sample.
 func perceive(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return Vector3.ZERO
+	if reaction_time > 0.0 and not has_observed(target_slot):
 		return Vector3.ZERO
 	var idx := _history_index(_time - reaction_time)
 	if idx >= 0:
@@ -460,6 +471,8 @@ func perceive(target_slot: int) -> Vector3:
 ## either, so the aim lead is built from the same stale snapshot as its position.
 func _perceived_velocity(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return Vector3.ZERO
+	if reaction_time > 0.0 and not has_observed(target_slot):
 		return Vector3.ZERO
 	var idx := _history_index(_time - reaction_time)
 	if idx >= 0:
@@ -501,7 +514,7 @@ func nearest_rival() -> int:
 	var candidates: Array[int] = []
 	var best_d := INF
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var d := me.global_position.distance_squared_to(perceive(i))
 		if candidates.is_empty() or (d < best_d and not is_equal_approx(d, best_d)):
@@ -523,7 +536,7 @@ func leader_rival() -> int:
 	var best_score := -2147483648
 	var candidates: Array[int] = []
 	for i in ctx.scores.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		if candidates.is_empty() or ctx.scores[i] > best_score:
 			best_score = ctx.scores[i]
@@ -566,7 +579,7 @@ func edge_pressured_rival(threshold: float = 4.0) -> int:
 	var best := -1
 	var best_margin := threshold
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var margin := arena.edge_distance(perceive(i))
 		if margin < best_margin:
@@ -769,7 +782,7 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 
 func maybe_attack(target_slot: int, range_: float = 2.4) -> void:
 	var me := self_body()
-	if me == null or not me.can_attack or target_slot < 0 or not can_observe(ctx.fighter(target_slot)):
+	if me == null or not me.can_attack or not can_target(target_slot):
 		return
 	var target := predict(target_slot, 0.2)
 	if me.global_position.distance_to(target) > range_:
