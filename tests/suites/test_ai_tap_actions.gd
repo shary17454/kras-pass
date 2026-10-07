@@ -30,6 +30,12 @@ class StationaryArmedRacer:
 		move = Vector2.ZERO
 
 
+class StationaryBossWeakpoint:
+	extends "res://src/ai/brains/boss_hunter_brain.gd"
+	func steer_to(_target: Vector3, _urgency: float = 1.0) -> void:
+		move = Vector2.ZERO
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI one-shot action requests")
 	for difficulty in 4:
@@ -75,6 +81,75 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_melee(t, host)
 	await _test_siege(t, host)
 	await _test_armed_race(t, host)
+	await _test_boss_weakpoint(t, host)
+
+
+func _test_boss_weakpoint(t: TestHarness, host: Node) -> void:
+	for difficulty in 4:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("boss_dreadnought", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 857)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		scene.ctx.observation_camera = null
+		var me: Fighter = scene.ctx.fighter(0)
+		me.global_position = scene.controller._vent.global_position + Vector3(0, -1.4, -1.8)
+		me.facing = Vector3(0, 0, 1)
+		for slot in [1, 2, 3]:
+			scene.ctx.fighter(slot).hide()
+		var brain := StationaryBossWeakpoint.new()
+		brain.controller = scene.controller
+		brain.configure(0, scene.ctx, difficulty, 857)
+		brain.on_round_start()
+		brain.reaction_time = 0.0
+		brain.decision_interval = 0.1
+		brain.mistake_chance = 0.0
+		brain.input_noise = 0.0
+		brain.attack_chance = 1.0
+		var health: float = scene.controller.boss_health
+		var edges := 0
+		for tick in 181:
+			brain.tick(1.0 / 60.0)
+			InputRouter._physics_process(1.0 / 60.0)
+			var frame := InputRouter.frame(0)
+			if frame.just_pressed(InputFrame.Btn.ATTACK):
+				edges += 1
+			me._advance_timers(1.0 / 60.0)
+			me._handle_buttons(frame)
+			scene.controller._check_vent_hits(1.0 / 60.0)
+		var damage: float = health - scene.controller.boss_health
+		t.ok(edges >= 10, "tier %d repeated weakpoint decisions create press edges" % difficulty)
+		t.ok(damage >= 90.0, "tier %d actual vent takes damage after a second swing" % difficulty)
+		t.ok(damage <= 135.0, "tier %d weakpoint requests preserve vent cooldown" % difficulty)
+		t.near(damage, float(scene.ctx.scores[0]), 0.001, "tier %d vent damage and credited score agree" % difficulty)
+		brain._publish()
+		InputRouter._physics_process(0.0)
+		t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "tier %d weakpoint request is released" % difficulty)
+		brain.attack_chance = 0.0
+		brain.tick(1.0)
+		InputRouter._physics_process(0.0)
+		t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "tier %d weakpoint request retains attack probability" % difficulty)
+		brain.attack_chance = 1.0
+		scene.controller._vent.hide()
+		brain.tick(1.0)
+		InputRouter._physics_process(0.0)
+		t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "tier %d cannot attack a hidden weakpoint" % difficulty)
+		scene.controller._vent.show()
+		brain.reaction_time = 0.8
+		brain.on_round_start()
+		brain.tick(0.1)
+		InputRouter._physics_process(0.0)
+		t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "tier %d weakpoint acquisition must earn reaction delay" % difficulty)
+		brain.reaction_time = 0.0
+		brain.on_round_start()
+		me.global_position += Vector3(0, 0, -10)
+		brain.tick(1.0)
+		InputRouter._physics_process(0.0)
+		t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "tier %d cannot attack a weakpoint outside range" % difficulty)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
 
 
 func _test_armed_race(t: TestHarness, host: Node) -> void:

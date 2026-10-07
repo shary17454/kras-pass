@@ -38,13 +38,19 @@ func run(t: TestHarness, host: Node) -> void:
 			brain.attack_chance = 1.0
 			brain.accuracy = 1.0
 			brain.bits = 0
+			InputRouter.push_virtual(0, Vector2.ZERO, Vector2.ZERO, 0)
+			InputRouter._physics_process(0.0)
 			brain.decide(0.1)
-			t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, id + " actual decision attacks an observed reachable weak point")
+			brain._publish_output(Vector2.ZERO)
+			InputRouter._physics_process(0.0)
+			t.ok(InputRouter.frame(0).just_pressed(InputFrame.Btn.ATTACK), id + " actual decision attacks an observed reachable weak point")
 			cue.hide()
 			t.empty(brain.perceived_weak_points(), id + " hidden weak point cannot guide attack")
 			brain.bits = 0
 			brain.decide(0.1)
-			t.ok((brain.bits & InputFrame.Btn.ATTACK) == 0, id + " actual decision cannot attack a hidden weak point")
+			brain._publish_output(Vector2.ZERO)
+			InputRouter._physics_process(0.0)
+			t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), id + " actual decision cannot attack a hidden weak point")
 			cue.show()
 			t.empty(brain.perceived_weak_points(), id + " reappearance cannot reuse reaction credit")
 			brain._time += 0.5
