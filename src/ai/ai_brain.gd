@@ -56,6 +56,7 @@ var _history_velocities: Array[PackedVector3Array] = []
 var _history_damage: Array[PackedFloat32Array] = []
 var _history_balls: Array[Dictionary] = []
 var _first_seen_times := PackedFloat64Array()
+var _visible_since_times := PackedFloat64Array()
 var _machine_cue_history := {}
 var _tracks_balls := false
 var _tracks_damage := false
@@ -129,6 +130,7 @@ func on_round_start() -> void:
 	_history_damage.clear()
 	_history_balls.clear()
 	_first_seen_times.clear()
+	_visible_since_times.clear()
 	_machine_cue_history.clear()
 	_history_head = 0
 	_history_count = 0
@@ -196,6 +198,9 @@ func _record_history() -> void:
 	if _first_seen_times.size() != ctx.fighters.size():
 		_first_seen_times.resize(ctx.fighters.size())
 		_first_seen_times.fill(INF)
+	if _visible_since_times.size() != ctx.fighters.size():
+		_visible_since_times.resize(ctx.fighters.size())
+		_visible_since_times.fill(INF)
 	var positions := PackedVector3Array()
 	var velocities := PackedVector3Array()
 	var damage := PackedFloat32Array()
@@ -208,12 +213,14 @@ func _record_history() -> void:
 		var f := ctx.fighters[i]
 		if can_observe(f):
 			_first_seen_times[i] = minf(_first_seen_times[i], _time)
+			_visible_since_times[i] = minf(_visible_since_times[i], _time)
 			positions[i] = f.global_position
 			velocities[i] = f.velocity
 			if _tracks_damage:
 				# Duel HUD displays whole percentages, not private fractional damage.
 				damage[i] = floorf(f.damage_percent)
 		else:
+			_visible_since_times[i] = INF
 			# Keep a last-seen location, never sample hidden movement or velocity.
 			positions[i] = _history_positions[previous][i] if previous >= 0 else Vector3.ZERO
 			velocities[i] = Vector3.ZERO
@@ -464,9 +471,17 @@ func has_observed(target_slot: int) -> bool:
 
 
 func can_target(target_slot: int) -> bool:
-	return target_slot >= 0 and target_slot < ctx.fighters.size() \
-		and ctx.is_alive(target_slot) and can_observe(ctx.fighter(target_slot)) \
-		and (reaction_time <= 0.0 or has_observed(target_slot))
+	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return false
+	if not ctx.is_alive(target_slot) or not can_observe(ctx.fighter(target_slot)):
+		if target_slot < _visible_since_times.size():
+			_visible_since_times[target_slot] = INF
+		return false
+	if reaction_time <= 0.0:
+		return true
+	# Last-seen memory survives occlusion, but reacquisition earns fresh delay.
+	return has_observed(target_slot) and target_slot < _visible_since_times.size() \
+		and _visible_since_times[target_slot] <= _time - reaction_time + 0.000001
 
 
 ## Delayed observed position, or a visible fallback before the first sample.
