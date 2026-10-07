@@ -279,7 +279,7 @@ func hud_value(slot: int) -> String:
 	if not ctx.is_alive(slot):
 		return Loc.t("hud.eliminated")
 	var pct := int(round(base_health(slot) / BASE_HEALTH * 100.0))
-	return "%d  ◈%d%%" % [ctx.scores[slot], pct]
+	return "%d\n◈%d%%" % [ctx.scores[slot], pct]
 
 
 func ai_script() -> Script:
