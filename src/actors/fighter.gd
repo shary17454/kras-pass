@@ -147,7 +147,6 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 	slot = player_slot
 	data = character
 	locomotion = mode
-	_build_collision()
 	_visual_theme = visual_theme
 	_mount_intact = _visual_theme == "arctic" and locomotion == Locomotion.WALK
 	_apply_character()
@@ -160,18 +159,20 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 
 
 func _build_collision() -> void:
-	var shape := get_node_or_null("Body") as CollisionShape3D
-	if shape == null:
-		shape = CollisionShape3D.new()
-		shape.name = "Body"
-		add_child(shape)
+	var shape := CollisionShape3D.new()
+	shape.name = "Body"
 	if locomotion == Locomotion.DRIVE:
-		if not shape.shape is BoxShape3D:
-			shape.shape = BoxShape3D.new()
+		var b := BoxShape3D.new()
+		b.size = Vector3(1.4, 0.9, 2.0)
+		shape.shape = b
+		shape.position = Vector3(0, 0.55, 0)
 	else:
-		if not shape.shape is CapsuleShape3D:
-			shape.shape = CapsuleShape3D.new()
-	_apply_scale()
+		var c := CapsuleShape3D.new()
+		c.radius = 0.42
+		c.height = 1.5
+		shape.shape = c
+		shape.position = Vector3(0, 0.75, 0)
+	add_child(shape)
 
 
 func _apply_character() -> void:
@@ -788,7 +789,6 @@ func _apply_scale() -> void:
 		shape.position.y = 0.75 * value
 	elif shape.shape is BoxShape3D:
 		(shape.shape as BoxShape3D).size = Vector3(1.4, 0.9, 2.0) * value
-		shape.position.y = 0.55 * value
 
 
 func _update_visual(delta: float, wish: Vector3) -> void:
