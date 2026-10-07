@@ -79,9 +79,9 @@ func decide(delta: float) -> void:
 			var spot := predict(target, 0.35)
 			steer_to(spot)
 			if distance_to(spot) < THROW_RANGE or fuse < PANIC_FUSE:
-				press(Btn.ATTACK)
+				tap(Btn.ATTACK)
 		elif fuse < PANIC_FUSE:
-			press(Btn.ATTACK)
+			tap(Btn.ATTACK)
 		return
 
 	# Not holding: flee anything close and nearly spent.
