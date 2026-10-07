@@ -52,6 +52,47 @@ class PlatformAttackProbe extends "res://src/ai/brains/platform_brain.gd":
 		attack_requests += 1
 
 
+func _test_rival_reacquisition(t: TestHarness, scene: Node) -> void:
+	var rival: Fighter = scene.ctx.fighter(1)
+	var original := rival.global_position
+	for difficulty in 4:
+		var observer := AIBrain.new()
+		observer.configure(0, scene.ctx, difficulty, 491)
+		observer._time = 10.0
+		rival.show()
+		rival.global_position = Vector3(2, 1, 0)
+		observer._record_history()
+		t.ok(not observer.can_target(1), "tier %d first sight waits for reaction" % difficulty)
+		observer._time += observer.reaction_time
+		observer._record_history()
+		t.ok(observer.can_target(1), "tier %d continuous sight becomes actionable" % difficulty)
+		rival.hide()
+		observer._time += 0.05
+		observer._record_history()
+		t.ok(not observer.can_target(1), "tier %d hidden rival is not targetable" % difficulty)
+		t.ok(observer.has_observed(1), "tier %d occlusion retains last-seen knowledge" % difficulty)
+		t.equal(observer.perceive(1), Vector3(2, 1, 0), "tier %d occlusion retains observed position" % difficulty)
+		rival.show()
+		rival.global_position = Vector3(3, 1, 0)
+		observer._time += 1.0
+		var reappeared := observer._time
+		observer._record_history()
+		t.ok(not observer.can_target(1), "tier %d reappearance cannot reuse old sight credit" % difficulty)
+		observer._time = reappeared + observer.reaction_time - 0.001
+		t.ok(not observer.can_target(1), "tier %d reacquisition waits until threshold" % difficulty)
+		observer._time = reappeared + observer.reaction_time
+		observer._record_history()
+		t.ok(observer.can_target(1), "tier %d reacquisition becomes actionable at threshold" % difficulty)
+		rival.hide()
+		t.ok(not observer.can_target(1), "tier %d visibility query catches occlusion between samples" % difficulty)
+		rival.show()
+		t.ok(not observer.can_target(1), "tier %d unsampled reappearance cannot retain targeting credit" % difficulty)
+		observer.on_round_start()
+		t.equal(observer._visible_since_times.size(), 0, "tier %d new round resets reacquisition history" % difficulty)
+	rival.global_position = original
+	rival.show()
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI visible targets")
 	var cfg := MatchConfig.build("ring_rumble", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 119)
@@ -130,6 +171,7 @@ func run(t: TestHarness, host: Node) -> void:
 	brain._time = 0.4
 	brain.reaction_time = 0.2
 	t.equal(brain.perceive(1), Vector3(9, 1, 0), "visible target retains configured reaction delay")
+	_test_rival_reacquisition(t, scene)
 	var parent := Node3D.new()
 	scene.add_child(parent)
 	parent.hide()
