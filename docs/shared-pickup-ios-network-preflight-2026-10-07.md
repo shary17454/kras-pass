@@ -112,3 +112,57 @@ new Version/Build committed to the approved remote; exact-source local
 Distribution Archive and signature validation; upload, processing and
 separately verified App Review submission. No old build is presented as
 containing these newer fixes.
+
+## Follow-Up: Partial Natural Campaign and Rendered QA
+
+Same immutable campaign 37577604329: catalogue, tank_arena and crumble_court
+completed successfully; ring_rumble was in progress and the remaining jobs
+queued. Downloaded reports are retained under
+/tmp/kras-c5fa1f9-campaign-partial. Each report's checkout.txt and source.json
+identify c5fa1f9813478ed8ab3a6ef26033e93b57b65928 and seed offset 1200000.
+All six downloaded import/policy/simulation logs passed the corresponding
+strict local log guards. Each game completed 24 baseline, 16 matched-seed
+same-character difficulty comparisons, and both mutator/chaos checks.
+
+| Game | Average Seconds | Expert Share | Slot Bias | Character Bias | Ties |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| tank_arena | 102.3042 | 0.54658 | 0.08333 | 0.08333 | 0 |
+| crumble_court | 13.7361 | 0.56875 | 0.15 | 0.155 | 1/24 |
+
+Both report flags arrays are empty. This is not a universal balance claim:
+crumble_court's raw slot wins are [9,5,10,1], including a tied winner, and
+its approximately 14-second average warrants party-flow review against
+the desired 30-second-to-three-minute typical rounds. The small sample
+must not be used to justify changing character stats or spawning rules
+without further diagnosis. No threshold or runtime code was changed.
+
+Rendered tests/party_visual_check.tscn completed locally with exit 0,
+PARTY VISUAL CHECK: 0 failures and strict runtime log guard exit 0.
+Arabic/English, 1280x720 landscape and 540x960 portrait were exercised:
+eight menu routes, save-compatibility warnings, standings/podium, and
+four-touch setups for ring_rumble, tank_arena and sabaq_sawarikh.
+Isolated save root: /tmp/kras-shared-pickup-party-visual-save.
+Logs: /tmp/kras-shared-pickup-party-visual.stdout and .log.
+
+Visual inspection went beyond the geometric assertions:
+
+- /tmp/kras-party-landscape-ar-podium.png: the standings scroll region
+  below the podium is too short to show a complete first row at once.
+- /tmp/kras-party-portrait-ar-podium.png: the first row fits but subsequent
+  ranks require scrolling in a narrow area above the action buttons.
+- /tmp/kras-party-portrait-four-touch-tank_arena.png: players are contained
+  in the world area, but the vehicles are very small with four shared touch
+  regions. This needs gameplay/readability acceptance, not only bounds checks.
+
+The test proves rendered nonblank layouts and its explicit bounds checks;
+it does not prove every minigame/orientation, four human touch usability,
+safe-area behavior on real iPhone/iPad, sustained FPS or thermal/battery.
+These polish findings remain open while gameplay source is frozen.
+
+Fresh production probes: GET /health returned ok=true,
+authentication_ready=true, multiplayer_enabled=false. GET /account without
+credentials returned 401, error=sign_in_again, Cache-Control=no-store and
+no Access-Control-Allow-Origin header. No production account was read,
+backup exported, secret changed or deployment performed. Server health
+and unauthorized rejection do not qualify signed-device Apple login or
+production online gameplay.
