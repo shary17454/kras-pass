@@ -23,7 +23,7 @@ var wrecks: Array[int] = []
 func configure() -> void:
 	eliminate_on_fall = true
 	lives_per_player = 1
-	# A derby scores wrecks, not caution.
+	# Wrecks reward engagement; surviving still determines the winner.
 	survival_knockout_weight = 4
 	var t := Balance.table("tuning").get("vehicle", {})
 	_max_health = float(t.get("max_health", 100.0))
