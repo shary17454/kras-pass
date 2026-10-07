@@ -32,7 +32,7 @@ func decide(_delta: float) -> void:
 	var pos := perceived_object_position(target)
 	steer_to(pos)
 	if distance_to(pos) < 2.4:
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 	elif distance_to(pos) > 6.0:
 		maybe_dash(0.6)
 	keep_off_edge()
