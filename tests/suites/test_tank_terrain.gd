@@ -62,6 +62,12 @@ func run(t: TestHarness, host: Node) -> void:
 			await host.get_tree().physics_frame
 			driver.velocity = Vector3(3, -3, 0)
 			driver.move_and_slide()
+			if OS.get_cmdline_user_args().has("--terrain-debug") and frame % 30 == 29:
+				var contacts := []
+				for index in driver.get_slide_collision_count():
+					var collision := driver.get_slide_collision(index)
+					contacts.append({"node": collision.get_collider().name, "normal": collision.get_normal()})
+				print("TERRAIN_TRAVERSAL ", arena_id, " frame=", frame, " position=", driver.position, " contacts=", contacts)
 		t.ok(driver.global_position.x > 3.5, "actual driver crosses the terrain origin without sticking: " + arena_id)
 		t.ok(driver.is_on_floor(), "driver retains ground contact during real traversal: " + arena_id)
 		t.ok(driver.global_position.y >= world.ground_height(driver.global_position.x, driver.global_position.z) - 0.1,
