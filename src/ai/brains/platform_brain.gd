@@ -9,6 +9,8 @@ extends "res://src/ai/brains/generic_brain.gd"
 var _target_tile: ArenaTile
 var _warning_tile: ArenaTile
 var _warning_seen_at := 0.0
+var _rival_warning_tile: ArenaTile
+var _rival_warning_seen_at := 0.0
 
 
 func on_round_start() -> void:
@@ -16,6 +18,8 @@ func on_round_start() -> void:
 	_target_tile = null
 	_warning_tile = null
 	_warning_seen_at = 0.0
+	_rival_warning_tile = null
+	_rival_warning_seen_at = 0.0
 
 
 func decide(_delta: float) -> void:
@@ -59,12 +63,24 @@ func decide(_delta: float) -> void:
 	# Opportunistic shove: a rival standing on shaking ground is one nudge from
 	# being gone.
 	var rival := nearest_rival()
-	if rival >= 0 and distance_to(perceive(rival)) < 2.6:
-		var their_tile := arena.tile_at(perceive(rival))
-		if their_tile != null and their_tile.state != ArenaTile.State.SOLID:
+	var in_range := rival >= 0 and distance_to(perceive(rival)) < 2.6
+	var their_tile: ArenaTile = arena.tile_at(perceive(rival)) if in_range else null
+	var warning_ready := _rival_warning_ready(their_tile)
+	if in_range:
+		if warning_ready:
 			maybe_attack(rival, 2.6)
 		elif rng.randf() < aggression * 0.5:
 			maybe_attack(rival, 2.6)
+
+
+func _rival_warning_ready(tile: ArenaTile) -> bool:
+	if not can_observe(tile) or tile.state == ArenaTile.State.SOLID:
+		_rival_warning_tile = null
+		return false
+	if tile != _rival_warning_tile:
+		_rival_warning_tile = tile
+		_rival_warning_seen_at = _time
+	return _time - _rival_warning_seen_at + 0.000001 >= reaction_time
 
 
 func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:

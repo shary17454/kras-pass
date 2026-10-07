@@ -46,6 +46,11 @@ class TagSteeringProbe extends "res://src/ai/brains/tag_brain.gd":
 	func steer_to(target: Vector3, _urgency: float = 1.0) -> void:
 		destination = target
 
+class PlatformAttackProbe extends "res://src/ai/brains/platform_brain.gd":
+	var attack_requests := 0
+	func maybe_attack(_target_slot: int, _range: float = 2.4) -> void:
+		attack_requests += 1
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI visible targets")
@@ -761,6 +766,57 @@ func _test_platform(t: TestHarness, scene: Node) -> void:
 	other.show()
 	brain.decide(0.0)
 	t.equal(brain._target_tile, other, "platform bot resumes targeting visible solid ground")
+	var attacker := PlatformAttackProbe.new()
+	attacker.configure(0, scene.ctx, 3, 119)
+	attacker.reaction_time = 0.0
+	attacker.aggression = 0.0
+	scene.ctx.fighter(1).global_position = tile.global_position
+	tile.state = ArenaTile.State.WARNING
+	attacker._record_history()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 0, "hidden rival floor warning cannot trigger an opportunistic shove")
+	tile.show()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 1, "visible rival floor warning still permits a shove")
+	tile.hide()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 1, "hiding the floor removes warning-based attack credit")
+	for difficulty in 4:
+		var delayed := PlatformAttackProbe.new()
+		delayed.configure(0, scene.ctx, difficulty, 119)
+		delayed.aggression = 0.0
+		delayed._record_history()
+		delayed._time = 10.0
+		tile.show()
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 0, "tier %d newly seen rival floor warning waits for reaction" % difficulty)
+		delayed._time = 10.0 + delayed.reaction_time - 0.001
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 0, "tier %d warning remains delayed before threshold" % difficulty)
+		delayed._time = 10.0 + delayed.reaction_time
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 1, "tier %d warning becomes actionable at threshold" % difficulty)
+		tile.hide()
+		delayed.decide(0.0)
+		tile.show()
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 1, "tier %d reappearing warning must earn fresh reaction credit" % difficulty)
+		delayed._time += delayed.reaction_time
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 2, "tier %d reappearing warning becomes actionable after delay" % difficulty)
+		tile.state = ArenaTile.State.SOLID
+		delayed.decide(0.0)
+		tile.state = ArenaTile.State.WARNING
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 2, "tier %d restored floor cannot retain warning credit" % difficulty)
+		delayed._time += delayed.reaction_time
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 3, "tier %d new floor warning becomes actionable after delay" % difficulty)
+		delayed.on_round_start()
+		delayed._record_history()
+		delayed._time += delayed.reaction_time + 1.0
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 3, "tier %d new round discards floor warning observations" % difficulty)
 	scene.arena.tiles = tiles
 	tile.queue_free()
 	other.queue_free()
