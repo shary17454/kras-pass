@@ -119,7 +119,7 @@ func decide(delta: float) -> void:
 			var target: Vector3 = plan.target
 			_steer_on_ground(target, clampf(_flat(target) * 0.8, 0.0, 1.0))
 			if plan.attack and rng.randf() < attack_chance:
-				press(Btn.ATTACK)
+				tap(Btn.ATTACK)
 			return
 		if controller.has_method("staging_point"):
 			_steer_on_ground(controller.call("staging_point", _idle_phase + _time * 0.2), 0.6)
@@ -136,7 +136,7 @@ func decide(delta: float) -> void:
 		else:
 			steer_to(plan.target, 0.65 if plan.hot else 1.0)
 			if plan.attack and rng.randf() < attack_chance:
-				press(Btn.ATTACK)
+				tap(Btn.ATTACK)
 		keep_off_edge(1.2)
 		return
 

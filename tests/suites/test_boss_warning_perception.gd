@@ -52,11 +52,15 @@ func run(t: TestHarness, host: Node) -> void:
 			brain._time += brain.reaction_time
 			brain.bits = 0
 			brain.decide(0.1)
-			t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, "fresh warning does not bypass reaction delay in actual decision")
+			brain._publish_output(brain.move)
+			InputRouter._physics_process(0.0)
+			t.ok(InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "fresh warning does not bypass reaction delay in actual decision")
 			brain._time += 0.5
 			brain.bits = 0
 			brain.decide(0.1)
-			t.ok((brain.bits & InputFrame.Btn.ATTACK) == 0, "perceived warning preempts attack after actual reaction delay")
+			brain._publish_output(brain.move)
+			InputRouter._physics_process(0.0)
+			t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "perceived warning preempts attack after actual reaction delay")
 			t.ok(brain.move.x > 0.0, "actual decision flees perceived warning")
 		scene.teardown()
 		scene.queue_free()
