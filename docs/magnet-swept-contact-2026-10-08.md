@@ -57,6 +57,13 @@ Two small samples do not prove universal fairness or real-device performance.
   `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-party-check.PF93DI/`.
   The deliberately injected memory-warning test drained mesh/material/texture
   caches; its warning is expected and is not an actual device thermal test.
+- Engine-log recheck: all eleven logs pass their appropriate modes (the test
+  runner uses `tests`, the other ten also pass strict `import`). Applying `import`
+  mode to the runtime test runner initially failed because it deliberately logs
+  one blocked save write and three failed screen loads. Their stacks point to
+  `test_save._failed_write` and `test_router_recovery`, which explicitly inject
+  those faults and assert successful recovery. The logs were not edited, nor was
+  the guard changed; this is not a claim that the test log contains no errors.
 - Previous campaign reports and candidate 112 archive do not contain this runtime
   change. Requalify affected content and create a new exact-source local archive
   after release integration; do not relabel or reuse the old archive.
