@@ -109,7 +109,7 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 				continue
 			first_steps[next] = neighbour if cell == start else first_steps[cell]
 			pending.append(neighbour)
-	var best: ArenaTile = null
+	var candidates: Array[ArenaTile] = []
 	var best_score := -INF
 	for cell in first_steps:
 		var t: ArenaTile = visible_ground.get(cell)
@@ -128,10 +128,18 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 			score -= 24.0 * edge_awareness
 		if _occupied(t):
 			score -= 4.0
-		if score > best_score:
+		if candidates.is_empty() or (score > best_score and not is_equal_approx(score, best_score)):
 			best_score = score
-			best = first_steps[cell]
-	return best
+			candidates.clear()
+			candidates.append(step)
+		elif is_equal_approx(score, best_score) and step not in candidates:
+			candidates.append(step)
+	if candidates.is_empty():
+		return null
+	if candidates.size() == 1:
+		return candidates[0]
+	# A route with several equally good destinations still gets one vote.
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
 func _ground_tile(arena: Arena, from: Vector3) -> ArenaTile:
