@@ -142,7 +142,12 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if scene == null or scene._paused or not MatchPhase.is_live(scene.phase):
+	if scene == null or scene._paused:
+		return
+	if humans > 0 and scene.phase == MatchPhase.P.INSTRUCTIONS:
+		scene.hud.ready_requested.emit()
+		return
+	if not MatchPhase.is_live(scene.phase):
 		return
 	for source in scene.touch_sources:
 		drive_touch(source, live_seconds)
