@@ -25,7 +25,7 @@ func decide(_delta: float) -> void:
 		var jump_at: float = lerp(2.6, 1.5, accuracy)
 		# Contact is still an obstacle: excluding it traps a late runner forever.
 		if obstacle < jump_at:
-			press(Btn.JUMP)
+			tap(Btn.JUMP)
 	if rng.randf() < dash_chance * 0.4:
 		tap(Btn.DASH)
 

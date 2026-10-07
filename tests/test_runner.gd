@@ -165,6 +165,7 @@ const SUITES := [
 	"res://tests/suites/test_saboteur_network.gd",
 	"res://tests/suites/test_race_conditions.gd",
 	"res://tests/suites/test_lifecycle.gd",
+	"res://tests/suites/test_ai_jump_actions.gd",
 ]
 
 var _t: TestHarness
