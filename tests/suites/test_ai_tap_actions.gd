@@ -55,6 +55,16 @@ class StationarySmasher:
 	func steer_to(_target: Vector3, _urgency: float = 1.0) -> void:
 		move = Vector2.ZERO
 
+class StationaryKeeper:
+	extends "res://src/ai/brains/keeper_brain.gd"
+	func steer_to(_target: Vector3, _urgency: float = 1.0) -> void:
+		move = Vector2.ZERO
+
+class StationaryBlast:
+	extends "res://src/ai/brains/ball_brain.gd"
+	func steer_to(_target: Vector3, _urgency: float = 1.0) -> void:
+		move = Vector2.ZERO
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI one-shot action requests")
@@ -106,6 +116,104 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_direct_race_dash(t, host)
 	await _test_direct_crate_attack(t, host)
 	await _test_generic_dash_retreat(t, host)
+	await _test_direct_ball_attacks(t, host)
+
+
+func _test_direct_ball_attacks(t: TestHarness, host: Node) -> void:
+	for id in ["goal_guard", "blast_ball"]:
+		for difficulty in 4:
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": MatchConfig.build(id, ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 867)})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+			scene.ctx.observation_camera = null
+			var me: Fighter = scene.ctx.fighter(0)
+			for slot in [1, 2, 3]:
+				scene.ctx.fighter(slot).hide()
+			var ball: GameBall
+			var brain: AIBrain
+			var normal := Vector3.FORWARD
+			if id == "goal_guard":
+				ball = scene.controller.balls[0]
+				brain = StationaryKeeper.new()
+				normal = scene.controller.NORMALS[scene.controller.side_for(0)]
+				scene.controller.paddles[0].global_position = me.global_position + normal * scene.controller.PADDLE_OFFSET
+				ball.global_position = me.global_position + normal * (scene.controller.PADDLE_OFFSET + ball.radius + 0.05)
+			else:
+				ball = scene.controller.ball
+				brain = StationaryBlast.new()
+				me.global_position = Vector3(0, 1, 0)
+				ball.global_position = Vector3(0, 0.9, 1.5)
+			me.facing = normal if id == "goal_guard" else Vector3.RIGHT
+			brain.controller = scene.controller
+			brain.configure(0, scene.ctx, difficulty, 867)
+			brain.on_round_start()
+			brain.reaction_time = 0.0
+			brain.decision_interval = 0.1
+			brain.mistake_chance = 0.0
+			brain.input_noise = 0.0
+			brain.attack_chance = 1.0
+			brain.aggression = 1.0
+			var edges := 0
+			var swings := 0
+			var responses := 0
+			for tick in 181:
+				# No movement/fuse integration: isolate repeated accepted requests.
+				ball.velocity = Vector3.ZERO
+				brain.tick(1.0 / 60.0)
+				InputRouter._physics_process(1.0 / 60.0)
+				var frame := InputRouter.frame(0)
+				if frame.just_pressed(InputFrame.Btn.ATTACK):
+					edges += 1
+				me._advance_timers(1.0 / 60.0)
+				var before: float = me._attack_cd
+				me._handle_buttons(frame)
+				if before <= 0.0 and me._attack_cd > 0.0:
+					swings += 1
+					ball.speed = 9.0
+					if id == "goal_guard":
+						ball.velocity = -normal * ball.speed
+						scene.controller._defend_ball(ball, 1.0 / 60.0)
+						if ball.last_toucher == 0 and ball.velocity.dot(normal) > 0.0:
+							responses += 1
+					else:
+						ball._deflect_from(me)
+						if ball.velocity.x > 0.0 and is_equal_approx(ball.speed, 9.0 * 1.18):
+							responses += 1
+			t.ok(edges >= 10, "%s tier %d direct decisions generate repeated input edges" % [id, difficulty])
+			t.ok(swings >= 3, "%s tier %d actual Fighter attacks again after cooldown" % [id, difficulty])
+			t.ok(swings <= 6, "%s tier %d direct requests preserve attack cooldown" % [id, difficulty])
+			t.equal(responses, swings, "%s tier %d actual contact consumer responds to each swing" % [id, difficulty])
+			_test_ball_attack_guards(t, brain, ball, me, id, difficulty)
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
+
+
+func _test_ball_attack_guards(t: TestHarness, brain: AIBrain, ball: GameBall, me: Fighter, id: String, difficulty: int) -> void:
+	var position := ball.global_position
+	ball.hide()
+	brain.on_round_start()
+	brain.tick(1.0)
+	_assert_no_melee_request(t, brain, "%s tier %d cannot attack a hidden ball" % [id, difficulty])
+	ball.show()
+	ball.global_position = me.global_position + Vector3(0, 0, 10)
+	brain.on_round_start()
+	brain.tick(1.0)
+	_assert_no_melee_request(t, brain, "%s tier %d cannot attack outside strike range" % [id, difficulty])
+	ball.global_position = position
+	brain.reaction_time = 0.8
+	brain.on_round_start()
+	brain.tick(0.1)
+	_assert_no_melee_request(t, brain, "%s tier %d must earn fresh ball acquisition delay" % [id, difficulty])
+	if id == "blast_ball":
+		brain.reaction_time = 0.0
+		ball._label.hide()
+		brain.on_round_start()
+		brain.tick(1.0)
+		_assert_no_melee_request(t, brain, "blast tier %d cannot use an invisible fuse label to attack" % difficulty)
 
 
 func _test_generic_dash_retreat(t: TestHarness, host: Node) -> void:

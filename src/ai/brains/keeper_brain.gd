@@ -55,7 +55,7 @@ func decide(_delta: float) -> void:
 	steer_to(intercept)
 
 	if closing < 2.8 and rng.randf() < attack_chance:
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 		# Face a rival's goal so the clearance is a shot, not a giveaway.
 		var victim := leader_rival()
 		if victim >= 0:
