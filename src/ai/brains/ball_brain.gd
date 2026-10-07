@@ -29,10 +29,13 @@ func decide(_delta: float) -> void:
 		steer_to(arena.global_position)
 		return
 	var dist := me.global_position.distance_to(position)
-	# How long a bot is willing to stay near the bomb scales with risk and with
-	# how quickly it can react if things go wrong.
-	var commit_window: float = lerp(2.4, 1.1, risk) + reaction_time
 	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	# Aggression does not buy escape time. Better planning tempers risk and
+	# reserves movement plus the next decision before committing to contact.
+	var blast_radius := Balance.num("tuning", "ball.explosive_radius", 5.0)
+	var escape_time := blast_radius / maxf(walk_speed, 0.1)
+	var commit_window: float = lerp(2.4, 1.1, risk * (1.0 - strategy)) \
+		+ reaction_time + decision_interval + escape_time
 	# Reserve time to reach the existing strike range before spending the
 	# remaining fuse on a risky approach. Own movement stats are not secret.
 	var travel_time := maxf(0.0, dist - 3.0) / maxf(walk_speed, 0.1)

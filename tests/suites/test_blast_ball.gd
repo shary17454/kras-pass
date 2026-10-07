@@ -109,7 +109,15 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.observed["position"] = Vector3(2.5, 1.0, 0)
 	brain.observed["fuse"] = 1.8
 	brain.decide(0.1)
-	t.ok(not brain.escaped, "ball already in strike range does not incur a distant approach penalty")
+	t.ok(brain.escaped, "close contact still needs time to leave the blast radius")
+	brain.escaped = false
+	brain.observed["fuse"] = 5.0
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "early close contact retains an offensive opportunity")
+	brain.escaped = false
+	me.top_speed = 1.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "slow movement cannot borrow the escape budget of a faster character")
 	brain.controller = null
 	me.global_position = original_position
 	me.top_speed = original_speed
