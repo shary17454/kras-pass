@@ -105,6 +105,66 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_dash(t, host)
 	await _test_direct_race_dash(t, host)
 	await _test_direct_crate_attack(t, host)
+	await _test_generic_dash_retreat(t, host)
+
+
+func _test_generic_dash_retreat(t: TestHarness, host: Node) -> void:
+	for difficulty in 4:
+		for mode in ["accepted", "disabled", "empty", "chance", "hidden"]:
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": MatchConfig.build("duel_pit", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 865)})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+			scene.ctx.observation_camera = null
+			var me: Fighter = scene.ctx.fighter(0)
+			me.global_position = Vector3(0, 1, 0)
+			me.facing = Vector3(0, 0, 1)
+			me.charge = 1.0
+			scene.ctx.fighter(1).global_position = Vector3(0, 1, 6)
+			for slot in [2, 3]:
+				scene.ctx.fighter(slot).hide()
+			var brain: AIBrain = load("res://src/ai/brains/generic_brain.gd").new()
+			brain.controller = scene.controller
+			brain.configure(0, scene.ctx, difficulty, 865)
+			brain.on_round_start()
+			brain.reaction_time = 0.0
+			brain.decision_interval = 0.1
+			brain.mistake_chance = 0.0
+			brain.input_noise = 0.0
+			brain.aggression = 1.0
+			brain.powerup_interest = 0.0
+			brain.attack_chance = 0.0
+			brain.dash_chance = 10.0
+			brain.edge_awareness = 1.0
+			if mode == "disabled":
+				me.can_dash = false
+			elif mode == "empty":
+				me.charge = 0.0
+			elif mode == "chance":
+				brain.dash_chance = 0.0
+			elif mode == "hidden":
+				scene.ctx.fighter(1).hide()
+			brain.tick(1.0 / 60.0)
+			InputRouter._physics_process(1.0 / 60.0)
+			var frame := InputRouter.frame(0)
+			me._handle_buttons(frame)
+			if mode == "accepted":
+				t.ok(frame.just_pressed(InputFrame.Btn.DASH), "tier %d real generic decision publishes accepted dash" % difficulty)
+				t.ok(me._dash_cd > 0.0, "tier %d accepted generic request executes actual dash" % difficulty)
+				t.ok(brain._retreat >= 0.35 and brain._retreat <= 0.75, "tier %d accepted tap schedules bounded follow-through retreat" % difficulty)
+				brain.tick(0.2)
+				InputRouter._physics_process(0.2)
+				t.ok(brain.move.y < 0.0, "tier %d next real decision retreats from observed rival" % difficulty)
+				t.ok(not InputRouter.frame(0).held(InputFrame.Btn.DASH), "tier %d retreat does not hold the dash action" % difficulty)
+			else:
+				t.ok(not frame.held(InputFrame.Btn.DASH), "tier %d %s does not publish rejected dash" % [difficulty, mode])
+				t.equal(brain._retreat, 0.0, "tier %d %s cannot schedule rejected dash retreat" % [difficulty, mode])
+				t.equal(me._dash_cd, 0.0, "tier %d %s cannot execute rejected dash" % [difficulty, mode])
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
 
 
 func _test_direct_crate_attack(t: TestHarness, host: Node) -> void:

@@ -97,12 +97,12 @@ func decide(_delta: float) -> void:
 		steer_to(shove_dir)
 		maybe_attack(target, 2.5)
 		if to_target > 4.5 and to_target < 11.0:
-			var before := bits
+			var before := bits | _tap_bits
 			maybe_dash(0.9)
 			# A dash is a commitment; standing in the follow-through next to a
 			# rival is how a bot hands back the exchange it just won. Back off
 			# for a beat afterwards.
-			if bits != before:
+			if (bits | _tap_bits) != before:
 				_retreat = rng.randf_range(0.35, 0.75)
 		keep_off_edge(panic_margin)
 		return
