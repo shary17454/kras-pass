@@ -61,7 +61,7 @@ func decide(_delta: float) -> void:
 	var rival := nearest_rival()
 	if rival >= 0 and distance_to(perceive(rival)) < 2.6:
 		var their_tile := arena.tile_at(perceive(rival))
-		if their_tile != null and their_tile.state != ArenaTile.State.SOLID:
+		if can_observe(their_tile) and their_tile.state != ArenaTile.State.SOLID:
 			maybe_attack(rival, 2.6)
 		elif rng.randf() < aggression * 0.5:
 			maybe_attack(rival, 2.6)

@@ -46,6 +46,11 @@ class TagSteeringProbe extends "res://src/ai/brains/tag_brain.gd":
 	func steer_to(target: Vector3, _urgency: float = 1.0) -> void:
 		destination = target
 
+class PlatformAttackProbe extends "res://src/ai/brains/platform_brain.gd":
+	var attack_requests := 0
+	func maybe_attack(_target_slot: int, _range: float = 2.4) -> void:
+		attack_requests += 1
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI visible targets")
@@ -761,6 +766,21 @@ func _test_platform(t: TestHarness, scene: Node) -> void:
 	other.show()
 	brain.decide(0.0)
 	t.equal(brain._target_tile, other, "platform bot resumes targeting visible solid ground")
+	var attacker := PlatformAttackProbe.new()
+	attacker.configure(0, scene.ctx, 3, 119)
+	attacker.reaction_time = 0.0
+	attacker.aggression = 0.0
+	scene.ctx.fighter(1).global_position = tile.global_position
+	tile.state = ArenaTile.State.WARNING
+	attacker._record_history()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 0, "hidden rival floor warning cannot trigger an opportunistic shove")
+	tile.show()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 1, "visible rival floor warning still permits a shove")
+	tile.hide()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 1, "hiding the floor removes warning-based attack credit")
 	scene.arena.tiles = tiles
 	tile.queue_free()
 	other.queue_free()
