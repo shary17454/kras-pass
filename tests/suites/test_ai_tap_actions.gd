@@ -50,6 +50,11 @@ class StationaryDirectRunner:
 	func _distance_to_obstacle(_me) -> float:
 		return -1.0
 
+class StationarySmasher:
+	extends "res://src/ai/brains/smasher_brain.gd"
+	func steer_to(_target: Vector3, _urgency: float = 1.0) -> void:
+		move = Vector2.ZERO
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI one-shot action requests")
@@ -99,6 +104,63 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_boss_weakpoint(t, host)
 	await _test_dash(t, host)
 	await _test_direct_race_dash(t, host)
+	await _test_direct_crate_attack(t, host)
+
+
+func _test_direct_crate_attack(t: TestHarness, host: Node) -> void:
+	for difficulty in 4:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("crate_smash", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 863)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		scene.controller.cleanup()
+		scene.ctx.observation_camera = null
+		var me: Fighter = scene.ctx.fighter(0)
+		me.global_position = Vector3(0, 1, 0)
+		me.facing = Vector3(0, 0, 1)
+		for slot in [1, 2, 3]:
+			scene.ctx.fighter(slot).hide()
+		var brain := StationarySmasher.new()
+		brain.controller = scene.controller
+		brain.configure(0, scene.ctx, difficulty, 863)
+		brain.on_round_start()
+		brain.reaction_time = 0.0
+		brain.decision_interval = 0.1
+		brain.mistake_chance = 0.0
+		brain.input_noise = 0.0
+		brain.accuracy = 1.0
+		var edges := 0
+		var swings := 0
+		for tick in 181:
+			# A new rendered target appears only after the preceding swing ends.
+			if scene.controller.crate_entries().is_empty() and not me.is_attacking():
+				var crate := StaticBody3D.new()
+				crate.collision_layer = 0
+				crate.collision_mask = 0
+				crate.add_child(MeshFactory.crate(1.5, Color("#ffc46b"), Color("#fff0c2")))
+				scene.ctx.world_root.add_child(crate)
+				crate.global_position = Vector3(0, 0.75, 1.5)
+				scene.controller._crates.append({"node": crate, "bomb": false})
+			brain.tick(1.0 / 60.0)
+			InputRouter._physics_process(1.0 / 60.0)
+			var frame := InputRouter.frame(0)
+			if frame.just_pressed(InputFrame.Btn.ATTACK):
+				edges += 1
+			me._advance_timers(1.0 / 60.0)
+			var before: float = me._attack_cd
+			me._handle_buttons(frame)
+			if before <= 0.0 and me._attack_cd > 0.0:
+				swings += 1
+			scene.controller._check_swings()
+		t.ok(edges >= 10, "tier %d direct crate decisions generate repeated input edges" % difficulty)
+		t.ok(swings >= 3, "tier %d actual crate attacks recur after cooldown" % difficulty)
+		t.ok(swings <= 6, "tier %d crate requests preserve Fighter cooldown" % difficulty)
+		t.equal(scene.ctx.scores[0], swings * scene.controller.CRATE_POINTS, "tier %d each actual swing credits one safe crate" % difficulty)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
 
 
 func _test_direct_race_dash(t: TestHarness, host: Node) -> void:
