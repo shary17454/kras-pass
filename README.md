@@ -448,24 +448,29 @@ press-a-button-to-join rather than menu navigation, so someone can pick up a pad
 mid-lobby. A controller disconnecting mid-match pauses the game with an
 explanatory message instead of stranding the player.
 
-**Online:** the transport is **not** shipped in 1.0, and the reason is stated
-plainly rather than hidden behind a grey button. Shipping half-working netcode
-would destabilise the local game, which is the product. What *is* implemented is
-the seam:
+**Online:** WebSocket transport is implemented in
+`src/net/room_client.gd` and `src/net/net_service.gd`, with the room service in
+`server/rooms.js`. Current source uses protocol 2. It includes public room
+listing, private six-character codes, capacity checks, ready/loading gates,
+host-only configuration and kicking, tournament accounting, input forwarding,
+validated world snapshots, and a default 30-second reconnection grace period.
+Game-specific replicas live in `src/net/`; transport alone is not sufficient
+to qualify a new mini-game's online behavior.
 
-- `Net` (`src/net/net_service.gd`) defines the full session model: hosting,
-  room codes, join, peer list, ready state, lobby config, match start, and
-  disconnect handling.
-- A `LocalBackend` satisfies that entire interface today, and the Online screen
-  runs the real lobby flow against it — a real room code, real ready-up, and a
-  real `MatchConfig` at the end.
-- The input transport contract is `publish_input()` / `consume_input()`, keyed
-  on `(slot, tick)` and carrying the same 5-byte `InputFrame` the local game
-  already uses.
+The host simulates matches; the server validates state and owns tournament
+accounting. This is not a fully server-simulated physics engine or a guarantee
+against every host-side cheat. Actual multi-process localhost tests exercise
+the transport and reconnection; they do not certify Internet conditions,
+mobile session recovery or production readiness.
 
-Turning it on means implementing those two methods against
-`ENetMultiplayerPeer` or WebRTC and setting `Net.online_available = true`.
-No mini-game, AI brain or match-layer code changes.
+The client resolves its endpoint from `KRAS_MULTIPLAYER_URL` or
+`kras/online/endpoint`. `Net.online_available` indicates endpoint configuration,
+not deployment health. The service separately gates rooms with
+`MULTIPLAYER_ENABLED` and validates configured `MULTIPLAYER_ORIGINS`.
+Production `/health` was checked on 2026-10-07 and reported
+`multiplayer_enabled=false`; do not treat source implementation as a released
+online feature. Coordinated protocol rollout, protected database recovery,
+production authentication and real-device acceptance remain release gates.
 
 ---
 
@@ -477,9 +482,12 @@ string the other has. No user-facing text exists in code; everything goes throug
 `Loc.t()`.
 
 RTL is genuine, not cosmetic: `UIKit` mirrors container order, text alignment and
-the direction of the back arrow when `Loc.is_rtl()` is true. Fonts use
-`SystemFont` with OS fallback, which gives correct Arabic shaping and bidi on
-macOS, Windows, iOS and Android without shipping or licensing a font file.
+the direction of the back arrow when `Loc.is_rtl()` is true. Ordinary UI uses
+bundled Noto Latin, Arabic, symbol and monochrome emoji fonts with explicit
+fallbacks. Their original SIL Open Font License files are retained and exported;
+see [font sources and checksums](assets/fonts/README.md). User-authored text
+outside their coverage can use a separate operating-system fallback. Glyph
+coverage tests do not replace layout and real-device QA.
 
 **Accessibility options** (Settings → Accessibility):
 
@@ -571,17 +579,19 @@ a tested one.
 
 Stated plainly, because a list of caveats is more useful than an optimistic one:
 
-1. **Online multiplayer is not implemented.** The abstraction layer, lobby,
-   room codes and input transport contract exist and work locally; the network
-   transport does not. See [Multiplayer](#multiplayer).
-2. **Replays are hybrid, not deterministic — measured, not assumed.** Replaying
-   identical inputs through Godot's physics diverges within half a second: four
-   bodies shoving each other resolve in an order the solver does not guarantee,
-   and one launched fighter turns a centimetre into metres. So a recording
-   carries inputs every tick *and* a position keyframe ten times a second that
-   playback snaps to. Drift is bounded to a tenth of a second and the outcome
-   reproduces exactly; the cost is ~2.2 KB per second (26 KB for a 12-second
-   four-player round).
+1. **Online multiplayer is not production-qualified.** Current source contains
+   transport, rooms, replicas and reconnection, but production rooms remain
+   disabled at the last check. See [Multiplayer](#multiplayer).
+2. **Replays are hybrid, not universally deterministic.** Recordings combine
+   inputs, state checkpoints, position corrections and game events. Current
+   tests cover a short Zone Hold replay with matching scores/places and a
+   chaotic Ring Rumble replay that reaches the end without unrecoverable desync;
+   the latter does not promise exact score equality. These cases do not prove
+   every game, long match, engine version or platform reproduces identically.
+   Storage size varies with duration and events; capture budgets and recovery
+   tests are separate from visual playback fidelity. See
+   [replay regressions](tests/suites/test_replay.gd) and
+   [bounded input capture](docs/bounded-replay-input-qualification-2026-10-05.md).
 3. **Art needs a per-game quality review.** Procedural characters and environments
    are not a claim of photorealism or final art quality. `MeshFactory` is a shared
    construction point.
@@ -601,7 +611,12 @@ Stated plainly, because a list of caveats is more useful than an optimistic one:
 
 ## Licence and originality
 
-All code, data, text, geometry and audio in this repository were written for this
-project. No assets, names, characters, arenas, music or mechanics were copied
-from any existing game. The design is informed by the party mini-game genre in
-general; the execution is original throughout.
+KRAS PASS has its own characters, names, rules, arenas and presentation; general
+party-game concepts are not a license to reuse another game's protected content.
+The project also bundles third-party environment assets under CC0 and Noto fonts
+under SIL OFL, rather than claiming those files were authored here. See
+[environment licensing](assets/natural/LICENSE.md),
+[asset sources](assets/natural/sources.json) and
+[font licensing](assets/fonts/README.md). Their bundled licenses and provenance
+must be retained. Final release review must check new and existing assets rather
+than relying on this documentation as proof of ownership or permission.
