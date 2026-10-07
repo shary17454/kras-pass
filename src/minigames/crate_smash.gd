@@ -88,26 +88,44 @@ func tick(delta: float) -> void:
 
 func _check_swings() -> void:
 	var reach := Balance.num("tuning", "fighter.attack_range", 2.15)
+	var served := {}
+	var idx := _crates.size() - 1
+	while idx >= 0:
+		var entry = _crates[idx]
+		var node = entry["node"]
+		if not is_instance_valid(node):
+			_crates.remove_at(idx)
+		else:
+			var winner := _swing_winner(node.global_position, reach + 0.6, served)
+			if winner >= 0:
+				served[winner] = true
+				_break_crate(idx, winner)
+		idx -= 1
+
+
+func _swing_winner(position: Vector3, reach: float, served: Dictionary) -> int:
+	var candidates: Array[int] = []
+	var nearest := INF
 	for i in ctx.fighters.size():
-		if not ctx.is_alive(i):
+		if served.has(i) or not ctx.is_alive(i):
 			continue
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f) or not f.is_attacking():
 			continue
-		var idx := _crates.size() - 1
-		while idx >= 0:
-			var entry = _crates[idx]
-			var n = entry["node"]
-			if not is_instance_valid(n):
-				_crates.remove_at(idx)
-				idx -= 1
-				continue
-			var to: Vector3 = n.global_position - f.global_position
-			to.y = 0.0
-			if to.length() <= reach + 0.6:
-				_break_crate(idx, i)
-				break
-			idx -= 1
+		var to := position - f.global_position
+		to.y = 0.0
+		var distance := to.length_squared()
+		if distance > reach * reach:
+			continue
+		if candidates.is_empty() or distance < nearest:
+			nearest = distance
+			candidates.assign([i])
+		elif distance == nearest:
+			candidates.append(i)
+	if candidates.is_empty():
+		return -1
+	# Seat order is not swing priority. Only exact ties consume gameplay RNG.
+	return candidates[0] if candidates.size() == 1 else candidates[ctx.rng.randi_range(0, candidates.size() - 1)]
 
 
 func _break_crate(index: int, slot: int) -> void:
