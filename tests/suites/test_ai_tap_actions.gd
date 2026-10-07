@@ -117,6 +117,107 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_direct_crate_attack(t, host)
 	await _test_generic_dash_retreat(t, host)
 	await _test_direct_ball_attacks(t, host)
+	await _test_boss_plan_attacks(t, host)
+
+
+func _test_boss_plan_attacks(t: TestHarness, host: Node) -> void:
+	for id in ["boss_colossus", "boss_forge"]:
+		for difficulty in 4:
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": MatchConfig.build(id, ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 869)})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+			scene.ctx.observation_camera = null
+			var me: Fighter = scene.ctx.fighter(0)
+			me.global_position = Vector3(6, 1, 0) if id == "boss_colossus" else Vector3(4.5, 1, 0)
+			me.facing = Vector3.LEFT
+			for slot in [1, 2, 3]:
+				scene.ctx.fighter(slot).hide()
+			if id == "boss_colossus":
+				scene.controller._fist.global_position = Vector3(3, 1, 0)
+				scene.controller._exposed = 5.0
+			var brain := StationaryBossWeakpoint.new()
+			brain.controller = scene.controller
+			brain.configure(0, scene.ctx, difficulty, 869)
+			brain.on_round_start()
+			brain.reaction_time = 0.0
+			brain.decision_interval = 0.1
+			brain.mistake_chance = 0.0
+			brain.input_noise = 0.0
+			brain.attack_chance = 1.0
+			var health: float = scene.controller.boss_health
+			var edges := 0
+			var swings := 0
+			var fed := 0
+			for tick in 181:
+				# Two controlled openings retain Colossus's one-hit-per-window rule.
+				if id == "boss_colossus" and tick == 90:
+					t.near(health - scene.controller.boss_health, 55.0, 0.001, "tier %d one arm opening credits one hit" % difficulty)
+					scene.controller._hit_this_window.clear()
+				if id == "boss_forge" and scene.controller._crates.is_empty() and not me.is_attacking():
+					scene.controller._clear_forge_objects()
+					var crate := StaticBody3D.new()
+					scene.ctx.world_root.add_child(crate)
+					crate.global_position = Vector3(3, 0.7, 0)
+					scene.controller._crates.append(crate)
+				brain.tick(1.0 / 60.0)
+				InputRouter._physics_process(1.0 / 60.0)
+				var frame := InputRouter.frame(0)
+				if frame.just_pressed(InputFrame.Btn.ATTACK):
+					edges += 1
+				me._advance_timers(1.0 / 60.0)
+				var before: float = me._attack_cd
+				me._handle_buttons(frame)
+				if before <= 0.0 and me._attack_cd > 0.0:
+					swings += 1
+				if id == "boss_colossus":
+					scene.controller._check_arm_hits()
+				else:
+					var count_before: int = scene.controller._slag.size()
+					scene.controller._check_feeding()
+					if scene.controller._slag.size() > count_before:
+						fed += 1
+			t.ok(edges >= 10, "%s tier %d direct plans create repeated press edges" % [id, difficulty])
+			t.ok(swings >= 3 and swings <= 6, "%s tier %d plan swings retain Fighter cooldown" % [id, difficulty])
+			if id == "boss_colossus":
+				t.near(health - scene.controller.boss_health, 110.0, 0.001, "tier %d second arm opening accepts a fresh swing" % difficulty)
+				t.near(float(scene.ctx.scores[0]), 110.0, 0.001, "tier %d arm damage and score agree" % difficulty)
+			else:
+				t.equal(fed, swings, "tier %d every new swing feeds an actual forge crate" % difficulty)
+			brain._publish()
+			InputRouter._physics_process(0.0)
+			t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "%s tier %d plan attack releases" % [id, difficulty])
+			var cue: Node3D
+			if id == "boss_colossus":
+				cue = scene.controller._fist
+			else:
+				scene.controller._clear_forge_objects()
+				cue = StaticBody3D.new()
+				scene.ctx.world_root.add_child(cue)
+				cue.global_position = Vector3(3, 0.7, 0)
+				scene.controller._crates.append(cue)
+			brain.attack_chance = 0.0
+			brain.tick(1.0)
+			_assert_no_melee_request(t, brain, "%s tier %d plan probability guard" % [id, difficulty])
+			brain.attack_chance = 1.0
+			cue.hide()
+			brain.tick(1.0)
+			_assert_no_melee_request(t, brain, "%s tier %d hidden plan target" % [id, difficulty])
+			cue.show()
+			brain.reaction_time = 0.8
+			brain.on_round_start()
+			brain.tick(0.1)
+			_assert_no_melee_request(t, brain, "%s tier %d fresh plan reaction delay" % [id, difficulty])
+			brain.reaction_time = 0.0
+			brain.on_round_start()
+			me.global_position = Vector3(11, 1, 0)
+			brain.tick(1.0)
+			_assert_no_melee_request(t, brain, "%s tier %d plan outside swing reach" % [id, difficulty])
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
 
 
 func _test_direct_ball_attacks(t: TestHarness, host: Node) -> void:
