@@ -7,33 +7,6 @@ var _variant := 0
 var _cover_shapes := {}
 
 
-func _build_terrain_collision(terrain: MeshInstance3D) -> void:
-	# Preserve every rendered triangle, but let broadphase reject distant patches.
-	var patches := {}
-	var faces := terrain.mesh.get_faces()
-	for index in range(0, faces.size(), 3):
-		var x := minf(faces[index].x, minf(faces[index + 1].x, faces[index + 2].x))
-		var z := minf(faces[index].z, minf(faces[index + 1].z, faces[index + 2].z))
-		var cell := Vector2i(floori((x + 300.0) / 60.0), floori((z + 300.0) / 60.0))
-		if not patches.has(cell):
-			patches[cell] = []
-		for vertex in 3:
-			patches[cell].append(faces[index + vertex])
-	var root := Node3D.new()
-	root.name = "TerrainCollision"
-	add_child(root)
-	for cell: Vector2i in patches:
-		var body := StaticBody3D.new()
-		body.name = "Patch%d_%d" % [cell.x, cell.y]
-		var shape := ConcavePolygonShape3D.new()
-		shape.set_faces(PackedVector3Array(patches[cell]))
-		var collision := CollisionShape3D.new()
-		collision.shape = shape
-		body.add_child(collision)
-		root.add_child(body)
-		body.set_meta("observation_mesh", body.get_path_to(terrain))
-
-
 func build(a: Arena) -> void:
 	arena = a
 	name = "TankWorld"

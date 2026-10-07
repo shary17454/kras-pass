@@ -161,11 +161,6 @@ func _terrain() -> void:
 			material.set_shader_parameter(prefix + "_" + map, load(ROOT + id + "/" + id + "_" + map + "_2k.jpg"))
 	terrain.material_override = material
 	add_child(terrain)
-	_build_terrain_collision(terrain)
-	_add_distant_rocks()
-
-
-func _build_terrain_collision(terrain: MeshInstance3D) -> void:
 	var body := StaticBody3D.new()
 	body.name = "TerrainCollision"
 	var collision := CollisionShape3D.new()
@@ -173,6 +168,7 @@ func _build_terrain_collision(terrain: MeshInstance3D) -> void:
 	body.add_child(collision)
 	add_child(body)
 	body.set_meta("observation_mesh", body.get_path_to(terrain))
+	_add_distant_rocks()
 
 
 func _add_distant_rocks() -> void:
