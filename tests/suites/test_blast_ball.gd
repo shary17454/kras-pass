@@ -90,6 +90,15 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.risk = 1.0
 	brain.reaction_time = 0.12
 	brain.observed_ball = game.ball
+	var trajectory := {"position": Vector3(2, 1, 0), "velocity": Vector3(8, 0, 0)}
+	var anticipated := brain._anticipated_position(trajectory)
+	t.ok(anticipated.x > 2.0, "planning uses observed ball motion rather than a stale position")
+	game.ball.velocity = Vector3(-999, 0, 0)
+	t.equal(brain._anticipated_position(trajectory), anticipated, "private ball momentum cannot change the visible trajectory estimate")
+	brain.prediction = 0.0
+	t.equal(brain._anticipated_position(trajectory), trajectory.position, "zero prediction uses only the delayed position")
+	brain.prediction = 0.85
+	t.equal(brain._anticipated_position({"position": Vector3(2, 1, 0)}), Vector3(2, 1, 0), "missing observed motion does not invent a velocity")
 	var me: Fighter = scene.ctx.fighter(0)
 	var original_position := me.global_position
 	var original_speed := me.top_speed
@@ -109,7 +118,15 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.observed["position"] = Vector3(2.5, 1.0, 0)
 	brain.observed["fuse"] = 1.8
 	brain.decide(0.1)
-	t.ok(not brain.escaped, "ball already in strike range does not incur a distant approach penalty")
+	t.ok(brain.escaped, "close contact still needs time to leave the blast radius")
+	brain.escaped = false
+	brain.observed["fuse"] = 5.0
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "early close contact retains an offensive opportunity")
+	brain.escaped = false
+	me.top_speed = 1.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "slow movement cannot borrow the escape budget of a faster character")
 	brain.controller = null
 	me.global_position = original_position
 	me.top_speed = original_speed

@@ -23,16 +23,19 @@ func decide(_delta: float) -> void:
 		return
 
 	var observed := perceive_ball(ball)
-	var position: Vector3 = observed["position"]
+	var position := _anticipated_position(observed)
 	var fuse: float = observed["fuse"]
 	if fuse < 0.0:
 		steer_to(arena.global_position)
 		return
 	var dist := me.global_position.distance_to(position)
-	# How long a bot is willing to stay near the bomb scales with risk and with
-	# how quickly it can react if things go wrong.
-	var commit_window: float = lerp(2.4, 1.1, risk) + reaction_time
 	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	# Aggression does not buy escape time. Better planning tempers risk and
+	# reserves movement plus the next decision before committing to contact.
+	var blast_radius := Balance.num("tuning", "ball.explosive_radius", 5.0)
+	var escape_time := blast_radius / maxf(walk_speed, 0.1)
+	var commit_window: float = lerp(2.4, 1.1, risk * (1.0 - strategy)) \
+		+ reaction_time + decision_interval + escape_time
 	# Reserve time to reach the existing strike range before spending the
 	# remaining fuse on a risky approach. Own movement stats are not secret.
 	var travel_time := maxf(0.0, dist - 3.0) / maxf(walk_speed, 0.1)
@@ -56,6 +59,12 @@ func decide(_delta: float) -> void:
 		_escape_observed_ball(position)
 		if dist < 5.0:
 			maybe_dash(1.3)
+
+
+func _anticipated_position(observed: Dictionary) -> Vector3:
+	# Estimate from successive visible samples; never read private momentum.
+	var horizon := minf(0.35, reaction_time + decision_interval) * prediction
+	return Vector3(observed["position"]) + Vector3(observed.get("velocity", Vector3.ZERO)) * horizon
 
 
 func _escape_observed_ball(position: Vector3) -> void:
