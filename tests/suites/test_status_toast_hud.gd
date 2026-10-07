@@ -114,11 +114,22 @@ func _local_names(t: TestHarness, host: Node) -> void:
 				for chip in scene.hud._chips:
 					var bounds: Rect2 = chip.root.get_global_rect()
 					t.ok(bounds.position.x >= 0 and bounds.end.x <= host.get_viewport().get_visible_rect().size.x, "long local names cannot resize player cards off screen")
-					t.ok(chip.name.clip_text, "long names are clipped without pushing score or controls")
+					t.ok(not chip.name.clip_text, "long names use explicit wrapping and overflow, not silent clipping")
+					t.equal(chip.name.tooltip_text, chip.name.text, "full overflow identity remains available")
+					t.equal(chip.name.mouse_filter, Control.MOUSE_FILTER_PASS, "name receives tooltip hover without stopping event propagation")
+					t.ok(chip.name.get_visible_line_count() <= 3, "legacy oversized name cannot expand indefinitely")
+					t.ok(bounds.end.y < host.get_viewport().get_visible_rect().size.y * (0.34 if resolution.x < resolution.y else 0.4), "overflow header leaves arena and controls visible: %s %s end=%s name=%s" % [game_id, resolution, bounds.end.y, chip.name.size])
+					t.ok(not chip.name.get_global_rect().intersects(chip.value.get_global_rect()), "overflow name does not cover score")
 					t.ok(chip.value.visible and chip.effects.visible, "compact layout retains score and active effects")
 					t.equal(chip.name.get_theme_font_size("font_size"), int((14 if resolution.x < resolution.y else 22) * 1.6), "responsive HUD honors larger text setting")
 					if resolution.x < resolution.y:
 						t.ok(bounds.position.y >= scene.hud._round_label.get_global_rect().end.y, "tournament round label stays above local player cards")
+				if DisplayServer.get_name() != "headless":
+					await RenderingServer.frame_post_draw
+					var output := SaveSystem.storage_root.path_join("hud-custom-name-screenshots")
+					DirAccess.make_dir_recursive_absolute(output)
+					var filename := "%s-%s-%dx%d.png" % [language, game_id, resolution.x, resolution.y]
+					t.equal(host.get_viewport().get_texture().get_image().save_png(output.path_join(filename)), OK, "save actual oversized profile name layout")
 			scene.teardown()
 			scene.queue_free()
 			await host.get_tree().process_frame

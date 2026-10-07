@@ -243,9 +243,12 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# Shrink, don't fill: a filling chip eats the gap the clock sits in.
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var contents := VBoxContainer.new()
+	contents.add_theme_constant_override("separation", 1)
+	card.add_child(contents)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	card.add_child(row)
+	contents.add_child(row)
 
 	var portrait := _make_portrait(p, col)
 	portrait.custom_minimum_size = Vector2(74, 74)
@@ -263,21 +266,28 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# it in here is what pushed the name into being clipped.
 	var character := p.character()
 	var shown: String = character.display_name() if character != null else p.display_name()
+	var custom_name := false
 	if p.is_human and ctx.config.human_slots().size() == 1:
 		shown = Loc.t("hud.you", {"name": shown})
 	elif p.is_human and not p.display_name_override.is_empty():
 		shown = p.display_name_override
+		custom_name = true
 	shown = p.symbol() + " " + shown
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 4)
-	box.add_child(name_row)
+	contents.add_child(name_row)
+	contents.move_child(name_row, 0)
 	var crown := UIKit.label("👑", UIKit.SIZE_SMALL)
 	crown.name = "Crown"
 	crown.visible = false
 	name_row.add_child(crown)
 	var name_label := UIKit.label(shown, UIKit.SIZE_SMALL, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_label.clip_text = true
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.max_lines_visible = 1 if custom_name else 3
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.tooltip_text = shown
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	name_label.custom_minimum_size = Vector2(120, 0)
 	if _compact_players():
 		name_label.custom_minimum_size.x = 0
