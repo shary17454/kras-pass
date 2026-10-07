@@ -35,7 +35,9 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(brain.edge_pressured_rival(), 1, "tier %d reads rival edge pressure at deadline" % difficulty)
 		t.equal(brain.perceive(1), rival.global_position, "tier %d observes recorded position after delay" % difficulty)
 		brain.maybe_attack(1, 2.0)
-		t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, "tier %d can attack acquired rival" % difficulty)
+		brain._publish_output(Vector2.ZERO)
+		InputRouter._physics_process(0.0)
+		t.ok(InputRouter.frame(0).just_pressed(InputFrame.Btn.ATTACK), "tier %d can attack acquired rival" % difficulty)
 		brain.on_round_start()
 		_check_unready(t, brain, difficulty, "round restart")
 		brain.reaction_time = 0.0
@@ -55,4 +57,6 @@ func _check_unready(t: TestHarness, brain: AIBrain, difficulty: int, stage: Stri
 	t.equal(brain._perceived_velocity(1), Vector3.ZERO, label + " cannot expose first live velocity early")
 	brain.bits = 0
 	brain.maybe_attack(1, 2.0)
-	t.equal(brain.bits, 0, label + " cannot attack unprocessed target")
+	brain._publish_output(Vector2.ZERO)
+	InputRouter._physics_process(0.0)
+	t.ok(not InputRouter.frame(0).held(InputFrame.Btn.ATTACK), label + " cannot attack unprocessed target")
