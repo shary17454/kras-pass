@@ -90,6 +90,15 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.risk = 1.0
 	brain.reaction_time = 0.12
 	brain.observed_ball = game.ball
+	var trajectory := {"position": Vector3(2, 1, 0), "velocity": Vector3(8, 0, 0)}
+	var anticipated := brain._anticipated_position(trajectory)
+	t.ok(anticipated.x > 2.0, "planning uses observed ball motion rather than a stale position")
+	game.ball.velocity = Vector3(-999, 0, 0)
+	t.equal(brain._anticipated_position(trajectory), anticipated, "private ball momentum cannot change the visible trajectory estimate")
+	brain.prediction = 0.0
+	t.equal(brain._anticipated_position(trajectory), trajectory.position, "zero prediction uses only the delayed position")
+	brain.prediction = 0.85
+	t.equal(brain._anticipated_position({"position": Vector3(2, 1, 0)}), Vector3(2, 1, 0), "missing observed motion does not invent a velocity")
 	var me: Fighter = scene.ctx.fighter(0)
 	var original_position := me.global_position
 	var original_speed := me.top_speed

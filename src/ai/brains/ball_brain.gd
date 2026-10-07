@@ -23,7 +23,7 @@ func decide(_delta: float) -> void:
 		return
 
 	var observed := perceive_ball(ball)
-	var position: Vector3 = observed["position"]
+	var position := _anticipated_position(observed)
 	var fuse: float = observed["fuse"]
 	if fuse < 0.0:
 		steer_to(arena.global_position)
@@ -59,6 +59,12 @@ func decide(_delta: float) -> void:
 		_escape_observed_ball(position)
 		if dist < 5.0:
 			maybe_dash(1.3)
+
+
+func _anticipated_position(observed: Dictionary) -> Vector3:
+	# Estimate from successive visible samples; never read private momentum.
+	var horizon := minf(0.35, reaction_time + decision_interval) * prediction
+	return Vector3(observed["position"]) + Vector3(observed.get("velocity", Vector3.ZERO)) * horizon
 
 
 func _escape_observed_ball(position: Vector3) -> void:
