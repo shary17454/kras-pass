@@ -95,6 +95,10 @@ func run(t: TestHarness, host: Node) -> void:
 		facing_driver._state_timer = 0.9
 		facing_driver.decide(0.1)
 		t.ok(facing_driver.move.y < 0.0, "tier %d keeps the forward peel-off for a side rival" % difficulty)
+		facing_driver.offset = Vector3.ZERO
+		facing_driver._state_timer = 0.9
+		facing_driver.decide(0.1)
+		t.ok(facing_driver.move.length() > 0.1, "tier %d an overlapping target does not cancel separation" % difficulty)
 		facing_driver.offset = Vector3(0, 0, 2)
 		me.global_position = scene.arena.global_position + Vector3(0, 0, -scene.arena.current_radius + 2)
 		facing_driver._state_timer = 0.9
