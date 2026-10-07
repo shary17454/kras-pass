@@ -853,7 +853,7 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 				var land: Vector3 = me.global_position + dir.normalized() * 5.0
 				if arena.edge_distance(land) < 1.2:
 					return
-	press(Btn.DASH)
+	tap(Btn.DASH)
 
 
 func maybe_attack(target_slot: int, range_: float = 2.4) -> void:

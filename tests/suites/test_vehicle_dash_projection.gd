@@ -21,21 +21,21 @@ func run(t: TestHarness, host: Node) -> void:
 	me.facing = Vector3.RIGHT
 	brain.move = Vector2(0, -1)
 	brain.maybe_dash()
-	t.equal(brain.bits & AIBrain.Btn.DASH, 0, "outward vehicle nose rejects a lethal dash even when throttle vector looks safe")
+	t.equal(_published_dash(brain), 0, "outward vehicle nose rejects a lethal dash even when throttle vector looks safe")
 	brain.bits = 0
 	me.facing = Vector3.LEFT
 	brain.move = Vector2(1, -1)
 	brain.maybe_dash()
-	t.ok((brain.bits & AIBrain.Btn.DASH) != 0, "inward nose permits dash despite an outward steering input")
+	t.ok(_published_dash(brain) != 0, "inward nose permits dash despite an outward steering input")
 	brain.bits = 0
 	me.facing = Vector3.RIGHT
 	brain.move = Vector2.ZERO
 	brain.maybe_dash()
-	t.equal(brain.bits & AIBrain.Btn.DASH, 0, "stationary vehicle still projects its nose direction")
+	t.equal(_published_dash(brain), 0, "stationary vehicle still projects its nose direction")
 	brain.bits = 0
 	scene.controller.eliminate_on_fall = false
 	brain.maybe_dash()
-	t.ok((brain.bits & AIBrain.Btn.DASH) != 0, "respawn tracks retain their existing unrestricted boost policy")
+	t.ok(_published_dash(brain) != 0, "respawn tracks retain their existing unrestricted boost policy")
 	for mode in [Fighter.Locomotion.WALK, Fighter.Locomotion.DRIVE, Fighter.Locomotion.FLOAT]:
 		me.locomotion = mode
 		me.facing = Vector3.LEFT
@@ -54,3 +54,8 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _published_dash(brain: AIBrain) -> int:
+	brain._publish_output(brain.move)
+	return int(InputRouter._virtual_pending[brain.slot].bits) & InputFrame.Btn.DASH
