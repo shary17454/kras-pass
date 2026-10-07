@@ -166,3 +166,39 @@ no Access-Control-Allow-Origin header. No production account was read,
 backup exported, secret changed or deployment performed. Server health
 and unauthorized rejection do not qualify signed-device Apple login or
 production online gameplay.
+
+## Follow-Up: Simulator Build Versus Simulator Execution
+
+Source 8a7f262 was freshly exported for simulator using local Xcode 27.
+Release compilation succeeded (exit 0) and source/output record and verify
+both exited 0. Build log:
+/tmp/kras-shared-pickup-ios27-simulator-build.log.
+Stamp: /tmp/kras-shared-pickup-ios27-simulator-export/.kras-source-export.json.
+Built app:
+/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/tmp.iBzSnKRVGX/Build/Products/Release-iphonesimulator/KrasPass.app.
+
+Actual engine simulator library and app architecture: x86_64 only, confirmed
+with lipo/file. The supplied Godot engine template lacks an arm64 simulator
+slice. This does not imply the arm64 device build is invalid.
+
+A new isolated iPhone16ProMax simulator was created on installed iOS26.5:
+06EE9294-49FF-454E-8325-9CA0BF4D3A96. Its arm64 boot completed, but a later
+boot request with --arch=x86_64 returned code22: supported architecture is
+arm64 only. That simulator was shut down; no unrelated simulator was stopped.
+
+Installed iOS18.6 advertises x86_64/arm64 support. A separate QA device,
+266481DA-646B-4503-A6A0-1627E9F9A5A7, accepted x86_64 boot, but bootstatus
+and installation did not complete. Both owned commands were stopped (exit143)
+and that QA simulator was shut down successfully. No automatic restart,
+runtime download, certificate change or physical-phone install occurred.
+The devices are retained, not deleted. Application launch was NOT achieved;
+do not report this as native gameplay acceptance. An arm64 simulator template
+or an approved physical-device session remains necessary for native QA.
+
+The same campaign's ring_rumble report subsequently completed: 24 natural
+baseline matches, 16 paired difficulty comparisons, both smoke variants,
+source/checkouts c5fa1f9, seed offset1200000. Average duration37.3826 seconds,
+Expert share0.54375, slot bias0.04167, character bias0.08333, tie rate0 and
+flags empty. Artifact: /tmp/kras-c5fa1f9-campaign-ring. This is a third game,
+not completion of the 39-game campaign; the specific campaign remains queued
+for its other games and must not be duplicated merely because of queue time.
