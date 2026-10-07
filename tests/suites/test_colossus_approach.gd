@@ -23,7 +23,9 @@ func run(t: TestHarness, host: Node) -> void:
 	# This fixture isolates navigation; reaction delay has its own suite.
 	brain.reaction_time = 0.0
 	brain.decide(0.1)
-	t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, "bot attacks exposed fist from safe crater rim")
+	brain._publish_output(brain.move)
+	InputRouter._physics_process(0.0)
+	t.ok(InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "bot attacks exposed fist from safe crater rim")
 	t.ok(scene.arena.is_inside(fighter.global_position, 0.5), "attacking position remains on real ground")
 	if game.has_method("attack_plan"):
 		for step in 16:
