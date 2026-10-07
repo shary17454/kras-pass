@@ -68,21 +68,14 @@ func decide(delta: float) -> void:
 			away = -me.facing
 		away = away.normalized()
 		var goal: Vector3 = me.global_position + away * 8.0
-		var room_behind := arena.edge_distance(goal) >= 3.0
-		if not room_behind:
+		if arena.edge_distance(goal) < 3.0:
 			# No room behind: peel off along the floor instead, which keeps the
 			# separation without spending the arena to get it.
 			var inward: Vector3 = arena.global_position - me.global_position
 			inward.y = 0.0
 			if inward.length() > 0.2:
 				goal = me.global_position + (away + inward.normalized() * 1.4).normalized() * 8.0
-		if room_behind and dist >= 0.2 and me.facing.dot(-away) > 0.6:
-			# Reverse without exposing the rear or spending the run-up turning.
-			# DRIVE steering yaw does not invert with the throttle direction.
-			drive_to(spot, false)
-			move.y = absf(move.y)
-		else:
-			drive_to(goal)
+		drive_to(goal)
 		if _state_timer <= 0.0 or dist > lerp(9.0, 6.0, aggression):
 			_reset_engagement()
 		return
