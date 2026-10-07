@@ -25,6 +25,7 @@ var ctx: MatchContext
 var controller: MiniGameController
 var arena: Arena
 var camera: ArenaCamera
+var vehicle_views: LocalVehicleViews
 var hud: MatchHUD
 var touch: TouchSource
 var touch_sources: Array[TouchSource] = []
@@ -257,18 +258,25 @@ func _build() -> void:
 			_set_phase(P.COUNTDOWN))
 	hud.set_round(_round_index, _total_rounds)
 	if config.minigame_id == "tank_arena":
-		hud.reserve_auxiliary_overlay(120.0)
+		if not camera.shared_world:
+			hud.reserve_auxiliary_overlay(120.0)
 		var radar_layer := CanvasLayer.new()
 		add_child(radar_layer)
 		var radar: Control = load("res://src/ui/tank_radar.gd").new()
 		radar.ctx = ctx
 		radar.hud = hud
 		radar_layer.add_child(radar)
+		radar.visible = not camera.shared_world
 
 	_create_brains()
 	_assign_inputs()
 	_create_touch_controls()
 	hud.touch_sources = touch_sources
+	if camera.shared_world and playback == null:
+		vehicle_views = LocalVehicleViews.new()
+		vehicle_views.name = "LocalVehicleViews"
+		add_child(vehicle_views)
+		vehicle_views.setup(ctx, hud, local_slots)
 	AudioManager.play_music(controller.music_track())
 	EventBus.match_started.emit(config)
 	_set_phase(P.INTRO)
@@ -366,6 +374,8 @@ func _create_touch_controls() -> void:
 
 
 func teardown() -> void:
+	if is_instance_valid(vehicle_views):
+		vehicle_views.stop()
 	AudioManager.stop_ambience()
 	InputRouter.playback_mode = false
 	if controller != null and is_instance_valid(controller):

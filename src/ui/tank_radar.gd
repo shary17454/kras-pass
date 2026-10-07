@@ -2,6 +2,7 @@ extends Control
 
 var ctx: MatchContext
 var hud: MatchHUD
+var embedded := false
 var _elapsed := 0.0
 
 
@@ -15,6 +16,9 @@ func _ready() -> void:
 
 
 func _layout() -> void:
+	if embedded:
+		size = Vector2(120, 120)
+		return
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	var top := hud.auxiliary_overlay_top() if is_instance_valid(hud) else 150.0
 	position = Vector2(22 + Platform.safe_insets().x, top)
