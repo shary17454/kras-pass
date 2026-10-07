@@ -1,0 +1,664 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 114.692361111114,
+      "avg_score": 277.125,
+      "baseline_seeds": [
+        909001,
+        909614,
+        910227,
+        910840,
+        911453,
+        912066,
+        912679,
+        913292,
+        913905,
+        914518,
+        915131,
+        915744,
+        916357,
+        916970,
+        917583,
+        918196,
+        918809,
+        919422,
+        920035,
+        920648,
+        921261,
+        921874,
+        922487,
+        923100
+      ],
+      "category": "vehicle",
+      "character_bias": 0.115,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "damage": 13,
+              "knockouts": 1
+            },
+            {
+              "damage": 177,
+              "knockouts": 1
+            },
+            {
+              "damage": 60,
+              "knockouts": 1
+            },
+            {
+              "damage": 75
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            300,
+            475,
+            200,
+            100
+          ],
+          "seed": 904242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {},
+            {
+              "damage": 25
+            },
+            {
+              "damage": 73,
+              "knockouts": 1
+            },
+            {
+              "damage": 262,
+              "knockouts": 2
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            200,
+            100,
+            300,
+            440
+          ],
+          "seed": 904242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "damage": 145,
+              "knockouts": 2
+            },
+            {
+              "damage": 190,
+              "knockouts": 1
+            },
+            {
+              "damage": 40
+            },
+            {
+              "damage": 15
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            410,
+            300,
+            100,
+            200
+          ],
+          "seed": 904339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "damage": 95,
+              "knockouts": 2
+            },
+            {
+              "damage": 165,
+              "knockouts": 1
+            },
+            {
+              "damage": 45
+            },
+            {
+              "damage": 75
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            1,
+            3,
+            2,
+            4
+          ],
+          "scores": [
+            420,
+            200,
+            300,
+            100
+          ],
+          "seed": 904339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {},
+            {
+              "damage": 250,
+              "knockouts": 3
+            },
+            {
+              "damage": 40
+            },
+            {
+              "damage": 75
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            4,
+            1,
+            3,
+            2
+          ],
+          "scores": [
+            100,
+            435,
+            200,
+            300
+          ],
+          "seed": 904436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {},
+            {
+              "damage": 65
+            },
+            {
+              "damage": 97
+            },
+            {
+              "damage": 185,
+              "knockouts": 3
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            2,
+            3,
+            1
+          ],
+          "scores": [
+            100,
+            300,
+            200,
+            453
+          ],
+          "seed": 904436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "damage": 215,
+              "knockouts": 2
+            },
+            {
+              "damage": 110,
+              "knockouts": 1
+            },
+            {},
+            {
+              "damage": 25
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            3,
+            4,
+            2
+          ],
+          "scores": [
+            450,
+            200,
+            100,
+            300
+          ],
+          "seed": 904533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {},
+            {},
+            {
+              "damage": 103,
+              "knockouts": 1
+            },
+            {
+              "damage": 239,
+              "knockouts": 2
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            200,
+            100,
+            300,
+            458
+          ],
+          "seed": 904533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "damage": 207,
+              "knockouts": 1
+            },
+            {
+              "damage": 118,
+              "knockouts": 2
+            },
+            {},
+            {}
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "scores": [
+            475,
+            300,
+            200,
+            100
+          ],
+          "seed": 904630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "damage": 28
+            },
+            {
+              "damage": 10,
+              "knockouts": 1
+            },
+            {
+              "damage": 176,
+              "knockouts": 1
+            },
+            {
+              "damage": 133,
+              "knockouts": 1
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            100,
+            200,
+            453,
+            300
+          ],
+          "seed": 904630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "damage": 47
+            },
+            {
+              "damage": 198,
+              "knockouts": 2
+            },
+            {
+              "damage": 13,
+              "knockouts": 1
+            },
+            {
+              "damage": 42
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            4,
+            1,
+            2,
+            3
+          ],
+          "scores": [
+            100,
+            500,
+            300,
+            200
+          ],
+          "seed": 904727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "damage": 22
+            },
+            {},
+            {
+              "damage": 107,
+              "knockouts": 2
+            },
+            {
+              "damage": 218,
+              "knockouts": 1
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            200,
+            100,
+            300,
+            453
+          ],
+          "seed": 904727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "damage": 195,
+              "knockouts": 2
+            },
+            {
+              "damage": 175,
+              "knockouts": 1
+            },
+            {},
+            {
+              "damage": 25
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            300,
+            405,
+            200,
+            100
+          ],
+          "seed": 904824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "damage": 30
+            },
+            {
+              "damage": 50
+            },
+            {
+              "damage": 94,
+              "knockouts": 1
+            },
+            {
+              "damage": 176,
+              "knockouts": 2
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            100,
+            200,
+            300,
+            450
+          ],
+          "seed": 904824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "damage": 175,
+              "knockouts": 2
+            },
+            {
+              "damage": 25
+            },
+            {
+              "damage": 75,
+              "knockouts": 1
+            },
+            {
+              "damage": 47
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            4,
+            2,
+            3
+          ],
+          "scores": [
+            478,
+            100,
+            300,
+            200
+          ],
+          "seed": 904921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "damage": 79,
+              "knockouts": 1
+            },
+            {
+              "damage": 25
+            },
+            {
+              "damage": 141,
+              "knockouts": 1
+            },
+            {
+              "damage": 115,
+              "knockouts": 1
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            1,
+            4,
+            3,
+            2
+          ],
+          "scores": [
+            440,
+            100,
+            200,
+            300
+          ],
+          "seed": 904921
+        }
+      ],
+      "expert_edge": 0.61875,
+      "flags": [],
+      "id": "tank_arena",
+      "name": "تحدي دبابات البر",
+      "round_window": 150.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 900000,
+      "severity": 0,
+      "slot_bias": 0.07,
+      "tie_rate": 0.0416666666666667,
+      "wins_by_character": {
+        "barq": 3,
+        "fanoos": 1,
+        "ghaim": 4,
+        "mowja": 3,
+        "nabta": 3,
+        "ramla": 6,
+        "sakhra": 1,
+        "turs": 4
+      },
+      "wins_by_slot": [
+        6,
+        4,
+        8,
+        7
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-07T08:27:12",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 905502,
+      "flags": [],
+      "id": "tank_arena",
+      "mutated_ok": true,
+      "mutated_seed": 905501,
+      "name": "تحدي دبابات البر",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 900000,
+  "simulation_source_end": "67ed39f6d5c714fc5262914ed0f9975df5f23d384a17b1a8b0bbdd092f5f50fa",
+  "simulation_source_start": "67ed39f6d5c714fc5262914ed0f9975df5f23d384a17b1a8b0bbdd092f5f50fa"
+}
