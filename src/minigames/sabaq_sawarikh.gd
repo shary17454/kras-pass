@@ -348,12 +348,14 @@ func _launch_missile(slot: int, f) -> void:
 ## The kart directly ahead on the road, not the nearest one in space: on a
 ## circuit the nearest rival is often a lap behind and on the other side of a
 ## wall, and firing at them feels broken even when the maths is right.
-func rival_ahead(slot: int) -> int:
+func rival_ahead(slot: int, targetable: Callable = Callable()) -> int:
 	var mine := _progress_of(slot)
 	var best := -1
 	var best_gap := 1 << 30
 	for i in ctx.fighters.size():
 		if i == slot or not ctx.is_alive(i) or finish_times[i] != UNFINISHED:
+			continue
+		if targetable.is_valid() and not targetable.call(i):
 			continue
 		var gap := _progress_of(i) - mine
 		if gap > 0 and gap < best_gap:
@@ -364,6 +366,8 @@ func rival_ahead(slot: int) -> int:
 	# Nobody ahead: the leader's missile chases whoever is closest behind.
 	for i in ctx.fighters.size():
 		if i != slot and ctx.is_alive(i) and finish_times[i] == UNFINISHED:
+			if targetable.is_valid() and not targetable.call(i):
+				continue
 			return i
 	return -1
 
