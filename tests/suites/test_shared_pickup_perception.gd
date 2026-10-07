@@ -94,9 +94,59 @@ func run(t: TestHarness, host: Node) -> void:
 	observer._record_history()
 	t.equal(observer._object_history.size(), 0, "destroyed object identity is released on the next sample")
 	controller.free()
+	_check_cargo(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _check_cargo(t: TestHarness, scene: Node) -> void:
+	t.suite("courier public cargo reaction")
+	var rival: Fighter = scene.ctx.fighter(1)
+	rival.global_position = Vector3(4, 100, 0)
+	for difficulty in 4:
+		rival.show()
+		rival.carrying = 3
+		var brain = load("res://src/ai/brains/courier_brain.gd").new()
+		brain.configure(0, scene.ctx, difficulty, 917)
+		brain.on_round_start()
+		brain._time = 10.0
+		t.equal(brain._perceived_cargo(1), 0, "new carrier does not disclose cargo immediately")
+		brain._time += brain.reaction_time - 0.0001
+		t.equal(brain._perceived_cargo(1), 0, "cargo cannot mature before reaction time")
+		brain._time = 10.0 + brain.reaction_time
+		rival.carrying = 8
+		t.equal(brain._perceived_cargo(1), 3, "uses observed count rather than current cargo")
+		brain._time += brain.reaction_time
+		t.equal(brain._perceived_cargo(1), 8, "cargo increase matures after reaction time")
+		rival.carrying = 0
+		t.equal(brain._perceived_cargo(1), 8, "same timestamp cannot overwrite an observation")
+		brain._time += 0.05
+		brain._record_history()
+		brain._time += brain.reaction_time
+		t.equal(brain._perceived_cargo(1), 0, "banked cargo matures from regular perception sampling")
+		rival.hide()
+		rival.carrying = 6
+		t.equal(brain._perceived_cargo(1), 0, "hidden carrier cannot supply cargo observations")
+		t.ok(not brain._cargo_history.has(1), "hidden carrier loses observation credit")
+		rival.show()
+		t.equal(brain._perceived_cargo(1), 0, "reappearing carrier waits again")
+		brain._time += brain.reaction_time
+		t.equal(brain._perceived_cargo(1), 6, "reappearance becomes actionable after reaction time")
+		t.equal(brain._richest_carrier(), 1, "target selection uses matured cargo")
+		brain.on_round_start()
+		t.equal(brain._perceived_cargo(1), 0, "round restart clears cargo observations")
+		brain._time += brain.reaction_time
+		brain._perceived_cargo(1)
+		brain.configure(0, scene.ctx, difficulty, 918)
+		t.equal(brain._perceived_cargo(1), 0, "reconfiguration clears cargo observations")
+		for sample in 100:
+			brain._time += 0.05
+			brain._record_history()
+		t.ok(brain._cargo_history[1].size() <= brain.HISTORY_CAP, "cargo observation storage remains bounded")
+		brain.reaction_time = 0.0
+		t.equal(brain._perceived_cargo(1), 6, "zero-delay diagnostics remain immediate")
+		t.equal(brain._perceived_cargo(0), 0, "own inventory is not stored as rival cargo")
 
 
 func _target(brain, kind: String, host: Node) -> Node3D:
