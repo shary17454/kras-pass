@@ -1,0 +1,121 @@
+{
+  "commit": "c5fa1f9813478ed8ab3a6ef26033e93b57b65928",
+  "run": "37577604329",
+  "seedOffset": 1200000,
+  "complete": true,
+  "gamesCompleted": 39,
+  "gamesExpected": 39,
+  "matchesCompleted": 1638,
+  "difficultyPairingVerified": true,
+  "missing": [],
+  "reviews": [
+    {
+      "game": "base_siege",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "blast_ball",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "sabaq_sawarikh",
+      "flags": [
+        "character advantage"
+      ]
+    },
+    {
+      "game": "star_rush",
+      "flags": [
+        "character advantage"
+      ]
+    }
+  ],
+  "characterWins": {
+    "barq": 141,
+    "fanoos": 114,
+    "ghaim": 107,
+    "mowja": 128,
+    "nabta": 146,
+    "ramla": 126,
+    "sakhra": 107,
+    "turs": 128
+  },
+  "bossBaseline": [
+    {
+      "game": "boss_colossus",
+      "defeated": 22,
+      "survived": 2,
+      "unknown": 0
+    },
+    {
+      "game": "boss_dreadnought",
+      "defeated": 24,
+      "survived": 0,
+      "unknown": 0
+    },
+    {
+      "game": "boss_forge",
+      "defeated": 24,
+      "survived": 0,
+      "unknown": 0
+    },
+    {
+      "game": "boss_sovereign",
+      "defeated": 23,
+      "survived": 1,
+      "unknown": 0
+    }
+  ],
+  "bossComparisons": [
+    {
+      "game": "boss_colossus",
+      "difficulty": {
+        "defeated": 16,
+        "survived": 0
+      },
+      "stress": {
+        "mutated": "survived",
+        "chaos": "survived"
+      }
+    },
+    {
+      "game": "boss_dreadnought",
+      "difficulty": {
+        "defeated": 16,
+        "survived": 0
+      },
+      "stress": {
+        "mutated": "survived",
+        "chaos": "defeated"
+      }
+    },
+    {
+      "game": "boss_forge",
+      "difficulty": {
+        "defeated": 16,
+        "survived": 0
+      },
+      "stress": {
+        "mutated": "survived",
+        "chaos": "survived"
+      }
+    },
+    {
+      "game": "boss_sovereign",
+      "difficulty": {
+        "defeated": 16,
+        "survived": 0
+      },
+      "stress": {
+        "mutated": "survived",
+        "chaos": "survived"
+      }
+    }
+  ],
+  "balanceReviewComplete": false,
+  "releaseReady": false
+}

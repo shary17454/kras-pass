@@ -94,6 +94,7 @@ signal playback_finished()
 signal desync_detected(tick: int)
 var _tick_index := 0
 var _aborted := false
+var _torn_down := false
 var _sudden_death_used := false
 var _noted_leader := -1
 var _noted_last := -1
@@ -374,6 +375,11 @@ func _create_touch_controls() -> void:
 
 
 func teardown() -> void:
+	if _torn_down:
+		return
+	_torn_down = true
+	# queue_free is deferred; retire simulation before shared pools disappear.
+	process_mode = Node.PROCESS_MODE_DISABLED
 	if is_instance_valid(vehicle_views):
 		vehicle_views.stop()
 	AudioManager.stop_ambience()
@@ -527,7 +533,7 @@ func _round_duration() -> float:
 # --- main loop -------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
-	if ctx == null or _aborted:
+	if ctx == null or _aborted or _torn_down:
 		return
 	if _online():
 		if not Net.match_running or Net.state == Net.State.DISCONNECTED:
@@ -567,6 +573,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if _torn_down:
+		return
 	if hud != null and is_instance_valid(hud) and ctx != null:
 		var started := DevTools.operations.begin()
 		hud.tick(delta)

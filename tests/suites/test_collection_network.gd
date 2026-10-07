@@ -146,6 +146,7 @@ func _island_bridge_walking(t: TestHarness, host: Node) -> void:
 			await host.get_tree().physics_frame
 			await host.get_tree().physics_frame
 			for slot in 4:
+				t.ok(not scene._torn_down, "bridge fixture remains live for every player")
 				var fighter: Fighter = scene.ctx.fighter(slot)
 				for island in 5:
 					var angle := TAU * island / 5.0
@@ -172,7 +173,7 @@ func _island_bridge_walking(t: TestHarness, host: Node) -> void:
 								break
 						t.ok(reached, "actual fighter crosses the bridge using movement only")
 						t.ok(fighter.is_on_floor(), "crossing ends on supporting ground")
-				scene.teardown()
+			scene.teardown()
 			scene.queue_free()
 			await host.get_tree().process_frame
 	await _island_ai_routes(t, host)
