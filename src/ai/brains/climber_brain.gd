@@ -2,6 +2,35 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## Rising Tide: go up, and push whoever is above you back down.
 
 var _ledge_target := Vector3.INF
+var _ground_history := {}
+
+
+func on_configured() -> void:
+	super.on_configured()
+	_ledge_target = Vector3.INF
+	_ground_history.clear()
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_ledge_target = Vector3.INF
+	_ground_history.clear()
+
+
+func _perceived_ground(node: Node3D) -> Vector3:
+	if not can_observe(node):
+		return Vector3.INF
+	var id := node.get_instance_id()
+	var history: Array = _ground_history.get(id, [])
+	if history.is_empty() or float(history.back().time) < _time:
+		history.append({"time": _time, "position": node.global_position})
+		if history.size() > HISTORY_CAP:
+			history.pop_front()
+	_ground_history[id] = history
+	for index in range(history.size() - 1, -1, -1):
+		if float(history[index].time) <= _time - reaction_time + 0.000001:
+			return history[index].position
+	return Vector3.INF
 
 
 func decide(_delta: float) -> void:
@@ -54,9 +83,11 @@ func _find_higher_ground(from: Vector3) -> Vector3:
 	var best := from
 	var best_score := -INF
 	for node in arena.get_node_or_null("Static").get_children() if arena.has_node("Static") else []:
-		if not node is Node3D or not can_observe(node):
+		if not node is Node3D:
 			continue
-		var p: Vector3 = node.global_position
+		var p := _perceived_ground(node)
+		if p == Vector3.INF:
+			continue
 		if p.y <= from.y + 0.4:
 			continue
 		var dist := Vector2(p.x - from.x, p.z - from.z).length()
