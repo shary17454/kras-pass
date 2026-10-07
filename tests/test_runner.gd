@@ -14,6 +14,7 @@ const SUITES := [
 	"res://tests/suites/test_driver_engagement.gd",
 	"res://tests/suites/test_vehicle_dash_projection.gd",
 	"res://tests/suites/test_survivor_winner_contract.gd",
+	"res://tests/suites/test_meaningful_leader_target.gd",
 	"res://tests/suites/test_tide_step_access.gd",
 	"res://tests/suites/test_climber_ground_perception.gd",
 	"res://tests/suites/test_round_announcement_fit.gd",
