@@ -2,6 +2,39 @@ extends AIBrain
 ## Base Siege. Two jobs and never enough time for both: break the weakest
 ## crystal, or turn round and defend your own when somebody is standing on it.
 
+var _base_history := {}
+
+
+func on_configured() -> void:
+	_base_history.clear()
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_base_history.clear()
+
+
+func _base_cue(base_slot: int) -> Dictionary:
+	if not is_instance_valid(controller):
+		_base_history.erase(base_slot)
+		return {}
+	var observed: Dictionary = controller.call("base_observation", base_slot, Callable(self, "can_observe"))
+	if observed.is_empty():
+		_base_history.erase(base_slot)
+		return {}
+	var history: Array = _base_history.get(base_slot, [])
+	if not history.is_empty() and history.back().cue.id != observed.id:
+		history.clear()
+	if history.is_empty() or float(history.back().time) != _time:
+		history.append({"time": _time, "cue": observed})
+		if history.size() > HISTORY_CAP:
+			history.pop_front()
+	_base_history[base_slot] = history
+	for i in range(history.size() - 1, -1, -1):
+		if float(history[i].time) <= _time - reaction_time + 0.000001:
+			return history[i].cue
+	return {}
+
 
 func decide(_delta: float) -> void:
 	var me := self_body()
@@ -22,12 +55,13 @@ func decide(_delta: float) -> void:
 
 	var target := _weakest_rival_base()
 	if target < 0:
+		move = Vector2.ZERO
 		var rival := nearest_rival()
 		if rival >= 0:
 			steer_to(predict(rival, 0.3))
 			maybe_attack(rival, 2.4)
 		return
-	var base: Vector3 = controller.call("base_position", target)
+	var base: Vector3 = _base_cue(target).position
 	var gap := distance_to(base)
 	steer_to(base)
 	if gap < 3.0:
@@ -43,11 +77,10 @@ func decide(_delta: float) -> void:
 
 ## Whoever is closest to my crystal, if they are close enough to be a problem.
 func _intruder_at_home() -> int:
-	if not bool(controller.call("base_visible", slot)):
+	var cue := _base_cue(slot)
+	if cue.is_empty() or cue.health <= 0:
 		return -1
-	var home: Vector3 = controller.call("base_position", slot)
-	if float(controller.call("base_health", slot)) <= 0.0:
-		return -1
+	var home: Vector3 = cue.position
 	var best := -1
 	var best_d := 5.0
 	for i in ctx.fighters.size():
@@ -76,12 +109,13 @@ func _weakest_rival_base() -> int:
 	var best := -1
 	var best_cost := INF
 	for i in ctx.fighters.size():
-		if i == slot or not bool(controller.call("base_visible", i)):
+		if i == slot:
 			continue
-		var health: float = controller.call("base_health", i)
-		if health <= 0.0:
+		var cue := _base_cue(i)
+		if cue.is_empty() or cue.health <= 0:
 			continue
-		var pos: Vector3 = controller.call("base_position", i)
+		var health: float = cue.health
+		var pos: Vector3 = cue.position
 		var cost := health * 0.6 + me.global_position.distance_to(pos) * lerpf(3.0, 1.0, strategy)
 		cost += rng.randf_range(-4.0, 4.0)
 		if cost < best_cost:

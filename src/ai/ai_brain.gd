@@ -347,6 +347,10 @@ func _world_sight_clear(target: Node3D, point: Vector3) -> bool:
 			return true
 		if body == target or (body != null and (body.is_ancestor_of(target) or target.is_ancestor_of(body))):
 			return true
+		if body != null and body.has_meta("observation_mesh"):
+			var surface := body.get_node_or_null(NodePath(body.get_meta("observation_mesh")))
+			if surface == target or (surface != null and target.is_ancestor_of(surface)):
+				return true
 		if body == null or _has_visible_geometry(body, camera.cull_mask):
 			return false
 		var excluded := _sight_query.exclude
@@ -355,14 +359,15 @@ func _world_sight_clear(target: Node3D, point: Vector3) -> bool:
 	return false
 
 
-func _has_visible_geometry(root: Node, cull_mask: int) -> bool:
-	if root is CollisionObject3D and root.has_meta("observation_mesh"):
-		var geometry := root.get_node_or_null(NodePath(root.get_meta("observation_mesh"))) as GeometryInstance3D
-		return geometry != null and _geometry_has_visual_cue(geometry, cull_mask)
+func _has_visible_geometry(root: Node, cull_mask: int, follow_reference: bool = true) -> bool:
+	if follow_reference and root is CollisionObject3D and root.has_meta("observation_mesh"):
+		var geometry := root.get_node_or_null(NodePath(root.get_meta("observation_mesh")))
+		return geometry != null and geometry != root and not geometry.is_ancestor_of(root) \
+			and _has_visible_geometry(geometry, cull_mask, false)
 	if root is GeometryInstance3D and _geometry_has_visual_cue(root, cull_mask):
 		return true
 	for child in root.get_children():
-		if _has_visible_geometry(child, cull_mask):
+		if _has_visible_geometry(child, cull_mask, follow_reference):
 			return true
 	return false
 
