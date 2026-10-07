@@ -601,6 +601,9 @@ func priority_rival() -> int:
 		return near
 	if near == -1:
 		return lead
+	# Keep unrelated seeded decisions stable even when scores do not justify
+	# chasing a distant rival.
+	var selection_roll := rng.randf()
 	# A tied scoreboard supplies no reason to abandon the nearest eligible
 	# rival. In survival games running scores can stay tied for the whole round.
 	if ctx.scores[lead] <= ctx.scores[near]:
@@ -609,7 +612,7 @@ func priority_rival() -> int:
 	# bot independently picks them. `strategy` still sets the baseline, so a
 	# low tier keeps swinging at whoever is closest.
 	var bias: float = clampf(strategy + leader_gap() * 0.45, 0.0, 0.95)
-	return lead if rng.randf() < bias else near
+	return lead if selection_roll < bias else near
 
 
 ## The rival closest to going out. Standing next to the rim is the most

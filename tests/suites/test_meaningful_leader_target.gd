@@ -18,6 +18,12 @@ func run(t: TestHarness, host: Node) -> void:
 		# Test score selection independently of timing; production profiles remain unchanged.
 		brain.reaction_time = 0.0
 		brain.strategy = 1.0
+		scene.ctx.scores.fill(0)
+		var reference := RandomNumberGenerator.new()
+		reference.state = brain.rng.state
+		reference.randf()
+		brain.priority_rival()
+		t.equal(brain.rng.state, reference.state, "tied target selection preserves the established random draw budget")
 		for score in [0, 7, -7]:
 			scene.ctx.scores.fill(score)
 			for sample in 64:
