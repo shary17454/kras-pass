@@ -7,6 +7,22 @@ extends AIBrain
 
 var _state := "hunt"
 var _state_timer := 0.0
+var _backoff_target := -1
+
+
+func on_configured() -> void:
+	_reset_engagement()
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_reset_engagement()
+
+
+func _reset_engagement() -> void:
+	_state = "hunt"
+	_state_timer = 0.0
+	_backoff_target = -1
 
 
 func decide(delta: float) -> void:
@@ -25,7 +41,14 @@ func decide(delta: float) -> void:
 		drive_to(arena.retreat_point(me.global_position))
 		return
 
-	var target := priority_rival()
+	# A run-up belongs to one observed rival, not a freshly randomized leader.
+	var target := -1
+	if _state == "backoff" and can_target(_backoff_target):
+		target = _backoff_target
+	else:
+		if _state == "backoff":
+			_reset_engagement()
+		target = priority_rival()
 	if target < 0:
 		drive_to(arena.global_position)
 		return
@@ -54,7 +77,7 @@ func decide(delta: float) -> void:
 				goal = me.global_position + (away + inward.normalized() * 1.4).normalized() * 8.0
 		drive_to(goal)
 		if _state_timer <= 0.0 or dist > lerp(9.0, 6.0, aggression):
-			_state = "hunt"
+			_reset_engagement()
 		return
 
 	# Drive straight at them. Aiming at the flank was tried — the damage model
@@ -67,5 +90,6 @@ func decide(delta: float) -> void:
 	if dist < 4.0 and me.speed_ratio() < 0.45 and rng.randf() < strategy:
 		_state = "backoff"
 		_state_timer = 0.9
+		_backoff_target = target
 	if dist < 10.0 and me.speed_ratio() > 0.6:
 		maybe_dash(1.2)
