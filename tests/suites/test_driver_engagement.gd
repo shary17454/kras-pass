@@ -1,5 +1,20 @@
 extends RefCounted
 
+class RamObserver:
+	extends "res://src/ai/brains/driver_brain.gd"
+	var observed := Vector3(0, 0, 6)
+	var visible := true
+	var requests := 0
+
+	func priority_rival() -> int:
+		return 1 if visible else -1
+
+	func predict(_target_slot: int, _lead: float = 0.35) -> Vector3:
+		return observed
+
+	func maybe_dash(_chance_scale: float = 1.0) -> void:
+		requests += 1
+
 class Observer:
 	extends "res://src/ai/brains/driver_brain.gd"
 	var selected := 1
@@ -53,6 +68,55 @@ func run(t: TestHarness, host: Node) -> void:
 		brain._state = "backoff"
 		brain.configure(0, scene.ctx, difficulty, 817)
 		t.equal(brain._state, "hunt", "tier %d reconfiguration clears maneuver state" % difficulty)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
+
+	t.suite("driver ram commitment alignment")
+	for difficulty in 4:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("scrap_karts", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 816)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		var me: Fighter = scene.ctx.fighter(0)
+		me.global_position = Vector3.ZERO
+		me.velocity = Vector3(0, 0, me.top_speed * 0.8)
+		var brain := RamObserver.new()
+		brain.configure(0, scene.ctx, difficulty, 816)
+		brain.on_round_start()
+		me.facing = Vector3(0, 0, -1)
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d does not ram away from observed rival" % difficulty)
+		brain.requests = 0
+		me.facing = Vector3.RIGHT
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d turns before committing a sideways ram" % difficulty)
+		brain.requests = 0
+		me.facing = Vector3(0, 0, 1)
+		brain.decide(0.1)
+		t.equal(brain.requests, 1, "tier %d can commit an aligned ram" % difficulty)
+		brain.requests = 0
+		brain.observed = Vector3(0, 0, 11)
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d preserves ram range" % difficulty)
+		brain.observed = Vector3(0, 0, 6)
+		me.velocity = Vector3(0, 0, me.top_speed * 0.5)
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d preserves minimum ram speed" % difficulty)
+		me.velocity = Vector3(0, 0, me.top_speed * 0.8)
+		brain.visible = false
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d cannot ram an unobserved rival" % difficulty)
+		brain.visible = true
+		brain.observed = me.global_position
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d overlapping rival has no ram direction" % difficulty)
+		me.global_position = Vector3(0, 0, scene.ctx.arena.current_radius - 1.0)
+		brain.observed = me.global_position + me.facing * 6.0
+		brain.decide(0.1)
+		t.equal(brain.requests, 0, "tier %d edge recovery takes priority over ramming" % difficulty)
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
