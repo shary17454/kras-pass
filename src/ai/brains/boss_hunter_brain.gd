@@ -160,7 +160,7 @@ func decide(delta: float) -> void:
 	var d := _flat(best)
 	if d < Balance.num("tuning", "fighter.attack_range", 2.15) + 0.6:
 		if rng.randf() < attack_chance:
-			press(Btn.ATTACK)
+			tap(Btn.ATTACK)
 	elif d < 9.0:
 		maybe_dash(0.8)
 	keep_off_edge(3.0)
