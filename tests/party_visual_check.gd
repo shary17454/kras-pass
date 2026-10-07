@@ -37,6 +37,7 @@ func _ready() -> void:
 			await SceneRouter.go_to("standings", {"session": s}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/standings")
+			_check_standings_layout(orientation, false)
 			_capture("%s-%s-standings" % [orientation, locale])
 			var final := TournamentSession.new()
 			final.setup(PartyRoster.last_players(), ["ring_rumble"] as Array[String], 43)
@@ -48,6 +49,7 @@ func _ready() -> void:
 			await SceneRouter.go_to("standings", {"session": final}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/podium")
+			_check_standings_layout(orientation, true)
 			_capture("%s-%s-podium" % [orientation, locale])
 		Loc.set_locale("ar")
 		var cfg := MatchConfig.build("ring_rumble", ["nabta", "sakhra", "fanoos", "ramla"], 4, 1, 742)
@@ -113,6 +115,32 @@ func _match_loaded(game_id: String) -> bool:
 		push_error("Party visual QA loaded the wrong match: " + game_id)
 		return false
 	return true
+
+
+func _check_standings_layout(orientation: String, champion: bool) -> void:
+	var screen: Node = SceneRouter.current_node
+	var rows := screen.find_child("StandingsRows", true, false) as VBoxContainer
+	var actions := screen.find_child("StandingsActions", true, false) as Control
+	if rows == null or rows.get_child_count() != 4:
+		_errors.append(orientation + ": standings must retain all four ranks")
+		return
+	if rows.get_parent() is ScrollContainer:
+		_errors.append(orientation + ": standings have a nested scrolling region")
+	if actions == null or actions.get_parent() == screen.body:
+		_errors.append(orientation + ": standings actions are not pinned outside scrolling content")
+		return
+	var visible := get_viewport().get_visible_rect()
+	if not visible.encloses(actions.get_global_rect()):
+		_errors.append(orientation + ": standings actions are outside the viewport")
+	if champion:
+		var columns := screen.find_child("ChampionColumns", true, false) as BoxContainer
+		if columns == null or columns.vertical != (orientation == "portrait"):
+			_errors.append(orientation + ": champion layout does not adapt to orientation")
+		if orientation == "landscape":
+			var scroll := screen.body.get_parent() as ScrollContainer
+			for row in rows.get_children():
+				if not scroll.get_global_rect().encloses(row.get_global_rect()):
+					_errors.append("landscape: complete standings row is clipped")
 
 
 func _settle() -> void:
