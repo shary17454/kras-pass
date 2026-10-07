@@ -1,6 +1,8 @@
 extends "res://src/arenas/natural_valley.gd"
 ## Natural battlefield; the road graph remains the AI's navigation contract.
 
+const CoverHulls = preload("res://src/arenas/cover_hull_cache.gd")
+
 var roads := AStar3D.new()
 var buildings: Array[StaticBody3D] = []
 var _variant := 0
@@ -87,7 +89,7 @@ func _cover(index: int, p: Vector3) -> void:
 	body.add_child(visual)
 	var shape := CollisionShape3D.new()
 	if not _cover_shapes.has(mesh):
-		_cover_shapes[mesh] = mesh.create_convex_shape()
+		_cover_shapes[mesh] = CoverHulls.resolve(mesh, _rock_meshes.find(mesh))
 	shape.shape = _cover_shapes[mesh]
 	shape.position = offset
 	shape.scale = Vector3.ONE * scale_value

@@ -1,6 +1,7 @@
 extends RefCounted
 
 const Preparation = preload("res://src/match/match_resource_preparation.gd")
+const CoverHulls = preload("res://src/arenas/cover_hull_cache.gd")
 
 
 func _subset_hull(original: ConvexPolygonShape3D, world_scale: float, budget: int) -> ConvexPolygonShape3D:
@@ -49,6 +50,9 @@ func _subset_hull(original: ConvexPolygonShape3D, world_scale: float, budget: in
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tank terrain collision ownership")
+	var changed_mesh := BoxMesh.new()
+	t.ok(CoverHulls.resolve(changed_mesh, 0).points == changed_mesh.create_convex_shape().points,
+		"changed source digest falls back to original geometry")
 	for arena_id in ["tank_foundry", "tank_oasis", "tank_frost"]:
 		var cfg := MatchConfig.build("tank_arena", ["nabta", "sakhra", "barq", "turs"], 0, 2, 117)
 		cfg.arena_id = arena_id
@@ -82,16 +86,17 @@ func run(t: TestHarness, host: Node) -> void:
 						else:
 							t.ok(false, "hull probe must retain one convex shape")
 						proxy.free()
-				var original: ConvexPolygonShape3D = collider.shape
+				var original: ConvexPolygonShape3D = visual.mesh.create_convex_shape()
 				for argument in OS.get_cmdline_user_args():
 					if argument.begins_with("--cover-subset-vertices="):
-						simplified = _subset_hull(original, collider.scale.x, argument.trim_prefix("--cover-subset-vertices=").to_int())
+						var max_scale := 8.2 / maxf(visual.mesh.get_aabb().size.x, visual.mesh.get_aabb().size.z)
+						simplified = _subset_hull(original, max_scale, argument.trim_prefix("--cover-subset-vertices=").to_int())
 						var probe_body := StaticBody3D.new()
 						probe_body.collision_layer = 1 << 19
 						probe_body.collision_mask = 0
 						var probe_shape := CollisionShape3D.new()
 						probe_shape.shape = simplified
-						probe_shape.scale = collider.scale
+						probe_shape.scale = Vector3.ONE * max_scale
 						probe_body.add_child(probe_shape)
 						world.add_child(probe_body)
 						probe_body.global_position = Vector3(1000, 0, 1000)
@@ -107,7 +112,7 @@ func run(t: TestHarness, host: Node) -> void:
 							misses = 0
 							var missing := PackedVector3Array()
 							for point in original.points:
-								query.transform = Transform3D(Basis.IDENTITY, probe_body.global_position + point * collider.scale.x)
+								query.transform = Transform3D(Basis.IDENTITY, probe_body.global_position + point * max_scale)
 								if world.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty():
 									misses += 1
 									missing.append(point)
@@ -127,13 +132,19 @@ func run(t: TestHarness, host: Node) -> void:
 							await host.get_tree().physics_frame
 							var control_misses := 0
 							for point in original.points:
-								query.transform = Transform3D(Basis.IDENTITY, probe_body.global_position + point * collider.scale.x)
+								query.transform = Transform3D(Basis.IDENTITY, probe_body.global_position + point * max_scale)
 								if world.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty():
 									control_misses += 1
 							print("COVER_ORIGINAL_CLEARANCE ", arena_id, " cover=", cover.name, " vertices_outside_5cm=", control_misses)
 						t.equal(misses, 0, "every original hull vertex remains within 5cm of candidate")
 						for point in simplified.points:
 							t.ok(original.points.has(point), "subset hull never introduces an external vertex")
+						if misses == 0 and OS.get_cmdline_user_args().has("--bake-cover-hulls"):
+							DirAccess.make_dir_recursive_absolute("res://data/collision")
+							simplified.set_meta("source_digest", CoverHulls.mesh_digest(visual.mesh))
+							simplified.set_meta("max_world_width", 8.2)
+							var mesh_index: int = world._rock_meshes.find(visual.mesh)
+							t.equal(ResourceSaver.save(simplified, "res://data/collision/rock_cover_%d.tres" % mesh_index), OK, "validated hull saved")
 						probe_body.free()
 				var max_error := 0.0
 				var min_error := 0.0
@@ -160,7 +171,15 @@ func run(t: TestHarness, host: Node) -> void:
 			else:
 				t.ok(not cover_shapes.values().has(collider.shape), "different rock meshes retain distinct hulls: " + arena_id)
 				cover_shapes[visual.mesh] = collider.shape
-				t.ok(collider.shape.points == visual.mesh.create_convex_shape().points, "shared hull preserves generated collision geometry: " + arena_id)
+				var authored := visual.mesh.create_convex_shape()
+				if OS.get_cmdline_user_args().has("--original-cover-hulls"):
+					t.ok(collider.shape.points == authored.points, "control retains the original collision hull")
+				else:
+					t.equal(collider.shape.get_meta("source_digest", ""), CoverHulls.mesh_digest(visual.mesh), "baked hull matches exact source vertices")
+					t.ok(collider.shape.points.size() <= 200, "baked hull stays within the verified vertex budget")
+					for point in collider.shape.points:
+						t.ok(authored.points.has(point), "baked hull remains a subset of original vertices")
+					t.ok(CoverHulls.resolve(visual.mesh, 99).points == authored.points, "missing cache retains original hull")
 			t.equal(collider.position, visual.position, "shared hull retains cover offset: " + arena_id)
 			t.equal(collider.scale, visual.scale, "shared hull retains cover scale: " + arena_id)
 		t.equal(world.buildings.size(), 16, "all authored rock obstacles remain: " + arena_id)
@@ -181,6 +200,26 @@ func run(t: TestHarness, host: Node) -> void:
 			"opposite corners remain connected: " + arena_id)
 		await host.get_tree().physics_frame
 		await host.get_tree().physics_frame
+		for cover: StaticBody3D in world.buildings:
+			var visual: MeshInstance3D = cover.get_child(0)
+			var original := visual.mesh.create_convex_shape()
+			var sphere := SphereShape3D.new()
+			sphere.radius = 0.05
+			var vertex_query := PhysicsShapeQueryParameters3D.new()
+			vertex_query.shape = sphere
+			vertex_query.collision_mask = cover.collision_layer
+			var misses := 0
+			for point in original.points:
+				vertex_query.transform = Transform3D(Basis.IDENTITY, visual.to_global(point))
+				var hits := world.get_world_3d().direct_space_state.intersect_shape(vertex_query, 32)
+				var found := false
+				for contact in hits:
+					if contact.collider == cover:
+						found = true
+						break
+				if not found:
+					misses += 1
+			t.equal(misses, 0, "actual rotated cover retains 5cm physical boundary coverage: " + str(cover.name))
 		var query := PhysicsRayQueryParameters3D.create(Vector3(0, 10, 0), Vector3(0, -10, 0))
 		query.collision_mask = body.collision_layer
 		var hit := world.get_world_3d().direct_space_state.intersect_ray(query)
