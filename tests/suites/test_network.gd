@@ -43,6 +43,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 func run(t: TestHarness, host: Node) -> void:
 	_protocol_policy(t)
 	await _protocol_terminal_state(t, host)
+	await _active_protocol_recovery(t, host)
 	_endpoint_policy(t)
 	_input_edges(t)
 	_input_buffer_limits(t)
@@ -226,6 +227,67 @@ func _input_edges(t: TestHarness) -> void:
 	Net.transport = saved_transport
 	recorder.free()
 	Net.leave()
+
+
+func _active_protocol_recovery(t: TestHarness, host: Node) -> void:
+	t.suite("Active online match incompatible version recovery")
+	var available := Net.online_available
+	for transport_failure in [true, false]:
+		Net.reset()
+		Net.online_available = true
+		Net.mode = Net.Mode.ONLINE_CLIENT
+		Net.is_host = false
+		Net.local_peer_id = 8
+		Net.peers = {8: {"slot": 1}}
+		Net.room_code = "ABCDEF"
+		Net.epoch = 1
+		Net.room_state = "playing"
+		Net.state = Net.State.IN_MATCH
+		Net.match_running = true
+		Net.match_data = {"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
+			"seed": 2345, "players": [
+				{"id": 1, "slot": 0, "name": "Host", "character": 0},
+				{"id": 8, "slot": 1, "name": "Guest", "character": 1}]}
+		var stats_before: Dictionary = Stats._s.duplicate(true)
+		var replay_before := Replays.index().duplicate(true)
+		var profile_before: Dictionary = SaveSystem.profile().duplicate(true)
+		t.ok(await SceneRouter.go_to("match", {"config": Net.make_match_config()}, false, 0), "actual online route mounts")
+		var match_node: Node = SceneRouter.current_node
+		var match_ref := weakref(match_node)
+		var world_ref := weakref(match_node.ctx.world_root)
+		# Drive the mounted guest through the real snapshot/render pipeline.
+		var snapshot: Dictionary = match_node._network_replica.capture(match_node)
+		snapshot.phase = MatchPhase.P.PLAYING
+		Net._receive({"op": "snapshot", "epoch": 1, "tick": 1, "data": snapshot})
+		await host.get_tree().physics_frame
+		await host.get_tree().process_frame
+		t.equal(match_node.phase, MatchPhase.P.PLAYING, "guest is actually playing before mismatch")
+		Net._token = "test-only-active-resume-token"
+		Net._retry_until = Time.get_ticks_msec() + 30000
+		if transport_failure:
+			Net._transport_lost("protocol_mismatch")
+		else:
+			Net._receive({"op": "error", "code": "version_mismatch"})
+		for frame in 120:
+			await host.get_tree().process_frame
+			if SceneRouter.current_id == "online" and not SceneRouter._busy and match_ref.get_ref() == null:
+				break
+		t.equal(SceneRouter.current_id, "online", "active failure returns to room browser")
+		t.ok(match_ref.get_ref() == null, "previous match is actually freed")
+		t.ok(world_ref.get_ref() == null, "previous world is actually freed")
+		t.equal(SceneRouter.holder.get_child_count(), 1, "one replacement screen, no duplicate nodes")
+		t.equal(SceneRouter.current_node._status.text, Loc.t("online.version_mismatch"), "replacement screen retains specific error")
+		t.equal(Net._retry_until, 0, "active failure cancels reconnect deadline")
+		t.equal(Net._token, "", "active failure clears resume token")
+		t.equal(Stats._s, stats_before, "aborted match awards no statistics")
+		t.equal(Replays.index(), replay_before, "aborted match stores no replay")
+		t.equal(SaveSystem.profile(), profile_before, "aborted match awards no progression")
+		Net.host_local(4)
+		t.ok(await SceneRouter.go_to("local_play", {}, false, 0), "local play remains reachable after online failure")
+		t.equal(Net.failure_key, "", "fresh local session clears failure")
+		await SceneRouter.go_to("main_menu", {}, false, 0)
+	Net.reset()
+	Net.online_available = available
 
 
 func _player_mapping(t: TestHarness) -> void:
