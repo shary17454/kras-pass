@@ -37,6 +37,7 @@ func run(t: TestHarness, host: Node) -> void:
 									expected = Loc.t("hud.you", {"name": expected})
 								t.equal(label.text, player.symbol() + " " + expected, "player identity is not shortened")
 								t.ok(not label.clip_text, "name never silently clips")
+								t.equal(label.get_visible_line_count(), label.get_line_count(), "all original character name lines remain visible")
 								var width := label.get_theme_font("font").get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
 								t.ok(width <= label.size.x + 1.0 or label.get_line_count() > 1, "wide name actually wraps to readable lines")
 								t.ok(label.get_combined_minimum_size().y <= label.size.y + 1.0, "all name lines receive height")

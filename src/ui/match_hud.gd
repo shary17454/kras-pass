@@ -266,10 +266,12 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# it in here is what pushed the name into being clipped.
 	var character := p.character()
 	var shown: String = character.display_name() if character != null else p.display_name()
+	var custom_name := false
 	if p.is_human and ctx.config.human_slots().size() == 1:
 		shown = Loc.t("hud.you", {"name": shown})
 	elif p.is_human and not p.display_name_override.is_empty():
 		shown = p.display_name_override
+		custom_name = true
 	shown = p.symbol() + " " + shown
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 4)
@@ -282,6 +284,10 @@ func _make_chip(p: PlayerConfig) -> Control:
 	var name_label := UIKit.label(shown, UIKit.SIZE_SMALL, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.max_lines_visible = 1 if custom_name else 3
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.tooltip_text = shown
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	name_label.custom_minimum_size = Vector2(120, 0)
 	if _compact_players():
 		name_label.custom_minimum_size.x = 0
