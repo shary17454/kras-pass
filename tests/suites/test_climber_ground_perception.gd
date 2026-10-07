@@ -17,12 +17,11 @@ func run(t: TestHarness, host: Node) -> void:
 			scene.ctx.fighter(slot).hide()
 		var from := Vector3(0, 100, 0)
 		scene.ctx.fighter(0).global_position = from
-		var ground := MeshInstance3D.new()
-		ground.mesh = BoxMesh.new()
+		var ground := _ground()
 		scene.arena.get_node("Static").add_child(ground)
-		var p0 := Vector3(1, 102, 0)
-		var p1 := Vector3(2, 103, 0)
-		var p2 := Vector3(3, 104, 0)
+		var p0 := Vector3(1, 100.6, 0)
+		var p1 := Vector3(2, 100.7, 0)
+		var p2 := Vector3(3, 100.8, 0)
 		ground.global_position = p0
 		var brain = load("res://src/ai/brains/climber_brain.gd").new()
 		brain.configure(0, scene.ctx, difficulty, 805)
@@ -34,11 +33,11 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(brain._find_higher_ground(from), from, "tier %d ground reaction does not expire early" % difficulty)
 		brain._time = 10.0 + brain.reaction_time
 		ground.global_position = p1
-		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP, "tier %d ground choice uses delayed observed position" % difficulty)
+		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP * 0.25, "tier %d ground choice uses delayed observed position" % difficulty)
 		brain._time += brain.reaction_time
 		ground.global_position = p2
 		var known: Vector3 = brain._find_higher_ground(from)
-		t.equal(known, p1 + Vector3.UP, "tier %d subsequent visible movement remains delayed" % difficulty)
+		t.equal(known, p1 + Vector3.UP * 0.25, "tier %d subsequent visible movement remains delayed" % difficulty)
 		brain._ledge_target = known
 		ground.hide()
 		ground.global_position = Vector3(40, 200, 0)
@@ -51,32 +50,31 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(brain._ledge_target, Vector3.INF, "tier %d new round clears prior ledge target" % difficulty)
 		t.equal(brain._find_higher_ground(from), from, "tier %d new round earns no old observation credit" % difficulty)
 		brain._time += brain.reaction_time
-		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP, "tier %d ground is usable after new-round delay" % difficulty)
+		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP * 0.25, "tier %d ground is usable after new-round delay" % difficulty)
 		brain._ledge_target = p0 + Vector3.UP
 		brain.configure(0, scene.ctx, difficulty, 806)
 		t.equal(brain._ledge_target, Vector3.INF, "tier %d reconfiguration clears prior ground plan" % difficulty)
 		t.equal(brain._find_higher_ground(from), from, "tier %d reconfiguration clears prior observation credit" % difficulty)
 		brain._time += brain.reaction_time
-		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP, "prior ground becomes observed before replacement")
+		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP * 0.25, "prior ground becomes observed before replacement")
 		ground.free()
-		ground = MeshInstance3D.new()
-		ground.mesh = BoxMesh.new()
+		ground = _ground()
 		scene.arena.get_node("Static").add_child(ground)
 		ground.global_position = p0
 		t.equal(brain._find_higher_ground(from), from, "tier %d replacement instance earns no previous observation credit" % difficulty)
 		brain.reaction_time = 0.0
-		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP, "zero-delay diagnostic contract remains immediate")
+		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP * 0.25, "zero-delay diagnostic contract remains immediate")
 		scene.ctx.observation_camera = scene.camera
 		var original_view: Transform3D = scene.camera.global_transform
 		scene.camera.global_position += Vector3.UP * 100.0
 		t.ok(brain.can_observe(ground), "actual camera can see the rendered ground fixture")
-		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP, "actual visible geometry remains actionable")
+		t.equal(brain._find_higher_ground(from), p0 + Vector3.UP * 0.25, "actual visible geometry remains actionable")
 		var transparent := StandardMaterial3D.new()
 		transparent.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		transparent.albedo_color = Color(1, 1, 1, 0)
-		ground.material_override = transparent
+		ground.get_child(0).material_override = transparent
 		t.equal(brain._find_higher_ground(from), from, "fully transparent ground is not new navigable knowledge")
-		ground.material_override = null
+		ground.get_child(0).material_override = null
 		scene.camera.global_transform = original_view
 		t.equal(brain._find_higher_ground(from), from, "off-screen geometry cannot enter a new ground plan")
 		scene.ctx.observation_camera = null
@@ -90,3 +88,18 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+
+
+func _ground() -> StaticBody3D:
+	var body := StaticBody3D.new()
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(1, 0.5, 1)
+	mesh.mesh = box
+	body.add_child(mesh)
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = box.size
+	collision.shape = shape
+	body.add_child(collision)
+	return body
