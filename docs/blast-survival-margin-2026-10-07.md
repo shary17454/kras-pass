@@ -46,10 +46,12 @@ missing observed motion. An earlier targeted invocation used an unsupported
 counted as a pass. Correct --suite=blast_ball invocation passed.
 
 The first experiment compiled all 415 scripts; the second commit's affected
-script was parsed and exercised by the targeted suite. The full 39-game suite
-has NOT been rerun on this second commit. Parent release-source full regression
-does not certify the modified behavior. Full regression, current-source all-game
-acceptance, native device QA and production/release gates remain open.
+script was parsed and exercised by the targeted suite. At this initial sample
+checkpoint the full 39-game suite had not been rerun. Subsequent modified-source
+qualification is recorded in blast-fixed-full-qualification-2026-10-07.md.
+Parent release-source full regression alone does not certify modified behavior.
+Current-source all-game acceptance, native device QA and production/release gates
+remain open.
 
 Two samples are not exhaustive balance proof. This is development evidence,
 not sustained rendered FPS, heat, battery, four-person touch or Internet QA.
