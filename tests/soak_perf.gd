@@ -102,6 +102,15 @@ func _ready() -> void:
 		scene.queue_free()
 		get_tree().quit(1)
 		return
+	if game == "tank_arena":
+		var cover_points := []
+		var cover_digests := []
+		for cover: StaticBody3D in scene.controller.world.buildings:
+			var collision: CollisionShape3D = cover.get_child(1)
+			cover_points.append(collision.shape.points.size())
+			cover_digests.append(collision.shape.get_meta("source_digest", "original"))
+		report["cover_hull_points"] = cover_points
+		report["cover_hull_source_digests"] = cover_digests
 	var prepared_states := 0
 	for fighter in scene.ctx.fighters:
 		if is_instance_valid(fighter._state_fx):
