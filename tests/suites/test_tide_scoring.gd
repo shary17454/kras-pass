@@ -30,6 +30,10 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.ctx.details[0]["knockouts"] = 1
 	var scored: Array[int] = scene.controller.compute_scores()
 	t.equal(scored[0], 4 + scene.controller.survival_knockout_weight, "legitimate knockout reward preserved")
+	scene.ctx.details[0]["knockouts"] = 10
+	var rewarded: Array[int] = scene.controller.compute_scores()
+	t.ok(rewarded[1] > rewarded[0], "survivor still wins over an eliminated knockout leader")
+	t.equal(rewarded[0], 4 + 10 * scene.controller.survival_knockout_weight, "survivor priority does not erase hunter reward")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

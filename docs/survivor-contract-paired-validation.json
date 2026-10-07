@@ -1,0 +1,86 @@
+[
+  {
+    "offset": 1200000,
+    "fingerprint": "bb391fb77305db702f2ecc5438de81703adfab4859fc0cf4e3c5a4056de9f290",
+    "files": 272,
+    "validation": {
+      "commit": "e07a540289624a583edcb558f0db90824c8a409b",
+      "run": "local-survivor-1200000",
+      "seedOffset": 1200000,
+      "complete": true,
+      "gamesCompleted": 1,
+      "gamesExpected": 1,
+      "matchesCompleted": 42,
+      "difficultyPairingVerified": true,
+      "missing": [],
+      "reviews": [
+        {
+          "game": "scrap_karts",
+          "flags": [
+            "expert bots no better than easy"
+          ]
+        }
+      ],
+      "characterWins": {
+        "barq": 1,
+        "fanoos": 3,
+        "ghaim": 3,
+        "mowja": 3,
+        "nabta": 5,
+        "ramla": 3,
+        "sakhra": 2,
+        "turs": 4
+      },
+      "bossBaseline": [],
+      "bossComparisons": [],
+      "balanceReviewComplete": false,
+      "releaseReady": false
+    },
+    "expertShare": 0.49375,
+    "characterBias": 0.0833333333333333,
+    "slotBias": 0.166666666666667,
+    "tieRate": 0
+  },
+  {
+    "offset": 1500000,
+    "fingerprint": "bb391fb77305db702f2ecc5438de81703adfab4859fc0cf4e3c5a4056de9f290",
+    "files": 272,
+    "validation": {
+      "commit": "e07a540289624a583edcb558f0db90824c8a409b",
+      "run": "local-survivor-1500000",
+      "seedOffset": 1500000,
+      "complete": true,
+      "gamesCompleted": 1,
+      "gamesExpected": 1,
+      "matchesCompleted": 42,
+      "difficultyPairingVerified": true,
+      "missing": [],
+      "reviews": [
+        {
+          "game": "scrap_karts",
+          "flags": [
+            "expert bots no better than easy"
+          ]
+        }
+      ],
+      "characterWins": {
+        "barq": 3,
+        "fanoos": 5,
+        "ghaim": 5,
+        "mowja": 1,
+        "nabta": 2,
+        "ramla": 3,
+        "sakhra": 2,
+        "turs": 3
+      },
+      "bossBaseline": [],
+      "bossComparisons": [],
+      "balanceReviewComplete": false,
+      "releaseReady": false
+    },
+    "expertShare": 0.5125,
+    "characterBias": 0.0833333333333333,
+    "slotBias": 0.0833333333333333,
+    "tieRate": 0
+  }
+]
