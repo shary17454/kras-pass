@@ -36,9 +36,10 @@ func decide(_delta: float) -> void:
 		# Still processing the call: keep doing whatever we were doing.
 		return
 
-	if _committed == null or not is_instance_valid(_committed) or not _committed.is_standable() or _committed.tag != call_tag:
-		_committed = controller.call("safe_tile_near", me.global_position) if controller.has_method("safe_tile_near") else null
+	if not can_observe(_committed) or not _committed.is_standable() or _committed.tag != call_tag:
+		_committed = controller.call("safe_tile_near", me.global_position, can_observe) if controller.has_method("safe_tile_near") else null
 	if _committed == null or not is_instance_valid(_committed):
+		move = Vector2.ZERO
 		return
 	var offset: Vector3 = _committed.global_position - me.global_position
 	var dist := Vector2(offset.x, offset.z).length()

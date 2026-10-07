@@ -152,10 +152,12 @@ func detail_rows() -> Array:
 	return [{"key": "results.stat.tiles", "field": "tiles"}]
 
 
-func unclaimed_tile_near(pos: Vector3, slot: int) -> ArenaTile:
+func unclaimed_tile_near(pos: Vector3, slot: int, observable: Callable = Callable()) -> ArenaTile:
 	var best: ArenaTile = null
 	var best_d := INF
 	for t in _tiles:
+		if not is_instance_valid(t) or (observable.is_valid() and not observable.call(t)):
+			continue
 		if t.owner_slot == slot:
 			continue
 		var d: float = t.global_position.distance_squared_to(pos)

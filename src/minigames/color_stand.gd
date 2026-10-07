@@ -119,10 +119,12 @@ func called_serial() -> int:
 	return call_sequence
 
 
-func safe_tile_near(pos: Vector3) -> ArenaTile:
+func safe_tile_near(pos: Vector3, observable: Callable = Callable()) -> ArenaTile:
 	var best: ArenaTile = null
 	var best_d := INF
 	for t in _tiles:
+		if not is_instance_valid(t) or (observable.is_valid() and not observable.call(t)):
+			continue
 		if t.tag != COLOR_NAMES[_called] or not t.is_standable():
 			continue
 		var d: float = t.global_position.distance_squared_to(pos)
