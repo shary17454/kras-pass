@@ -2,6 +2,10 @@ extends RefCounted
 
 class RoutingProbe extends "res://src/ai/brains/platform_brain.gd":
 	var observations := 0
+	var route_selections := 0
+	func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
+		route_selections += 1
+		return super._pick_tile(arena, from)
 	func can_observe(node: Node3D) -> bool:
 		observations += 1
 		return is_instance_valid(node) and node.is_visible_in_tree()
@@ -264,6 +268,12 @@ func _test_walk_before_jump(t: TestHarness, host: Node) -> void:
 	brain.reaction_time = 0.25
 	brain._time = 1.0
 	brain.decide(0.1)
+	var selections := brain.route_selections
+	for decision in 10:
+		brain._time += 0.1
+		brain.decide(0.1)
+	t.equal(brain.route_selections, selections,
+		"warning underfoot does not repeatedly replace a fresh visible escape step")
 	brain._time += 0.26
 	brain.bits = 0
 	brain.decide(0.1)

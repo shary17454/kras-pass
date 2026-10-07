@@ -36,8 +36,7 @@ func decide(_delta: float) -> void:
 	else:
 		_warning_tile = null
 	var unsafe := current == null or current.state != ArenaTile.State.SOLID
-	if not can_observe(_target_tile) or _target_tile.state != ArenaTile.State.SOLID \
-			or (unsafe and rng.randf() < edge_awareness):
+	if not can_observe(_target_tile) or _target_tile.state != ArenaTile.State.SOLID:
 		_target_tile = _pick_tile(arena, me.global_position)
 	# Keep ground control when the next visible step is fresh; jump to rescue
 	# a trapped route rather than hop on every floor warning.
