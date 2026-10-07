@@ -301,7 +301,7 @@ func tick(frame: InputFrame, delta: float) -> void:
 		velocity = Vector3.ZERO
 		var collision_started := DevTools.operations.begin()
 		move_and_slide()
-		DevTools.operations.finish("fighter.physics", collision_started)
+		DevTools.operations.finish_physics(self, slot, collision_started)
 		return
 	var operation_started := DevTools.operations.begin()
 	_pre_vel = velocity
@@ -328,7 +328,7 @@ func tick(frame: InputFrame, delta: float) -> void:
 	DevTools.operations.finish("fighter.integrate", operation_started)
 	operation_started = DevTools.operations.begin()
 	move_and_slide()
-	DevTools.operations.finish("fighter.physics", operation_started)
+	DevTools.operations.finish_physics(self, slot, operation_started)
 	operation_started = DevTools.operations.begin()
 	_collect_body_contacts()
 	if not _was_on_floor and is_on_floor():
