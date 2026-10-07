@@ -146,6 +146,7 @@ func _build() -> void:
 			chip["name"].custom_minimum_size.x = 0 if portrait or _compact_players() else 100
 			chip["name"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 			chip["value"].add_theme_font_size_override("font_size", int((24 if portrait else 32) * text_scale))
+			chip["detail"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 			chip["crown"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 			chip["meter"].custom_minimum_size = Vector2(60 if portrait else METER_WIDTH, 6 if portrait else 16)
 			for effect in chip["effects"].get_children():
@@ -294,6 +295,12 @@ func _make_chip(p: PlayerConfig) -> Control:
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	score_row.add_child(value)
 	box.add_child(score_row)
+	var detail := UIKit.label("", UIKit.SIZE_SMALL, Color.WHITE)
+	detail.name = "Detail"
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.visible = false
+	box.add_child(detail)
 
 	# The per-player meter the spec asks for. Where a game has no dash the bar
 	# would be a permanently full decoration, so it is hidden instead.
@@ -313,7 +320,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 		effects.add_child(label)
 		effect_labels[definition.id] = label
 
-	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
+	_chips.append({"root": card, "value": value, "detail": detail, "effects": effects, "slot": p.slot,
 		"effect_labels": effect_labels,
 		"color": col, "meter": meter, "charge": -1.0,
 		"crown": crown, "name": name_label, "portrait": portrait})
@@ -622,7 +629,12 @@ func _refresh_chips() -> void:
 	for chip in _chips:
 		var operation_started := DevTools.operations.begin()
 		var slot: int = chip["slot"]
-		chip["value"].text = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
+		var text: String = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
+		# Keep numbers prominent while allowing localized secondary status to wrap.
+		var parts := text.split("\n", true, 1)
+		chip["value"].text = parts[0]
+		chip["detail"].text = parts[1] if parts.size() > 1 else ""
+		chip["detail"].visible = not chip["detail"].text.is_empty()
 		var alive: bool = ctx.is_alive(slot)
 		chip["root"].modulate = Color(1, 1, 1, 1.0 if alive else 0.4)
 		_refresh_meter(chip, slot)
