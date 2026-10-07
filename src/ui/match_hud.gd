@@ -12,6 +12,7 @@ signal ready_requested()
 signal auxiliary_overlay_layout_changed()
 var controller: MiniGameController
 var touch_sources: Array = []
+var local_vehicle_views := false
 
 var _chips: Array = []
 var _timer_label: Label
@@ -533,7 +534,7 @@ func show_rules(visible_: bool) -> void:
 
 
 func show_hints(visible_: bool) -> void:
-	_hint_label.visible = visible_
+	_hint_label.visible = visible_ and not local_vehicle_views
 
 
 func _fit_announcement() -> void:
@@ -654,6 +655,10 @@ func tick(delta: float) -> void:
 
 
 func _refresh_offscreen_cues() -> void:
+	if local_vehicle_views:
+		for cue in _offscreen_cues:
+			cue.hide()
+		return
 	var viewport_size := get_viewport().get_visible_rect().size
 	var inset := Platform.safe_insets()
 	var top := maxf(occupied_top() + 40.0, inset.y + 40.0)

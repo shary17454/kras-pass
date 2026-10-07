@@ -91,8 +91,14 @@ func _ready() -> void:
 			_capture(orientation + "-four-touch-" + game_id)
 			var controls_top := TouchSource.party_region(get_viewport().get_visible_rect().size, 0, 4).position.y
 			for fighter in match_scene.ctx.fighters:
-				var pixel: Vector2 = match_scene.camera.unproject_position(fighter.global_position)
-				if pixel.y <= match_scene.hud.occupied_top() or pixel.y >= controls_top:
+				var views: LocalVehicleViews = match_scene.vehicle_views
+				if views == null:
+					_errors.append(orientation + ": local world vehicles did not create personal views")
+					break
+				var index := views.slots.find(fighter.slot)
+				var panel: Control = views.panels[index]
+				var pixel: Vector2 = panel.position + views.cameras[index].unproject_position(fighter.global_position)
+				if not panel.get_global_rect().has_point(pixel) or pixel.y <= match_scene.hud.occupied_top() or pixel.y >= controls_top:
 					_errors.append(orientation + ": world player is hidden behind the HUD or controls")
 			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await _settle()

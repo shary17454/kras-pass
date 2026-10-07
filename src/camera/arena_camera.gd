@@ -13,6 +13,10 @@ var local_target: Node3D
 var shared_world := false
 var shared_touch_count := 0
 var shared_hud_bottom: Callable
+var follow_distance := 10.0
+var follow_height := 6.0
+var follow_lookahead := 5.0
+var close_follow := false
 
 var mode: Mode = Mode.ARENA
 var targets: Array = []
@@ -136,7 +140,7 @@ func _update_camera(delta: float) -> void:
 	if mode == Mode.CHASE and is_instance_valid(local_target):
 		var heading: Vector3 = local_target.facing.normalized()
 		var subject: Vector3 = local_target.get_global_transform_interpolated().origin
-		var wanted := subject - heading * 10.0 + Vector3.UP * 6.0
+		var wanted := subject - heading * follow_distance + Vector3.UP * follow_height
 		var candidate := global_position.lerp(wanted, 1.0 - exp(-5.0 * delta))
 		# Keep the camera on the driver's side of tunnel walls and ceilings.
 		var anchor := subject + Vector3.UP * 1.2
@@ -147,7 +151,7 @@ func _update_camera(delta: float) -> void:
 			candidate = hit.position + (anchor - hit.position).normalized() * 0.5
 		global_position = candidate
 		focus = subject
-		look_at(subject + heading * 5.0 + Vector3.UP)
+		look_at(subject + heading * follow_lookahead + Vector3.UP)
 		return
 	_update_focus_and_zoom(false)
 	_shake = maxf(0.0, _shake - _shake_decay * delta)
@@ -326,7 +330,7 @@ func _apply(weight: float, delta: float) -> void:
 	var live_focus := focus
 	if delta > 0.0:
 		var wanted := _wanted_focus()
-		live_focus = focus.lerp(wanted, weight)
+		live_focus = wanted if close_follow and mode == Mode.WORLD else focus.lerp(wanted, weight)
 		focus = live_focus
 		_zoom = lerp(_zoom, _target_zoom, clampf(_zoom_lerp * delta, 0.0, 1.0))
 
@@ -338,7 +342,7 @@ func _apply(weight: float, delta: float) -> void:
 	if mode == Mode.WORLD and is_instance_valid(local_target):
 		var heading: Vector3 = local_target.facing.normalized()
 		offset = -heading * _distance * framing
-		look_focus += heading * 5.0
+		look_focus += heading * follow_lookahead
 	var pos := live_focus + Vector3(offset.x, _height * _zoom * framing, offset.z)
 	if mode == Mode.WORLD and is_inside_tree():
 		var ray := PhysicsRayQueryParameters3D.create(live_focus + Vector3.UP * 2, pos, 1)

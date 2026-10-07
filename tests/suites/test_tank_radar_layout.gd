@@ -38,6 +38,14 @@ func run(t: TestHarness, host: Node) -> void:
 					window.size = resolution
 					for frame in 12:
 						await host.get_tree().process_frame
+					if humans > 1:
+						t.ok(not radar.visible, "personal views replace the global map without covering the driving region")
+						t.equal(scene.vehicle_views.radars.size(), humans, "each driver retains its map")
+						for index in humans:
+							var map: Control = scene.vehicle_views.radars[index]
+							var panel: Control = scene.vehicle_views.panels[index]
+							t.ok(Rect2(Vector2.ZERO, panel.size).encloses(Rect2(map.position, map.size * map.scale)), "embedded map stays inside the correct driving view")
+						continue
 					scene.hud._fit_toasts()
 					var rect := radar.get_global_rect()
 					t.ok(not rect.intersects(scene.hud._hint_label.get_global_rect()), "radar does not cross the objective after resize in " + locale)
