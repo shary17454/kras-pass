@@ -57,6 +57,13 @@ func _sync_radius() -> void:
 		_marker.scale = Vector3(ratio, 1.0, ratio)
 
 
+func zone_observation(observable: Callable) -> Dictionary:
+	if not observable.is_valid() or not is_instance_valid(_marker) or not observable.call(_marker):
+		return {}
+	return {"id": _marker.get_instance_id(), "position": _marker.global_position,
+		"radius": BASE_RADIUS * _marker.scale.x}
+
+
 func _set_ring_color(color: Color) -> void:
 	if is_instance_valid(_ring) and color != _ring_color:
 		_ring_color = color

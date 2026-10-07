@@ -1,6 +1,35 @@
 extends "res://src/ai/brains/generic_brain.gd"
 ## Zone Hold: get in the circle, and be the only one in it.
 
+var _zone_history: Array[Dictionary] = []
+var _zone_id := 0
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_zone_history.clear()
+	_zone_id = 0
+
+
+func _perceived_zone() -> Dictionary:
+	var observed: Dictionary = controller.call("zone_observation", can_observe)
+	if observed.is_empty():
+		_zone_history.clear()
+		_zone_id = 0
+		return {}
+	if int(observed.id) != _zone_id:
+		_zone_history.clear()
+		_zone_id = int(observed.id)
+	if _zone_history.is_empty() or float(_zone_history.back().time) < _time:
+		observed["time"] = _time
+		_zone_history.append(observed)
+	while _zone_history.size() > HISTORY_CAP:
+		_zone_history.pop_front()
+	for index in range(_zone_history.size() - 1, -1, -1):
+		if float(_zone_history[index].time) <= _time - reaction_time + 0.000001:
+			return _zone_history[index]
+	return {}
+
 
 func steer_to(target: Vector3, urgency: float = 1.0) -> void:
 	var me := self_body()
@@ -29,8 +58,13 @@ func decide(_delta: float) -> void:
 	var me := self_body()
 	if me == null or controller == null:
 		return
-	var zone: Vector3 = controller.get("zone_position")
-	var radius: float = float(controller.get("zone_radius"))
+	var observation := _perceived_zone()
+	if observation.is_empty():
+		move = Vector2.ZERO
+		keep_off_edge()
+		return
+	var zone: Vector3 = observation.position
+	var radius: float = observation.radius
 	var inside := me.global_position.distance_to(zone) <= radius
 
 	var intruder := _rival_in_zone(zone, radius)
