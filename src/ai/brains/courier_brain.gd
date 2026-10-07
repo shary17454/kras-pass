@@ -4,6 +4,44 @@ extends "res://src/ai/brains/generic_brain.gd"
 ## The interesting decision is when to stop collecting and bank. Greedy bots
 ## (high `risk`) hold more before running home; cautious ones deliver early.
 
+var _cargo_history := {}
+
+
+func on_configured() -> void:
+	super.on_configured()
+	_cargo_history.clear()
+
+
+func on_round_start() -> void:
+	super.on_round_start()
+	_cargo_history.clear()
+
+
+func _record_history() -> void:
+	super._record_history()
+	for i in ctx.fighters.size():
+		if i != slot:
+			_perceived_cargo(i)
+
+
+## Cargo is public in the delivery HUD, but changes still require reaction time.
+func _perceived_cargo(target_slot: int) -> int:
+	var rival := ctx.fighter(target_slot)
+	if target_slot == slot or not ctx.is_alive(target_slot) or not can_observe(rival):
+		_cargo_history.erase(target_slot)
+		return 0
+	var history: Array = _cargo_history.get(target_slot, [])
+	if history.is_empty() or float(history.back()["time"]) < _time:
+		history.append({"time": _time, "count": rival.carrying})
+	while history.size() > HISTORY_CAP:
+		history.pop_front()
+	_cargo_history[target_slot] = history
+	var want := _time - reaction_time + 0.000001
+	for i in range(history.size() - 1, -1, -1):
+		if float(history[i]["time"]) <= want:
+			return int(history[i]["count"])
+	return 0
+
 
 func decide(_delta: float) -> void:
 	var me := self_body()
@@ -64,8 +102,8 @@ func _richest_carrier() -> int:
 	for i in ctx.fighters.size():
 		if i == slot or not ctx.is_alive(i):
 			continue
-		var f := ctx.fighter(i)
-		if can_observe(f) and f.carrying > best_n:
-			best_n = f.carrying
+		var carried := _perceived_cargo(i)
+		if carried > best_n:
+			best_n = carried
 			best = i
 	return best if best_n > 0 else nearest_rival()
