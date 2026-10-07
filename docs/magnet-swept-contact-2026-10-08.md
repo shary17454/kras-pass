@@ -69,3 +69,30 @@ Two small samples do not prove universal fairness or real-device performance.
   after release integration; do not relabel or reuse the old archive.
 - No main merge, production Railway mutation, device performance sign-off,
   upload or App Review submission in this pass.
+
+## Four real network clients
+
+At source `a0b1601924bf27bc67b6fc83b6f61a073cf02ba9` (same runtime as
+`d854d69`), ran:
+
+```sh
+GODOT_BIN=/opt/homebrew/bin/godot node server/network-smoke.js \
+  --game=magnet_court --humans=4 --seed=309019
+```
+
+The script exited 0 with PASS. Four independent Godot clients used a real local
+WebSocket server; all moved, retained distinct IDs, and agreed on aggregate scores
+`[24,22,21,21]`. Host ID 1 and guest ID 2 resumed after transport loss. Other guests
+received 1107 world snapshots; resumed guest received 1088. The host alone
+submitted the result. Room closure followed the intentional host leave in RESULTS.
+All four engine logs pass strict `import`-mode error checking.
+
+Evidence: `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-qOsr95/`.
+Server loop maximum was 138 ms and client maximum frame gaps were 946--988 ms,
+including loading/reconnect. These are not a sustained 60 FPS qualification or a
+phone battery/thermal measurement. This match does not prove four physical touch
+users, an Internet deployment, forced sudden death or every other minigame.
+
+Read-only production health at this pass returned `ok:true`,
+`authentication_ready:true`, `multiplayer_enabled:false`. Therefore production
+online play remains disabled; local networking success is not production sign-off.
