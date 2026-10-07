@@ -85,7 +85,8 @@ func run(t: TestHarness, host: Node) -> void:
 				brain.dash_chance = 1.0
 				brain.bits = 0
 				brain.decide(0.1)
-				t.equal(brain.bits & InputFrame.Btn.DASH, 0, "a small persistent crater clearance correction does not request a long dash")
+				brain._publish_output(brain.move)
+				t.equal(InputRouter._virtual_pending[0].bits & InputFrame.Btn.DASH, 0, "a small persistent crater clearance correction does not request a long dash")
 				t.ok(brain.move.length() < 0.6, "persistent crater correction brakes near safe ground instead of fleeing at full speed")
 			if id == "boss_sovereign":
 				scene.controller._shielded = true
