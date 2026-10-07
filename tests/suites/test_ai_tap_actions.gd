@@ -16,6 +16,14 @@ class StationaryMelee:
 		return true
 
 
+class StationarySiege:
+	extends "res://src/ai/brains/siege_brain.gd"
+	func steer_to(_target: Vector3, _urgency: float = 1.0) -> void:
+		move = Vector2.ZERO
+	func _has_line_of_sight(_from: Vector3, _to: Vector3) -> bool:
+		return true
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI one-shot action requests")
 	for difficulty in 4:
@@ -59,6 +67,51 @@ func run(t: TestHarness, host: Node) -> void:
 		await host.get_tree().process_frame
 	await _test_bomber(t, host)
 	await _test_melee(t, host)
+	await _test_siege(t, host)
+
+
+func _test_siege(t: TestHarness, host: Node) -> void:
+	for difficulty in 4:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("base_siege", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 851)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		scene.ctx.observation_camera = null
+		var me: Fighter = scene.ctx.fighter(0)
+		var base: Dictionary = scene.controller._bases[1]
+		me.global_position = base.node.global_position + Vector3(0, 1.3, -2.5)
+		me.facing = Vector3(0, 0, 1)
+		for slot in [1, 2, 3]:
+			scene.ctx.fighter(slot).hide()
+		var brain := StationarySiege.new()
+		brain.controller = scene.controller
+		brain.configure(0, scene.ctx, difficulty, 851)
+		brain.on_round_start()
+		brain.reaction_time = 0.0
+		brain.decision_interval = 0.1
+		brain.mistake_chance = 0.0
+		brain.input_noise = 0.0
+		var edges := 0
+		for tick in 181:
+			brain.tick(1.0 / 60.0)
+			InputRouter._physics_process(1.0 / 60.0)
+			var frame := InputRouter.frame(0)
+			if frame.just_pressed(InputFrame.Btn.ATTACK):
+				edges += 1
+			me._advance_timers(1.0 / 60.0)
+			scene.controller.tick(1.0 / 60.0)
+			me._handle_buttons(frame)
+		var hits: int = base.hits
+		t.ok(edges >= 10, "tier %d repeated crystal attacks create input edges" % difficulty)
+		t.ok(hits >= 3, "tier %d actual crystal takes repeated attack damage" % difficulty)
+		t.ok(hits <= 6, "tier %d crystal attacks respect Fighter cooldown" % difficulty)
+		t.near(base.health, scene.controller.BASE_HEALTH - hits * scene.controller.HIT_DAMAGE, 0.001, "tier %d crystal damage per swing is unchanged" % difficulty)
+		t.equal(scene.controller._bases[0].hits, 0, "tier %d cannot damage its own crystal" % difficulty)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
 
 
 func _test_melee(t: TestHarness, host: Node) -> void:

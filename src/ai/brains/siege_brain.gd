@@ -67,7 +67,7 @@ func decide(_delta: float) -> void:
 	if gap < 3.0:
 		# Close enough: swing at the crystal. The controller checks reach and
 		# facing, so pressing attack near it is all this has to do.
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 		var guard := nearest_rival()
 		if guard >= 0 and distance_to(perceive(guard)) < 2.4:
 			maybe_attack(guard, 2.4)
