@@ -56,6 +56,16 @@ func run(t: TestHarness, host: Node) -> void:
 			t.ok(hit.collider in bodies, "ray hits the single authored terrain body: " + arena_id)
 			t.ok(absf(hit.position.y - world.ground_height(0, 0)) < 0.001,
 				"physical ground height matches the authored surface: " + arena_id)
+		var driver: Fighter = scene.ctx.fighter(0)
+		driver.global_position = Vector3(-2, 1.5, 0)
+		for frame in 120:
+			await host.get_tree().physics_frame
+			driver.velocity = Vector3(3, -3, 0)
+			driver.move_and_slide()
+		t.ok(driver.global_position.x > 3.5, "actual driver crosses the terrain origin without sticking: " + arena_id)
+		t.ok(driver.is_on_floor(), "driver retains ground contact during real traversal: " + arena_id)
+		t.ok(driver.global_position.y >= world.ground_height(driver.global_position.x, driver.global_position.z) - 0.1,
+			"real traversal does not drop the driver through the surface: " + arena_id)
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
