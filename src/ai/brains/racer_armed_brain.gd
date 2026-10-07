@@ -28,7 +28,7 @@ func decide(delta: float) -> void:
 	if item == Race.Item.NONE:
 		return
 	if _should_use(item, me):
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 
 
 func _should_use(item: int, me: Fighter) -> bool:
