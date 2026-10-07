@@ -258,11 +258,11 @@ func splash_at(pos: Vector3) -> void:
 	add_child(burst)
 	burst.global_position = at
 	var ring := MeshFactory.torus(0.5, 1.15, Color(0.75, 0.93, 1.0), 0.9)
-	ring.global_position = at + Vector3(0, 0.06, 0)
 	add_child(ring)
+	ring.global_position = at + Vector3(0, 0.06, 0)
 	var tween := ring.create_tween().set_parallel(true)
 	tween.tween_property(ring, "scale", Vector3(3.4, 1.0, 3.4), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(ring, "modulate:a", 0.0, 0.7)
+	tween.tween_property(ring, "transparency", 1.0, 0.7)
 	tween.chain().tween_callback(ring.queue_free)
 
 
@@ -900,9 +900,11 @@ func _build_pit() -> void:
 	_add_static_cylinder(def.radius, def.thickness, Vector3(0, -def.thickness * 0.5, 0), def.floor_color)
 	# Three tiers of ledges so a climbing game has real vertical structure.
 	var tiers := 3
+	var step_height := def.param("step_height", 2.3)
+	var summit_gap := def.param("summit_gap", 2.2)
 	for tier in range(1, tiers + 1):
-		var y := float(tier) * 2.3
-		var count := 6 + tier
+		var y := float(tier) * step_height
+		var count := clampi(roundi(def.param("ledge_count", float(6 + tier))), 4, 16)
 		var r := def.radius * (0.85 - 0.16 * tier)
 		for i in count:
 			var ang := TAU * i / count + tier * 0.4
@@ -911,7 +913,7 @@ func _build_pit() -> void:
 				Vector3(cos(ang) * r, y, sin(ang) * r),
 				def.floor_color.lightened(0.06 * tier))
 			body.rotation.y = -ang
-	var top := _add_static_cylinder(2.2, 0.5, Vector3(0, float(tiers) * 2.3 + 2.2, 0), def.accent_color.darkened(0.2))
+	var top := _add_static_cylinder(2.2, 0.5, Vector3(0, float(tiers) * step_height + summit_gap, 0), def.accent_color.darkened(0.2))
 	top.name = "Summit"
 	var rim := MeshFactory.torus(def.radius - 0.35, def.radius + 0.1, def.accent_color, 0.7)
 	rim.position = Vector3(0, 0.06, 0)

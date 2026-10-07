@@ -896,16 +896,15 @@ func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
 		static_root = Node3D.new()
 		static_root.name = "Static"
 		scene.arena.add_child(static_root)
-	var hidden_ledge := Node3D.new()
-	var visible_ledge := Node3D.new()
-	static_root.add_child(hidden_ledge)
-	static_root.add_child(visible_ledge)
-	hidden_ledge.global_position = Vector3(0, 104, 0)
-	visible_ledge.global_position = Vector3(1, 102, 0)
+	var hidden_ledge: StaticBody3D = scene.arena._add_static_box(Vector3(1, 0.5, 1), Vector3(0, 100.8, 0), Color.WHITE)
+	var visible_ledge: StaticBody3D = scene.arena._add_static_box(Vector3(1, 0.5, 1), Vector3(1, 100.6, 0), Color.WHITE)
 	hidden_ledge.hide()
 	var view: Transform3D = scene.camera.global_transform
 	scene.camera.global_position += Vector3.UP * 100.0
-	t.equal(climber._find_higher_ground(Vector3(0, 100, 0)), Vector3(1, 103, 0), "climber ignores hidden higher geometry")
+	var could_jump: bool = scene.ctx.fighter(0).can_jump
+	scene.ctx.fighter(0).can_jump = true
+	t.equal(climber._find_higher_ground(Vector3(0, 100, 0)), Vector3(1, 100.85, 0), "climber ignores hidden higher solid geometry")
+	scene.ctx.fighter(0).can_jump = could_jump
 	scene.camera.global_transform = view
 	hidden_ledge.queue_free()
 	visible_ledge.queue_free()
