@@ -51,7 +51,7 @@ func decide(_delta: float) -> void:
 				push_from = position - dir.normalized() * 1.4
 		steer_to(push_from)
 		if dist < 3.0:
-			press(Btn.ATTACK)
+			tap(Btn.ATTACK)
 		if dist > 5.0:
 			maybe_dash(0.8)
 		keep_off_edge(2.4)
