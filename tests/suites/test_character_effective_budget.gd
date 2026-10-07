@@ -39,6 +39,12 @@ func run(t: TestHarness, host: Node) -> void:
 		for field in ["top_speed", "acceleration"]:
 			var ratio := float(vehicle.get(field)) / float(neutral_drive.get(field))
 			t.ok(ratio >= 0.85 - 0.00001 and ratio <= 1.15 + 0.00001, "%s vehicle %s stays within its effective budget" % [character.id, field])
+		var speed_ratio := vehicle.top_speed / neutral_drive.top_speed
+		t.ok(speed_ratio >= 0.94 and speed_ratio <= 1.06, "%s vehicle cruising speed leaves room for combat and handling tradeoffs" % character.id)
+		var tuning: Dictionary = Balance.table("tuning").get("fighter", {})
+		var neutral_speed := float(tuning.base_speed) + float(tuning.speed_range) * 0.5
+		var expected_speed := (neutral_speed + float(tuning.speed_range) * (character.speed - 0.5) * 0.35) * float(tuning.drive_speed_mult)
+		t.near(vehicle.top_speed, expected_speed, 0.0001, "%s vehicle retains a bounded nonzero character speed difference" % character.id)
 		vehicle.free()
 	neutral_drive.free()
 	await host.get_tree().process_frame

@@ -201,6 +201,10 @@ func _apply_character() -> void:
 	air_control *= d.perk_factor("air_control")
 	knock_resist *= d.perk_factor("resistance")
 	if locomotion == Locomotion.DRIVE:
+		# Preserve neutral pace while leaving handling and weapon counters room
+		# to matter over several laps; all input sources use the same budget.
+		var speed_scale := clampf(float(t.get("drive_speed_stat_scale", 1.0)), 0.0, 1.0)
+		top_speed = base_speed + speed_range * lerpf(0.5, d.speed, speed_scale)
 		top_speed *= float(t.get("drive_speed_mult", 1.5))
 		acceleration *= float(t.get("drive_accel_mult", 0.55))
 	max_health = float(t.get("base_health", 100.0))

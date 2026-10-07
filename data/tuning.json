@@ -35,6 +35,7 @@
     "damage_knock_scale": 0.022,
     "assist_window": 5.0,
     "drive_speed_mult": 1.55,
+    "drive_speed_stat_scale": 0.35,
     "drive_accel_mult": 0.55,
     "drive_steer": 3.1,
     "dash_cost": 0.34,

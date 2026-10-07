@@ -1,0 +1,58 @@
+{
+  "commit": "96c53f359cbb48663a9a99d3fec5ecf6e16d16af",
+  "run": "37616445234",
+  "seedOffset": 1200000,
+  "complete": false,
+  "gamesCompleted": 15,
+  "gamesExpected": 39,
+  "matchesCompleted": 630,
+  "difficultyPairingVerified": false,
+  "missing": [
+    "mnatiq",
+    "mukharrib",
+    "zone_hold",
+    "crate_smash",
+    "lab_crates",
+    "crate_relay",
+    "hurdle_dash",
+    "kart_sprint",
+    "color_stand",
+    "symbol_echo",
+    "quick_draw",
+    "rising_tide",
+    "sweeper_storm",
+    "duel_pit",
+    "boss_forge",
+    "boss_colossus",
+    "boss_dreadnought",
+    "boss_sovereign",
+    "sabaq_sawarikh",
+    "relic_hold",
+    "tag_hunt",
+    "base_siege",
+    "drift_floes",
+    "duo_clash"
+  ],
+  "reviews": [
+    {
+      "game": "scrap_karts",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    }
+  ],
+  "characterWins": {
+    "barq": 51,
+    "fanoos": 53,
+    "ghaim": 42,
+    "mowja": 50,
+    "nabta": 49,
+    "ramla": 42,
+    "sakhra": 41,
+    "turs": 47
+  },
+  "bossBaseline": [],
+  "bossComparisons": [],
+  "balanceReviewComplete": false,
+  "releaseReady": false
+}
