@@ -73,6 +73,7 @@ func _make_base(arena: Arena, slot: int) -> Dictionary:
 	plinth.position = Vector3(0, 0.25, 0)
 	node.add_child(plinth)
 	var crystal := MeshFactory.gem(0.95, col)
+	crystal.name = "Crystal"
 	crystal.position = Vector3(0, 1.35, 0)
 	node.add_child(crystal)
 	var ring := MeshFactory.torus(1.55, 1.75, col, 1.2)
@@ -82,6 +83,7 @@ func _make_base(arena: Arena, slot: int) -> Dictionary:
 	# Solid: the crystals are cover, which is what stops a four-way siege from
 	# collapsing into everyone standing in the middle.
 	var body := StaticBody3D.new()
+	body.set_meta("observation_mesh", NodePath("../Crystal"))
 	body.collision_layer = 1
 	body.collision_mask = 0
 	var shape := CollisionShape3D.new()
@@ -227,8 +229,7 @@ func _destroy(base: Dictionary, attacker: int) -> void:
 
 # --- shared-layer answers --------------------------------------------------
 
-## Read by the AI: it can see which crystal is closest to breaking, because so
-## can everybody else.
+## Authoritative health for HUD/replay. AI uses base_observation below.
 func base_health(slot: int) -> float:
 	for base in _bases:
 		if int(base["slot"]) == slot:
@@ -243,6 +244,22 @@ func base_visible(slot: int) -> bool:
 			return is_instance_valid(node) and not node.is_queued_for_deletion() \
 				and node.is_visible_in_tree()
 	return false
+
+
+func base_observation(slot: int, observable: Callable) -> Dictionary:
+	if not observable.is_valid():
+		return {}
+	for base in _bases:
+		if int(base["slot"]) != slot:
+			continue
+		var crystal := base.get("crystal") as Node3D
+		if not is_instance_valid(crystal) or not observable.call(crystal):
+			return {}
+		var position := crystal.global_position
+		position.y = ctx.arena_center().y
+		return {"id": crystal.get_instance_id(), "position": position,
+			"health": int(round(float(base["health"]) / BASE_HEALTH * 100.0))}
+	return {}
 
 
 func base_position(slot: int) -> Vector3:
