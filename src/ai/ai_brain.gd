@@ -864,7 +864,7 @@ func maybe_attack(target_slot: int, range_: float = 2.4) -> void:
 	if me.global_position.distance_to(target) > range_:
 		return
 	if rng.randf() < attack_chance:
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 
 
 func maybe_jump(chance: float = 0.5) -> void:
