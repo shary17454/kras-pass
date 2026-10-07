@@ -110,7 +110,7 @@ func _crate_swings(t: TestHarness, host: Node) -> void:
 		scene.ctx.alive[0] = false
 		scene.ctx.fighter(1)._attack_time = 0.0
 		scene.ctx.fighter(2).global_position = Vector3(100, 1, 0)
-		var previous := scene.ctx.rng.state
+		var previous: int = scene.ctx.rng.state
 		t.equal(scene.controller._swing_winner(Vector3.ZERO, 2.75, {}), 3, "dead, idle and out-of-reach attackers are excluded")
 		t.equal(scene.ctx.rng.state, previous, "unique eligible swing consumes no random draw")
 		t.equal(scene.controller._swing_winner(Vector3.ZERO, 2.75, {3: true}), -1, "served attacker cannot break another crate this tick")
