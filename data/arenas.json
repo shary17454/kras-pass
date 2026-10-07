@@ -348,7 +348,7 @@
     {
       "id": "tide_spire",
       "shape": "pit",
-      "params": { "step_height": 1.1, "summit_gap": 1.1 },
+      "params": { "step_height": 1.1, "summit_gap": 1.1, "ledge_count": 8 },
       "spawns": [[0, 0.1, -10.7], [10.7, 0.1, 0], [0, 0.1, 10.7], [-10.7, 0.1, 0]],
       "radius": 11.5,
       "thickness": 0.8,

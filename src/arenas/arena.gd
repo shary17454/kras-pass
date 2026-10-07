@@ -258,11 +258,11 @@ func splash_at(pos: Vector3) -> void:
 	add_child(burst)
 	burst.global_position = at
 	var ring := MeshFactory.torus(0.5, 1.15, Color(0.75, 0.93, 1.0), 0.9)
-	ring.global_position = at + Vector3(0, 0.06, 0)
 	add_child(ring)
+	ring.global_position = at + Vector3(0, 0.06, 0)
 	var tween := ring.create_tween().set_parallel(true)
 	tween.tween_property(ring, "scale", Vector3(3.4, 1.0, 3.4), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(ring, "modulate:a", 0.0, 0.7)
+	tween.tween_property(ring, "transparency", 1.0, 0.7)
 	tween.chain().tween_callback(ring.queue_free)
 
 
@@ -904,7 +904,7 @@ func _build_pit() -> void:
 	var summit_gap := def.param("summit_gap", 2.2)
 	for tier in range(1, tiers + 1):
 		var y := float(tier) * step_height
-		var count := 6 + tier
+		var count := clampi(roundi(def.param("ledge_count", float(6 + tier))), 4, 16)
 		var r := def.radius * (0.85 - 0.16 * tier)
 		for i in count:
 			var ang := TAU * i / count + tier * 0.4

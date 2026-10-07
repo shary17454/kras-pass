@@ -16,6 +16,13 @@ func run(t: TestHarness, host: Node) -> void:
 			if node is StaticBody3D and node.position.y > 0.0:
 				steps.append(node)
 		steps.sort_custom(func(a, b): return a.position.y < b.position.y)
+		t.equal(steps.size(), 25, "tide has three eight-ledge tiers and one summit")
+		if character.id == "nabta":
+			for step in steps:
+				if step.name == "Summit":
+					continue
+				var rotated := Vector3(-step.position.z, step.position.y, step.position.x)
+				t.ok(steps.any(func(other): return other.position.distance_to(rotated) < 0.001), "every tide ledge has a quarter-turn counterpart")
 		var first := steps[0]
 		var outward := Vector3(first.position.x, 0, first.position.z).normalized()
 		body.global_position = Vector3(first.position.x, 0.05, first.position.z) + outward * 3.1
