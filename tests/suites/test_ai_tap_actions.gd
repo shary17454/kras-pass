@@ -40,6 +40,16 @@ class StationaryDash:
 	func decide(_delta: float) -> void:
 		maybe_dash(10.0)
 
+class StationaryDirectRacer:
+	extends "res://src/ai/brains/racer_brain.gd"
+	func drive_to(_target: Vector3, _reverse_when_stuck: bool = true) -> void:
+		move = Vector2.ZERO
+
+class StationaryDirectRunner:
+	extends "res://src/ai/brains/runner_brain.gd"
+	func _distance_to_obstacle(_me) -> float:
+		return -1.0
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("AI one-shot action requests")
@@ -88,6 +98,52 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_armed_race(t, host)
 	await _test_boss_weakpoint(t, host)
 	await _test_dash(t, host)
+	await _test_direct_race_dash(t, host)
+
+
+func _test_direct_race_dash(t: TestHarness, host: Node) -> void:
+	for id in ["kart_sprint", "hurdle_dash", "sabaq_sawarikh"]:
+		for difficulty in 4:
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": MatchConfig.build(id, ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 861)})
+			scene.set_physics_process(false)
+			for fighter in scene.ctx.fighters:
+				fighter.set_physics_process(false)
+			var me: Fighter = scene.ctx.fighter(0)
+			me.velocity = Vector3(0, 0, -me.top_speed * 0.8)
+			var brain: AIBrain = StationaryDirectRacer.new()
+			if id == "hurdle_dash":
+				brain = StationaryDirectRunner.new()
+			elif id == "sabaq_sawarikh":
+				brain = StationaryArmedRacer.new()
+			brain.controller = scene.controller
+			brain.configure(0, scene.ctx, difficulty, 861)
+			brain.on_round_start()
+			brain.decision_interval = 0.1
+			brain.dash_chance = 3.0
+			brain.strategy = 0.0
+			brain.mistake_chance = 0.0
+			brain.input_noise = 0.0
+			var edges := 0
+			var boosts := 0
+			for tick in 181:
+				brain.tick(1.0 / 60.0)
+				InputRouter._physics_process(1.0 / 60.0)
+				var frame := InputRouter.frame(0)
+				if frame.just_pressed(InputFrame.Btn.DASH):
+					edges += 1
+				me._advance_timers(1.0 / 60.0)
+				var before: float = me._dash_cd
+				me._handle_buttons(frame)
+				if before <= 0.0 and me._dash_cd > 0.0:
+					boosts += 1
+			t.ok(edges >= 10, "%s tier %d repeated direct requests create input edges" % [id, difficulty])
+			t.ok(boosts >= 3, "%s tier %d actual Fighter boosts again after cooldown" % [id, difficulty])
+			t.ok(boosts <= 4, "%s tier %d direct requests respect cooldown" % [id, difficulty])
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
 
 
 func _test_dash(t: TestHarness, host: Node) -> void:

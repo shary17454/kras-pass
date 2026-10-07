@@ -40,7 +40,7 @@ func decide(_delta: float) -> void:
 			aim_point = best_pad
 	drive_to(aim_point)
 	if me.speed_ratio() > 0.75 and rng.randf() < dash_chance * 0.5:
-		press(Btn.DASH)
+		tap(Btn.DASH)
 
 
 ## Perpendicular distance from point `p` to the segment a->b.
