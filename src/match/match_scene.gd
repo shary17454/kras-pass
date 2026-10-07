@@ -434,7 +434,7 @@ func _enter_phase(p: int) -> void:
 			UserSettings.mark_tutorial_seen(ctx.definition.id)
 			_countdown_value = int(_tuning.get("countdown_seconds", 3))
 			_phase_timer = 1.0
-			hud.announce(str(_countdown_value), UIKit.TEXT, 0.4)
+			hud.announce(str(_countdown_value), UIKit.TEXT, 0.4, true)
 			AudioManager.play_sfx("countdown")
 			EventBus.countdown_tick.emit(_countdown_value)
 		P.PLAYING:
@@ -610,7 +610,7 @@ func _tick_countdown(delta: float) -> void:
 		_set_phase(P.PLAYING)
 		return
 	_phase_timer = 1.0
-	hud.announce(str(_countdown_value), UIKit.TEXT, 0.4)
+	hud.announce(str(_countdown_value), UIKit.TEXT, 0.4, true)
 	AudioManager.play_sfx("countdown", Vector3.ZERO, 1.0 + (3 - _countdown_value) * 0.1)
 	EventBus.countdown_tick.emit(_countdown_value)
 

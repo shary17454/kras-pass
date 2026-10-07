@@ -20,6 +20,7 @@ var _boss_meter: ProgressBar
 var _fit_top_rows: Callable
 var _round_label: Label
 var _centre_label: Label
+var _announcement_tween: Tween
 var _rules_card: Control
 var _hint_label: Label
 var _toast_box: VBoxContainer
@@ -28,6 +29,8 @@ var _auxiliary_overlay_height := 0.0
 var _offscreen_cues: Array[OffscreenPlayerCue] = []
 ## Width of the per-player charge meter, in unscaled pixels.
 const METER_WIDTH := 118.0
+const ANNOUNCEMENT_SIZE := 36
+const COUNTDOWN_SIZE := 64
 
 var _accum := 0.0
 var _period := 1.0 / 12.0
@@ -158,11 +161,15 @@ func _build() -> void:
 	fit_chips.call()
 
 	# --- centre announcements ---------------------------------------------
-	_centre_label = UIKit.centered("", 120, UIKit.ACCENT, true)
-	_centre_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_centre_label = UIKit.centered("", ANNOUNCEMENT_SIZE, UIKit.ACCENT, true)
+	_centre_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_centre_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_centre_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_centre_label.modulate.a = 0.0
 	root.add_child(_centre_label)
+	get_viewport().size_changed.connect(_fit_announcement)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(_fit_announcement))
+	_fit_announcement()
 
 	# --- rules card --------------------------------------------------------
 	_rules_card = _make_rules_card()
@@ -334,6 +341,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 		"effect_labels": effect_labels,
 		"color": col, "meter": meter, "charge": -1.0,
 		"crown": crown, "name": name_label, "portrait": portrait})
+	card.resized.connect(_fit_announcement)
 	return card
 
 
@@ -528,15 +536,45 @@ func show_hints(visible_: bool) -> void:
 	_hint_label.visible = visible_
 
 
-func announce(text: String, color: Color = UIKit.ACCENT, hold := 0.75) -> void:
+func _fit_announcement() -> void:
+	if _centre_label == null:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var inset := Platform.safe_insets()
+	var upper := occupied_top() + 24.0
+	var lower := viewport_size.y * 0.76 - inset.w
+	var touch_count := 0
+	for player in ctx.config.players:
+		if player.is_human and (player.device_type == 2 or (player.device_type == 0 and TouchSource.should_show())):
+			touch_count += 1
+	if touch_count > 1:
+		lower = TouchSource.party_region(viewport_size, 0, touch_count).position.y - 24.0
+	var height := maxf(1.0, lower - upper)
+	var left := maxf(24.0 + inset.x, viewport_size.x * 0.12)
+	var right := viewport_size.x - maxf(24.0 + inset.z, viewport_size.x * 0.12)
+	# Reserve room for the pop animation as well as the settled text.
+	_centre_label.position = Vector2(left, upper + height * 0.08)
+	_centre_label.size = Vector2(maxf(1.0, right - left), height * 0.84)
+	_centre_label.pivot_offset = _centre_label.size * 0.5
+
+
+func announce(text: String, color: Color = UIKit.ACCENT, hold := 0.75, countdown := false) -> void:
+	if _announcement_tween != null and _announcement_tween.is_valid():
+		_announcement_tween.kill()
+	_announcement_tween = null
 	_centre_label.text = text
+	_centre_label.add_theme_font_override("font", UIKit.font_for_text(text, true))
+	_centre_label.add_theme_font_size_override("font_size", int((COUNTDOWN_SIZE if countdown else ANNOUNCEMENT_SIZE) * UIKit.scale()))
 	_centre_label.add_theme_color_override("font_color", color)
+	_centre_label.scale = Vector2.ONE
+	_fit_announcement()
 	if DisplayServer.get_name() == "headless":
 		return
 	_centre_label.modulate.a = 1.0
-	_centre_label.scale = Vector2(1.5, 1.5)
+	_centre_label.scale = Vector2(1.08, 1.08)
 	_centre_label.pivot_offset = _centre_label.size * 0.5
 	var tw := create_tween()
+	_announcement_tween = tw
 	tw.tween_property(_centre_label, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_interval(hold)
 	tw.tween_property(_centre_label, "modulate:a", 0.0, 0.25)
@@ -611,6 +649,7 @@ func tick(delta: float) -> void:
 	if layout_changed and _fit_top_rows.is_valid():
 		_fit_top_rows.call()
 	_fit_toasts()
+	_fit_announcement()
 	DevTools.operations.finish("hud.layout", operation_started)
 
 
