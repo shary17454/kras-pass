@@ -1,0 +1,847 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 91.2673611111072,
+      "avg_score": 24.3229166666667,
+      "baseline_seeds": [
+        1209001,
+        1209614,
+        1210227,
+        1210840,
+        1211453,
+        1212066,
+        1212679,
+        1213292,
+        1213905,
+        1214518,
+        1215131,
+        1215744,
+        1216357,
+        1216970,
+        1217583,
+        1218196,
+        1218809,
+        1219422,
+        1220035,
+        1220648,
+        1221261,
+        1221874,
+        1222487,
+        1223100
+      ],
+      "category": "crates",
+      "character_bias": 0.0833333333333333,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "crates": 25,
+              "falls": 1,
+              "knockouts": 1,
+              "weapons": 8
+            },
+            {
+              "crates": 26,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 1,
+              "weapons": 11
+            },
+            {
+              "crates": 5,
+              "knockouts": 1,
+              "mistakes": 1,
+              "weapons": 1
+            },
+            {
+              "crates": 6,
+              "falls": 1,
+              "mistakes": 6,
+              "weapons": 1
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            65,
+            74,
+            7,
+            0
+          ],
+          "seed": 1204242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "crates": 3,
+              "falls": 1,
+              "mistakes": 6,
+              "weapons": 1
+            },
+            {
+              "crates": 7,
+              "knockouts": 1,
+              "mistakes": 4,
+              "weapons": 3
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "knockouts": 2,
+              "mistakes": 5,
+              "weapons": 8
+            },
+            {
+              "crates": 24,
+              "falls": 1,
+              "mistakes": 2,
+              "weapons": 8
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            2,
+            7,
+            41,
+            47
+          ],
+          "seed": 1204242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "crates": 18,
+              "falls": 1,
+              "knockouts": 3,
+              "mistakes": 4,
+              "weapons": 13
+            },
+            {
+              "crates": 22,
+              "falls": 1,
+              "mistakes": 2,
+              "weapons": 10
+            },
+            {
+              "crates": 3,
+              "falls": 1,
+              "mistakes": 6,
+              "weapons": 4
+            },
+            {
+              "crates": 7,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 1,
+              "weapons": 2
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            4,
+            3
+          ],
+          "scores": [
+            29,
+            53,
+            0,
+            11
+          ],
+          "seed": 1204339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "crates": 2,
+              "mistakes": 2,
+              "weapons": 2
+            },
+            {
+              "crates": 5,
+              "mistakes": 6,
+              "weapons": 3
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 2,
+              "weapons": 11
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 11
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            0,
+            55,
+            62
+          ],
+          "seed": 1204339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "crates": 21,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 1,
+              "weapons": 5
+            },
+            {
+              "crates": 26,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 8
+            },
+            {
+              "crates": 5,
+              "falls": 1,
+              "mistakes": 6,
+              "weapons": 3
+            },
+            {
+              "crates": 6,
+              "knockouts": 1,
+              "mistakes": 9,
+              "weapons": 1
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            49,
+            58,
+            4,
+            2
+          ],
+          "seed": 1204436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "crates": 6,
+              "knockouts": 1,
+              "mistakes": 5,
+              "weapons": 3
+            },
+            {
+              "crates": 5,
+              "mistakes": 2,
+              "weapons": 1
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "mistakes": 1,
+              "weapons": 8
+            },
+            {
+              "crates": 22,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 12
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            11,
+            9,
+            73,
+            55
+          ],
+          "seed": 1204436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "crates": 32,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 10
+            },
+            {
+              "crates": 18,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 4,
+              "weapons": 7
+            },
+            {
+              "crates": 4,
+              "mistakes": 4,
+              "weapons": 1
+            },
+            {
+              "crates": 5,
+              "mistakes": 6,
+              "weapons": 1
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            85,
+            39,
+            0,
+            2
+          ],
+          "seed": 1204533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "crates": 3,
+              "mistakes": 5,
+              "weapons": 4
+            },
+            {
+              "crates": 4,
+              "falls": 1,
+              "mistakes": 1,
+              "weapons": 1
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "knockouts": 2,
+              "mistakes": 2,
+              "weapons": 11
+            },
+            {
+              "crates": 28,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 8
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            2,
+            8,
+            75,
+            52
+          ],
+          "seed": 1204533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "crates": 20,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 2,
+              "weapons": 13
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 7
+            },
+            {
+              "crates": 6,
+              "mistakes": 4,
+              "weapons": 1
+            },
+            {
+              "crates": 6,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 1,
+              "weapons": 4
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            59,
+            47,
+            3,
+            9
+          ],
+          "seed": 1204630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "crates": 5,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 7,
+              "weapons": 1
+            },
+            {
+              "crates": 4,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 6,
+              "weapons": 2
+            },
+            {
+              "crates": 22,
+              "falls": 1,
+              "knockouts": 2,
+              "mistakes": 3,
+              "weapons": 9
+            },
+            {
+              "crates": 27,
+              "falls": 1,
+              "weapons": 7
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            2,
+            1,
+            56,
+            64
+          ],
+          "seed": 1204630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "crates": 27,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 1,
+              "weapons": 10
+            },
+            {
+              "crates": 17,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 4,
+              "weapons": 8
+            },
+            {
+              "crates": 5,
+              "mistakes": 7,
+              "weapons": 1
+            },
+            {
+              "crates": 6,
+              "mistakes": 4,
+              "weapons": 2
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            76,
+            44,
+            2,
+            8
+          ],
+          "seed": 1204727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "crates": 3,
+              "mistakes": 8,
+              "weapons": 2
+            },
+            {
+              "crates": 5,
+              "falls": 1,
+              "mistakes": 3
+            },
+            {
+              "crates": 18,
+              "knockouts": 2,
+              "mistakes": 4,
+              "weapons": 11
+            },
+            {
+              "crates": 31,
+              "falls": 1,
+              "weapons": 8
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            3,
+            2,
+            49,
+            87
+          ],
+          "seed": 1204727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "crates": 28,
+              "falls": 1,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 7
+            },
+            {
+              "crates": 18,
+              "falls": 1,
+              "knockouts": 2,
+              "mistakes": 1,
+              "weapons": 8
+            },
+            {
+              "crates": 2,
+              "falls": 1,
+              "mistakes": 9
+            },
+            {
+              "crates": 5,
+              "mistakes": 11
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            3
+          ],
+          "scores": [
+            62,
+            43,
+            0,
+            0
+          ],
+          "seed": 1204824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "crates": 2,
+              "mistakes": 7,
+              "weapons": 1
+            },
+            {
+              "crates": 3,
+              "mistakes": 7,
+              "weapons": 2
+            },
+            {
+              "crates": 21,
+              "falls": 1,
+              "mistakes": 6,
+              "weapons": 6
+            },
+            {
+              "crates": 29,
+              "knockouts": 1,
+              "mistakes": 6,
+              "weapons": 2
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            6,
+            35,
+            43
+          ],
+          "seed": 1204824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "crates": 22,
+              "falls": 1,
+              "mistakes": 1,
+              "weapons": 10
+            },
+            {
+              "crates": 32,
+              "falls": 1,
+              "weapons": 10
+            },
+            {
+              "crates": 3,
+              "knockouts": 1,
+              "mistakes": 8,
+              "weapons": 1
+            },
+            {
+              "crates": 2,
+              "knockouts": 1,
+              "mistakes": 3,
+              "weapons": 2
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            76,
+            84,
+            2,
+            0
+          ],
+          "seed": 1204921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "crates": 3,
+              "knockouts": 1,
+              "mistakes": 5,
+              "weapons": 4
+            },
+            {
+              "crates": 3,
+              "knockouts": 1,
+              "mistakes": 6,
+              "weapons": 4
+            },
+            {
+              "crates": 25,
+              "falls": 1,
+              "mistakes": 2,
+              "weapons": 9
+            },
+            {
+              "crates": 23,
+              "falls": 1,
+              "mistakes": 4,
+              "weapons": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            10,
+            4,
+            50,
+            49
+          ],
+          "seed": 1204921
+        }
+      ],
+      "expert_edge": 0.691358024691358,
+      "flags": [],
+      "id": "lab_crates",
+      "name": "المختبر",
+      "round_window": 90.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 1200000,
+      "severity": 0,
+      "slot_bias": 0.0833333333333333,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "barq": 4,
+        "fanoos": 2,
+        "ghaim": 4,
+        "mowja": 3,
+        "nabta": 3,
+        "ramla": 1,
+        "sakhra": 5,
+        "turs": 2
+      },
+      "wins_by_slot": [
+        7,
+        5,
+        4,
+        8
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-07T19:28:45",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 1205502,
+      "flags": [],
+      "id": "lab_crates",
+      "mutated_ok": true,
+      "mutated_seed": 1205501,
+      "name": "المختبر",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 1200000,
+  "simulation_source_end": "f2a3888bd8b301928cc943aacad789f0d4412a7c9c7c2f69633e683bb449f2b1",
+  "simulation_source_start": "f2a3888bd8b301928cc943aacad789f0d4412a7c9c7c2f69633e683bb449f2b1"
+}
