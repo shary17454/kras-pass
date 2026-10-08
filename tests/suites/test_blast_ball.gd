@@ -116,6 +116,11 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.target = Vector3.INF
 	brain.observed["fuse"] = 5.0
 	brain.decide(0.1)
+	t.ok(brain.escaped, "full fuse still cannot fund distant contact plus the escape reserve")
+	brain.escaped = false
+	brain.observed["position"] = Vector3(4, 1.0, 0)
+	brain.observed["radius"] = 0.62
+	brain.decide(0.1)
 	t.equal(brain.target, brain.observed["position"], "long visible fuse still permits an offensive approach")
 	t.ok(not brain.escaped, "a viable approach is not replaced with unconditional retreat")
 	brain.escaped = false
@@ -123,6 +128,15 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.observed["fuse"] = 1.8
 	brain.decide(0.1)
 	t.ok(brain.escaped, "close contact still needs time to leave the blast radius")
+	brain.escaped = false
+	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	var escape_budget: float = lerp(2.4, 1.1, brain.risk * (1.0 - brain.strategy)) \
+		+ brain.reaction_time + brain.decision_interval \
+		+ Balance.num("tuning", "ball.explosive_radius", 5.0) / walk_speed
+	brain.observed["radius"] = 0.62
+	brain.observed["fuse"] = escape_budget + 0.05
+	brain.decide(0.1)
+	t.ok(brain.escaped, "being within attack range cannot remove the travel time required for ball contact")
 	brain.escaped = false
 	brain.observed["fuse"] = 5.0
 	brain.decide(0.1)

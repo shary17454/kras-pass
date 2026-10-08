@@ -38,9 +38,14 @@ func decide(_delta: float) -> void:
 	var escape_time := blast_radius / maxf(walk_speed, 0.1)
 	var commit_window: float = lerp(2.4, 1.1, risk * (1.0 - strategy)) \
 		+ reaction_time + decision_interval + escape_time
-	# Reserve time to reach the existing strike range before spending the
-	# remaining fuse on a risky approach. Own movement stats are not secret.
-	var travel_time := maxf(0.0, dist - 3.0) / maxf(walk_speed, 0.1)
+	# Deflection requires contact, not the attack button's three-metre range.
+	# Reserve the approach using visible ball size and our own collision body.
+	var contact_distance := maxf(0.0, float(observed.get("radius", 0.0)))
+	var body := me.get_node_or_null("Body") as CollisionShape3D
+	if body != null and body.shape is CapsuleShape3D:
+		var scale_size := body.global_basis.get_scale().abs()
+		contact_distance += body.shape.radius * maxf(scale_size.x, scale_size.z)
+	var travel_time := maxf(0.0, dist - contact_distance) / maxf(walk_speed, 0.1)
 
 	if fuse > commit_window + travel_time and dist < 9.0 and rng.randf() < aggression + 0.25:
 		# Approach from the side opposite the rival we want to send it toward.
