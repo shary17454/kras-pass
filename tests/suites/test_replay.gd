@@ -286,3 +286,16 @@ func _highlights(t: TestHarness) -> void:
 	t.test("a dull match produces no highlights")
 	var dull := MatchResult.make("paint_grid", "paint_grid", [40, 20, 10, 5] as Array[int])
 	t.equal(ReplayHighlights.detect([], dull, 4800, 60).size(), 0, "nothing to show")
+
+	t.test("photo finish requires a winner and respects the recording tick rate")
+	var tied := MatchResult.make("ring_rumble", "vortex_ring", [10, 10, 4, 1] as Array[int])
+	t.equal(ReplayHighlights.detect([], tied, 5400, 60).size(), 0, "a draw is not a narrow win")
+	var tied_comeback := [{"tick": 30, "type": "last_place", "slot": 0}]
+	t.equal(ReplayHighlights.detect(tied_comeback, tied, 5400, 60).size(), 0, "a tied first place is not a winning comeback")
+	for rate in [30, 60, 120]:
+		var ticks: int = 90 * rate
+		var photo := ReplayHighlights.detect([], result, ticks, rate)
+		t.equal(photo.size(), 1, "one photo finish at %d ticks per second" % rate)
+		t.equal(int(photo[0]["tick"]), ticks - 1 - 2 * rate, "photo finish starts two seconds before the end at %d Hz" % rate)
+	var short_clip := ReplayHighlights.detect([], result, 30, 60)
+	t.equal(int(short_clip[0]["tick"]), 0, "short photo finish never seeks before the recording")

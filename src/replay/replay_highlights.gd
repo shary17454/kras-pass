@@ -23,7 +23,7 @@ static func detect(timeline: Array, result: MatchResult, tick_count: int, tick_r
 	var last_tick := maxi(tick_count - 1, 0)
 	var final_window_start := last_tick - int(LAST_SECOND_WINDOW * tick_rate)
 
-	_narrow_finish(out, result, last_tick)
+	_narrow_finish(out, result, last_tick, tick_rate)
 	_late_swing(out, timeline, final_window_start)
 	_comeback(out, timeline, result)
 	_early_exit(out, timeline, tick_rate)
@@ -43,15 +43,17 @@ static func _add(out: Array, tick: int, kind: String, slot: int, detail := "") -
 
 
 ## Decided by a single point, or a hair on the clock.
-static func _narrow_finish(out: Array, result: MatchResult, last_tick: int) -> void:
+static func _narrow_finish(out: Array, result: MatchResult, last_tick: int, tick_rate: int) -> void:
+	if result.winners().size() != 1:
+		return
 	var ranking := result.ranking()
 	if ranking.size() < 2:
 		return
 	var first := result.score_of(ranking[0])
 	var second := result.score_of(ranking[1])
 	var margin: int = absi(first - second)
-	if margin <= NARROW_MARGIN and margin >= 0:
-		_add(out, maxi(0, last_tick - 120), "narrow_win", ranking[0], str(margin))
+	if margin <= NARROW_MARGIN and margin > 0:
+		_add(out, maxi(0, last_tick - 2 * tick_rate), "narrow_win", ranking[0], str(margin))
 
 
 ## The lead changed in the closing seconds.
@@ -70,6 +72,8 @@ static func _late_swing(out: Array, timeline: Array, from_tick: int) -> void:
 
 ## Finished first after being last at some point.
 static func _comeback(out: Array, timeline: Array, result: MatchResult) -> void:
+	if result.winners().size() != 1:
+		return
 	var winner := result.winner_slot()
 	if winner < 0:
 		return
