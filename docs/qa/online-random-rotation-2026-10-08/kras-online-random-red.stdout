@@ -1,0 +1,44 @@
+✖ host can configure independent random tournament rotation without bypassing readiness (1.730834ms)
+✖ independent random rotation is seeded and permits consecutive repeats (2.626959ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 131.61825
+
+✖ failing tests:
+
+test at rooms.test.js:1299:1
+✖ host can configure independent random tournament rotation without bypassing readiness (1.730834ms)
+  Error: invalid_config
+      at fail (file:///private/tmp/kras-crate-swing-arbitration/server/rooms.js:17:30)
+      at tournamentSettings (file:///private/tmp/kras-crate-swing-arbitration/server/rooms.js:30:96)
+      at Rooms.handle (file:///private/tmp/kras-crate-swing-arbitration/server/rooms.js:161:26)
+      at Object.send (file:///private/tmp/kras-crate-swing-arbitration/server/rooms.test.js:290:43)
+      at TestContext.<anonymous> (file:///private/tmp/kras-crate-swing-arbitration/server/rooms.test.js:1306:8)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.start (node:internal/test_runner/test:1191:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+
+test at tournament.test.js:109:1
+✖ independent random rotation is seeded and permits consecutive repeats (2.626959ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///private/tmp/kras-crate-swing-arbitration/server/tournament.test.js:117:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.start (node:internal/test_runner/test:1191:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
