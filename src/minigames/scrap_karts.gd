@@ -161,7 +161,7 @@ func _damage(victim: int, attacker: int, amount: float, dir: Vector3) -> void:
 	health[victim] = maxf(0.0, health[victim] - amount)
 	var f := ctx.fighter(victim)
 	if f != null and is_instance_valid(f):
-		f.take_hit(attacker, dir, amount * 0.5, 0.0, true)
+		f.take_ram_hit(attacker, dir, amount * 0.5)
 	if health[victim] <= 0.0:
 		wrecks[victim] += 1
 		ctx.bump_detail(attacker, "knockouts")

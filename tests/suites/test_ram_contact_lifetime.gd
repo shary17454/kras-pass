@@ -30,6 +30,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().process_frame
 	await host.get_tree().process_frame
 	await _scrap_wreck(t, host)
+	await _scrap_multi_contact(t, host)
 
 
 func _scrap_wreck(t: TestHarness, host: Node) -> void:
@@ -70,3 +71,49 @@ func _scrap_wreck(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _scrap_multi_contact(t: TestHarness, host: Node) -> void:
+	var reference: Array = []
+	for swapped in [false, true]:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("scrap_karts", ["fanoos", "fanoos", "fanoos", "fanoos"], 0, 2, 9616)})
+		scene.set_physics_process(false)
+		var physical_slots := [0, 2, 1, 3] if swapped else [0, 1, 2, 3]
+		var positions := [Vector3(0, 1.3, 0), Vector3(2, 1.3, 0), Vector3(0, 1.3, 2), Vector3(100, 1.3, 100)]
+		for physical in 4:
+			var fighter: Fighter = scene.ctx.fighter(physical_slots[physical])
+			fighter.set_physics_process(false)
+			fighter.global_position = positions[physical]
+			fighter.facing = Vector3.FORWARD
+			fighter.velocity = Vector3(12, 0, 12) if physical == 0 else Vector3.ZERO
+			fighter._invuln = 0.0
+			fighter._impulse = Vector3.ZERO
+		scene.controller._resolve_rams()
+		t.equal(scene.controller.ram_serial, 2, "both simultaneous live contacts resolve")
+		for physical in 4:
+			var slot: int = physical_slots[physical]
+			var fighter: Fighter = scene.ctx.fighter(slot)
+			t.ok(scene.ctx.is_alive(slot), "multi-contact fixture has no elimination ordering")
+			if not swapped:
+				reference.append({"health": scene.controller.health[slot], "impulse": fighter._impulse})
+			else:
+				t.near(scene.controller.health[slot], reference[physical].health, 0.0001,
+					"same physical kart takes the same health damage after seat permutation")
+				t.near(fighter._impulse.distance_to(reference[physical].impulse), 0.0, 0.0001,
+					"same physical kart receives the same combined impulse after seat permutation")
+		var victim: Fighter = scene.ctx.fighter(physical_slots[1])
+		var first_impulse := victim._impulse
+		t.ok(not victim.take_hit(0, Vector3.BACK, 1.0), "ordinary hits still honor hit immunity")
+		t.near(victim._impulse.distance_to(first_impulse), 0.0, 0.0001, "blocked ordinary hit adds no impulse")
+		t.ok(victim.take_ram_hit(0, Vector3.BACK, 1.0), "accepted ram feedback is not suppressed by hit immunity")
+		t.ok(victim._impulse.distance_to(first_impulse) > 0.0, "accepted ram contributes its impulse")
+		victim.teammates[0] = true
+		t.ok(not victim.take_ram_hit(0, Vector3.BACK, 1.0), "ram entry point retains teammate protection")
+		victim.teammates.clear()
+		victim.alive = false
+		t.ok(not victim.take_ram_hit(0, Vector3.BACK, 1.0), "ram entry point rejects eliminated bodies")
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame

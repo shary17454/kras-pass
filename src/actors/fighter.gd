@@ -446,7 +446,18 @@ func _do_attack() -> void:
 ## melee, explosions, hazards, karts, balls — goes through here so shields,
 ## invulnerability and weight are applied exactly once.
 func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float = 0.0, ignore_shield: bool = false) -> bool:
-	if not alive or _invuln > 0.0:
+	if _invuln > 0.0:
+		return false
+	return _apply_hit(from_slot, direction, strength, damage, ignore_shield)
+
+
+## Ram damage is resolved by the controller's per-pair cooldown, not hit immunity.
+func take_ram_hit(from_slot: int, direction: Vector3, strength: float) -> bool:
+	return _apply_hit(from_slot, direction, strength, 0.0, true)
+
+
+func _apply_hit(from_slot: int, direction: Vector3, strength: float, damage: float, ignore_shield: bool) -> bool:
+	if not alive:
 		return false
 	if from_slot >= 0 and teammates.has(from_slot):
 		return false
