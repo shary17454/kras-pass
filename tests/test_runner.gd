@@ -45,6 +45,7 @@ const SUITES := [
 	"res://tests/suites/test_collectible_arbitration.gd",
 	"res://tests/suites/test_world_camera.gd",
 	"res://tests/suites/test_balance_sim.gd",
+	"res://tests/suites/test_balance_contact_probe.gd",
 	"res://tests/suites/test_network.gd",
 	"res://tests/suites/test_apple_account.gd",
 	"res://tests/suites/test_scoring.gd",
