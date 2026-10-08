@@ -1,9 +1,14 @@
 extends RefCounted
 
+class ClockProbe extends "res://tools/balance_contact_probe.gd":
+	var tick_value := 1000
+	func _physics_tick() -> int:
+		return tick_value
+
 
 func run(t: TestHarness) -> void:
 	t.suite("development contact evidence")
-	var probe = load("res://tools/balance_contact_probe.gd").new()
+	var probe := ClockProbe.new()
 	var cfg := MatchConfig.build("sweeper_storm", ["nabta", "sakhra", "fanoos", "ramla"], 0, 1, 331)
 	probe._begin_probe(cfg)
 	probe._on_contact(-1, 0, 8.0)
@@ -21,6 +26,21 @@ func run(t: TestHarness) -> void:
 	probe._begin_probe(cfg)
 	t.equal(probe._contacts[0].environment_hits, 0, "new match cannot inherit previous contact counts")
 	t.equal(probe._invalid_contacts, 0, "new match resets invalid-event count")
+	probe._on_round_started(1)
+	probe.tick_value += 2 * Engine.physics_ticks_per_second
+	probe._on_eliminated(0, 4)
+	t.near(probe._contacts[0].alive_seconds, 2.0, 0.00001, "elimination records simulation exposure rather than wall-clock duration")
+	probe.tick_value += Engine.physics_ticks_per_second
+	probe._on_eliminated(0, 4)
+	t.near(probe._contacts[0].alive_seconds, 2.0, 0.00001, "duplicate elimination cannot extend exposure")
+	var result := MatchResult.make("sweeper_storm", "sweeper_ring", [0, 1, 2, 3] as Array[int])
+	result.duration = 8.0
+	probe._on_round_finished(result)
+	t.near(probe._contacts[1].alive_seconds, 8.0, 0.00001, "survivor exposure ends with actual round duration")
+	t.near(probe._contacts[0].alive_seconds, 2.0, 0.00001, "completed round preserves eliminated player's exposure")
+	t.ok(probe._round_complete, "results stop subsequent input sampling")
+	probe._begin_probe(cfg)
+	t.ok(probe._contacts[0].alive_seconds == null and not probe._round_complete, "new round does not inherit exposure or completion")
 	probe._probe_config = null
 	probe._on_contact(-1, 0, 5.0)
 	t.equal(probe._contacts[0].environment_hits, 0, "late feedback after match cannot mutate its evidence")
