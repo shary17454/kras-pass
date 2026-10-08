@@ -3,12 +3,16 @@ import assert from 'node:assert/strict';
 import { summarizeBalance } from '../tools/balance-report.mjs';
 
 const commit = 'a'.repeat(40);
+const fingerprint = '1'.repeat(64);
 const options = { commit, run: '42', gameIds: ['one', 'two'] };
 function entry(id) {
   return {
     source: { commit, run: '42', game: id, mode: 'natural', runs: 24, difficultyRuns: 12, smokeRuns: 2 },
     checkout: `${commit}\n`,
     report: {
+      engine_version: '4.7.1-stable (official)',
+      simulation_source_start: fingerprint,
+      simulation_source_end: fingerprint,
       sample_mode: 'natural',
       games: [{ id, sample_mode: 'natural', attempted_runs: 24, runs: 24,
         difficulty_attempted: 12, difficulty_completed: 12, severity: 0, flags: [], wins_by_character: { nabta: 3 } }],
@@ -24,11 +28,15 @@ test('complete campaign counts actual qualified matches but does not certify rel
   assert.equal(result.characterWins.nabta, 6);
   assert.equal(result.releaseReady, false);
   assert.equal(result.balanceReviewComplete, false);
+  assert.equal(result.sourceFingerprint, fingerprint);
+  assert.equal(result.engineVersion, '4.7.1-stable (official)');
+  assert.equal(result.sourceConsistencyVerified, true);
 });
 test('partial campaign names missing games explicitly', () => {
   const result = summarizeBalance([entry('one')], { ...options, partial: true });
   assert.equal(result.complete, false);
   assert.deepEqual(result.missing, ['two']);
+  assert.equal(result.sourceConsistencyVerified, false);
   assert.throws(() => summarizeBalance([entry('one')], options), /Missing/);
 });
 test('warnings survive aggregation instead of becoming green readiness', () => {
@@ -38,6 +46,54 @@ test('warnings survive aggregation instead of becoming green readiness', () => {
   assert.deepEqual(summarizeBalance([one, entry('two')], options).reviews,
     [{ game: 'one', flags: ['character advantage'] }]);
 });
+
+for (const [name, mutate] of [
+  ['missing start', e => { delete e.report.simulation_source_start; }],
+  ['missing end', e => { delete e.report.simulation_source_end; }],
+  ['short fingerprint', e => { e.report.simulation_source_start = e.report.simulation_source_end = 'short'; }],
+  ['non-hex fingerprint', e => { e.report.simulation_source_start = e.report.simulation_source_end = 'z'.repeat(64); }],
+  ['changed source', e => { e.report.simulation_source_end = '2'.repeat(64); }],
+  ['different source across games', e => { e.report.simulation_source_start = e.report.simulation_source_end = '2'.repeat(64); }],
+  ['missing engine', e => { delete e.report.engine_version; }],
+  ['wrong engine', e => { e.report.engine_version = '4.6-stable (official)'; }],
+]) {
+  test(`rejects campaign ${name}`, () => {
+    const one = entry('one'); mutate(one);
+    assert.throws(() => summarizeBalance([one, entry('two')], options));
+  });
+}
+
+test('source pin cannot be replaced by an internally consistent different fingerprint', () => {
+  assert.throws(() => summarizeBalance([entry('one'), entry('two')], {
+    ...options, sourceFingerprint: '2'.repeat(64),
+  }));
+});
+
+test('matching explicit source pin remains accepted without declaring release readiness', () => {
+  const result = summarizeBalance([entry('one'), entry('two')], { ...options, sourceFingerprint: fingerprint });
+  assert.equal(result.sourceFingerprint, fingerprint);
+  assert.equal(result.sourceConsistencyVerified, true);
+  assert.equal(result.releaseReady, false);
+});
+
+test('empty partial evidence does not invent a verified engine or source', () => {
+  const result = summarizeBalance([], { ...options, partial: true });
+  assert.equal(result.sourceFingerprint, null);
+  assert.equal(result.engineVersion, null);
+  assert.equal(result.sourceConsistencyVerified, false);
+});
+
+for (const sourceFingerprint of ['', 1, 'short', 'z'.repeat(64)]) {
+  test(`rejects invalid expected fingerprint ${sourceFingerprint}`, () => {
+    assert.throws(() => summarizeBalance([entry('one'), entry('two')], { ...options, sourceFingerprint }));
+  });
+}
+
+for (const engineVersion of ['', ' ', null, 4.7]) {
+  test(`rejects invalid expected engine ${engineVersion}`, () => {
+    assert.throws(() => summarizeBalance([entry('one'), entry('two')], { ...options, engineVersion }));
+  });
+}
 for (const [name, mutate] of [
   ['wrong source', e => { e.source.commit = 'b'.repeat(40); }],
   ['wrong checkout', e => { e.checkout = 'b'.repeat(40); }],
