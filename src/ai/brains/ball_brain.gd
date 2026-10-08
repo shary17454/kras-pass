@@ -73,14 +73,23 @@ func decide(_delta: float) -> void:
 			maybe_dash(0.8)
 		keep_off_edge(2.4)
 	else:
-		_escape_observed_ball(position)
-		if dist < 5.0:
+		var escape_position := _estimated_position_now(observed)
+		_escape_observed_ball(escape_position)
+		if me.global_position.distance_to(escape_position) < 5.0:
 			maybe_dash(1.3)
 
 
 func _anticipated_position(observed: Dictionary) -> Vector3:
 	# Estimate from successive visible samples; never read private momentum.
 	var horizon := minf(0.35, reaction_time + decision_interval) * prediction
+	return Vector3(observed["position"]) + Vector3(observed.get("velocity", Vector3.ZERO)) * horizon
+
+
+func _estimated_position_now(observed: Dictionary) -> Vector3:
+	# Leading an interception is useful; leading radial escape can invert it
+	# before a fast incoming ball actually crosses us. Advance only sample age.
+	var age := maxf(0.0, float(observed.get("age", reaction_time)))
+	var horizon := minf(0.35, age) * prediction
 	return Vector3(observed["position"]) + Vector3(observed.get("velocity", Vector3.ZERO)) * horizon
 
 

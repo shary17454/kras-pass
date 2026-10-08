@@ -205,6 +205,24 @@ func run(t: TestHarness, host: Node) -> void:
 	escape.edge_awareness = 1.0
 	escape.observed_ball = game.ball
 	var arena: Arena = scene.ctx.arena
+	me.global_position = arena.global_position + Vector3.UP
+	escape.prediction = 1.0
+	escape.reaction_time = 0.12
+	escape.decision_interval = 0.2
+	escape.observed = {"position": me.global_position + Vector3.LEFT * 4.0,
+		"velocity": Vector3.RIGHT * 18.0, "age": 0.13, "fuse": 0.2}
+	escape.decide(0.1)
+	t.ok(escape.move.x > 0.0, "escape does not run toward the incoming ball because its future forecast crosses the player")
+	var estimated := escape._estimated_position_now(escape.observed)
+	t.near(estimated.x - me.global_position.x, -1.66, 0.00001, "escape compensates only the elapsed visible-sample age")
+	game.ball.velocity = Vector3.LEFT * 999.0
+	t.equal(escape._estimated_position_now(escape.observed), estimated, "private live momentum cannot alter escape planning")
+	escape.observed["age"] = 0.3
+	escape.decide(0.1)
+	t.ok(escape.move.x < 0.0, "a ball estimated to have already crossed changes the escape side")
+	escape.prediction = 0.0
+	t.equal(escape._estimated_position_now(escape.observed), escape.observed["position"], "zero prediction retains the delayed visible cue")
+	escape.prediction = 1.0
 	for direction in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
 		me.global_position = arena.global_position + direction * (arena.current_radius - 0.2) + Vector3.UP
 		escape.observed = {"position": arena.global_position + direction * (arena.current_radius - 2.5), "fuse": 0.2}
