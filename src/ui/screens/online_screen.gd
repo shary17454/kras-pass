@@ -198,7 +198,7 @@ func _host_settings() -> void:
 		cfg["game"] = Net.ONLINE_GAMES[index]
 		cfg["arena"] = Net.ONLINE_ARENAS[cfg.game][0]
 		if not tournament.is_empty():
-			cfg["tournament"]["entries"] = _arena_entries(cfg.game) if tournament.rotation == "random_no_repeat" \
+			cfg["tournament"]["entries"] = _arena_entries(cfg.game) if tournament.rotation != "manual" \
 				else [{"game": cfg.game, "arena": cfg.arena}]
 		Net.set_lobby_config(cfg))
 	body.add_child(games)
@@ -256,14 +256,16 @@ func _host_settings() -> void:
 		Net.set_lobby_config(cfg))
 	body.add_child(arenas)
 	if not tournament.is_empty():
-		var rotate := UIKit.checkbox(Loc.t("online.rotate_arenas"), tournament.rotation == "random_no_repeat")
-		rotate.toggled.connect(func(value):
-			cfg["tournament"]["rotation"] = "random_no_repeat" if value else "manual"
-			cfg["tournament"]["entries"] = _arena_entries(selected_game)
-			if not value:
-				cfg["tournament"]["entries"] = [{"game": selected_game, "arena": cfg.arena}]
+		var rotations := ["manual", "random", "random_no_repeat"]
+		var rotate := UIKit.option([Loc.t("online.rotation.manual"), Loc.t("common.random"),
+			Loc.t("online.rotate_arenas")], rotations.find(tournament.rotation))
+		rotate.name = "OnlineRotationSelect"
+		rotate.item_selected.connect(func(index):
+			cfg["tournament"]["rotation"] = rotations[index]
+			cfg["tournament"]["entries"] = [{"game": selected_game, "arena": cfg.arena}] if index == 0 \
+				else _arena_entries(selected_game)
 			Net.set_lobby_config(cfg))
-		body.add_child(rotate)
+		body.add_child(UIKit.row(Loc.t("online.rotation.label"), rotate))
 
 
 func _arena_entries(game_id: String) -> Array:

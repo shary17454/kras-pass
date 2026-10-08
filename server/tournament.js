@@ -31,6 +31,9 @@ export class Tournament {
     }
     if (this.rotation === 'manual') {
       this.current = this.entries[this.round % this.entries.length];
+    } else if (this.rotation === 'random') {
+      this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
+      this.current = this.entries[Math.floor(this.seed / 0x100000000 * this.entries.length)];
     } else {
       if (!this.bag.length) {
         this.bag = [...this.entries];

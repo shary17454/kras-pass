@@ -512,6 +512,8 @@
   "online.single": "Single match",
   "online.next_round": "Next tournament round",
   "online.rotate_arenas": "Rotate arenas without repeats",
+  "online.rotation.manual": "Selected arena",
+  "online.rotation.label": "Arena selection",
   "online.tournament_progress": "Completed rounds: {n} | Target: {target}",
   "online.champions": "Tournament champions: {names}",
   "online.bots": "Fill with bots",

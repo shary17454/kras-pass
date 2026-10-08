@@ -41,6 +41,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 
 
 func run(t: TestHarness, host: Node) -> void:
+	await _rotation_menu(t, host)
 	_protocol_policy(t)
 	await _protocol_terminal_state(t, host)
 	await _active_protocol_recovery(t, host)
@@ -158,6 +159,42 @@ func _protocol_terminal_state(t: TestHarness, host: Node) -> void:
 	await host.get_tree().process_frame
 	Net.reset()
 	Net.online_available = available
+	Loc.set_locale(locale)
+
+
+func _rotation_menu(t: TestHarness, host: Node) -> void:
+	t.suite("Online tournament rotation menu")
+	var locale := Loc.locale
+	var config := Net.lobby_config.duplicate(true)
+	var mode := Net.mode
+	Net.mode = Net.Mode.LOCAL
+	for language in ["ar", "en"]:
+		Loc.set_locale(language)
+		for rotation in ["manual", "random", "random_no_repeat"]:
+			Net.lobby_config = {"game": "ring_rumble", "arena": "storm_ring", "rounds": 3,
+				"bots": true, "difficulty": 1, "tournament": {"mode": "points", "target": 3,
+				"rotation": rotation, "points": [5, 3, 2, 1], "entries": [
+					{"game": "ring_rumble", "arena": "vortex_ring"},
+					{"game": "ring_rumble", "arena": "storm_ring"}]}}
+			var screen = load("res://src/ui/screens/online_screen.gd").new()
+			host.add_child(screen)
+			screen.body = VBoxContainer.new()
+			screen.add_child(screen.body)
+			screen._host_settings()
+			var select: OptionButton = screen.find_child("OnlineRotationSelect", true, false)
+			t.ok(select != null, "rotation choice is exposed")
+			t.equal(select.item_count, 3, "all three policies remain available")
+			t.equal(select.selected, ["manual", "random", "random_no_repeat"].find(rotation), "server policy selects matching option")
+			for index in 3:
+				t.ok(not select.get_item_text(index).contains("online."), "rotation label resolves in both languages")
+				select.item_selected.emit(index)
+				t.equal(Net.lobby_config.tournament.rotation, ["manual", "random", "random_no_repeat"][index], "choice sends matching policy")
+				t.equal(Net.lobby_config.tournament.entries.size(), 1 if index == 0 else 2, "manual keeps chosen arena while random uses all arenas")
+				t.equal(Net.lobby_config.tournament.entries[0].arena, "storm_ring" if index == 0 else "vortex_ring", "arena identity is preserved")
+			screen.queue_free()
+			await host.get_tree().process_frame
+	Net.lobby_config = config
+	Net.mode = mode
 	Loc.set_locale(locale)
 
 

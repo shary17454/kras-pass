@@ -24,7 +24,7 @@ const cleanName = v => typeof v === 'string' ? v.replace(/[\p{C}<>]/gu, '').trim
 function tournamentSettings(value) {
   if (value == null) return null;
   if (!['points', 'cups'].includes(value.mode) || !integer(value.target, 3, 10)
-    || !['manual', 'random_no_repeat'].includes(value.rotation)
+    || !['manual', 'random', 'random_no_repeat'].includes(value.rotation)
     || !Array.isArray(value.entries) || value.entries.length < 1 || value.entries.length > 39
     || !Array.isArray(value.points) || value.points.length !== 4
     || value.points.some((v, i) => !integer(v, 0, 100) || (i > 0 && v > value.points[i - 1]))) fail('invalid_config');

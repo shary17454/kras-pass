@@ -106,6 +106,24 @@ test('seeded rotation exhausts each bag without repetition', () => {
   for (let i = 0; i < 10; i += 2) assert.notEqual(order[i].arena, order[i + 1].arena);
 });
 
+test('independent random rotation is seeded and permits consecutive repeats', () => {
+  const entries = [{game: 'ring_rumble', arena: 'vortex_ring'},
+    {game: 'ring_rumble', arena: 'storm_ring'}, {game: 'goal_guard', arena: 'quad_court'}];
+  const a = new Tournament(4, settings({rotation: 'random', entries}), 17);
+  const b = new Tournament(4, settings({rotation: 'random', entries}), 17);
+  const order = Array.from({length: 40}, () => a.next());
+  assert.deepEqual(order, Array.from({length: 40}, () => b.next()));
+  assert.ok(order.some((entry, i) => i > 0 && entry.arena === order[i - 1].arena));
+  assert.ok(order.every(entry => entries.some(e => e.arena === entry.arena)));
+  assert.equal(a.bag.length, 0);
+  const pair = new Tournament(4, settings({rotation: 'random', entries: entries.slice(0, 2)}), 17);
+  const pairOrder = Array.from({length: 40}, () => pair.next());
+  assert.ok(pairOrder.some((entry, i) => i > 0 && entry.arena === pairOrder[i - 1].arena));
+  const single = new Tournament(4, settings({rotation: 'random', entries: entries.slice(0, 1)}), 0);
+  assert.deepEqual(single.next(), entries[0]);
+  assert.deepEqual(single.next(), entries[0]);
+});
+
 test('tournament view cannot mutate authoritative accounting', () => {
   const t = new Tournament(4, settings(), 1);
   t.view().points[0] = 900;

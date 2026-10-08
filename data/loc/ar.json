@@ -512,6 +512,8 @@
   "online.single": "مباراة واحدة",
   "online.next_round": "الجولة التالية للبطولة",
   "online.rotate_arenas": "تبديل الحلبات دون تكرار",
+  "online.rotation.manual": "الحلبة المختارة",
+  "online.rotation.label": "اختيار الحلبات",
   "online.tournament_progress": "الجولات المكتملة: {n} | الهدف: {target}",
   "online.champions": "أبطال البطولة: {names}",
   "online.bots": "إكمال العدد بخصوم آليين",

@@ -1296,6 +1296,21 @@ test('online tournament rejects unavailable games and malformed point tables', (
   assert.throws(() => host.send({op: 'configure', config: {...host.c.room.config, tournament: t}}), /invalid_config/);
 });
 
+test('host can configure independent random tournament rotation without bypassing readiness', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const tournament = {mode: 'points', target: 3, rotation: 'random', points: [5, 3, 2, 1],
+    entries: [{game: 'ring_rumble', arena: 'vortex_ring'}, {game: 'ring_rumble', arena: 'storm_ring'}]};
+  const config = {...host.c.room.config, tournament};
+  assert.throws(() => guest.send({op: 'configure', config}), /host_only/);
+  host.send({op: 'configure', config});
+  assert.equal(host.last('room').config.tournament.rotation, 'random');
+  assert.throws(() => host.send({op: 'start'}), /not_ready/);
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  assert.ok(tournament.entries.some(e => e.arena === host.last('start').config.arena));
+});
+
 test('real WebSocket match, reconnect and closed-room input drain', async t => {
   const server = createServer();
   const multiplayer = attachMultiplayer(server, {enabled: true});
