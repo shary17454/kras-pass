@@ -21,6 +21,12 @@ function contents(database) {
 
 // A restore rehearsal only: the live file is never replaced or opened for writes.
 export async function auditBackup(sourcePath) {
+  return withVerifiedBackup(sourcePath, (_filename, result) => result);
+}
+
+// The consumer must finish before the private plaintext snapshot is removed.
+export async function withVerifiedBackup(sourcePath, consume) {
+  if (typeof consume !== 'function') throw new Error('invalid_backup_consumer');
   if (typeof sourcePath !== 'string' || !isAbsolute(sourcePath) || !statSync(sourcePath).isFile()) {
     throw new Error('invalid_database_path');
   }
@@ -45,10 +51,11 @@ export async function auditBackup(sourcePath) {
       || foreignKeyErrors !== 0 || !schemaMatches || !accountSchema || !contentMatches) {
       throw new Error('backup_verification_failed');
     }
-    return {ok: true, integrity: 'ok', foreign_key_errors: 0, schema_matches: true,
+    const result = {ok: true, integrity: 'ok', foreign_key_errors: 0, schema_matches: true,
       account_schema: true, content_matches: true,
       user_version: restored.prepare('PRAGMA user_version').get().user_version,
       pages, backup_bytes: statSync(filename).size};
+    return await consume(filename, result);
   } finally {
     try { restored?.close(); }
     finally {
