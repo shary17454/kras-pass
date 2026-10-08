@@ -1,0 +1,47 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── platform visible ground routing ─────────────────────────────
+  ✗ platform visible ground routing / : rotation 0 seat 0 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 0 seat 1 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 0 seat 2 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 0 seat 3 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 1 seat 0 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 1 seat 1 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 1 seat 2 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 1 seat 3 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 2 seat 0 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 2 seat 1 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 2 seat 2 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 2 seat 3 can use both equally short routes to one destination: [64, 0]
+  ✗ platform visible ground routing / : rotation 3 seat 0 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 3 seat 1 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 3 seat 2 can use both equally short routes to one destination: [0, 64]
+  ✗ platform visible ground routing / : rotation 3 seat 3 can use both equally short routes to one destination: [0, 64]
+
+finished in 0.5s
+
+════════════════════════════════════════════════════════════════
+FAILED — 2103 passed, 16 failed
+   ✗ platform visible ground routing / : rotation 0 seat 0 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 0 seat 1 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 0 seat 2 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 0 seat 3 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 1 seat 0 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 1 seat 1 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 1 seat 2 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 1 seat 3 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 2 seat 0 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 2 seat 1 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 2 seat 2 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 2 seat 3 can use both equally short routes to one destination: [64, 0]
+   ✗ platform visible ground routing / : rotation 3 seat 0 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 3 seat 1 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 3 seat 2 can use both equally short routes to one destination: [0, 64]
+   ✗ platform visible ground routing / : rotation 3 seat 3 can use both equally short routes to one destination: [0, 64]
+════════════════════════════════════════════════════════════════

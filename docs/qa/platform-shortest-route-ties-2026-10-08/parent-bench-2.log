@@ -1,0 +1,6 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+PLANNER_BENCH {"calls":2400,"microseconds_per_call":[3468.1775,4262.185,5468.4125,4698.675,3397.345],"successful_picks":2400,"tile_count":113}

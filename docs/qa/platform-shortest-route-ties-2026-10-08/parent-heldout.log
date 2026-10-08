@@ -1,0 +1,12 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+balance simulation: 24 runs per game, 1 games
+  crumble_court    ties   0%  slot-bias  12%  char-bias   8%   13.5s  expert +51%   ⚠ expert bots no better than easy
+
+mutator & chaos smoke pass:
+  crumble_court    mutated ok  chaos ok
+
+finished in 45.1s — /tmp/kras-shortest-parent-heldout/report.html
