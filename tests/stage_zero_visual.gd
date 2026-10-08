@@ -6,6 +6,13 @@ var _rows: Array = []
 var _failures: Array[String] = []
 
 
+static func parse_human_count(value: String) -> int:
+	if not value.is_valid_int():
+		return -1
+	var count := int(value)
+	return count if count >= 1 and count <= 4 else -1
+
+
 func _ready() -> void:
 	if DisplayServer.get_name() == "headless":
 		push_error("Stage-zero visual QA needs a real renderer")
@@ -16,12 +23,19 @@ func _ready() -> void:
 	UserSettings.set_value("touch_controls", "on")
 	var language := "ar"
 	var play_seconds := 0.0
+	var human_count := 1
 	var selected := PackedStringArray()
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--games="):
 			selected = argument.trim_prefix("--games=").split(",", false)
 		elif argument.begins_with("--locale="):
 			language = argument.trim_prefix("--locale=")
+		elif argument.begins_with("--humans="):
+			human_count = parse_human_count(argument.trim_prefix("--humans="))
+			if human_count < 0:
+				push_error("Visual QA humans must be an integer from one to four")
+				get_tree().quit(2)
+				return
 		elif argument.begins_with("--play-seconds="):
 			var value := argument.trim_prefix("--play-seconds=")
 			if not value.is_valid_float() or not is_finite(float(value)) or float(value) < 0.0 or float(value) > 10.0:
@@ -49,8 +63,10 @@ func _ready() -> void:
 			if not selected.is_empty() and not game.id in selected:
 				continue
 			var errors_before := Log.error_count()
-			var cfg := MatchConfig.build(game.id, ["nabta", "sakhra", "fanoos", "ramla"], 1, 1, 250925)
-			cfg.players[0].device_type = 2
+			var cfg := MatchConfig.build(game.id, ["nabta", "sakhra", "fanoos", "ramla"], human_count, 1, 250925)
+			for player in cfg.players:
+				if player.is_human:
+					player.device_type = 2
 			cfg.rounds = 1
 			await SceneRouter.go_to("match", {"config": cfg}, false, 0)
 			var scene: Node = SceneRouter.current_node
@@ -76,14 +92,24 @@ func _ready() -> void:
 				for y in range(0, image.get_height(), 11):
 					colors[image.get_pixel(x, y).to_html()] = true
 			var success: bool = image.save_png(file) == OK and colors.size() >= 15 \
-				and scene.ctx.fighters.size() == 4 and Log.error_count() == errors_before
+				and scene.ctx.fighters.size() == 4 and Log.error_count() == errors_before \
+				and scene.touch_sources.size() == human_count
+			var control_bounds_valid := true
+			var touch_slots: Array[int] = []
+			for source in scene.touch_sources:
+				touch_slots.append(source.slot)
+				for control in source.control_rects():
+					control_bounds_valid = control_bounds_valid and source.get_global_rect().grow(1.0).encloses(control)
+			success = success and control_bounds_valid and touch_slots == cfg.human_slots()
 			var hud_bottom: float = scene.hud.occupied_top()
 			if game.id.begins_with("boss_") and resolution.x < resolution.y:
 				success = success and hud_bottom < image.get_height() * 0.35
 			_rows.append({"id": game.id, "arena": cfg.arena_id, "orientation": orientation,
 				"image": file, "nonblank_colors": colors.size(), "hud_bottom": hud_bottom, "passed": success,
 				"requested_play_seconds": play_seconds, "phase": scene.phase,
-				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count()})
+				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count(),
+				"human_count": human_count, "touch_slots": touch_slots,
+				"control_bounds_valid": control_bounds_valid})
 			if not success:
 				_failures.append(game.id + "/" + orientation)
 			print("STAGE ZERO VISUAL %s/%s: %s" % [game.id, orientation, "PASS" if success else "FAIL"])
@@ -99,8 +125,8 @@ func _ready() -> void:
 		_failures.append("report write failed")
 	else:
 		report.store_string(JSON.stringify({"shots": _rows, "failures": _failures,
-			"scope": "%d games, default arena, %s, 1 human + 3 AI, 2 orientations, %.1f additional play seconds; smoke only" % [
-				_rows.size() / 2, language, play_seconds]}, "  "))
+			"scope": "%d games, default arena, %s, %d human slots + %d AI, 2 orientations, %.1f additional play seconds; smoke only, not physical humans" % [
+				_rows.size() / 2, language, human_count, 4 - human_count, play_seconds]}, "  "))
 		report.close()
 	print("STAGE ZERO VISUAL: %d captures, %d failures" % [_rows.size(), _failures.size()])
 	AudioManager.shutdown()
