@@ -15,9 +15,41 @@ func run(t: TestHarness, host: Node) -> void:
 	_pooling(t)
 	await _projectile_visual_reuse(t, host)
 	await _local_marker_scale(t, host)
+	await _player_marker_symbols(t, host)
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _player_marker_symbols(t: TestHarness, host: Node) -> void:
+	t.test("in-world player identity is independent of character color")
+	var seen: Array[String] = []
+	for slot in 4:
+		var fighter := Fighter.new()
+		fighter.slot = slot
+		host.add_child(fighter)
+		fighter._build_markers()
+		var label := fighter._markers.get_node("PlayerSymbol") as Label3D
+		t.equal(label.text, PlayerConfig.SYMBOLS[slot], "world and HUD use the same slot symbol")
+		t.ok(not seen.has(label.text), "all four slots have distinct symbols")
+		seen.append(label.text)
+		t.ok(not label.no_depth_test, "identity cannot expose a player through a wall")
+		t.ok(not label.fixed_size, "identity retains bounded world dimensions")
+		t.equal(label.billboard, BaseMaterial3D.BILLBOARD_ENABLED, "symbol faces either camera orientation")
+		t.ok(label.font != null, "identity uses the bundled UI font")
+		fighter.hide()
+		t.ok(not label.is_visible_in_tree(), "hidden player does not leak identity")
+		fighter.show()
+		fighter._markers.hide()
+		t.ok(not label.is_visible_in_tree(), "elimination hides identity with other markers")
+		fighter._markers.show()
+		t.ok(label.is_visible_in_tree(), "respawn restores identity")
+		fighter.locomotion = Fighter.Locomotion.DRIVE
+		fighter._build_markers()
+		var driving_label := fighter._markers.get_node("PlayerSymbol") as Label3D
+		t.near(driving_label.pixel_size, 0.005, 0.00001, "close vehicle camera uses a compact symbol")
+		fighter.queue_free()
+		await host.get_tree().process_frame
 
 
 func _local_marker_scale(t: TestHarness, host: Node) -> void:

@@ -274,6 +274,18 @@ func _build_markers() -> void:
 	collar.name = "PipCollar"
 	collar.position = Vector3(0, 2.62, 0)
 	_markers.add_child(collar)
+	var identity := Label3D.new()
+	identity.name = "PlayerSymbol"
+	identity.text = PlayerConfig.SYMBOLS[clampi(slot, 0, 3)]
+	identity.font = UIKit.font_bold()
+	identity.font_size = 64
+	# Personal vehicle cameras are much closer than shared arena cameras.
+	identity.pixel_size = 0.005 if locomotion == Locomotion.DRIVE else 0.025
+	identity.outline_size = 16
+	identity.outline_modulate = Color(0.02, 0.02, 0.02, 1.0)
+	identity.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	identity.position = Vector3(0, 3.25, 0)
+	_markers.add_child(identity)
 
 
 ## The local player's own pip is larger, because "where am I" is a different
