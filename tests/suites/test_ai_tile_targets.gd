@@ -51,6 +51,25 @@ func run(t: TestHarness, host: Node) -> void:
 				visible.show()
 				brain.decide(0.01)
 				t.equal(brain._committed, visible, "color difficulty %d reacquires rendered safe ground" % difficulty)
+				hidden.show()
+				hidden.global_position = me.global_position + Vector3.LEFT
+				visible.global_position = me.global_position + Vector3.RIGHT
+				var choices := {}
+				for seed_value in range(1, 33):
+					brain.rng.seed = seed_value
+					brain._committed = null
+					brain.decide(0.01)
+					choices[brain._committed] = true
+					var first_choice: ArenaTile = brain._committed
+					brain.rng.seed = seed_value
+					brain._committed = null
+					brain.decide(0.01)
+					t.equal(brain._committed, first_choice, "equal-distance choice is reproducible from the AI seed")
+				t.equal(choices.size(), 2, "equal-distance visible color targets are not biased by tile array order")
+				visible.global_position = me.global_position + Vector3.RIGHT * 0.25
+				var rng_state: int = brain.rng.state
+				t.equal(game.safe_tile_near(me.global_position, brain.can_observe, brain.rng), visible, "strictly nearer visible tile remains preferred")
+				t.equal(brain.rng.state, rng_state, "unique nearest tile does not consume random state")
 			else:
 				hidden.owner_slot = -1
 				visible.owner_slot = -1

@@ -37,7 +37,7 @@ func decide(_delta: float) -> void:
 		return
 
 	if not can_observe(_committed) or not _committed.is_standable() or _committed.tag != call_tag:
-		_committed = controller.call("safe_tile_near", me.global_position, can_observe) if controller.has_method("safe_tile_near") else null
+		_committed = controller.call("safe_tile_near", me.global_position, can_observe, rng) if controller.has_method("safe_tile_near") else null
 	if _committed == null or not is_instance_valid(_committed):
 		move = Vector2.ZERO
 		return

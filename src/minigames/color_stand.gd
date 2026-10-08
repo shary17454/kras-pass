@@ -119,8 +119,8 @@ func called_serial() -> int:
 	return call_sequence
 
 
-func safe_tile_near(pos: Vector3, observable: Callable = Callable()) -> ArenaTile:
-	var best: ArenaTile = null
+func safe_tile_near(pos: Vector3, observable: Callable = Callable(), randomizer: RandomNumberGenerator = null) -> ArenaTile:
+	var candidates: Array[ArenaTile] = []
 	var best_d := INF
 	for t in _tiles:
 		if not is_instance_valid(t) or (observable.is_valid() and not observable.call(t)):
@@ -128,10 +128,16 @@ func safe_tile_near(pos: Vector3, observable: Callable = Callable()) -> ArenaTil
 		if t.tag != COLOR_NAMES[_called] or not t.is_standable():
 			continue
 		var d: float = t.global_position.distance_squared_to(pos)
-		if d < best_d:
+		if is_equal_approx(d, best_d):
+			candidates.append(t)
+		elif d < best_d:
 			best_d = d
-			best = t
-	return best
+			candidates.assign([t])
+	if candidates.is_empty():
+		return null
+	if candidates.size() == 1 or randomizer == null:
+		return candidates[0]
+	return candidates[randomizer.randi_range(0, candidates.size() - 1)]
 
 
 func is_dropping() -> bool:
