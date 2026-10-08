@@ -50,7 +50,15 @@ func decide(_delta: float) -> void:
 			var dir: Vector3 = perceive(victim) - position
 			dir.y = 0.0
 			if dir.length() > 0.5:
-				push_from = position - dir.normalized() * 1.4
+				dir = dir.normalized()
+				push_from = position - dir * 1.4
+				var alignment := me.global_position - push_from
+				alignment.y = 0.0
+				# The ball deflects on contact, not on an attack at a distance.
+				# Once lined up, cross its visible position instead of parking
+				# beyond the combined ball/player collision radii.
+				if alignment.length() < 0.9:
+					push_from = position + dir * 0.8
 		steer_to(push_from)
 		if dist < 3.0:
 			tap(Btn.ATTACK)

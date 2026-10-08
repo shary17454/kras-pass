@@ -11,12 +11,16 @@ class ApproachProbe extends "res://src/ai/brains/ball_brain.gd":
 	var observed_ball: GameBall
 	var target := Vector3.INF
 	var escaped := false
+	var victim := -1
+	var victim_position := Vector3.ZERO
 	func _ball() -> GameBall:
 		return observed_ball
 	func perceive_ball(_ball: GameBall) -> Dictionary:
 		return observed
 	func _best_victim(_position: Vector3) -> int:
-		return -1
+		return victim
+	func perceive(_slot: int) -> Vector3:
+		return victim_position
 	func steer_to(point: Vector3, _urgency: float = 1.0) -> void:
 		target = point
 	func steer_away(_point: Vector3, _urgency: float = 1.0) -> void:
@@ -128,6 +132,17 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.decide(0.1)
 	t.ok(brain.escaped, "elapsed time since the visible fuse sample cannot fund a late approach")
 	brain.observed.erase("age")
+	brain.victim = 1
+	brain.victim_position = Vector3(8, 1.0, 0)
+	brain.observed = {"position": Vector3(2.5, 1.0, 0), "fuse": 5.0}
+	me.global_position = Vector3(0, 1.0, 0)
+	brain.decide(0.1)
+	t.ok(brain.target.x < brain.observed["position"].x, "approach lines up behind the observed ball before contact")
+	me.global_position = Vector3(1.1, 1.0, 0)
+	brain.decide(0.1)
+	t.ok(brain.target.x > brain.observed["position"].x, "aligned approach follows through the ball rather than stopping outside contact range")
+	brain.victim = -1
+	me.global_position = Vector3(0, 1.0, 0)
 	brain.escaped = false
 	me.top_speed = 1.0
 	brain.decide(0.1)
