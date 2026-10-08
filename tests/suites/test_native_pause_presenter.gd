@@ -43,6 +43,8 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(not presenter.show({}, false, true), "double opening does not create duplicate presentation")
 	presenter.navigate(10)
 	t.equal(bridge.navigation[0], [bridge.requests[0].session, 1, false], "controller navigation is scoped and bounded")
+	presenter.navigate(0)
+	t.equal(bridge.navigation[1], [bridge.requests[0].session, 0, false], "cancel is forwarded to native confirmation instead of discarding its parent menu")
 	bridge.menu_action.emit(bridge.requests[0].session, "unknown")
 	t.ok(presenter.active and actions.is_empty(), "unknown native command cannot mutate match")
 	presenter.dismiss()
@@ -89,6 +91,23 @@ func _match_flow(t: TestHarness, host: Node, online: bool) -> void:
 	t.equal(bridge.requests[0].restart, not online, "online restart is disabled in native menu")
 	for key in ["title", "resume", "restart", "settings", "quit", "confirm", "cancel"]:
 		t.ok(not String(bridge.requests[0].labels[key]).is_empty(), "native label uses localization: " + key)
+	var cancel := InputEventJoypadButton.new()
+	cancel.button_index = JOY_BUTTON_B
+	cancel.pressed = true
+	scene._input(cancel)
+	t.ok(not bridge.navigation.is_empty(), "configured controller cancel produces a navigation command")
+	if not bridge.navigation.is_empty():
+		t.equal(bridge.navigation[-1], [bridge.requests[0].session, 0, false], "actual controller cancel reaches the current native dialog")
+	t.ok(scene._pause_menu != null and scene._native_pause.active, "controller cancel waits for native confirmation handling")
+	for command in [[JOY_BUTTON_DPAD_UP, -1, false], [JOY_BUTTON_DPAD_DOWN, 1, false], [JOY_BUTTON_A, 0, true]]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = command[0]
+		event.pressed = true
+		var before: int = bridge.navigation.size()
+		scene._input(event)
+		t.equal(bridge.navigation.size(), before + 1, "controller menu action is routed once")
+		if bridge.navigation.size() > before:
+			t.equal(bridge.navigation[-1], [bridge.requests[0].session, command[1], command[2]], "controller direction and activation preserve native session")
 	bridge.menu_action.emit(bridge.requests[0].session, "resume")
 	t.ok(not scene._paused and scene._pause_menu == null, "native resume restores original match flow")
 	scene._toggle_pause()

@@ -3,6 +3,10 @@
 @implementation KrasGlassPauseMenu {
     NSMutableArray<UIButton *> *_buttons;
     NSInteger _selection;
+    UIVisualEffectView *_panel;
+    UIScrollView *_scroll;
+    UIAlertController *_restartConfirmation;
+    NSInteger _confirmationSelection;
 }
 
 - (void)viewDidLoad {
@@ -15,6 +19,7 @@
     UIVisualEffect *effect = nil;
     if (@available(iOS 26.0, *)) effect = [UIGlassEffect effectWithStyle:UIGlassEffectStyleRegular];
     UIVisualEffectView *panel = [[UIVisualEffectView alloc] initWithEffect:effect];
+    _panel = panel;
     if (UIAccessibilityIsReduceTransparencyEnabled()) {
         panel.effect = nil;
         panel.backgroundColor = UIColor.secondarySystemBackgroundColor;
@@ -26,6 +31,7 @@
     [self.view addSubview:panel];
 
     UIScrollView *scroll = [UIScrollView new];
+    _scroll = scroll;
     scroll.translatesAutoresizingMaskIntoConstraints = NO;
     [panel.contentView addSubview:scroll];
     UIStackView *stack = [UIStackView new];
@@ -56,6 +62,7 @@
         config.contentInsets = NSDirectionalEdgeInsetsMake(12, 16, 12, 16);
         button.configuration = config;
         button.titleLabel.numberOfLines = 0;
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
         button.accessibilityIdentifier = [@"kras.pause." stringByAppendingString:command];
         button.enabled = ![command isEqualToString:@"restart"] || self.allowsRestart;
         __weak KrasGlassPauseMenu *weakSelf = self;
@@ -91,6 +98,31 @@
         [stack.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor],
         [stack.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor]
     ]];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(transparencyChanged:)
+        name:UIAccessibilityReduceTransparencyStatusDidChangeNotification object:nil];
+}
+
+- (void)dealloc { [NSNotificationCenter.defaultCenter removeObserver:self]; }
+- (void)transparencyChanged:(NSNotification *)notification {
+    BOOL reduced = UIAccessibilityIsReduceTransparencyEnabled();
+    if (@available(iOS 26.0, *)) {
+        _panel.effect = reduced ? nil : [UIGlassEffect effectWithStyle:UIGlassEffectStyleRegular];
+    }
+    _panel.backgroundColor = reduced ? UIColor.secondarySystemBackgroundColor : UIColor.clearColor;
+    for (NSUInteger index = 0; index < _buttons.count; ++index) {
+        UIButton *button = _buttons[index];
+        UIButtonConfiguration *previous = button.configuration;
+        UIButtonConfiguration *config = [UIButtonConfiguration tintedButtonConfiguration];
+        if (@available(iOS 26.0, *)) {
+            if (!reduced) config = index == 0 ? [UIButtonConfiguration prominentGlassButtonConfiguration]
+                                             : [UIButtonConfiguration glassButtonConfiguration];
+        }
+        config.title = previous.title;
+        config.image = previous.image;
+        config.imagePadding = previous.imagePadding;
+        config.contentInsets = previous.contentInsets;
+        button.configuration = config;
+    }
 }
 
 - (BOOL)canBecomeFirstResponder { return YES; }
@@ -108,8 +140,23 @@
 - (void)previousChoice:(UIKeyCommand *)key { [self navigate:-1 activate:NO]; }
 - (void)nextChoice:(UIKeyCommand *)key { [self navigate:1 activate:NO]; }
 - (void)activateChoice:(UIKeyCommand *)key { [self navigate:0 activate:YES]; }
-- (void)resumeChoice:(UIKeyCommand *)key { [self finish:@"resume"]; }
+- (void)resumeChoice:(UIKeyCommand *)key {
+    if (_restartConfirmation) [self closeRestartConfirmation:NO];
+    else [self finish:@"resume"];
+}
 - (void)navigate:(NSInteger)direction activate:(BOOL)activate {
+    if (!direction && !activate) {
+        [self resumeChoice:nil];
+        return;
+    }
+    if (_restartConfirmation) {
+        if (activate) [self closeRestartConfirmation:_confirmationSelection == 1];
+        else if (direction) {
+            _confirmationSelection = 1 - _confirmationSelection;
+            _restartConfirmation.preferredAction = _restartConfirmation.actions[_confirmationSelection];
+        }
+        return;
+    }
     if (self.presentedViewController || !_buttons.count) return;
     if (activate) {
         [_buttons[_selection] sendActionsForControlEvents:UIControlEventPrimaryActionTriggered];
@@ -121,6 +168,8 @@
         if (_buttons[_selection].enabled) break;
     }
     for (NSUInteger index = 0; index < _buttons.count; ++index) _buttons[index].highlighted = index == _selection;
+    [_scroll scrollRectToVisible:[_buttons[_selection] convertRect:_buttons[_selection].bounds toView:_scroll]
+        animated:!UIAccessibilityIsReduceMotionEnabled()];
     UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, _buttons[_selection]);
 }
 
@@ -135,13 +184,35 @@
 }
 
 - (void)confirmRestart {
+    if (!self.allowsRestart || self.presentedViewController) return;
     UIAlertController *confirmation = [UIAlertController alertControllerWithTitle:self.labels[@"restart"]
         message:self.labels[@"confirm"] preferredStyle:UIAlertControllerStyleAlert];
-    [confirmation addAction:[UIAlertAction actionWithTitle:self.labels[@"cancel"] style:UIAlertActionStyleCancel handler:nil]];
     __weak KrasGlassPauseMenu *weakSelf = self;
+    [confirmation addAction:[UIAlertAction actionWithTitle:self.labels[@"cancel"] style:UIAlertActionStyleCancel
+        handler:^(UIAlertAction *action) {
+            KrasGlassPauseMenu *menu = weakSelf;
+            if (menu) menu->_restartConfirmation = nil;
+        }]];
     [confirmation addAction:[UIAlertAction actionWithTitle:self.labels[@"restart"] style:UIAlertActionStyleDestructive
-        handler:^(UIAlertAction *action) { [weakSelf finish:@"restart"]; }]];
+        handler:^(UIAlertAction *action) {
+            KrasGlassPauseMenu *menu = weakSelf;
+            if (!menu) return;
+            menu->_restartConfirmation = nil;
+            [menu finish:@"restart"];
+        }]];
+    _restartConfirmation = confirmation;
+    _confirmationSelection = 0;
     [self presentViewController:confirmation animated:!UIAccessibilityIsReduceMotionEnabled() completion:nil];
+}
+
+- (void)closeRestartConfirmation:(BOOL)restart {
+    UIAlertController *confirmation = _restartConfirmation;
+    if (!confirmation) return;
+    _restartConfirmation = nil;
+    __weak KrasGlassPauseMenu *weakSelf = self;
+    [confirmation dismissViewControllerAnimated:!UIAccessibilityIsReduceMotionEnabled() completion:^{
+        if (restart) [weakSelf finish:@"restart"];
+    }];
 }
 
 - (void)finish:(NSString *)command {

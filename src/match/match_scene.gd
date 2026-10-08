@@ -1165,10 +1165,10 @@ func _input(event: InputEvent) -> void:
 			_native_pause.navigate(-1)
 		elif event.is_action_pressed("ui_down"):
 			_native_pause.navigate(1)
-		elif event.is_action_pressed("ui_accept"):
+		elif event.is_action_pressed("ui_accept") or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A):
 			_native_pause.navigate(0, true)
-		elif event.is_action_pressed("ui_cancel"):
-			_toggle_pause()
+		elif event.is_action_pressed("ui_back") or event.is_action_pressed("ui_cancel"):
+			_native_pause.navigate(0)
 		else:
 			return
 		get_viewport().set_input_as_handled()
