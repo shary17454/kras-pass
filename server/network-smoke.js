@@ -9,6 +9,7 @@ import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {monitorEventLoopDelay, performance} from 'node:perf_hooks';
 import {NetworkTiming} from './network-timing.js';
+import {startSchedulingProbe} from './scheduling-probe.js';
 import {attachMultiplayer} from './multiplayer.js';
 import {ONLINE_GAMES, Rooms} from './rooms.js';
 import {kartProcessDeadline} from './race-smoke-budget.js';
@@ -100,7 +101,9 @@ assert.ok(!sovereignTiebreak || selectedHumans === undefined || selectedHumans =
 server.listen(0, '127.0.0.1'); await once(server, 'listening');
 const url = `ws://127.0.0.1:${server.address().port}/multiplayer`;
 console.log(`Evidence: ${out}`);
+let schedulingProbe;
 try {
+  if (process.argv.includes('--scheduling-probe')) schedulingProbe = await startSchedulingProbe();
   for (const humans of selectedHumans ? [Number(selectedHumans)] : (duoTiebreak || raceTiebreak || siegeTiebreak || forgeTiebreak || dreadTiebreak || sovereignTiebreak ? [4] : [2, 4])) {
     let resolveRoom;
     const roomCode = new Promise(resolve => { resolveRoom = resolve; });
@@ -187,10 +190,17 @@ try {
     console.log(JSON.stringify({humans, status: 'PASS', results}));
   }
 } finally {
-  clearInterval(timingInterval);
-  loopDelay.disable();
-  await writeFile(join(out, 'server-timing.json'), JSON.stringify(timing.report(), null, 2));
-  console.log(JSON.stringify({event: 'server_timing', maxMs: Math.round(loopDelay.max / 1e6)}));
-  for (const child of children) if (child.exitCode === null) child.kill('SIGTERM');
-  service.close(); await new Promise(resolve => server.close(resolve));
+  try {
+    clearInterval(timingInterval);
+    loopDelay.disable();
+    await writeFile(join(out, 'server-timing.json'), JSON.stringify(timing.report(), null, 2));
+    console.log(JSON.stringify({event: 'server_timing', maxMs: Math.round(loopDelay.max / 1e6)}));
+    if (schedulingProbe) {
+      const report = await schedulingProbe.stop();
+      await writeFile(join(out, 'scheduling-probe.json'), JSON.stringify(report, null, 2));
+    }
+  } finally {
+    for (const child of children) if (child.exitCode === null) child.kill('SIGTERM');
+    service.close(); await new Promise(resolve => server.close(resolve));
+  }
 }
