@@ -1,0 +1,12 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+balance simulation: 24 runs per game, 1 games
+  hurdle_dash      ties   4%  slot-bias  23%  char-bias   8%   13.0s  expert +69%   ⚠ spawn slot advantage
+
+mutator & chaos smoke pass:
+  hurdle_dash      mutated ok  chaos ok
+
+finished in 40.0s — /tmp/kras-hurdle-spacing-balance280/report.html

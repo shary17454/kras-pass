@@ -1235,8 +1235,10 @@ func _build_hazards() -> void:
 				for row in range(1, rows + 1):
 					var z := start_z - track_length * (float(row) / float(rows + 1))
 					for lane in lane_count:
-						if (row + lane) % 4 == 0:
-							continue  # a gap per row keeps lanes non-identical
+						# Equal jump and recovery windows for every starting lane;
+						# staggered gaps otherwise make a fixed slot a faster route.
+						if row % lane_count == 0:
+							continue
 						_add_static_box(Vector3(def.radius * 0.3, float(h.get("height", 0.85)), 0.35),
 							Vector3(lane_x(lane), float(h.get("height", 0.85)) * 0.5, z),
 							def.accent_color)
