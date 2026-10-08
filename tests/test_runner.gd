@@ -3,10 +3,11 @@ extends Node
 ##
 ##   godot --headless --fixed-fps 60 --path . tests/test_runner.tscn
 ##
-## Backs up the real profile before running, restores it afterwards, and exits
+## Uses an isolated test profile, restores fixture state afterwards, and exits
 ## with a non-zero status on failure so CI can gate on it.
 
 const SUITES := [
+	"res://tests/suites/test_test_storage_isolation.gd",
 	"res://tests/suites/test_release_version.gd",
 	"res://tests/suites/test_local_vehicle_views.gd",
 	"res://tests/suites/test_shared_pickup_perception.gd",
@@ -179,6 +180,7 @@ func _ready() -> void:
 	_t = TestHarness.new()
 	print("\nKRAS PASS test suite — Godot %s, %s" % [
 		Engine.get_version_info().string, OS.get_name()])
+	print("TEST_STORAGE_ROOT=" + SaveSystem.storage_root)
 	_backup()
 	var started := Time.get_ticks_msec()
 	var filter := ""
@@ -217,8 +219,8 @@ func _ready() -> void:
 	get_tree().quit(code)
 
 
-## Tests write to the same `user://` directory as the game. Snapshot the two
-## real slots first so running the suite never costs a developer their progress.
+## SaveSystem selects a private test root before any autoload reads save data.
+## Preserve fixture slots when several suites share an explicit scratch root.
 func _backup() -> void:
 	_profile_backup = SaveSystem.profile().duplicate(true)
 	_settings_backup = SaveSystem.settings().duplicate(true)

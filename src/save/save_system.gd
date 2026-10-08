@@ -50,15 +50,30 @@ var enabled := true
 func _ready() -> void:
 	# Editor-only test runs must never read or rotate the player's real saves.
 	if OS.has_feature("editor"):
-		for argument in OS.get_cmdline_user_args():
-			if argument.begins_with("--test-data-dir="):
-				var requested := argument.trim_prefix("--test-data-dir=")
-				if requested.is_absolute_path():
-					storage_root = requested.path_join("")
+		storage_root = storage_root_for_launch(true, OS.get_cmdline_args(),
+			OS.get_cmdline_user_args(), "%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()])
 		DirAccess.make_dir_recursive_absolute(storage_root)
 	_cache[PROFILE] = load_slot(PROFILE)
 	_cache[SETTINGS] = load_slot(SETTINGS)
 	profile_loaded.emit(_cache[PROFILE])
+
+
+static func storage_root_for_launch(editor: bool, engine_args: PackedStringArray,
+		user_args: PackedStringArray, run_id: String) -> String:
+	if not editor:
+		return DIR
+	for argument in user_args:
+		if argument.begins_with("--test-data-dir="):
+			var requested := argument.trim_prefix("--test-data-dir=")
+			var real_root := ProjectSettings.globalize_path(DIR).simplify_path().trim_suffix("/")
+			var requested_root := ProjectSettings.globalize_path(requested).simplify_path().trim_suffix("/")
+			if requested.is_absolute_path() and requested_root != real_root:
+				return requested.path_join("")
+	for argument in engine_args:
+		var entry := ProjectSettings.localize_path(argument)
+		if entry.begins_with("res://tests/") and (entry.ends_with(".tscn") or entry.ends_with(".gd")):
+			return DIR.path_join("test-runs").path_join(run_id)
+	return DIR
 
 
 func _process(delta: float) -> void:

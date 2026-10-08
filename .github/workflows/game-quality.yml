@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
+      core_only:
+        description: Run the complete core regression and stability gate without the separate per-game networking matrix
+        type: boolean
+        default: false
       balance_campaign:
         description: Run the full natural-round balance campaign instead of the networking matrix
         type: boolean
@@ -15,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: game-quality-${{ github.workflow }}-${{ github.ref }}
+  group: game-quality-${{ github.workflow }}-${{ github.ref }}${{ inputs.core_only && '-core-only' || '' }}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +42,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        scenario: [core, ring_rumble, goal_guard, gem_grab, star_rush, zone_hold, relic_hold, tag_hunt, paint_grid, mnatiq, mukharrib, magnet_court, storm_heart, sky_court, crumble_court, blast_ball, color_stand, quick_draw, symbol_echo, crate_smash, lab_crates, crate_relay, hurdle_dash, rising_tide, sweeper_storm, duel_pit, bumper_bowl, duo_clash, drift_floes, turret_duel, tank_arena, scrap_karts, fawda, kart_sprint, sabaq_sawarikh, base_siege, boss_forge, boss_dreadnought, boss_sovereign, boss_colossus]
+        scenario: ${{ inputs.core_only && fromJSON('["core"]') || fromJSON('["core","ring_rumble","goal_guard","gem_grab","star_rush","zone_hold","relic_hold","tag_hunt","paint_grid","mnatiq","mukharrib","magnet_court","storm_heart","sky_court","crumble_court","blast_ball","color_stand","quick_draw","symbol_echo","crate_smash","lab_crates","crate_relay","hurdle_dash","rising_tide","sweeper_storm","duel_pit","bumper_bowl","duo_clash","drift_floes","turret_duel","tank_arena","scrap_karts","fawda","kart_sprint","sabaq_sawarikh","base_siege","boss_forge","boss_dreadnought","boss_sovereign","boss_colossus"]') }}
     env:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
