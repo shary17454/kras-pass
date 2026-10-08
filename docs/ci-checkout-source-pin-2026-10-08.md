@@ -1,7 +1,8 @@
 # CI Checkout Source Pin
 
 Repository: shary17454/kras-pass. Branch: fix/kras-ci-checkout-fingerprint.
-Code commit: 4d714f7947006f8e97500105e41f37526ddeaf36.
+Initial wiring commit: 4d714f7947006f8e97500105e41f37526ddeaf36.
+Final code commit: 0a3aeb7d429e5c82bca9279d88fb23723b96a264.
 Parent: 4f990aa97c22ee3d4d98dbc5e830252a00159f2e (PR 211).
 
 ## Gap Closed
