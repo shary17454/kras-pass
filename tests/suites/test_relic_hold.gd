@@ -18,6 +18,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(game.holder(), 0, "pickup sets holder")
 	t.equal(fighter.carrying, 1, "holder carries relic")
 	t.ok(not fighter.can_attack, "holder cannot attack")
+	_check_hit_drops(t, game, fighter, scene.ctx)
 	game._accum = 0.7
 	game.on_round_start()
 	t.equal(game.holder(), -1, "round reset releases holder")
@@ -30,6 +31,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(game._relic, item, "repeated round callback does not duplicate relic")
 	game._on_taken(game._relic, 0)
 	game.cleanup()
+	t.ok(not EventBus.player_hit.is_connected(Callable(game, "_on_player_hit")), "cleanup disconnects relic hit handler")
 	game.cleanup()
 	t.equal(game.holder(), -1, "cleanup releases ownership")
 	t.equal(fighter.carrying, 0, "cleanup clears carrying")
@@ -98,3 +100,36 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _check_hit_drops(t: TestHarness, game: Node, fighter: Fighter, ctx: MatchContext) -> void:
+	fighter._invuln = 0.0
+	fighter.mods.shield = 1.0
+	t.ok(not fighter.take_hit(1, Vector3.RIGHT, 3.0), "shield blocks the incoming hit")
+	t.equal(game.holder(), 0, "blocked shield hit does not drop relic")
+	fighter._invuln = 0.5
+	t.ok(not fighter.take_hit(1, Vector3.RIGHT, 3.0), "invulnerability blocks the incoming hit")
+	t.equal(game.holder(), 0, "invulnerable carrier keeps relic")
+	fighter._invuln = 0.0
+	t.ok(fighter.take_hit(1, Vector3.RIGHT, 3.0), "normal rival hit lands without knockout")
+	t.equal(game.holder(), -1, "normal hit drops held relic")
+	t.equal(fighter.carrying, 0, "normal hit clears carrier cargo")
+	t.ok(fighter.can_attack, "normal hit restores attack permission")
+	t.ok(is_instance_valid(game.loose_relic()), "normal hit puts relic back in play")
+	t.equal(ctx.details[1].get("steals", 0), 1, "landed rival hit credits exactly one steal")
+	t.equal(ctx.details[1].get("knockouts", 0), 0, "steal is not a knockout")
+	var loose: Collectible = game._relic
+	EventBus.player_hit.emit(1, 0, 3.0)
+	t.equal(game._relic, loose, "repeat hit cannot duplicate an already dropped relic")
+	t.equal(ctx.details[1].get("steals", 0), 1, "repeat hit cannot double credit steal")
+	if not is_instance_valid(game._relic):
+		return
+	game._on_taken(game._relic, 0)
+	EventBus.player_hit.emit(0, 0, 3.0)
+	t.equal(game.holder(), 0, "self hit does not steal relic")
+	fighter._invuln = 0.0
+	t.ok(fighter.take_hit(-1, Vector3.LEFT, 3.0), "environmental hit lands")
+	t.equal(game.holder(), -1, "environmental hit drops relic")
+	t.equal(ctx.details[1].get("steals", 0), 1, "environmental hit does not award rival steal")
+	if is_instance_valid(game._relic):
+		game._on_taken(game._relic, 0)

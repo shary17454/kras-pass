@@ -26,6 +26,8 @@ func configure() -> void:
 
 func build() -> void:
 	Pool.define(POOL_KEY, func(): return Collectible.new(), 3)
+	if not EventBus.player_hit.is_connected(_on_player_hit):
+		EventBus.player_hit.connect(_on_player_hit)
 	_spawn_relic(ctx.arena_center() + Vector3(0, 1.2, 0))
 
 
@@ -115,6 +117,12 @@ func _on_taken(item: Collectible, slot: int) -> void:
 	AudioManager.play_sfx("pickup", f.global_position)
 	EventBus.pickup_collected.emit(slot, "relic", 1)
 	EventBus.notify(Loc.t("relic.taken", {"name": player_name(slot)}), "✦")
+
+
+func _on_player_hit(attacker: int, victim: int, strength: float) -> void:
+	# Shield breaks emit a zero-strength cue, not a landed shove.
+	if victim == _holder and attacker != victim and strength > 0.0 and ctx.is_alive(victim):
+		_drop(victim, attacker)
 
 
 func on_fighter_knocked_out(slot: int, by_slot: int) -> void:
@@ -223,6 +231,8 @@ func detail_rows() -> Array:
 
 
 func cleanup() -> void:
+	if EventBus.player_hit.is_connected(_on_player_hit):
+		EventBus.player_hit.disconnect(_on_player_hit)
 	_release_carrier()
 	_holder = -1
 	_clear_mark()
