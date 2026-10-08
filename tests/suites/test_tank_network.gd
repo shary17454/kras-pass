@@ -55,6 +55,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(peer._tank_waypoint(between, destination), waypoint, "ATV route does not steer back when nearest-node lookup still selects origin")
 	t.ok(peer._tank_waypoint(waypoint, destination).distance_to(waypoint) > 3.0, "ATV fixture advances after reaching each waypoint")
 	peer.free()
+	await _test_peer_corridor(t, host, scene)
 	t.not_null(game._engine, "audio-enabled test creates an actual engine player")
 	for kind in 7:
 		game._spawn_shell(0, kind, Vector3(100, 4, 100), Vector3.FORWARD)
@@ -280,6 +281,35 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 		scene.ctx.fighter(index).visible = fighter_visibility[index]
 	me.global_position = origin
 	scene.camera.global_transform = camera_transform
+
+
+func _test_peer_corridor(t: TestHarness, host: Node, scene: Node) -> void:
+	var peer: Node = load("res://tests/network_peer.gd").new()
+	peer.game = scene
+	var origin := Vector3(100, 1, 100)
+	var target := Vector3(100, 1, 110)
+	t.ok(peer._tank_clear_path(origin, target), "empty vehicle-width corridor permits direct pursuit")
+	peer.tank_route = PackedVector3Array([Vector3(0, 0, 6)])
+	t.equal(peer._tank_waypoint(origin, target), target, "clear combat corridor bypasses the road detour")
+	t.equal(peer.tank_route.size(), 0, "direct pursuit discards a stale road route")
+	var barrier := StaticBody3D.new()
+	barrier.collision_layer = 1
+	var collision := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3.ONE * 0.4
+	collision.shape = box
+	barrier.add_child(collision)
+	host.add_child(barrier)
+	barrier.global_position = Vector3(101, 2, 105)
+	await host.get_tree().physics_frame
+	await host.get_tree().process_frame
+	t.ok(not peer._tank_clear_path(origin, target), "side barrier blocks an ATV corridor even when the center ray is clear")
+	barrier.global_position = Vector3(100, 2, 105)
+	await host.get_tree().physics_frame
+	await host.get_tree().process_frame
+	t.ok(not peer._tank_clear_path(origin, target), "center barrier also retains road navigation")
+	barrier.free()
+	peer.free()
 
 
 func _test_routing_clock(t: TestHarness, scene: Node) -> void:

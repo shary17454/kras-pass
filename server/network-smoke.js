@@ -16,22 +16,26 @@ import {kartProcessDeadline} from './race-smoke-budget.js';
 import {labProcessDeadline} from './lab-smoke-budget.js';
 import {crateProcessDeadline} from './crate-smoke-budget.js';
 import {restoreFawdaFinal, assertFawdaNetworkEvidence, FAWDA_FINAL_SEED} from './fawda-final-checkpoint.js';
+import {restoreTankFinal, TANK_FINAL_SEED} from './tank-final-checkpoint.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
 const server = createServer();
 const seedText = process.argv.find(arg => arg.startsWith('--seed='))?.slice(7);
 const fawdaFinalCheckpoint = process.argv.includes('--fawda-final-checkpoint');
+const tankFinalCheckpoint = process.argv.includes('--tank-final-checkpoint');
 assert.ok(seedText === undefined || (/^[0-9]+$/.test(seedText)
   && Number.isSafeInteger(Number(seedText)) && Number(seedText) >= 1 && Number(seedText) <= 2147483646));
 const service = attachMultiplayer(server, {enabled: true,
   rooms: fawdaFinalCheckpoint ? new Rooms({seed: () => FAWDA_FINAL_SEED})
+    : tankFinalCheckpoint ? new Rooms({seed: () => TANK_FINAL_SEED})
     : seedText === undefined ? new Rooms() : new Rooms({seed: () => Number(seedText)})});
-if (fawdaFinalCheckpoint) {
+if (fawdaFinalCheckpoint || tankFinalCheckpoint) {
   const beginRound = service.rooms.beginRound.bind(service.rooms);
   service.rooms.beginRound = room => {
     if (room.epoch === 0) {
-      console.log(JSON.stringify({event: 'restored_fawda_final', standings: restoreFawdaFinal(room)}));
+      console.log(JSON.stringify({event: tankFinalCheckpoint ? 'restored_tank_final' : 'restored_fawda_final',
+        standings: tankFinalCheckpoint ? restoreTankFinal(room) : restoreFawdaFinal(room)}));
     }
     beginRound(room);
   };
@@ -96,6 +100,8 @@ assert.ok(!dreadTiebreak || (tournament && game === 'boss_dreadnought'));
 assert.ok(!sovereignTiebreak || (tournament && game === 'boss_sovereign'));
 const selectedHumans = process.argv.find(arg => arg.startsWith('--humans='))?.slice(9);
 assert.ok(!fawdaFinalCheckpoint || (tournament && game === 'fawda' && selectedHumans === '2' && seedText === undefined));
+assert.ok(!tankFinalCheckpoint || (tournament && game === 'tank_arena' && selectedHumans === '2'
+  && seedText === undefined && !fawdaFinalCheckpoint && !mixedPlaylist && rotation === undefined));
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
 assert.ok(!raceTiebreak || selectedHumans === undefined || selectedHumans === '4');
@@ -123,6 +129,7 @@ try {
         ...(mixedPlaylist ? ['--mixed-playlist'] : []),
         ...(duoTiebreak ? ['--duo-tiebreak'] : []),
         ...(fawdaFinalCheckpoint ? ['--fawda-final-checkpoint'] : []),
+        ...(tankFinalCheckpoint ? ['--tank-final-checkpoint'] : []),
         ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : []),
         ...(forgeTiebreak ? ['--forge-tiebreak'] : []), ...(dreadTiebreak ? ['--dread-tiebreak'] : []),
         ...(sovereignTiebreak ? ['--sovereign-tiebreak'] : [])],
@@ -166,7 +173,7 @@ try {
     assert.equal(results[0].reconnected, true, 'host result must survive transport loss');
     if (tournament) {
       for (const result of results) {
-        assert.ok(result.matches >= (fawdaFinalCheckpoint ? 1 : 3));
+        assert.ok(result.matches >= (fawdaFinalCheckpoint || tankFinalCheckpoint ? 1 : 3));
         assert.equal(result.tournament.complete, true);
         assert.deepEqual(result.tournament, results[0].tournament);
         if (rotation) {
@@ -174,6 +181,15 @@ try {
           assert.deepEqual(result.arena_history, results[0].arena_history);
           assert.equal(result.arena_history.length, result.matches);
         }
+      }
+    }
+    if (tankFinalCheckpoint) {
+      for (const result of results) {
+        assert.deepEqual(result.tournament.points, [10, 7, 10, 7]);
+        assert.ok(result.tournament.champions.length > 0);
+        assert.ok(result.tournament.champions.every(slot => [0, 2].includes(slot)));
+        assert.equal(result.round_history[0].epoch, 4);
+        assert.equal(result.round_history[0].arena, 'tank_oasis');
       }
     }
     if (mixedPlaylist) {

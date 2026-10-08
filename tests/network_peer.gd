@@ -63,6 +63,7 @@ var fawda_arenas_seen := {}
 var tank_arenas_seen := {}
 var tank_route := PackedVector3Array()
 var tank_route_target := Vector3.INF
+var tank_final_checkpoint := false
 var observed_duo_score := false
 var observed_duo_life_loss := false
 var observed_duo_damage := false
@@ -250,6 +251,7 @@ func _ready() -> void:
 		if arg == "--mixed-playlist": mixed_playlist = true
 		if arg.begins_with("--rotation="): tournament_rotation = arg.trim_prefix("--rotation=")
 		if arg == "--fawda-final-checkpoint": fawda_final_checkpoint = true
+		if arg == "--tank-final-checkpoint": tank_final_checkpoint = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg == "--siege-tiebreak": siege_tiebreak = true
@@ -1042,12 +1044,33 @@ func _observe_fawda_pickup(world: Dictionary) -> void:
 
 
 func _tank_waypoint(origin: Vector3, target: Vector3) -> Vector3:
+	if _tank_clear_path(origin, target):
+		tank_route.clear()
+		tank_route_target = Vector3.INF
+		return target
 	if tank_route.is_empty() or target.distance_to(tank_route_target) > 6.0:
 		tank_route = game.controller.world.route(origin, target)
 		tank_route_target = target
 	while not tank_route.is_empty() and origin.distance_to(tank_route[0]) < 3.0:
 		tank_route.remove_at(0)
 	return target if tank_route.is_empty() else tank_route[0]
+
+
+func _tank_clear_path(origin: Vector3, target: Vector3) -> bool:
+	var direction := target - origin
+	direction.y = 0.0
+	if direction.length_squared() < 0.01:
+		return true
+	var side := Vector3(-direction.z, 0.0, direction.x).normalized()
+	var space: PhysicsDirectSpaceState3D = game.controller.get_world_3d().direct_space_state
+	# A center ray alone can fit beside a building where the ATV cannot.
+	for offset in [-1.0, 0.0, 1.0]:
+		var lift: Vector3 = Vector3.UP + side * offset
+		var query := PhysicsRayQueryParameters3D.create(origin + lift, target + lift, 1)
+		query.hit_from_inside = true
+		if not space.intersect_ray(query).is_empty():
+			return false
+	return true
 
 
 func _collection_movement(slot: int) -> Vector2:
@@ -1721,7 +1744,7 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "turret_duel" and (not observed_turret_shot or not observed_turret_damage or not observed_turret_score):
 		_fail("turret shot/damage/score evidence missing: %s %s %s" % [observed_turret_shot, observed_turret_damage, observed_turret_score])
 		return
-	if requested_game_id == "tank_arena" and tournament_mode and tank_arenas_seen.size() != 3:
+	if requested_game_id == "tank_arena" and tournament_mode and not tank_final_checkpoint and tank_arenas_seen.size() != 3:
 		_fail("ATV tournament did not visit all three authored arenas")
 		return
 	if requested_game_id == "fawda" and tournament_mode and not fawda_final_checkpoint and fawda_arenas_seen.size() != 2:
