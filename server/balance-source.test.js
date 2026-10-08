@@ -62,6 +62,8 @@ test('missing required roots and symlinks fail closed', t => {
   fs.unlinkSync(path.join(root, 'src', 'linked.gd'));
   fs.rmdirSync(path.join(root, 'data'));
   assert.throws(() => balanceSourceFingerprint(root), /ENOENT/);
+  fs.symlinkSync(path.join(root, 'src'), path.join(root, 'data'));
+  assert.throws(() => balanceSourceFingerprint(root), /Invalid source directory/);
 });
 
 test('campaign summary pins evidence to its actual checked-out source', () => {

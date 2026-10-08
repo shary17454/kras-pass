@@ -16,6 +16,9 @@ export function balanceSourceFingerprint(root) {
     entries.set(`res://${relative.split(path.sep).join('/')}`, sha256(fs.readFileSync(filename)));
   }
   function walk(relative) {
+    if (!fs.lstatSync(path.join(root, relative)).isDirectory()) {
+      throw new Error(`Invalid source directory: ${relative}`);
+    }
     for (const entry of fs.readdirSync(path.join(root, relative), { withFileTypes: true })) {
       const child = path.join(relative, entry.name);
       if (entry.isSymbolicLink()) throw new Error(`Source symlink is not qualified: ${child}`);
