@@ -3,6 +3,12 @@ extends RefCounted
 func run(t: TestHarness, _host: Node) -> void:
 	t.suite("rendered performance sampling budget")
 	var probe: Node = load("res://tests/perf.gd").new()
+	probe._configure_games(PackedStringArray(["--all"]))
+	t.equal(probe._games.size(), Registry.all_minigames().size(), "all-game rendered sweep includes the complete catalogue")
+	for definition in Registry.all_minigames():
+		t.ok(definition.id in probe._games, "rendered sweep includes " + definition.id)
+	probe._configure_games(PackedStringArray(["--all", "--games=boss_forge,ring_rumble"]))
+	t.equal(probe._games, ["boss_forge", "ring_rumble"], "explicit probe selection overrides the all-game sweep")
 	probe._samples.resize(400)
 	probe._live_seconds = 2.0
 	t.ok(not probe._sample_budget_met(), "fast rendering cannot substitute for simulation time")

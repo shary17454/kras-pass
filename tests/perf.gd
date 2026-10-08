@@ -49,17 +49,20 @@ func _ready() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
 	var user_args := OS.get_cmdline_user_args()
+	_configure_games(user_args)
+	_nodes_start = get_tree().get_node_count()
+	_start()
+
+func _configure_games(user_args: PackedStringArray) -> void:
 	if "--all" in user_args:
 		_games.clear()
-		for def in Registry.minigames():
+		for def in Registry.all_minigames():
 			_games.append(def.id)
 	for arg in user_args:
 		# `--games=a,b` isolates specific games, which is how you tell a slow
 		# game apart from a game that only looks slow because it ran last.
 		if arg.begins_with("--games="):
 			_games = Array(arg.split("=")[1].split(","))
-	_nodes_start = get_tree().get_node_count()
-	_start()
 
 func _start() -> void:
 	DevTools.operations.reset()
