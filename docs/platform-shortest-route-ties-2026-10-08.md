@@ -40,12 +40,28 @@ identical baseline seeds, characters, seat pairing, and isolated saves.
 | Candidate held-out | 1500000 | 24 / 16 / 2 | 6,2,10,6 | 0.56250 | None |
 | Parent expanded | 1200000 | 96 / 48 / 2 | 27,23,29,17 | 0.57708 | None |
 | Candidate expanded | 1200000 | 96 / 48 / 2 | 37,15,19,25 | 0.56875 | Spawn advantage |
+| Parent expanded held-out | 1500000 | 96 / 48 / 2 | 29,23,22,22 | 0.52917 | None |
+| Candidate expanded held-out | 1500000 | 96 / 48 / 2 | 21,21,23,31 | 0.55833 | None |
 
 The candidate's larger sample contradicts an unconditional balance-success
 claim. The parent's larger sample also contradicts treating its small-sample
 warning as proof of a structural spawn advantage. Do not hide either result,
 change thresholds, or claim this route defect caused the original warning.
-Further matched expanded held-out validation and investigation are needed.
+The completed expanded held-out comparison does not reproduce the same
+favored seat: candidate seat four wins most often, and neither source is
+flagged. Across the two expanded candidate reports the seat totals are
+58,36,42,56 (192 baseline rounds); parent totals are 56,46,51,39. These totals
+are descriptive only. They do not overwrite the warning in the first report
+or certify overall balance. All-game current-source qualification, remaining
+product/device gates, and investigation of warning repeatability remain open.
+
+Both added reports have all 96 baseline and 48 paired difficulty matches
+complete, plus both stress matches, identical pre/post runtime fingerprints,
+matched baseline seeds and characters, and passing runtime log guards.
+No source, thresholds, spawn coordinates, difficulty, or win condition was
+changed for the expanded held-out run. The candidate's elapsed runtime was
+longer than the parent; elapsed time is retained, not treated as device FPS
+evidence or an isolated performance comparison.
 
 Parent runtime fingerprint:
 `373ff382576009d42c54395613580fdf7acb0b017fa41c2afeead79e9ac9dd7e`.
@@ -89,3 +105,15 @@ exit zero. Completion is recorded separately in the retained log.
 Previous native-build evidence uses the parent runtime and cannot qualify
 this changed runtime. No current signed archive, upload, processing, review
 submission, main merge, or Railway promotion occurred.
+
+## New All-Game Campaign
+
+Dispatched `balance-campaign.yml` on the existing remote candidate commit
+`50539cbe5ab83f1482700800ccc90bcf68d97254`, seed offset `1800000`.
+Run: https://github.com/shary17454/kras-pass/actions/runs/37721855569
+Verified queued with that exact head SHA. It is not a passing campaign yet.
+Its expected runtime fingerprint is the candidate value above. Earlier run
+37713199729 tests parent fingerprint `373ff...` and is retained, not cancelled
+or relabeled as candidate evidence. PR 215's existing quality checks also
+remain live. These documentation changes are retained locally without pushing
+a synchronization that would cancel those checks; no runtime input changed.
