@@ -161,6 +161,14 @@ jobs:
             exit 1
           fi
           KRAS_ARMED_WORLD_FIXTURE="${captures[0]}" KRAS_SIEGE_WORLD_FIXTURE="${siege_captures[0]}" KRAS_FORGE_WORLD_FIXTURE="${forge_captures[0]}" KRAS_DREADNOUGHT_WORLD_FIXTURE="${dreadnought_captures[0]}" KRAS_SOVEREIGN_WORLD_FIXTURE="${sovereign_captures[0]}" KRAS_COLOSSUS_WORLD_FIXTURE="${colossus_captures[0]}" npm test 2>&1 | tee "$RUNNER_TEMP/kras-server-capture-tests.stdout"
+      - name: Real four-peer mixed tournament and reconnect
+        if: matrix.scenario == 'core'
+        working-directory: server
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          node network-smoke.js --tournament --mixed-playlist --rotation=random_no_repeat --humans=4 --seed=17 2>&1 | tee "$RUNNER_TEMP/kras-network-mixed-playlist.stdout"
       - name: Record QA source
         if: always()
         shell: bash

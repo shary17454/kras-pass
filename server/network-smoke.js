@@ -74,6 +74,8 @@ service.rooms.close = (room, reason) => {
 };
 const children = [];
 const tournament = process.argv.includes('--tournament');
+const mixedPlaylist = process.argv.includes('--mixed-playlist');
+assert.ok(!mixedPlaylist || tournament);
 const rotation = process.argv.find(arg => arg.startsWith('--rotation='))?.slice(11);
 assert.ok(rotation === undefined || (tournament && ['manual', 'random', 'random_no_repeat'].includes(rotation)));
 const duoTiebreak = process.argv.includes('--duo-tiebreak');
@@ -117,6 +119,7 @@ try {
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
         ...(tournament ? ['--tournament'] : []), ...(rotation ? [`--rotation=${rotation}`] : []),
+        ...(mixedPlaylist ? ['--mixed-playlist'] : []),
         ...(duoTiebreak ? ['--duo-tiebreak'] : []),
         ...(fawdaFinalCheckpoint ? ['--fawda-final-checkpoint'] : []),
         ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : []),
@@ -168,6 +171,19 @@ try {
           assert.equal(result.tournament_rotation, rotation);
           assert.deepEqual(result.arena_history, results[0].arena_history);
           assert.equal(result.arena_history.length, result.matches);
+        }
+      }
+    }
+    if (mixedPlaylist) {
+      const expected = new Set(['ring_rumble', 'goal_guard', 'hurdle_dash']);
+      for (const result of results) {
+        assert.deepEqual(result.round_history, results[0].round_history);
+        assert.equal(result.round_history.length, result.matches);
+        assert.equal(new Set(result.round_history.slice(0, 3).map(round => round.game)).size, 3);
+        assert.ok(result.round_history.slice(0, 3).every(round => expected.has(round.game)));
+        for (const round of result.round_history) {
+          assert.equal(round.scores.length, 4);
+          assert.ok(round.scores.every(Number.isFinite));
         }
       }
     }

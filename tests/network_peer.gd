@@ -22,6 +22,9 @@ var moved := false
 var tournament_mode := false
 var tournament_rotation := "random_no_repeat"
 var arena_history: Array[String] = []
+var mixed_playlist := false
+var round_history: Array[Dictionary] = []
+var round_snapshot_start := 0
 var fawda_final_checkpoint := false
 var game_id := "ring_rumble"
 var requested_game_id := ""
@@ -244,6 +247,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
+		if arg == "--mixed-playlist": mixed_playlist = true
 		if arg.begins_with("--rotation="): tournament_rotation = arg.trim_prefix("--rotation=")
 		if arg == "--fawda-final-checkpoint": fawda_final_checkpoint = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
@@ -312,6 +316,12 @@ func _room() -> void:
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
+			if mixed_playlist:
+				cfg["tournament"]["entries"] = [
+					{"game": "ring_rumble", "arena": "vortex_ring"},
+					{"game": "ring_rumble", "arena": "storm_ring"},
+					{"game": "goal_guard", "arena": "quad_court"},
+					{"game": "hurdle_dash", "arena": "hurdle_track"}]
 			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak or dread_tiebreak or sovereign_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
@@ -351,6 +361,7 @@ func _start(cfg: MatchConfig) -> void:
 		_fail("server rotation differs from requested policy")
 		return
 	arena_history.append(cfg.arena_id)
+	round_snapshot_start = snapshots
 	draw_tap_sequence = -1
 	observed_remote_input_slots.clear()
 	if game_id == "duo_clash":
@@ -1146,6 +1157,11 @@ func _colossus_movement(from: Vector3, target: Vector3) -> Vector2:
 
 
 func _finished(result: MatchResult) -> void:
+	round_history.append({"epoch": Net.epoch, "game": game.config.minigame_id,
+		"arena": game.config.arena_id, "scores": Array(result.scores)})
+	if mixed_playlist and not host and snapshots - round_snapshot_start < 5:
+		_fail("mixed round lacks its own snapshots")
+		return
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
 	print("NETWORK_ROUND=" + JSON.stringify({"epoch": Net.epoch, "game": game.config.minigame_id,
@@ -1810,6 +1826,7 @@ func _finished(result: MatchResult) -> void:
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
 		"tournament_rotation": tournament_rotation, "arena_history": arena_history,
+		"round_history": round_history,
 		"fawda_worlds": fawda_worlds,
 		"fawda_event_coverage": fawda_event_coverage,
 		"collection_scored": observed_collection_score, "carrying_seen": observed_carrying}))

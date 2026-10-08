@@ -72,8 +72,10 @@ remain explicit in the qualification status.
 
 - A mixed-game tournament with four actual Godot peers and gameplay-derived
   results still needs end-to-end qualification.
-- Real four-peer Godot mixed-game qualification must also exercise the new
-  no-repeat policy through complete gameplay-driven rounds and reconnect.
+- The real four-peer mixed-game scenario was subsequently qualified for three
+  games on loopback, including no-repeat and reconnect; see
+  `online-mixed-real-peers-2026-10-08.md`. Production networking and wider
+  mixed-playlist coverage remain separate gates.
 - The first full run encountered a temporary settings write error during low
   disk space and was superseded by later handler changes. It is not final
   source qualification; its identified process was terminated and exit 143
