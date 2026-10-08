@@ -216,6 +216,9 @@ func _default_button_centre(index: int) -> Vector2:
 			x += (index % 2) * r * 2.2 * (1.0 if _move_on_right() else -1.0)
 			return Vector2(x, _bottom_edge() - r - int(index / 2) * r * 2.2)
 		return Vector2(x, _bottom_edge() - r - index * r * 2.2)
+	if ControlProfile.shows_steering(profile):
+		var throttle: Rect2 = _steer_rects()[2]
+		return Vector2(throttle.get_center().x, throttle.position.y - r - 18.0 - index * r * 2.2)
 	if profile == ControlProfile.Kind.ATV:
 		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
 		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
@@ -252,8 +255,8 @@ func _default_button_centre(index: int) -> Vector2:
 
 
 func _steer_rects() -> Array:
-	var w := size.x * 0.22
-	var h := size.y * 0.34
+	var w := minf(size.x * 0.22, BUTTON_RADIUS * 2.0 * _scale)
+	var h := minf(w, size.y * 0.20)
 	var y := _bottom_edge() - h
 	var left := Rect2(_left_edge(), y, w, h)
 	var right := Rect2(_left_edge() + w + 18.0, y, w, h)

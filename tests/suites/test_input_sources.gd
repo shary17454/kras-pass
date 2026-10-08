@@ -18,6 +18,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _sources_are_indistinguishable(t, host)
 	_touch_profiles(t)
 	_touch_layout_rules(t)
+	_steering_layout(t)
 	_tank_controls(t)
 	_haptics(t)
 	_haptic_events(t)
@@ -134,6 +135,41 @@ func _touch_profiles(t: TestHarness) -> void:
 		if def.control_hints.has("drive"):
 			t.ok(def.control_profile in [ControlProfile.Kind.STEERING, ControlProfile.Kind.MOVEMENT_ACTION, ControlProfile.Kind.ATV],
 				"%s exposes turn and throttle axes" % def.id)
+
+
+func _steering_layout(t: TestHarness) -> void:
+	t.test("steering pads leave a separate boost target in both orientations")
+	var touch := TouchSource.new()
+	touch.profile = ControlProfile.Kind.STEERING
+	touch.buttons = ["dash"]
+	touch._haptics = false
+	for view in [Vector2(540, 960), Vector2(1280, 720), Vector2(270, 201), Vector2(320, 216)]:
+		for handed in [false, true]:
+			touch.size = view
+			touch.touch_count = 4 if view.x <= 320 else 1
+			touch._scale = minf(view.x / 700.0, view.y / 550.0) if touch.touch_count > 1 else 1.0
+			touch._left_handed = handed
+			var pads := touch._steer_rects()
+			var boost := touch._button_centre(0)
+			var radius := TouchSource.BUTTON_RADIUS * touch._scale
+			var boost_bounds := Rect2(boost - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+			for index in pads.size():
+				var pad: Rect2 = pads[index]
+				t.ok(not pad.intersects(boost_bounds), "boost never steals steering or throttle touches")
+				t.ok(pad.size.y <= view.y * 0.22, "driving controls do not consume a third of the screen")
+				t.ok(Rect2(Vector2.ZERO, view).encloses(pad), "pads stay inside the viewport")
+				touch._handle_press(index, pad.get_center(), true)
+				t.equal(touch._owners.get(index, {}).get("kind", ""), "steer", "each pad owns its own touch")
+				t.equal(touch._owners.get(index, {}).get("id", -1), index, "pad touch routes to the correct driving action")
+			touch._handle_press(3, boost, true)
+			t.equal(touch._throttle, 1.0, "throttle remains held alongside boost")
+			t.ok((touch._bits & InputFrame.Btn.DASH) != 0, "boost remains available during steering")
+			touch._owners.clear()
+			touch._pressed_buttons.clear()
+			touch._bits = 0
+			touch._steer = 0.0
+			touch._throttle = 0.0
+	touch.free()
 
 
 func _tank_controls(t: TestHarness) -> void:
