@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import plistlib
 from pathlib import Path
 import subprocess
 import tempfile
@@ -186,6 +187,21 @@ class ExportEvidenceTests(unittest.TestCase):
         result, destination = self.fetch("0" * 64)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(destination.read_bytes(), b"stale cache")
+
+
+class DistributionExportPolicyTests(unittest.TestCase):
+    def test_export_preserves_frozen_build_and_existing_manual_identity(self):
+        filename = Path(__file__).parents[1] / "tools/ExportOptions.app-store-connect.plist"
+        with filename.open("rb") as source:
+            options = plistlib.load(source)
+        self.assertIs(options.get("manageAppVersionAndBuildNumber"), False)
+        self.assertEqual(options.get("signingStyle"), "manual")
+        self.assertEqual(options.get("signingCertificate"),
+                         "Apple Distribution: Shary ALADHYANI (4HM66AD594)")
+        self.assertEqual(options.get("teamID"), "4HM66AD594")
+        self.assertEqual(options.get("method"), "app-store-connect")
+        self.assertEqual(options.get("provisioningProfiles"), {
+            "com.shary.kraspass": "Kras Pass App Store Xcode 27 2026-09-20"})
 
 
 if __name__ == "__main__":
