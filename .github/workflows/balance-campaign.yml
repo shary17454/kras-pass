@@ -43,8 +43,9 @@ jobs:
         run: |
           set -euo pipefail
           gh run download "$GITHUB_RUN_ID" --pattern 'natural-balance-*' --dir "$RUNNER_TEMP/balance-evidence"
+          source_fingerprint="$(node tools/balance-source.mjs .)"
           node tools/balance-report.mjs "$RUNNER_TEMP/balance-evidence" "$GITHUB_SHA" "$GITHUB_RUN_ID" \
-            --paired --seed-offset="$SEED_OFFSET" \
+            --paired --seed-offset="$SEED_OFFSET" --source-fingerprint="$source_fingerprint" \
             | tee "$RUNNER_TEMP/balance-summary.json"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
