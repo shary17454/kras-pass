@@ -56,6 +56,9 @@ var _fighters: Array[Fighter] = []
 var _countdown_value := 3
 var _paused := false
 var _pause_menu: CanvasLayer
+var _native_pause = preload("res://src/ui/native_pause_presenter.gd").new()
+var _native_pause_requested := false
+var _pause_message := ""
 var _on_finished: Callable = Callable()
 var _next_match_config: MatchConfig
 var _tuning := {}
@@ -378,6 +381,8 @@ func teardown() -> void:
 	if _torn_down:
 		return
 	_torn_down = true
+	_close_pause_menu()
+	_native_pause.dispose()
 	# queue_free is deferred; retire simulation before shared pools disappear.
 	process_mode = Node.PROCESS_MODE_DISABLED
 	if is_instance_valid(vehicle_views):
@@ -1154,6 +1159,21 @@ func _abort() -> void:
 
 # --- pause -----------------------------------------------------------------
 
+func _input(event: InputEvent) -> void:
+	if _native_pause.active and (event is InputEventJoypadButton or event is InputEventJoypadMotion):
+		if event.is_action_pressed("ui_up"):
+			_native_pause.navigate(-1)
+		elif event.is_action_pressed("ui_down"):
+			_native_pause.navigate(1)
+		elif event.is_action_pressed("ui_accept"):
+			_native_pause.navigate(0, true)
+		elif event.is_action_pressed("ui_cancel"):
+			_toggle_pause()
+		else:
+			return
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if ctx == null or phase == P.DONE:
 		return
@@ -1167,8 +1187,7 @@ func _toggle_pause() -> void:
 		if _pause_menu == null:
 			_show_pause_menu(Loc.t("online.no_pause"))
 		else:
-			_pause_menu.queue_free()
-			_pause_menu = null
+			_close_pause_menu()
 			for source in touch_sources:
 				source.set_process_input(true)
 		return
@@ -1180,9 +1199,70 @@ func _toggle_pause() -> void:
 		_show_pause_menu()
 		AudioManager.play_ui("ui_back")
 	else:
-		if _pause_menu != null and is_instance_valid(_pause_menu):
-			_pause_menu.queue_free()
-			_pause_menu = null
+		_close_pause_menu()
+
+
+func _close_pause_menu() -> void:
+	_native_pause_requested = false
+	_native_pause.dismiss()
+	if is_instance_valid(_pause_menu):
+		_pause_menu.queue_free()
+	_pause_menu = null
+
+
+func _present_native_pause_menu() -> bool:
+	if not _native_pause.action.is_connected(_on_native_pause_action):
+		_native_pause.action.connect(_on_native_pause_action)
+		_native_pause.unavailable.connect(_on_native_pause_unavailable)
+	return _native_pause.show({
+		"title": Loc.t("pause.title"), "message": _pause_message,
+		"resume": Loc.t("pause.resume"), "restart": Loc.t("pause.restart"),
+		"settings": Loc.t("pause.settings"), "quit": Loc.t("pause.quit_match"),
+		"confirm": Loc.t("party.restart_confirm"), "cancel": Loc.t("common.cancel"),
+	}, Loc.is_rtl(), not _online())
+
+
+func _on_native_pause_unavailable() -> void:
+	_native_pause_requested = false
+	if not _torn_down and is_instance_valid(_pause_menu) and _pause_menu.get_child_count() == 0:
+		_build_godot_pause_menu(_pause_menu, _pause_message)
+
+
+func _on_native_pause_action(command: String) -> void:
+	if _torn_down or not is_instance_valid(_pause_menu):
+		return
+	match command:
+		"resume": _toggle_pause()
+		"restart":
+			if _online():
+				_present_native_pause_menu()
+				return
+			_toggle_pause()
+			debug_restart_round()
+		"settings": _open_pause_settings()
+		"quit": _quit_paused_match()
+
+
+func _open_pause_settings() -> void:
+	var sheet := CanvasLayer.new()
+	sheet.layer = 50
+	add_child(sheet)
+	var screen := load("res://src/ui/screens/settings_screen.gd").new() as Screen
+	sheet.add_child(screen)
+	screen.setup({"close_callback": func():
+		sheet.queue_free()
+		if not _torn_down and _native_pause_requested and is_instance_valid(_pause_menu):
+			if not _present_native_pause_menu():
+				_on_native_pause_unavailable(), "in_match": true})
+
+
+func _quit_paused_match() -> void:
+	_close_pause_menu()
+	_paused = false
+	_aborted = true
+	if _online():
+		Net.leave()
+	SceneRouter.go_to("main_menu", {}, false)
 
 
 func _show_pause_menu(message: String = "") -> void:
@@ -1193,6 +1273,13 @@ func _show_pause_menu(message: String = "") -> void:
 	layer.layer = 40
 	add_child(layer)
 	_pause_menu = layer
+	_pause_message = message
+	_native_pause_requested = _present_native_pause_menu()
+	if not _native_pause_requested:
+		_build_godot_pause_menu(layer, message)
+
+
+func _build_godot_pause_menu(layer: CanvasLayer, message: String) -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.72)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1228,21 +1315,10 @@ func _show_pause_menu(message: String = "") -> void:
 		dialog.popup_centered())
 	v.add_child(restart)
 	var settings := UIKit.button(Loc.t("pause.settings"))
-	settings.pressed.connect(func():
-		var sheet := CanvasLayer.new()
-		sheet.layer = 50
-		add_child(sheet)
-		var screen := load("res://src/ui/screens/settings_screen.gd").new() as Screen
-		sheet.add_child(screen)
-		screen.setup({"close_callback": func(): sheet.queue_free(), "in_match": true}))
+	settings.pressed.connect(_open_pause_settings)
 	v.add_child(settings)
 	var quit := UIKit.button(Loc.t("pause.quit_match"))
-	quit.pressed.connect(func():
-		_paused = false
-		_aborted = true
-		if _online():
-			Net.leave()
-		SceneRouter.go_to("main_menu", {}, false))
+	quit.pressed.connect(_quit_paused_match)
 	v.add_child(quit)
 	resume.grab_focus()
 	UIKit.animate_in(card)

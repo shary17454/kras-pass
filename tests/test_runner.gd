@@ -161,6 +161,7 @@ const SUITES := [
 	"res://tests/suites/test_collection_network.gd",
 	"res://tests/suites/test_zone_hold.gd",
 	"res://tests/suites/test_relic_hold.gd",
+	"res://tests/suites/test_native_pause_presenter.gd",
 	"res://tests/suites/test_tag_network.gd",
 	"res://tests/suites/test_paint_reset.gd",
 	"res://tests/suites/test_paint_network.gd",
