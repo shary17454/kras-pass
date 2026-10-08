@@ -112,7 +112,8 @@ func _browser() -> void:
 func _lobby() -> void:
 	_status.text = "%s: %s   %d ms" % [Loc.t("online.room_code"), Net.room_code, Net.ping_ms]
 	var selected_game := String(Net.lobby_config.get("game", "ring_rumble"))
-	var variant := UIKit.label(Loc.t("online.push_variant") if selected_game == "ring_rumble" \
+	var variant := UIKit.label(Loc.t("online.playlist") if Net.lobby_config.get("tournament") is Dictionary \
+		else Loc.t("online.push_variant") if selected_game == "ring_rumble" \
 		else Registry.minigame(selected_game).display_name(), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 	variant.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(variant)
@@ -165,6 +166,12 @@ func _lobby() -> void:
 		body.add_child(row)
 	if Net.is_host and Net.room_state == "lobby":
 		_host_settings()
+	elif Net.lobby_config.get("tournament") is Dictionary:
+		for entry in Net.lobby_config.tournament.get("entries", []):
+			var item := UIKit.label("%s / %s" % [Registry.minigame(entry.game).display_name(),
+				Registry.arena(entry.arena).display_name()], UIKit.SIZE_SMALL)
+			item.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			body.add_child(item)
 	if Net.room_state == "results":
 		if not Net.tournament.is_empty() and not bool(Net.tournament.complete):
 			var ready := bool(Net.peers.get(Net.local_peer_id, {}).get("ready", false))
@@ -201,12 +208,21 @@ func _host_settings() -> void:
 			cfg["tournament"]["entries"] = _arena_entries(cfg.game) if tournament.rotation != "manual" \
 				else [{"game": cfg.game, "arena": cfg.arena}]
 		Net.set_lobby_config(cfg))
-	body.add_child(games)
+	if tournament.is_empty():
+		body.add_child(games)
+	else:
+		games.queue_free()
 	var mode := UIKit.option([Loc.t("online.single"), Loc.t("tournament.points"), Loc.t("tournament.cups")],
 		0 if tournament.is_empty() else (1 if tournament.mode == "points" else 2))
+	mode.name = "OnlineTournamentMode"
 	mode.item_selected.connect(func(index):
-		cfg["tournament"] = null if index == 0 else {"mode": "points" if index == 1 else "cups", "target": 3,
-			"rotation": "random_no_repeat", "points": [5, 3, 2, 1], "entries": _arena_entries(selected_game)}
+		if index == 0:
+			cfg["tournament"] = null
+		elif cfg.get("tournament") is Dictionary:
+			cfg.tournament.mode = "points" if index == 1 else "cups"
+		else:
+			cfg["tournament"] = {"mode": "points" if index == 1 else "cups", "target": 3,
+				"rotation": "random_no_repeat", "points": [5, 3, 2, 1], "entries": _arena_entries(selected_game)}
 		Net.set_lobby_config(cfg))
 	body.add_child(mode)
 	var row := UIKit.hbox(12)
@@ -218,7 +234,7 @@ func _host_settings() -> void:
 	rounds.max_value = 10
 	rounds.value = int(cfg.get("rounds", 3)) if tournament.is_empty() else int(tournament.target)
 	rounds.value_changed.connect(func(value):
-		if tournament.is_empty(): cfg["rounds"] = int(value)
+		if not cfg.get("tournament") is Dictionary: cfg["rounds"] = int(value)
 		else: cfg["tournament"]["target"] = int(value)
 		Net.set_lobby_config(cfg))
 	row.add_child(rounds)
@@ -226,9 +242,10 @@ func _host_settings() -> void:
 	bots.toggled.connect(func(value):
 		cfg["bots"] = value
 		Net.set_lobby_config(cfg))
-	row.add_child(bots)
 	body.add_child(row)
-	if selected_game in ["kart_sprint", "sabaq_sawarikh"]:
+	body.add_child(bots)
+	if selected_game in ["kart_sprint", "sabaq_sawarikh"] or tournament.get("entries", []).any( \
+			func(entry): return entry.game in ["kart_sprint", "sabaq_sawarikh"]):
 		var laps := UIKit.option(["3", "4", "5", "6", "7", "8", "9", "10"], int(cfg.get("race_laps", 3)) - 3)
 		laps.name = "OnlineLapSelect"
 		laps.item_selected.connect(func(index):
@@ -254,18 +271,134 @@ func _host_settings() -> void:
 		if not tournament.is_empty() and tournament.rotation == "manual":
 			cfg["tournament"]["entries"] = [{"game": selected_game, "arena": cfg.arena}]
 		Net.set_lobby_config(cfg))
-	body.add_child(arenas)
+	if tournament.is_empty():
+		body.add_child(arenas)
+	else:
+		arenas.queue_free()
 	if not tournament.is_empty():
 		var rotations := ["manual", "random", "random_no_repeat"]
 		var rotate := UIKit.option([Loc.t("online.rotation.manual"), Loc.t("common.random"),
 			Loc.t("online.rotate_arenas")], rotations.find(tournament.rotation))
 		rotate.name = "OnlineRotationSelect"
 		rotate.item_selected.connect(func(index):
+			if not cfg.get("tournament") is Dictionary:
+				return
 			cfg["tournament"]["rotation"] = rotations[index]
-			cfg["tournament"]["entries"] = [{"game": selected_game, "arena": cfg.arena}] if index == 0 \
-				else _arena_entries(selected_game)
 			Net.set_lobby_config(cfg))
 		body.add_child(UIKit.row(Loc.t("online.rotation.label"), rotate))
+		_playlist_editor(cfg)
+
+
+func _playlist_editor(cfg: Dictionary) -> void:
+	var entries: Array = cfg.tournament.entries
+	body.add_child(UIKit.label(Loc.t("online.playlist"), UIKit.SIZE_SMALL))
+	for index in entries.size():
+		var entry: Dictionary = entries[index]
+		var portrait := get_viewport_rect().size.y > get_viewport_rect().size.x
+		var row: BoxContainer = UIKit.vbox(8) if portrait else UIKit.hbox(8)
+		var game := UIKit.option([], 0)
+		game.name = "OnlinePlaylistGame%d" % index
+		game.fit_to_longest_item = false
+		game.custom_minimum_size.x = 160
+		game.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		game.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		for id in Net.ONLINE_GAMES:
+			game.add_item(Registry.minigame(id).display_name())
+		game.select(Net.ONLINE_GAMES.find(entry.game))
+		game.item_selected.connect(func(choice):
+			if not cfg.get("tournament") is Dictionary or index >= cfg.tournament.entries.size():
+				return
+			var id: String = Net.ONLINE_GAMES[choice]
+			for arena in Net.ONLINE_ARENAS[id]:
+				var changed: Array = cfg.tournament.entries.duplicate(true)
+				changed[index] = {"game": id, "arena": arena}
+				if _replace_playlist(cfg, changed):
+					return
+			_schedule_refresh())
+		row.add_child(game)
+		var arena := UIKit.option([], 0)
+		arena.name = "OnlinePlaylistArena%d" % index
+		arena.fit_to_longest_item = false
+		arena.custom_minimum_size.x = 160
+		arena.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		arena.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var maps: Array = Net.ONLINE_ARENAS[entry.game]
+		for id in maps:
+			arena.add_item(Registry.arena(id).display_name())
+		arena.select(maps.find(entry.arena))
+		arena.item_selected.connect(func(choice):
+			if not cfg.get("tournament") is Dictionary or index >= cfg.tournament.entries.size():
+				return
+			var changed: Array = cfg.tournament.entries.duplicate(true)
+			changed[index].arena = maps[choice]
+			if not _replace_playlist(cfg, changed):
+				_schedule_refresh())
+		row.add_child(arena)
+		var up := UIKit.button("↑", UIKit.SIZE_SMALL)
+		up.name = "OnlinePlaylistUp%d" % index
+		up.tooltip_text = Loc.t("online.playlist.up")
+		up.disabled = index == 0
+		up.pressed.connect(func():
+			if not cfg.get("tournament") is Dictionary or index <= 0 or index >= cfg.tournament.entries.size():
+				return
+			var changed: Array = cfg.tournament.entries.duplicate(true)
+			var previous = changed[index - 1]
+			changed[index - 1] = changed[index]
+			changed[index] = previous
+			_replace_playlist(cfg, changed))
+		var actions := UIKit.hbox(8)
+		actions.add_child(UIKit.label(str(index + 1), UIKit.SIZE_SMALL))
+		actions.add_child(up)
+		var remove := UIKit.button("-", UIKit.SIZE_SMALL)
+		remove.name = "OnlinePlaylistRemove%d" % index
+		remove.tooltip_text = Loc.t("online.playlist.remove")
+		remove.disabled = entries.size() == 1
+		remove.pressed.connect(func():
+			if not cfg.get("tournament") is Dictionary or index >= cfg.tournament.entries.size():
+				return
+			var changed: Array = cfg.tournament.entries.duplicate(true)
+			changed.remove_at(index)
+			_replace_playlist(cfg, changed))
+		actions.add_child(remove)
+		row.add_child(actions)
+		body.add_child(row)
+	var add := UIKit.button(Loc.t("online.playlist.add"), UIKit.SIZE_SMALL)
+	add.name = "OnlinePlaylistAdd"
+	add.disabled = entries.size() >= 39
+	add.pressed.connect(func():
+		if not cfg.get("tournament") is Dictionary:
+			return
+		for id in Net.ONLINE_GAMES:
+			for arena in Net.ONLINE_ARENAS[id]:
+				var changed: Array = cfg.tournament.entries.duplicate(true)
+				changed.append({"game": id, "arena": arena})
+				if _replace_playlist(cfg, changed):
+					return)
+	body.add_child(add)
+
+
+func _replace_playlist(cfg: Dictionary, entries: Array) -> bool:
+	if not cfg.get("tournament") is Dictionary or entries.is_empty() or entries.size() > 39:
+		return false
+	var seen := {}
+	for entry in entries:
+		if not entry is Dictionary or not entry.get("game") in Net.ONLINE_GAMES \
+				or not entry.get("arena") in Net.ONLINE_ARENAS[entry.game]:
+			return false
+		var key := "%s:%s" % [entry.game, entry.arena]
+		if seen.has(key):
+			return false
+		seen[key] = true
+	var changed := cfg.duplicate(true)
+	changed.tournament.entries = entries.duplicate(true)
+	changed.game = entries[0].game
+	changed.arena = entries[0].arena
+	# Keep sequential local edits on the same draft until server refresh arrives.
+	cfg.tournament = changed.tournament
+	cfg.game = changed.game
+	cfg.arena = changed.arena
+	Net.set_lobby_config(changed)
+	return true
 
 
 func _arena_entries(game_id: String) -> Array:

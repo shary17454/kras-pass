@@ -1,0 +1,64 @@
+✔ mixed race and score rounds use their own ranking direction (2.355709ms)
+✔ race tiebreak ignores faster spectators and awards no extra points (0.144333ms)
+✔ duo teammates settle a tournament tie in an individual duel (0.160625ms)
+✔ catalogue ranking rejects unknown games and cannot be supplied by clients (1.163917ms)
+✔ race cup tournaments reward quickest finish and refuse unstarted results (0.149416ms)
+✔ points, cup awards and results are applied once per epoch (0.13175ms)
+✔ cup target, tied finalists and bounded shared championship (0.104041ms)
+✔ a tiebreak narrows contenders without awarding extra tournament points (0.086375ms)
+✔ seeded rotation exhausts each bag without repetition (0.171375ms)
+✖ no-repeat rotation exhausts games before reusing a game with several arenas (1.278042ms)
+✖ single-game no-repeat keeps arena rotation and avoids a repeat at cycle boundaries (0.258958ms)
+✔ independent random rotation is seeded and permits consecutive repeats (0.235875ms)
+✔ tournament view cannot mutate authoritative accounting (0.106792ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 11
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.697375
+
+✖ failing tests:
+
+test at tournament.test.js:109:1
+✖ no-repeat rotation exhausts games before reusing a game with several arenas (1.278042ms)
+  AssertionError [ERR_ASSERTION]: seed 0, cycle 0
+  
+  2 !== 3
+  
+      at TestContext.<anonymous> (file:///private/tmp/kras-crate-swing-arbitration/server/tournament.test.js:123:14)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 3,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tournament.test.js:135:1
+✖ single-game no-repeat keeps arena rotation and avoids a repeat at cycle boundaries (0.258958ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to:
+  
+  'vortex_ring'
+      at TestContext.<anonymous> (file:///private/tmp/kras-crate-swing-arbitration/server/tournament.test.js:139:51)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'vortex_ring',
+    expected: 'vortex_ring',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }

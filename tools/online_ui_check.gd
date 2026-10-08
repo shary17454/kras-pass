@@ -18,6 +18,9 @@ func _ready() -> void:
 	Net.lobby_config = {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 3, "bots": true, "difficulty": 1}
 	Net.lobby_config["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat",
 		"points": [5, 3, 2, 1], "entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
+	if "--mixed" in OS.get_cmdline_user_args():
+		Net.lobby_config.tournament.entries = [{"game": "ring_rumble", "arena": "vortex_ring"},
+			{"game": "goal_guard", "arena": "quad_court"}, {"game": "tank_arena", "arena": "tank_foundry"}]
 	if "--goal-guard" in OS.get_cmdline_user_args():
 		Net.lobby_config.game = "goal_guard"
 		Net.lobby_config.arena = "quad_court"
@@ -54,8 +57,8 @@ func _ready() -> void:
 		screen.setup({})
 		await get_tree().create_timer(0.8).timeout
 		await RenderingServer.frame_post_draw
-		var game_select := screen.find_child("OnlineGameSelect", true, false) as OptionButton
-		var arena_select := screen.find_child("OnlineArenaSelect", true, false) as OptionButton
+		var game_select := screen.find_child("OnlinePlaylistGame0", true, false) as OptionButton
+		var arena_select := screen.find_child("OnlinePlaylistArena0", true, false) as OptionButton
 		var rotation_select := screen.find_child("OnlineRotationSelect", true, false) as OptionButton
 		if game_select == null or arena_select == null or game_select.item_count != Net.ONLINE_GAMES.size() \
 				or rotation_select == null or rotation_select.item_count != 3 \
@@ -71,7 +74,7 @@ func _ready() -> void:
 			return
 		print("ONLINE_UI_SCREENSHOT=" + path)
 		var scroll := screen.body.get_parent() as ScrollContainer
-		scroll.scroll_vertical = int(screen.body.size.y)
+		scroll.scroll_vertical = int(rotation_select.global_position.y - screen.body.global_position.y)
 		for frame in 4:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
@@ -84,6 +87,29 @@ func _ready() -> void:
 			get_tree().quit(1)
 			return
 		print("ONLINE_UI_SCREENSHOT=" + path)
+		for index in Net.lobby_config.tournament.entries.size():
+			var item := screen.find_child("OnlinePlaylistGame%d" % index, true, false) as OptionButton
+			var map := screen.find_child("OnlinePlaylistArena%d" % index, true, false) as OptionButton
+			var entry: Dictionary = Net.lobby_config.tournament.entries[index]
+			if item == null or map == null or Net.ONLINE_GAMES[item.selected] != entry.game \
+					or Net.ONLINE_ARENAS[entry.game][map.selected] != entry.arena:
+				push_error("ONLINE_UI_FAIL=playlist selection mismatch")
+				get_tree().quit(1)
+				return
+			scroll.scroll_vertical = int(item.global_position.y - screen.body.global_position.y)
+			for frame in 4:
+				await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			if not screen.get_global_rect().encloses(item.get_global_rect()) \
+					or not screen.get_global_rect().encloses(map.get_global_rect()):
+				push_error("ONLINE_UI_FAIL=playlist controls outside screen")
+				get_tree().quit(1)
+				return
+			path = SaveSystem.storage_root.path_join("online-entry-%d-%dx%d.png" % [index, dimensions.x, dimensions.y])
+			if get_viewport().get_texture().get_image().save_png(path) != OK:
+				get_tree().quit(1)
+				return
+			print("ONLINE_UI_SCREENSHOT=" + path)
 		screen.queue_free()
 		await get_tree().process_frame
 		var cfg := MatchConfig.new()

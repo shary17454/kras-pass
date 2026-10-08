@@ -42,6 +42,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 
 func run(t: TestHarness, host: Node) -> void:
 	await _rotation_menu(t, host)
+	await _mixed_playlist_menu(t, host)
 	_protocol_policy(t)
 	await _protocol_terminal_state(t, host)
 	await _active_protocol_recovery(t, host)
@@ -189,10 +190,76 @@ func _rotation_menu(t: TestHarness, host: Node) -> void:
 				t.ok(not select.get_item_text(index).contains("online."), "rotation label resolves in both languages")
 				select.item_selected.emit(index)
 				t.equal(Net.lobby_config.tournament.rotation, ["manual", "random", "random_no_repeat"][index], "choice sends matching policy")
-				t.equal(Net.lobby_config.tournament.entries.size(), 1 if index == 0 else 2, "manual keeps chosen arena while random uses all arenas")
-				t.equal(Net.lobby_config.tournament.entries[0].arena, "storm_ring" if index == 0 else "vortex_ring", "arena identity is preserved")
+				t.equal(Net.lobby_config.tournament.entries.size(), 2, "changing rotation never discards selected entries")
+				t.equal(Net.lobby_config.tournament.entries[0].arena, "vortex_ring", "playlist order is preserved")
 			screen.queue_free()
 			await host.get_tree().process_frame
+	Net.lobby_config = config
+	Net.mode = mode
+	Loc.set_locale(locale)
+
+
+func _mixed_playlist_menu(t: TestHarness, host: Node) -> void:
+	t.suite("Online mixed minigame playlist editor")
+	var locale := Loc.locale
+	var config := Net.lobby_config.duplicate(true)
+	var mode := Net.mode
+	Net.mode = Net.Mode.LOCAL
+	for language in ["ar", "en"]:
+		Loc.set_locale(language)
+		var cfg := {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 3,
+			"bots": true, "difficulty": 1, "tournament": {"mode": "points", "target": 3,
+			"rotation": "manual", "points": [5, 3, 2, 1], "entries": [
+				{"game": "ring_rumble", "arena": "vortex_ring"},
+				{"game": "goal_guard", "arena": "quad_court"}]}}
+		Net.lobby_config = cfg.duplicate(true)
+		var screen = load("res://src/ui/screens/online_screen.gd").new()
+		host.add_child(screen)
+		screen.body = VBoxContainer.new()
+		screen.add_child(screen.body)
+		screen._host_settings()
+		var select: OptionButton = screen.find_child("OnlinePlaylistGame1", true, false)
+		t.equal(select.item_count, Net.ONLINE_GAMES.size(), "all registered online games are selectable")
+		select.item_selected.emit(Net.ONLINE_GAMES.find("tank_arena"))
+		t.equal(Net.lobby_config.tournament.entries[1].game, "tank_arena", "game selector changes only its playlist entry")
+		t.equal(Net.lobby_config.tournament.entries[0], cfg.tournament.entries[0], "other entries are retained")
+		var up: Button = screen.find_child("OnlinePlaylistUp1", true, false)
+		up.pressed.emit()
+		t.equal(Net.lobby_config.tournament.entries[0].game, "tank_arena", "move earlier preserves the preceding game edit")
+		t.equal(Net.lobby_config.game, "tank_arena", "first entry and lobby game stay consistent")
+		var remove: Button = screen.find_child("OnlinePlaylistRemove1", true, false)
+		remove.pressed.emit()
+		t.equal(Net.lobby_config.tournament.entries.size(), 1, "remove sends a shorter valid playlist")
+		var add: Button = screen.find_child("OnlinePlaylistAdd", true, false)
+		t.ok(not add.text.contains("online."), "add label is localized")
+		add.pressed.emit()
+		t.equal(Net.lobby_config.tournament.entries.size(), 2, "add preserves preceding removal and finds an unused pair")
+		var selected_entries: Array = Net.lobby_config.tournament.entries.duplicate(true)
+		var tournament_mode: OptionButton = screen.find_child("OnlineTournamentMode", true, false)
+		for choice in [2, 1]:
+			tournament_mode.item_selected.emit(choice)
+			t.equal(Net.lobby_config.tournament.entries, selected_entries, "switching cups and points retains custom games")
+			t.equal(Net.lobby_config.tournament.mode, "cups" if choice == 2 else "points", "scoring mode changes independently")
+		var baseline: Dictionary = Net.lobby_config.duplicate(true)
+		for invalid in [[], [cfg.tournament.entries[0], cfg.tournament.entries[0]],
+				[{"game": "goal_guard", "arena": "vortex_ring"}], [{"game": "missing", "arena": "missing"}]]:
+			t.ok(not screen._replace_playlist(cfg, invalid), "invalid or duplicate playlist rejected before publication")
+			t.equal(Net.lobby_config, baseline, "rejection preserves room settings")
+		var all: Array = []
+		for id in Net.ONLINE_GAMES:
+			all.append({"game": id, "arena": Net.ONLINE_ARENAS[id][0]})
+		t.equal(all.size(), 39, "registry supports 39 different tournament games")
+		t.ok(screen._replace_playlist(cfg, all), "39-game playlist accepted")
+		all.append({"game": "ring_rumble", "arena": "storm_ring"})
+		t.ok(not screen._replace_playlist(cfg, all), "server entry budget enforced locally")
+		tournament_mode.item_selected.emit(0)
+		select.item_selected.emit(0)
+		add.pressed.emit()
+		up.pressed.emit()
+		remove.pressed.emit()
+		t.equal(Net.lobby_config.tournament, null, "old editor callbacks cannot resurrect a disabled tournament")
+		screen.queue_free()
+		await host.get_tree().process_frame
 	Net.lobby_config = config
 	Net.mode = mode
 	Loc.set_locale(locale)

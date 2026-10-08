@@ -1258,6 +1258,43 @@ test('loading and silent-authority watchdogs terminate without a result', () => 
   assert.equal(f.host.last('result'), undefined);
 });
 
+test('four-peer mixed playlist advances game contracts and restores tournament identity', () => {
+  const {rooms, host, client} = fixture();
+  const peers = [host, ...Array.from({length: 3}, client)];
+  peers.slice(1).forEach(peer => peer.send({op: 'join', code: host.c.room.code}));
+  const entries = [{game: 'ring_rumble', arena: 'vortex_ring'},
+    {game: 'goal_guard', arena: 'quad_court'}, {game: 'hurdle_dash', arena: 'hurdle_track'}];
+  const config = {...host.c.room.config, bots: false, tournament: {mode: 'points', target: 3,
+    rotation: 'manual', points: [5, 3, 2, 1], entries}};
+  assert.throws(() => peers[1].send({op: 'configure', config}), /host_only/);
+  host.send({op: 'configure', config});
+  const id = peers[2].c.player.id;
+  for (let epoch = 1; epoch <= 3; epoch++) {
+    peers.forEach(peer => peer.send({op: 'ready', ready: true}));
+    host.send({op: epoch === 1 ? 'start' : 'next'});
+    peers.forEach(peer => {
+      assert.equal(peer.last('start').config.game, entries[epoch - 1].game);
+      assert.equal(peer.last('start').config.arena, entries[epoch - 1].arena);
+      assert.equal(peer.last('start').players[2].id, id);
+      peer.send({op: 'loaded', epoch});
+    });
+    const scores = epoch === 3 ? [100, 200, 300, 400] : [10, 8, 6, 2];
+    assert.throws(() => peers[1].send({op: 'result', epoch, scores}), /host_only/);
+    host.send({op: 'result', epoch, scores});
+    peers.forEach(peer => assert.deepEqual(peer.last('result'), host.last('result')));
+    if (epoch === 2) {
+      const token = peers[2].last('welcome').token;
+      rooms.disconnect(peers[2].c);
+      peers[2] = client(); peers[2].send({op: 'resume', token});
+      assert.equal(peers[2].c.player.id, id);
+      assert.deepEqual(peers[2].last('result').tournament, host.last('result').tournament);
+    }
+  }
+  assert.equal(host.last('result').tournament.complete, true);
+  assert.deepEqual(host.last('result').tournament.points, [15, 9, 6, 3]);
+  assert.deepEqual(host.last('result').tournament.champions, [0]);
+});
+
 test('online tournament keeps roster, requires ready between rounds and reconnects standings', () => {
   const {rooms, host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
