@@ -46,8 +46,10 @@ func decide(_delta: float) -> void:
 		var scale_size := body.global_basis.get_scale().abs()
 		contact_distance += body.shape.radius * maxf(scale_size.x, scale_size.z)
 	var travel_time := maxf(0.0, dist - contact_distance) / maxf(walk_speed, 0.1)
+	# These are our own status timers; Fighter cannot steer until both expire.
+	var movement_delay := maxf(maxf(0.0, me._stun), maxf(0.0, float(me.mods["frozen"])))
 
-	if fuse > commit_window + travel_time and dist < 9.0 and rng.randf() < aggression + 0.25:
+	if fuse > commit_window + travel_time + movement_delay and dist < 9.0 and rng.randf() < aggression + 0.25:
 		# Approach from the side opposite the rival we want to send it toward.
 		var victim := _best_victim(position)
 		var push_from: Vector3 = position

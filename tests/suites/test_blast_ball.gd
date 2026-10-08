@@ -161,6 +161,41 @@ func run(t: TestHarness, host: Node) -> void:
 	me.top_speed = 1.0
 	brain.decide(0.1)
 	t.ok(brain.escaped, "slow movement cannot borrow the escape budget of a faster character")
+	me.top_speed = 5.0
+	var original_stun := me._stun
+	var original_freeze: float = me.mods["frozen"]
+	for status in ["frozen", "stunned"]:
+		me.mods["frozen"] = 8.0 if status == "frozen" else 0.0
+		me._stun = 8.0 if status == "stunned" else 0.0
+		brain.escaped = false
+		brain.target = Vector3.INF
+		brain.decide(0.1)
+		t.ok(brain.escaped, "own " + status + " duration cannot be spent as available approach time")
+	var collision := me.get_node("Body") as CollisionShape3D
+	var body_scale := collision.global_basis.get_scale().abs()
+	var contact_radius: float = 0.62 + collision.shape.radius * maxf(body_scale.x, body_scale.z)
+	var approach_budget := maxf(0.0, 2.5 - contact_radius) / walk_speed
+	brain.observed["radius"] = 0.62
+	brain.observed["fuse"] = escape_budget + approach_budget + 0.05
+	me._stun = 0.0
+	me.mods["frozen"] = 0.3
+	brain.escaped = false
+	brain.decide(0.1)
+	t.ok(brain.escaped, "even a short freeze consumes a marginal approach budget")
+	brain.observed["fuse"] = escape_budget + approach_budget + 0.25
+	me._stun = 0.2
+	me.mods["frozen"] = 0.2
+	brain.escaped = false
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "overlapping movement blocks expire concurrently, not consecutively")
+	t.near(me._stun, 0.2, 0.00001, "planning cannot shorten the real stun timer")
+	t.near(float(me.mods["frozen"]), 0.2, 0.00001, "planning cannot shorten the real freeze timer")
+	brain.observed["fuse"] = 5.0
+	me._stun = original_stun
+	me.mods["frozen"] = original_freeze
+	brain.escaped = false
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "clear movement status preserves a viable offensive approach")
 	brain.controller = null
 	me.global_position = original_position
 	me.top_speed = original_speed
