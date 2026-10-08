@@ -64,6 +64,53 @@ class ExportEvidenceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             EVIDENCE.source_identity(self.root)
 
+    def test_changed_scene_requires_commit_and_new_export(self):
+        scene = self.root / "scenes/boot.tscn"
+        scene.parent.mkdir()
+        scene.write_text('[gd_scene format=3]\n[node name="Boot" type="Node"]\n')
+        self.git("add", "scenes")
+        self.git("commit", "-qm", "Add boot scene")
+        before = EVIDENCE.source_identity(self.root)
+        self.record()
+        scene.write_text('[gd_scene format=3]\n[node name="Changed" type="Node"]\n')
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+        with self.assertRaises(RuntimeError):
+            EVIDENCE.source_identity(self.root)
+        self.git("add", "scenes")
+        self.git("commit", "-qm", "Change boot scene")
+        self.assertNotEqual(EVIDENCE.source_identity(self.root)["inputs_sha256"],
+                            before["inputs_sha256"])
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def test_untracked_scene_or_addon_cannot_enter_an_attested_pack(self):
+        for name in ["scenes/extra.tscn", "addons/helper/helper.gd"]:
+            with self.subTest(name=name):
+                path = self.root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture\n")
+                self.assertFalse(EVIDENCE.verify(self.root, self.out))
+                with self.assertRaises(RuntimeError):
+                    EVIDENCE.source_identity(self.root)
+                path.unlink()
+
+    def test_changed_addon_requires_commit_and_new_export(self):
+        addon = self.root / "addons/helper/helper.gd"
+        addon.parent.mkdir(parents=True)
+        addon.write_text("extends Node\n")
+        self.git("add", "addons")
+        self.git("commit", "-qm", "Add helper addon")
+        before = EVIDENCE.source_identity(self.root)
+        self.record()
+        addon.write_text("extends Node3D\n")
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+        with self.assertRaises(RuntimeError):
+            EVIDENCE.source_identity(self.root)
+        self.git("add", "addons")
+        self.git("commit", "-qm", "Change helper addon")
+        self.assertNotEqual(EVIDENCE.source_identity(self.root)["inputs_sha256"],
+                            before["inputs_sha256"])
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
     def test_generated_script_uid_must_be_committed(self):
         uid = self.input.with_suffix(".gd.uid")
         uid.write_text("uid://teststableidentity\n")
