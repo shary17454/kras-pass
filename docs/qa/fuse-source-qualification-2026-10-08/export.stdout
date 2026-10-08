@@ -1,0 +1,1028 @@
+ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension
+   at: parse_gdextension_file (core/extension/gdextension_library_loader.cpp:369)
+ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.
+   at: open_library (core/extension/gdextension.cpp:810)
+ERROR: Error loading extension: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.
+   at: load_extensions (core/extension/gdextension_manager.cpp:333)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started تهيئة المشروع (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | يتم مسح هيكل الملفات...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | جارٍ تحميل اسماء الأصناف العالمية...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | جارٍ التحقق من GDExtensions...[39m[0m
+ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension
+   at: parse_gdextension_file (core/extension/gdextension_library_loader.cpp:369)
+ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.
+   at: open_library (core/extension/gdextension.cpp:810)
+[  50% ] [90m[1mfirst_scan_filesystem[22m | جارٍ تحميل البرامج التحميل التلقائي النصية...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | جارٍ تهيئة الإضافات...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | جارٍ بدء مسح الملفات...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension
+   at: parse_gdextension_file (core/extension/gdextension_library_loader.cpp:369)
+ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.
+   at: open_library (core/extension/gdextension.cpp:810)
+[   0% ] [90m[1mexport[22m | Started Exporting for iOS (Project Files Only) (2 steps)[39m[0m
+[   0% ] [90m[1mexport[22m | Making .pck[39m[0m
+[   0% ] [90m[1msavepack[22m | Started يَحزم"ينتج الملف المضغوط" (102 steps)[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://addons/kras_apple_runtime/kras_apple.gdextension[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-40.png-bb54d8b9ec53726baf575583d36fe77a.ctex[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-40.png.import[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-58.png-71ba55043b6aaee521cf104646537507.ctex[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-58.png.import[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-60.png-97fc97fbcc9b218fb1f30690db8b4bc9.ctex[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-60.png.import[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-76.png-ebe494c2142cac4ddf1fae2e037440b5.ctex[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-76.png.import[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-80.png-9f7553592ff31b9b14620c8acab8782b.ctex[39m[0m
+[   1% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-80.png.import[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-87.png-5dc5a0f1dc9eb4d9aa623e961764b6c2.ctex[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-87.png.import[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-114.png-2dfcbeb94c5f01adff267fe6b2011fe5.ctex[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-114.png.import[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-120.png-f8187269c5d2f5f7c78fcebd453e3c89.ctex[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-120.png.import[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-128.png-1f22ea4c413a34af73a5a81a316c6a5e.ctex[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-128.png.import[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-136.png-0193742f6602f476dbc518a3bff8b77b.ctex[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-136.png.import[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-152.png-4948716b20665ccd6d0d1b32609729ed.ctex[39m[0m
+[   2% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-152.png.import[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-167.png-1c18a0864d5c0d3a71bd004bbea4f219.ctex[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-167.png.import[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-180.png-e4e59ac64a0873495cd92bc238d23581.ctex[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-180.png.import[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-192.png-81734025cdb4aa0187a2f0f20f362b81.ctex[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-192.png.import[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/Icon-1024.png-8670f2ccd0359b9e3713d10fd8fd9316.ctex[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-1024.png.import[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/ambience/atv_engine.res[39m[0m
+[   3% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/ambience/wind.res[39m[0m
+[   4% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/music/adventure.res[39m[0m
+[   4% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/music/arena.res[39m[0m
+[   4% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/music/arena_b.res[39m[0m
+[   4% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/music/menu.res[39m[0m
+[   4% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/music/tension.res[39m[0m
+[   4% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/music/victory.res[39m[0m
+[   5% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/beam.res[39m[0m
+[   5% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/bounce.res[39m[0m
+[   5% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/burn.res[39m[0m
+[   5% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/cannon_fire.res[39m[0m
+[   5% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/correct.res[39m[0m
+[   5% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/countdown.res[39m[0m
+[   6% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/crate_break.res[39m[0m
+[   6% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/dash.res[39m[0m
+[   6% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/eliminate.res[39m[0m
+[   6% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/engine.res[39m[0m
+[   6% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/explode.res[39m[0m
+[   6% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/fall.res[39m[0m
+[   7% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/go.res[39m[0m
+[   7% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/gust.res[39m[0m
+[   7% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/hit.res[39m[0m
+[   7% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/ice_crack.res[39m[0m
+[   7% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/lose.res[39m[0m
+[   8% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/machine_alert.res[39m[0m
+[   8% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/machine_hum.res[39m[0m
+[   8% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/pickup.res[39m[0m
+[   8% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/powerup.res[39m[0m
+[   8% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/rumble.res[39m[0m
+[   8% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/score.res[39m[0m
+[   9% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/shield_break.res[39m[0m
+[   9% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/shock.res[39m[0m
+[   9% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/skid.res[39m[0m
+[   9% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/splash.res[39m[0m
+[   9% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/swing.res[39m[0m
+[   9% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/tick.res[39m[0m
+[  10% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/trophy.res[39m[0m
+[  10% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/ui_back.res[39m[0m
+[  10% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/ui_error.res[39m[0m
+[  10% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/ui_move.res[39m[0m
+[  10% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/ui_select.res[39m[0m
+[  10% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/unlock.res[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/whistle.res[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/win.res[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://assets/audio/sfx/wrong.res[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/NotoEmoji.ttf-fb357b1be3b9b13fa82f384e13416206.fontdata[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoEmoji.ttf.import[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/NotoSans.ttf-27eae6a86b17fcaacb38def985d59f4e.fontdata[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSans.ttf.import[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/NotoSansArabic.ttf-8252d6f8f52729edbe389f806fc22a98.fontdata[39m[0m
+[  11% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSansArabic.ttf.import[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/NotoSansSymbols2.ttf-e21ca4eeb369da14057f4f5767bca9bd.fontdata[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSansSymbols2.ttf.import[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/NotoSansSymbols.ttf-fd935a11b2ce20291becb0d8d7a6e57f.fontdata[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSansSymbols.ttf.import[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-0b5d9f9dc3f268ebe38ce91721b577eb-startup_theme.res[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-eca259e3c3cf7ff7d71fbefa9a7e5197-ui_theme.res[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/aerial_rocks_01_diff_2k.jpg-e25101c179b2c05e77005a9267790c5d.astc.ctex[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/aerial_rocks_01/aerial_rocks_01_diff_2k.jpg.import[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/aerial_rocks_01_nor_gl_2k.jpg-13c4efc5f3d9af21961ea401cc498d6c.astc.ctex[39m[0m
+[  12% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/aerial_rocks_01/aerial_rocks_01_nor_gl_2k.jpg.import[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/aerial_rocks_01_rough_2k.jpg-6f16f3244b815a6b5f6511389c0bc163.astc.ctex[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/aerial_rocks_01/aerial_rocks_01_rough_2k.jpg.import[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/fern_02_arm_1k.jpg-5280f2291b4d35658fd5d38759429f73.astc.ctex[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/fern_02/textures/fern_02_arm_1k.jpg.import[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/fern_02_diff_1k.jpg-7a3f8ca027949ab207c85efdf2caf8cd.astc.ctex[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/fern_02/textures/fern_02_diff_1k.jpg.import[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/fern_02_nor_gl_1k.jpg-89ffa7da34a4e41255b7612808b55c4c.astc.ctex[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/fern_02/textures/fern_02_nor_gl_1k.jpg.import[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/fern_02_1k.gltf-374de73b2b408bc51b84f1ffb81b85d1.scn[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/fern_02/fern_02_1k.gltf.import[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/forrest_ground_01_diff_2k.jpg-bd1e33eebb390f0b475cd5c0c3a917b0.astc.ctex[39m[0m
+[  13% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/forrest_ground_01/forrest_ground_01_diff_2k.jpg.import[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/forrest_ground_01_nor_gl_2k.jpg-73d9dfe06eb74139eb13cfbf166c2372.astc.ctex[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/forrest_ground_01/forrest_ground_01_nor_gl_2k.jpg.import[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/forrest_ground_01_rough_2k.jpg-5d13317d57fce9694021028d90801f37.astc.ctex[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/forrest_ground_01/forrest_ground_01_rough_2k.jpg.import[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/gravel_floor_diff_2k.jpg-6112f23c5b501579915c4009d2889e40.astc.ctex[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/gravel_floor/gravel_floor_diff_2k.jpg.import[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/gravel_floor_nor_gl_2k.jpg-da4c644bc952cb02a6539417ee8ceae7.astc.ctex[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/gravel_floor/gravel_floor_nor_gl_2k.jpg.import[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/gravel_floor_rough_2k.jpg-0b242276913990f9718fb18c9b4f677c.astc.ctex[39m[0m
+[  14% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/gravel_floor/gravel_floor_rough_2k.jpg.import[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/rock_moss_set_01_diff_2k.jpg-4cdcb64d9a5edba23a30202b8ace969d.astc.ctex[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/rock_moss_set_01/textures/rock_moss_set_01_diff_2k.jpg.import[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/rock_moss_set_01_nor_gl_2k.jpg-ffb34f840933622ff151590766de0aa2.astc.ctex[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/rock_moss_set_01/textures/rock_moss_set_01_nor_gl_2k.jpg.import[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/rock_moss_set_01_rough_2k.jpg-4ad8a7a68754fb55e19e36d0cfbc58b3.astc.ctex[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/rock_moss_set_01/textures/rock_moss_set_01_rough_2k.jpg.import[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/rock_moss_set_01_2k.gltf-52b823de243380511a3c9420c570240f.scn[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/rock_moss_set_01/rock_moss_set_01_2k.gltf.import[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile.glb-ef44394fefcae1850c88d7ce4be45ad8.scn[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile.glb.import[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile_pine_sapling_small_bark_diff.jpg-07979338d124b8a99b998e009a63c822.astc.ctex[39m[0m
+[  15% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile_pine_sapling_small_bark_diff.jpg.import[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile_pine_sapling_small_bark_nor_gl.jpg-11da730fa155a5bb24c70d3ec5c53415.astc.ctex[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile_pine_sapling_small_bark_nor_gl.jpg.import[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile_pine_sapling_small_bark_rough.jpg-fd052ee0be308eca9baf314c8b67cbd0.astc.ctex[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile_pine_sapling_small_bark_rough.jpg.import[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile_pine_sapling_small_twig_diff.jpg-af9c925bfea76988097def8862c25c2c.astc.ctex[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile_pine_sapling_small_twig_diff.jpg.import[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile_pine_sapling_small_twig_nor_gl.jpg-1ae3ddaf01d084dc0671fa3b2ebbcc8a.astc.ctex[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile_pine_sapling_small_twig_nor_gl.jpg.import[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/pine_mobile_pine_sapling_small_twig_rough.jpg-5864570803c420667b99035e98a72352.astc.ctex[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/pine_mobile_pine_sapling_small_twig_rough.jpg.import[39m[0m
+[  16% ] [90m[1msavepack[22m | تخزين الملف: res://assets/natural/sources.json[39m[0m
+[  17% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-37edee23c11531b5f579c62324fd25a4-rock_cover_0.res[39m[0m
+[  17% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-a1f490f3dd69ed190ab2c7e5ef0fdcda-rock_cover_1.res[39m[0m
+[  17% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-54294bd3bc2dead110be665dd1ae25ab-rock_cover_2.res[39m[0m
+[  17% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-9bb91e163800bd8cae7cabbb121350c6-rock_cover_3.res[39m[0m
+[  17% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-4be3de501f4c512b478e325b5201ecf5-rock_cover_4.res[39m[0m
+[  17% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-5295d0f7da6a88498b890c07e26f1c6c-rock_cover_5.res[39m[0m
+[  18% ] [90m[1msavepack[22m | تخزين الملف: res://data/loc/ar.json[39m[0m
+[  18% ] [90m[1msavepack[22m | تخزين الملف: res://data/loc/en.json[39m[0m
+[  18% ] [90m[1msavepack[22m | تخزين الملف: res://data/achievements.json[39m[0m
+[  18% ] [90m[1msavepack[22m | تخزين الملف: res://data/adventure.json[39m[0m
+[  18% ] [90m[1msavepack[22m | تخزين الملف: res://data/ai.json[39m[0m
+[  18% ] [90m[1msavepack[22m | تخزين الملف: res://data/arenas.json[39m[0m
+[  19% ] [90m[1msavepack[22m | تخزين الملف: res://data/characters.json[39m[0m
+[  19% ] [90m[1msavepack[22m | تخزين الملف: res://data/cosmetics.json[39m[0m
+[  19% ] [90m[1msavepack[22m | تخزين الملف: res://data/minigames.json[39m[0m
+[  19% ] [90m[1msavepack[22m | تخزين الملف: res://data/mutators.json[39m[0m
+[  19% ] [90m[1msavepack[22m | تخزين الملف: res://data/powerups.json[39m[0m
+[  19% ] [90m[1msavepack[22m | تخزين الملف: res://data/tuning.json[39m[0m
+[  20% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-dash-tap-2026-10-07/fawda-candidate-1200000.json[39m[0m
+[  20% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-dash-tap-2026-10-07/fawda-parent-1200000.json[39m[0m
+[  20% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-dash-tap-2026-10-07/scrap-1200000.json[39m[0m
+[  20% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-dash-tap-2026-10-07/scrap-1500000.json[39m[0m
+[  20% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-tap-target-rng-2026-10-07/before-leader-fawda.json[39m[0m
+[  21% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-tap-target-rng-2026-10-07/rng-fawda.json[39m[0m
+[  21% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-tap-target-rng-2026-10-07/tap-fawda.json[39m[0m
+[  21% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ai-tap-target-rng-2026-10-07/tap-turret.json[39m[0m
+[  21% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/armed-race-tap-2026-10-07/sabaq-sawarikh-natural.json[39m[0m
+[  21% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/balance-source-consistency-2026-10-08/old-source-base_siege.json[39m[0m
+[  21% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/balance-source-consistency-2026-10-08/old-source-partial-summary.json[39m[0m
+[  22% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/balance-source-consistency-2026-10-08/old-source-sabaq_sawarikh.json[39m[0m
+[  22% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/balance-source-consistency-2026-10-08/old-source-tag_hunt.json[39m[0m
+[  22% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/blast-fuse-age-2026-10-08/candidate-report.json[39m[0m
+[  22% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/blast-fuse-age-2026-10-08/content-audit.json[39m[0m
+[  22% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/blast-fuse-age-2026-10-08/parent-report.json[39m[0m
+[  22% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/blast-fuse-age-2026-10-08/sample-history.json[39m[0m
+[  23% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/bomber-tap-2026-10-07/fawda-1200000.json[39m[0m
+[  23% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/bomber-tap-2026-10-07/fawda-1500000.json[39m[0m
+[  23% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/bomber-tap-2026-10-07/fawda-1800000.json[39m[0m
+[  23% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/boss-plan-attack-2026-10-08/boss_colossus-1200000.json[39m[0m
+[  23% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/boss-plan-attack-2026-10-08/boss_forge-1200000.json[39m[0m
+[  23% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/boss-weakpoint-tap-2026-10-07/dreadnought-natural.json[39m[0m
+[  24% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/boss-weakpoint-tap-2026-10-07/sovereign-natural.json[39m[0m
+[  24% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-37616445234/source-validation.json[39m[0m
+[  24% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-37616445234/summary.json[39m[0m
+[  24% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-followup-2026-10-08/gem_grab.json[39m[0m
+[  24% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-followup-2026-10-08/paint_grid.json[39m[0m
+[  24% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-followup-2026-10-08/scrap_karts.json[39m[0m
+[  25% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-followup-2026-10-08/star_rush.json[39m[0m
+[  25% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/campaign-followup-2026-10-08/turret_duel.json[39m[0m
+[  25% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crate-swing-2026-10-07/crate-smash-after.json[39m[0m
+[  25% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crate-swing-2026-10-07/lab-after.json[39m[0m
+[  25% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crate-swing-2026-10-07/lab-before.json[39m[0m
+[  25% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crumble-current-2026-10-08/campaign-1200000.json[39m[0m
+[  26% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crumble-current-2026-10-08/heldout-1500000.json[39m[0m
+[  26% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crumble-route-commitment-2026-10-08/experiment-1200000.json[39m[0m
+[  26% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/crumble-route-commitment-2026-10-08/experiment-1500000.json[39m[0m
+[  26% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/current-ball-balance-2026-10-08/blast_ball-campaign-1200000.json[39m[0m
+[  26% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/current-ball-balance-2026-10-08/magnet-heldout-1500000.json[39m[0m
+[  26% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/current-ball-balance-2026-10-08/magnet_court-campaign-1200000.json[39m[0m
+[  27% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/current-ball-balance-2026-10-08/sky_court-campaign-1200000.json[39m[0m
+[  27% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/current-ball-balance-2026-10-08/storm_heart-campaign-1200000.json[39m[0m
+[  27% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/current-source-balance-2026-10-07/scrap-natural.json[39m[0m
+[  27% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-ball-attack-2026-10-08/blast_ball-1200000.json[39m[0m
+[  27% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-ball-attack-2026-10-08/goal_guard-1200000.json[39m[0m
+[  28% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-ball-attack-2026-10-08/magnet_court-1200000.json[39m[0m
+[  28% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-ball-attack-2026-10-08/storm_heart-1200000.json[39m[0m
+[  28% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-crate-attack-2026-10-08/crate_smash-1200000.json[39m[0m
+[  28% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-crate-attack-2026-10-08/lab_crates-1200000.json[39m[0m
+[  28% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-crate-attack-2026-10-08/lab_crates-1500000.json[39m[0m
+[  28% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-race-dash-2026-10-07/hurdle_dash-1200000.json[39m[0m
+[  29% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-race-dash-2026-10-07/kart_sprint-1200000.json[39m[0m
+[  29% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/direct-race-dash-2026-10-07/sabaq_sawarikh-1200000.json[39m[0m
+[  29% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-facing-backoff-2026-10-07/final-1200000.json[39m[0m
+[  29% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-facing-backoff-2026-10-07/final-1500000.json[39m[0m
+[  29% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-facing-backoff-2026-10-07/initial-1200000.json[39m[0m
+[  29% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-facing-backoff-2026-10-07/initial-1500000.json[39m[0m
+[  30% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-facing-backoff-2026-10-07/parent-1500000.json[39m[0m
+[  30% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-ram-alignment-2026-10-07/candidate-1200000.json[39m[0m
+[  30% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/driver-ram-alignment-2026-10-07/candidate-1500000.json[39m[0m
+[  30% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/generic-dash-retreat-2026-10-08/duo_clash-1200000.json[39m[0m
+[  30% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/generic-dash-retreat-2026-10-08/historical-campaign-37670303689-summary.json[39m[0m
+[  30% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/generic-dash-retreat-2026-10-08/ring_rumble-1200000.json[39m[0m
+[  31% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ios-scene-source-2026-10-08/current-balance-partial.json[39m[0m
+[  31% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/ios-scene-source-2026-10-08/source.json[39m[0m
+[  31% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/local-roster-2026-10-08/dependency-audit.json[39m[0m
+[  31% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/local-roster-2026-10-08/four-local-ar.json[39m[0m
+[  31% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/local-roster-2026-10-08/four-local-en.json[39m[0m
+[  31% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/local-xcode-preflight-2026-10-08/app-metadata.json[39m[0m
+[  32% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/local-xcode-preflight-2026-10-08/export-attestation.json[39m[0m
+[  32% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/local-xcode-preflight-2026-10-08/source-before.json[39m[0m
+[  32% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/magnet-swept-contact-2026-10-08/after-1200000.json[39m[0m
+[  32% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/magnet-swept-contact-2026-10-08/after-1500000.json[39m[0m
+[  32% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/melee-tap-2026-10-07/base-siege-after.json[39m[0m
+[  32% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/melee-tap-2026-10-07/base-siege-before.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/melee-tap-2026-10-07/duel-pit-natural.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/native-preflight-0716-2026-10-08/campaign/crumble/balance-report/report.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/native-preflight-0716-2026-10-08/campaign/crumble/balance-source.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/native-preflight-0716-2026-10-08/campaign/ring/balance-report/report.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/native-preflight-0716-2026-10-08/campaign/ring/balance-source.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/native-preflight-0716-2026-10-08/source-before.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/native-preflight-0716-2026-10-08/source-export.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/first-scheduling-probe.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/first-server-timing.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-boss_colossus.json[39m[0m
+[  33% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-boss_dreadnought.json[39m[0m
+[  34% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-boss_forge.json[39m[0m
+[  34% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-boss_sovereign.json[39m[0m
+[  34% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-duel_pit.json[39m[0m
+[  34% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-partial-summary.json[39m[0m
+[  34% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/old-source-relic_hold.json[39m[0m
+[  34% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/repeat-scheduling-probe.json[39m[0m
+[  35% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/network-scheduling-2026-10-08/repeat-server-timing.json[39m[0m
+[  35% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/armed-world.json[39m[0m
+[  35% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/candidate-baseline.json[39m[0m
+[  35% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/candidate-expanded-heldout.json[39m[0m
+[  35% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/candidate-expanded.json[39m[0m
+[  35% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/candidate-heldout.json[39m[0m
+[  36% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/colossus-world.json[39m[0m
+[  36% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/current-content-audit.json[39m[0m
+[  36% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/current-sample-index.json[39m[0m
+[  36% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/dreadnought-world.json[39m[0m
+[  36% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/forge-world.json[39m[0m
+[  36% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/parent-baseline.json[39m[0m
+[  37% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/parent-expanded-heldout.json[39m[0m
+[  37% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/parent-expanded.json[39m[0m
+[  37% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/parent-heldout.json[39m[0m
+[  37% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/siege-world.json[39m[0m
+[  37% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/platform-shortest-route-ties-2026-10-08/sovereign-world.json[39m[0m
+[  37% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/core/kras-qa-source.json[39m[0m
+[  38% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/gem_grab/kras-network-smoke-7Lxm7G/server-timing.json[39m[0m
+[  38% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/gem_grab/kras-network-smoke-I5d4TQ/server-timing.json[39m[0m
+[  38% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/gem_grab/kras-qa-source.json[39m[0m
+[  38% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/goal_guard/kras-network-smoke-NDDeat/server-timing.json[39m[0m
+[  38% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/goal_guard/kras-network-smoke-PGcarh/server-timing.json[39m[0m
+[  38% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/goal_guard/kras-qa-source.json[39m[0m
+[  39% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/ring_rumble/kras-network-smoke-ppCGk6/server-timing.json[39m[0m
+[  39% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/ring_rumble/kras-network-smoke-vIDveq/server-timing.json[39m[0m
+[  39% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/ring_rumble/kras-qa-source.json[39m[0m
+[  39% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/star_rush/kras-network-smoke-IAqVzj/server-timing.json[39m[0m
+[  39% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/star_rush/kras-network-smoke-ZHyA5o/server-timing.json[39m[0m
+[  40% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/pr215-completed-artifacts-2026-10-08/star_rush/kras-qa-source.json[39m[0m
+[  40% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/runner-jump-2026-10-08/hurdle_dash-1200000.json[39m[0m
+[  40% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-current-diagnosis-2026-10-08/expanded-1200000.json[39m[0m
+[  40% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-current-diagnosis-2026-10-08/heldout-1500000.json[39m[0m
+[  40% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-current-diagnosis-2026-10-08/trace-1200000.json[39m[0m
+[  40% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-multi-contact-2026-10-08/expanded-1200000.json[39m[0m
+[  41% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-multi-contact-2026-10-08/heldout-1500000.json[39m[0m
+[  41% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-multi-contact-2026-10-08/network-loaded-timing.json[39m[0m
+[  41% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-multi-contact-2026-10-08/network-repeat-timing.json[39m[0m
+[  41% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-tactics-2026-10-07/trace.json[39m[0m
+[  41% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/scrap-wreck-contact-2026-10-08/natural-1200000.json[39m[0m
+[  41% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/siege-tap-2026-10-07/base-siege-1200000.json[39m[0m
+[  42% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/siege-tap-2026-10-07/base-siege-1500000.json[39m[0m
+[  42% ] [90m[1msavepack[22m | تخزين الملف: res://docs/qa/siege-tap-2026-10-07/base-siege-1800000.json[39m[0m
+[  42% ] [90m[1msavepack[22m | تخزين الملف: res://docs/balance-campaign-37113379841-summary.json[39m[0m
+[  42% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-homing-ties-baseline-report.json[39m[0m
+[  42% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-homing-ties-natural-report.json[39m[0m
+[  42% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-motion-baseline-report.json[39m[0m
+[  43% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-motion-candidate-report.json[39m[0m
+[  43% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-motion-independent-report.json[39m[0m
+[  43% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-network-tournament-timing-2026-10-07.json[39m[0m
+[  43% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-survival-natural-1200000.json[39m[0m
+[  43% ] [90m[1msavepack[22m | تخزين الملف: res://docs/blast-survival-natural-1500000.json[39m[0m
+[  43% ] [90m[1msavepack[22m | تخزين الملف: res://docs/boss-all-samples-natural-forge-86233b9.json[39m[0m
+[  44% ] [90m[1msavepack[22m | تخزين الملف: res://docs/boss-outcome-instrument-smoke-f1848ef.json[39m[0m
+[  44% ] [90m[1msavepack[22m | تخزين الملف: res://docs/campaign-37577604329-all39.json[39m[0m
+[  44% ] [90m[1msavepack[22m | تخزين الملف: res://docs/campaign-37577604329-partial32.json[39m[0m
+[  44% ] [90m[1msavepack[22m | تخزين الملف: res://docs/campaign-37616445234-partial3.json[39m[0m
+[  44% ] [90m[1msavepack[22m | تخزين الملف: res://docs/campaign-37616445234-partial8.json[39m[0m
+[  44% ] [90m[1msavepack[22m | تخزين الملف: res://docs/campaign-37616445234-partial15.json[39m[0m
+[  45% ] [90m[1msavepack[22m | تخزين الملف: res://docs/colossus-current-natural-1200000.json[39m[0m
+[  45% ] [90m[1msavepack[22m | تخزين الملف: res://docs/courier-relay-natural-1500000.json[39m[0m
+[  45% ] [90m[1msavepack[22m | تخزين الملف: res://docs/courier-star-natural-1500000.json[39m[0m
+[  45% ] [90m[1msavepack[22m | تخزين الملف: res://docs/courier-star-natural-1800000.json[39m[0m
+[  45% ] [90m[1msavepack[22m | تخزين الملف: res://docs/cover-hulls-baked-first.json[39m[0m
+[  45% ] [90m[1msavepack[22m | تخزين الملف: res://docs/cover-hulls-baked-repeat.json[39m[0m
+[  46% ] [90m[1msavepack[22m | تخزين الملف: res://docs/cover-hulls-original-first.json[39m[0m
+[  46% ] [90m[1msavepack[22m | تخزين الملف: res://docs/cover-hulls-original-repeat.json[39m[0m
+[  46% ] [90m[1msavepack[22m | تخزين الملف: res://docs/dash-projection-scrap-natural-1200000.json[39m[0m
+[  46% ] [90m[1msavepack[22m | تخزين الملف: res://docs/dash-projection-scrap-natural-1500000.json[39m[0m
+[  46% ] [90m[1msavepack[22m | تخزين الملف: res://docs/driver-memory-scrap-natural-1200000.json[39m[0m
+[  47% ] [90m[1msavepack[22m | تخزين الملف: res://docs/driver-memory-scrap-natural-1500000.json[39m[0m
+[  47% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hover-machine-ring-natural-600000.json[39m[0m
+[  47% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-bumper_bowl-natural-900000.json[39m[0m
+[  47% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-crumble_court-natural-900000.json[39m[0m
+[  47% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-fawda-natural-900000.json[39m[0m
+[  47% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-goal_guard-natural-900000.json[39m[0m
+[  48% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-magnet_court-natural-900000.json[39m[0m
+[  48% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-ring-natural-900000.json[39m[0m
+[  48% ] [90m[1msavepack[22m | تخزين الملف: res://docs/hud-campaign-tank_arena-natural-900000.json[39m[0m
+[  48% ] [90m[1msavepack[22m | تخزين الملف: res://docs/independent-balance-draw-smoke.json[39m[0m
+[  48% ] [90m[1msavepack[22m | تخزين الملف: res://docs/island-ai-routing-baseline-report.json[39m[0m
+[  48% ] [90m[1msavepack[22m | تخزين الملف: res://docs/island-ai-routing-natural-report.json[39m[0m
+[  49% ] [90m[1msavepack[22m | تخزين الملف: res://docs/keeper-goal-balance-report.json[39m[0m
+[  49% ] [90m[1msavepack[22m | تخزين الملف: res://docs/keeper-magnet-balance-report.json[39m[0m
+[  49% ] [90m[1msavepack[22m | تخزين الملف: res://docs/local-vehicle-four-high-landscape.json[39m[0m
+[  49% ] [90m[1msavepack[22m | تخزين الملف: res://docs/local-vehicle-four-high-no-ready.json[39m[0m
+[  49% ] [90m[1msavepack[22m | تخزين الملف: res://docs/local-vehicle-four-high-portrait.json[39m[0m
+[  49% ] [90m[1msavepack[22m | تخزين الملف: res://docs/local-vehicle-four-high-trace.json[39m[0m
+[  50% ] [90m[1msavepack[22m | تخزين الملف: res://docs/local-vehicle-four-low-landscape.json[39m[0m
+[  50% ] [90m[1msavepack[22m | تخزين الملف: res://docs/magnet-urgent-defense-balance.json[39m[0m
+[  50% ] [90m[1msavepack[22m | تخزين الملف: res://docs/meaningful-leader-paired-validation.json[39m[0m
+[  50% ] [90m[1msavepack[22m | تخزين الملف: res://docs/meaningful-leader-parent-scrap-natural-1800000.json[39m[0m
+[  50% ] [90m[1msavepack[22m | تخزين الملف: res://docs/meaningful-leader-ring-natural-1200000.json[39m[0m
+[  50% ] [90m[1msavepack[22m | تخزين الملف: res://docs/meaningful-leader-scrap-natural-1200000.json[39m[0m
+[  51% ] [90m[1msavepack[22m | تخزين الملف: res://docs/meaningful-leader-scrap-natural-1500000.json[39m[0m
+[  51% ] [90m[1msavepack[22m | تخزين الملف: res://docs/meaningful-leader-scrap-natural-1800000.json[39m[0m
+[  51% ] [90m[1msavepack[22m | تخزين الملف: res://docs/physics-contact-four-high-before.json[39m[0m
+[  51% ] [90m[1msavepack[22m | تخزين الملف: res://docs/physics-contact-four-high-final.json[39m[0m
+[  51% ] [90m[1msavepack[22m | تخزين الملف: res://docs/platform-route-ties-natural-600000.json[39m[0m
+[  51% ] [90m[1msavepack[22m | تخزين الملف: res://docs/platform-route-ties-natural-900000.json[39m[0m
+[  52% ] [90m[1msavepack[22m | تخزين الملف: res://docs/platform-visible-shove-natural-600000.json[39m[0m
+[  52% ] [90m[1msavepack[22m | تخزين الملف: res://docs/platform-warning-delay-natural-600000.json[39m[0m
+[  52% ] [90m[1msavepack[22m | تخزين الملف: res://docs/release-qualified-all39-ar-visual-report.json[39m[0m
+[  52% ] [90m[1msavepack[22m | تخزين الملف: res://docs/release-qualified-all39-en-visual-report.json[39m[0m
+[  52% ] [90m[1msavepack[22m | تخزين الملف: res://docs/release-qualified-content-audit.json[39m[0m
+[  52% ] [90m[1msavepack[22m | تخزين الملف: res://docs/release-qualified-gem-natural-report.json[39m[0m
+[  53% ] [90m[1msavepack[22m | تخزين الملف: res://docs/rocket-parent-natural-1200000.json[39m[0m
+[  53% ] [90m[1msavepack[22m | تخزين الملف: res://docs/room-isolation-timing-2026-10-07.json[39m[0m
+[  53% ] [90m[1msavepack[22m | تخزين الملف: res://docs/room-isolation-timing-repeat-2026-10-07.json[39m[0m
+[  53% ] [90m[1msavepack[22m | تخزين الملف: res://docs/scrub-warning-natural-600000.json[39m[0m
+[  53% ] [90m[1msavepack[22m | تخزين الملف: res://docs/siege-base-natural-600000.json[39m[0m
+[  54% ] [90m[1msavepack[22m | تخزين الملف: res://docs/siege-current-natural-1200000.json[39m[0m
+[  54% ] [90m[1msavepack[22m | تخزين الملف: res://docs/siege-current-natural-1500000.json[39m[0m
+[  54% ] [90m[1msavepack[22m | تخزين الملف: res://docs/star-current-natural-1200000.json[39m[0m
+[  54% ] [90m[1msavepack[22m | تخزين الملف: res://docs/survivor-contract-paired-validation.json[39m[0m
+[  54% ] [90m[1msavepack[22m | تخزين الملف: res://docs/survivor-contract-scrap-natural-1200000.json[39m[0m
+[  54% ] [90m[1msavepack[22m | تخزين الملف: res://docs/survivor-contract-scrap-natural-1500000.json[39m[0m
+[  55% ] [90m[1msavepack[22m | تخزين الملف: res://docs/sweeper-relative-baseline-300000.json[39m[0m
+[  55% ] [90m[1msavepack[22m | تخزين الملف: res://docs/sweeper-relative-baseline-900000.json[39m[0m
+[  55% ] [90m[1msavepack[22m | تخزين الملف: res://docs/sweeper-relative-candidate-300000.json[39m[0m
+[  55% ] [90m[1msavepack[22m | تخزين الملف: res://docs/sweeper-relative-candidate-900000.json[39m[0m
+[  55% ] [90m[1msavepack[22m | تخزين الملف: res://docs/tank-crate-natural-900000.json[39m[0m
+[  55% ] [90m[1msavepack[22m | تخزين الملف: res://docs/tank-terrain-chunks-rejected-trace.json[39m[0m
+[  56% ] [90m[1msavepack[22m | تخزين الملف: res://docs/tank-terrain-original-control-trace.json[39m[0m
+[  56% ] [90m[1msavepack[22m | تخزين الملف: res://docs/tide-access-natural-600000.json[39m[0m
+[  56% ] [90m[1msavepack[22m | تخزين الملف: res://docs/tide-access-natural-900000.json[39m[0m
+[  56% ] [90m[1msavepack[22m | تخزين الملف: res://docs/vehicle-box-rejected-four-high.json[39m[0m
+[  56% ] [90m[1msavepack[22m | تخزين الملف: res://docs/vehicle-speed-rocket-natural-1200000.json[39m[0m
+[  56% ] [90m[1msavepack[22m | تخزين الملف: res://docs/vehicle-speed-rocket-natural-1500000.json[39m[0m
+[  57% ] [90m[1msavepack[22m | تخزين الملف: res://docs/vehicle-speed-scrap-natural-1200000.json[39m[0m
+[  57% ] [90m[1msavepack[22m | تخزين الملف: res://docs/vehicle-speed-scrap-natural-1500000.json[39m[0m
+[  57% ] [90m[1msavepack[22m | تخزين الملف: res://docs/vehicle-speed-tank-natural-1200000.json[39m[0m
+[  57% ] [90m[1msavepack[22m | تخزين الملف: res://docs/visible-target-rocket-natural-1200000.json[39m[0m
+[  57% ] [90m[1msavepack[22m | تخزين الملف: res://docs/visible-target-scrap-natural-1500000.json[39m[0m
+[  57% ] [90m[1msavepack[22m | تخزين الملف: res://docs/zone-observation-natural-600000.json[39m[0m
+[  58% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/exported/133200997/export-c3c40bb4d42d26c7c74cc88080d6723d-boot.scn[39m[0m
+[  58% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/character_rig.gdc[39m[0m
+[  58% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/collectible.gdc[39m[0m
+[  58% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/fighter.gdc[39m[0m
+[  58% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/game_ball.gdc[39m[0m
+[  58% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/projectile.gdc[39m[0m
+[  59% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/ball_brain.gdc[39m[0m
+[  59% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/bomber_brain.gdc[39m[0m
+[  59% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/boss_hunter_brain.gdc[39m[0m
+[  59% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/climber_brain.gdc[39m[0m
+[  59% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/collector_brain.gdc[39m[0m
+[  60% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/color_brain.gdc[39m[0m
+[  60% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/courier_brain.gdc[39m[0m
+[  60% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/dodger_brain.gdc[39m[0m
+[  60% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/draw_brain.gdc[39m[0m
+[  60% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/driver_brain.gdc[39m[0m
+[  60% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/duellist_brain.gdc[39m[0m
+[  61% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/duo_brain.gdc[39m[0m
+[  61% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/echo_brain.gdc[39m[0m
+[  61% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/generic_brain.gdc[39m[0m
+[  61% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/gunner_brain.gdc[39m[0m
+[  61% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/keeper_brain.gdc[39m[0m
+[  61% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/magnet_keeper_brain.gdc[39m[0m
+[  62% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/painter_brain.gdc[39m[0m
+[  62% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/platform_brain.gdc[39m[0m
+[  62% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/racer_armed_brain.gdc[39m[0m
+[  62% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/racer_brain.gdc[39m[0m
+[  62% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/relic_brain.gdc[39m[0m
+[  62% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/runner_brain.gdc[39m[0m
+[  63% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/saboteur_painter_brain.gdc[39m[0m
+[  63% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/siege_brain.gdc[39m[0m
+[  63% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/smasher_brain.gdc[39m[0m
+[  63% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/storm_keeper_brain.gdc[39m[0m
+[  63% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/tag_brain.gdc[39m[0m
+[  63% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/tank_brain.gdc[39m[0m
+[  64% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/zone_brain.gdc[39m[0m
+[  64% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/ai_brain.gdc[39m[0m
+[  64% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/forge_feeding_plan.gdc[39m[0m
+[  64% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/alula_clouds.gdshader[39m[0m
+[  64% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/alula_sandstone.gdshader[39m[0m
+[  64% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/alula_world.gdc[39m[0m
+[  65% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/arena.gdc[39m[0m
+[  65% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/arena_hazards.gdc[39m[0m
+[  65% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/arena_tile.gdc[39m[0m
+[  65% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/battlefield_terrain.gdshader[39m[0m
+[  65% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/cover_hull_cache.gdc[39m[0m
+[  65% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/crater_floor.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/fantasy_circuit.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/forest_animal.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/forest_fur.gdshader[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/forest_life.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/forest_waterfall.gdshader[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/hover_machine.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/natural_valley.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/race_structures.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_asphalt.gdshader[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_biome.gdc[39m[0m
+[  66% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_boost.gdshader[39m[0m
+[  67% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_lava.gdshader[39m[0m
+[  67% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_precipitation.gdshader[39m[0m
+[  67% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_routes.gdc[39m[0m
+[  67% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_weather.gdc[39m[0m
+[  67% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/tank_world.gdc[39m[0m
+[  67% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/valley_terrain.gdshader[39m[0m
+[  68% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/valley_water.gdshader[39m[0m
+[  68% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/voyage_world.gdc[39m[0m
+[  68% ] [90m[1msavepack[22m | تخزين الملف: res://src/audio/audio_manager.gdc[39m[0m
+[  68% ] [90m[1msavepack[22m | تخزين الملف: res://src/audio/synth.gdc[39m[0m
+[  68% ] [90m[1msavepack[22m | تخزين الملف: res://src/camera/arena_camera.gdc[39m[0m
+[  68% ] [90m[1msavepack[22m | تخزين الملف: res://src/camera/local_vehicle_views.gdc[39m[0m
+[  69% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/balance.gdc[39m[0m
+[  69% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/event_bus.gdc[39m[0m
+[  69% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/logger.gdc[39m[0m
+[  69% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/main.gdc[39m[0m
+[  69% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/minigame_validator.gdc[39m[0m
+[  69% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/object_pool.gdc[39m[0m
+[  70% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/platform_service.gdc[39m[0m
+[  70% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/registry.gdc[39m[0m
+[  70% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/scene_router.gdc[39m[0m
+[  70% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/arena_def.gdc[39m[0m
+[  70% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/character_data.gdc[39m[0m
+[  70% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/minigame_def.gdc[39m[0m
+[  71% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/powerup_def.gdc[39m[0m
+[  71% ] [90m[1msavepack[22m | تخزين الملف: res://src/debug/dev_tools.gdc[39m[0m
+[  71% ] [90m[1msavepack[22m | تخزين الملف: res://src/debug/operation_trace.gdc[39m[0m
+[  71% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/burst.gdc[39m[0m
+[  71% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/mesh_factory.gdc[39m[0m
+[  71% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/quad_bike.gdc[39m[0m
+[  72% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/race_recovery.gdc[39m[0m
+[  72% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/sky_dome.gdc[39m[0m
+[  72% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/control_profile.gdc[39m[0m
+[  72% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/haptic_director.gdc[39m[0m
+[  72% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/input_frame.gdc[39m[0m
+[  73% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/input_router.gdc[39m[0m
+[  73% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/touch_source.gdc[39m[0m
+[  73% ] [90m[1msavepack[22m | تخزين الملف: res://src/localization/loc.gdc[39m[0m
+[  73% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/adventure_session.gdc[39m[0m
+[  73% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_config.gdc[39m[0m
+[  73% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_context.gdc[39m[0m
+[  74% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_phase.gdc[39m[0m
+[  74% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_resource_preparation.gdc[39m[0m
+[  74% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_result.gdc[39m[0m
+[  74% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_scene.gdc[39m[0m
+[  74% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/mutator_system.gdc[39m[0m
+[  74% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/player_config.gdc[39m[0m
+[  75% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/playlist_generator.gdc[39m[0m
+[  75% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/tournament.gdc[39m[0m
+[  75% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/base_siege.gdc[39m[0m
+[  75% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/blast_ball.gdc[39m[0m
+[  75% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_colossus.gdc[39m[0m
+[  75% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_controller.gdc[39m[0m
+[  76% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_dreadnought.gdc[39m[0m
+[  76% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_forge.gdc[39m[0m
+[  76% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_sovereign.gdc[39m[0m
+[  76% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/bumper_bowl.gdc[39m[0m
+[  76% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/color_stand.gdc[39m[0m
+[  76% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/crate_relay.gdc[39m[0m
+[  77% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/crate_smash.gdc[39m[0m
+[  77% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/crumble_court.gdc[39m[0m
+[  77% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/drift_floes.gdc[39m[0m
+[  77% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/duel_pit.gdc[39m[0m
+[  77% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/duo_clash.gdc[39m[0m
+[  77% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/fawda.gdc[39m[0m
+[  78% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/gem_grab.gdc[39m[0m
+[  78% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/goal_guard.gdc[39m[0m
+[  78% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/hurdle_dash.gdc[39m[0m
+[  78% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/kart_sprint.gdc[39m[0m
+[  78% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/lab_crates.gdc[39m[0m
+[  79% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/magnet_court.gdc[39m[0m
+[  79% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/minigame_controller.gdc[39m[0m
+[  79% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/mnatiq.gdc[39m[0m
+[  79% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/mukharrib.gdc[39m[0m
+[  79% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/paint_grid.gdc[39m[0m
+[  79% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/quick_draw.gdc[39m[0m
+[  80% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/relic_hold.gdc[39m[0m
+[  80% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/ring_rumble.gdc[39m[0m
+[  80% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/rising_tide.gdc[39m[0m
+[  80% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/sabaq_sawarikh.gdc[39m[0m
+[  80% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/scrap_karts.gdc[39m[0m
+[  80% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/sky_court.gdc[39m[0m
+[  81% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/star_rush.gdc[39m[0m
+[  81% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/storm_heart.gdc[39m[0m
+[  81% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/sweeper_storm.gdc[39m[0m
+[  81% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/symbol_echo.gdc[39m[0m
+[  81% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/tag_hunt.gdc[39m[0m
+[  81% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/tank_arena.gdc[39m[0m
+[  82% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/turret_duel.gdc[39m[0m
+[  82% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/zone_hold.gdc[39m[0m
+[  82% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/apple_account.gdc[39m[0m
+[  82% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/armed_race_replica.gdc[39m[0m
+[  82% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/blast_replica.gdc[39m[0m
+[  82% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/bumper_replica.gdc[39m[0m
+[  83% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/collectible_replica.gdc[39m[0m
+[  83% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/color_replica.gdc[39m[0m
+[  83% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/colossus_replica.gdc[39m[0m
+[  83% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/crate_replica.gdc[39m[0m
+[  83% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/crumble_replica.gdc[39m[0m
+[  83% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/draw_replica.gdc[39m[0m
+[  84% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/dreadnought_replica.gdc[39m[0m
+[  84% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/duel_replica.gdc[39m[0m
+[  84% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/duo_replica.gdc[39m[0m
+[  84% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/echo_replica.gdc[39m[0m
+[  84% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/fawda_replica.gdc[39m[0m
+[  84% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/floe_replica.gdc[39m[0m
+[  85% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/forge_replica.gdc[39m[0m
+[  85% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/goal_guard_replica.gdc[39m[0m
+[  85% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/hurdle_replica.gdc[39m[0m
+[  85% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/kart_replica.gdc[39m[0m
+[  85% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/magnet_replica.gdc[39m[0m
+[  86% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/match_replica.gdc[39m[0m
+[  86% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/net_service.gdc[39m[0m
+[  86% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/paint_replica.gdc[39m[0m
+[  86% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/relic_replica.gdc[39m[0m
+[  86% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/room_client.gdc[39m[0m
+[  86% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/saboteur_replica.gdc[39m[0m
+[  87% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/scrap_replica.gdc[39m[0m
+[  87% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/siege_replica.gdc[39m[0m
+[  87% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/sky_replica.gdc[39m[0m
+[  87% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/sovereign_replica.gdc[39m[0m
+[  87% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/storm_replica.gdc[39m[0m
+[  87% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/sweeper_replica.gdc[39m[0m
+[  88% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/tag_replica.gdc[39m[0m
+[  88% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/tank_replica.gdc[39m[0m
+[  88% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/tide_replica.gdc[39m[0m
+[  88% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/turret_replica.gdc[39m[0m
+[  88% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/zone_replica.gdc[39m[0m
+[  88% ] [90m[1msavepack[22m | تخزين الملف: res://src/powerups/powerup_pickup.gdc[39m[0m
+[  89% ] [90m[1msavepack[22m | تخزين الملف: res://src/powerups/powerup_system.gdc[39m[0m
+[  89% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/achievements_service.gdc[39m[0m
+[  89% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/owner_key.gdc[39m[0m
+[  89% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/party_library.gdc[39m[0m
+[  89% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/party_playlist.gdc[39m[0m
+[  89% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/profile_metrics.gdc[39m[0m
+[  90% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/progression_service.gdc[39m[0m
+[  90% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/stats_service.gdc[39m[0m
+[  90% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_data.gdc[39m[0m
+[  90% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_highlights.gdc[39m[0m
+[  90% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_input_buffer.gdc[39m[0m
+[  90% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_store.gdc[39m[0m
+[  91% ] [90m[1msavepack[22m | تخزين الملف: res://src/save/save_system.gdc[39m[0m
+[  91% ] [90m[1msavepack[22m | تخزين الملف: res://src/settings/settings_service.gdc[39m[0m
+[  91% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/account_screen.gdc[39m[0m
+[  91% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/achievements_screen.gdc[39m[0m
+[  91% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/adventure_map.gdc[39m[0m
+[  91% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/boot_screen.gdc[39m[0m
+[  92% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/character_gallery.gdc[39m[0m
+[  92% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/credits_screen.gdc[39m[0m
+[  92% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/customize_screen.gdc[39m[0m
+[  92% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/daily_screen.gdc[39m[0m
+[  92% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/game_library.gdc[39m[0m
+[  93% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/local_play.gdc[39m[0m
+[  93% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/main_menu.gdc[39m[0m
+[  93% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/online_screen.gdc[39m[0m
+[  93% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/playlist_builder.gdc[39m[0m
+[  93% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/profile_screen.gdc[39m[0m
+[  93% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/quick_play.gdc[39m[0m
+[  94% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/replay_library.gdc[39m[0m
+[  94% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/replay_player.gdc[39m[0m
+[  94% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/results_screen.gdc[39m[0m
+[  94% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/rewards_screen.gdc[39m[0m
+[  94% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/settings_screen.gdc[39m[0m
+[  94% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/standings_screen.gdc[39m[0m
+[  95% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/stats_screen.gdc[39m[0m
+[  95% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/touch_layout_screen.gdc[39m[0m
+[  95% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/tournament_setup.gdc[39m[0m
+[  95% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/training_screen.gdc[39m[0m
+[  95% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/updates_screen.gdc[39m[0m
+[  95% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/match_hud.gdc[39m[0m
+[  96% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/offscreen_player_cue.gdc[39m[0m
+[  96% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/party_roster.gdc[39m[0m
+[  96% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screen.gdc[39m[0m
+[  96% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/tank_radar.gdc[39m[0m
+[  96% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/tournament_podium.gdc[39m[0m
+[  96% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/ui_kit.gdc[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/ui_theme_bootstrap.gdc[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/widgets.gdc[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSansArabic-OFL.txt[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://icon.svg.import[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://railway.json[39m[0m
+[  97% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSansSymbols2-OFL.txt[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://package.json[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSansSymbols-OFL.txt[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoEmoji-OFL.txt[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/NotoSans-OFL.txt[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://package-lock.json[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/startup_theme.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://assets/fonts/ui_theme.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://data/collision/rock_cover_0.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://data/collision/rock_cover_1.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://data/collision/rock_cover_2.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://data/collision/rock_cover_3.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://data/collision/rock_cover_4.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://data/collision/rock_cover_5.tres.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://scenes/boot.tscn.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/character_rig.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/collectible.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/fighter.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/game_ball.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/actors/projectile.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/ball_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/bomber_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/boss_hunter_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/climber_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/collector_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/color_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/courier_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/dodger_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/draw_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/driver_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/duellist_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/duo_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/echo_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/generic_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/gunner_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/keeper_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/magnet_keeper_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/painter_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/platform_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/racer_armed_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/racer_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/relic_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/runner_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/saboteur_painter_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/siege_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/smasher_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/storm_keeper_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/tag_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/tank_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/brains/zone_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/ai_brain.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ai/forge_feeding_plan.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/alula_world.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/arena.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/arena_hazards.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/arena_tile.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/cover_hull_cache.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/crater_floor.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/fantasy_circuit.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/forest_animal.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/forest_life.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/hover_machine.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/natural_valley.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/race_structures.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_biome.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_routes.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/racing_weather.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/tank_world.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/arenas/voyage_world.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/audio/audio_manager.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/audio/synth.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/camera/arena_camera.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/camera/local_vehicle_views.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/balance.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/event_bus.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/logger.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/main.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/minigame_validator.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/object_pool.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/platform_service.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/registry.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/core/scene_router.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/arena_def.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/character_data.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/minigame_def.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/data/powerup_def.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/debug/dev_tools.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/debug/operation_trace.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/burst.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/mesh_factory.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/quad_bike.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/race_recovery.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/fx/sky_dome.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/control_profile.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/haptic_director.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/input_frame.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/input_router.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/input/touch_source.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/localization/loc.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/adventure_session.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_config.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_context.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_phase.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_resource_preparation.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_result.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/match_scene.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/mutator_system.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/player_config.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/playlist_generator.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/match/tournament.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/base_siege.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/blast_ball.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_colossus.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_controller.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_dreadnought.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_forge.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/boss_sovereign.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/bumper_bowl.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/color_stand.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/crate_relay.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/crate_smash.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/crumble_court.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/drift_floes.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/duel_pit.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/duo_clash.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/fawda.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/gem_grab.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/goal_guard.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/hurdle_dash.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/kart_sprint.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/lab_crates.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/magnet_court.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/minigame_controller.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/mnatiq.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/mukharrib.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/paint_grid.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/quick_draw.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/relic_hold.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/ring_rumble.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/rising_tide.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/sabaq_sawarikh.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/scrap_karts.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/sky_court.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/star_rush.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/storm_heart.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/sweeper_storm.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/symbol_echo.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/tag_hunt.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/tank_arena.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/turret_duel.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/minigames/zone_hold.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/apple_account.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/armed_race_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/blast_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/bumper_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/collectible_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/color_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/colossus_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/crate_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/crumble_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/draw_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/dreadnought_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/duel_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/duo_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/echo_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/fawda_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/floe_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/forge_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/goal_guard_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/hurdle_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/kart_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/magnet_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/match_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/net_service.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/paint_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/relic_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/room_client.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/saboteur_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/scrap_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/siege_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/sky_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/sovereign_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/storm_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/sweeper_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/tag_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/tank_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/tide_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/turret_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/net/zone_replica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/powerups/powerup_pickup.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/powerups/powerup_system.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/achievements_service.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/owner_key.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/party_library.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/party_playlist.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/profile_metrics.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/progression_service.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/progression/stats_service.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_data.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_highlights.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_input_buffer.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/replay/replay_store.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/save/save_system.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/settings/settings_service.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/account_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/achievements_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/adventure_map.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/boot_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/character_gallery.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/credits_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/customize_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/daily_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/game_library.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/local_play.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/main_menu.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/online_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/playlist_builder.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/profile_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/quick_play.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/replay_library.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/replay_player.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/results_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/rewards_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/settings_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/standings_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/stats_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/touch_layout_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/tournament_setup.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/training_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screens/updates_screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/match_hud.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/offscreen_player_cue.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/party_roster.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/screen.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/tank_radar.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/tournament_podium.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/ui_kit.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/ui_theme_bootstrap.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://src/ui/widgets.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/global_script_class_cache.cfg[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://assets/app_store/icons/Icon-1024.png[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/extension_list.cfg[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://.godot/uid_cache.bin[39m[0m
+[  98% ] [90m[1msavepack[22m | تخزين الملف: res://project.binary[39m[0m
+[92m[ DONE ][39m [1msavepack[22m
+[0m
+[  33% ] [90m[1mexport[22m | Extracting and configuring Xcode project[39m[0m
+Static framework: libgodot.ios.release.xcframework
+Unzipping...
+READ: data.pck
+READ: godot_apple_embedded/
+READ: godot_apple_embedded/export_options.plist
+ADDING: KrasPass/export_options.plist size: 465
+READ: godot_apple_embedded/godot_apple_embedded-Info.plist
+ADDING: KrasPass/KrasPass-Info.plist size: 2536
+READ: godot_apple_embedded/godot_apple_embedded.entitlements
+ADDING: KrasPass/KrasPass.entitlements size: 190
+READ: godot_apple_embedded/Launch Screen.storyboard
+WARNING: Property not found: application/boot_splash/fullsize
+     at: get_setting_with_override_and_custom_features (core/config/project_settings.cpp:409)
+ADDING: KrasPass/Launch Screen.storyboard size: 3014
+READ: godot_apple_embedded/dummy.cpp
+ADDING: KrasPass/dummy.cpp size: 2989
+READ: godot_apple_embedded/dummy.h
+ADDING: KrasPass/dummy.h size: 2285
+READ: godot_apple_embedded/dummy.swift
+ADDING: KrasPass/dummy.swift size: 2252
+READ: godot_apple_embedded/dylibs/
+READ: godot_apple_embedded/dylibs/empty
+ADDING: KrasPass/dylibs/empty size: 42
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass/dylibs
+READ: godot_apple_embedded/en.lproj/
+READ: godot_apple_embedded/en.lproj/InfoPlist.strings
+ADDING: KrasPass/en.lproj/InfoPlist.strings size: 44
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass/en.lproj
+READ: godot_apple_embedded/Images.xcassets/
+READ: godot_apple_embedded/Images.xcassets/SplashImage.imageset/
+READ: godot_apple_embedded/Images.xcassets/SplashImage.imageset/Contents.json
+ADDING: KrasPass/Images.xcassets/SplashImage.imageset/Contents.json size: 343
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass/Images.xcassets/SplashImage.imageset
+READ: godot_apple_embedded/Images.xcassets/SplashImage.imageset/splash@2x.png
+ADDING: KrasPass/Images.xcassets/SplashImage.imageset/splash@2x.png size: 14701
+READ: godot_apple_embedded/Images.xcassets/SplashImage.imageset/splash@3x.png
+ADDING: KrasPass/Images.xcassets/SplashImage.imageset/splash@3x.png size: 14701
+READ: godot_apple_embedded.xcodeproj/
+READ: godot_apple_embedded.xcodeproj/project.pbxproj
+ADDING: KrasPass.xcodeproj/project.pbxproj size: 16059
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass.xcodeproj
+READ: godot_apple_embedded.xcodeproj/project.xcworkspace/
+READ: godot_apple_embedded.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+ADDING: KrasPass.xcodeproj/project.xcworkspace/contents.xcworkspacedata size: 154
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass.xcodeproj/project.xcworkspace
+READ: godot_apple_embedded.xcodeproj/xcshareddata/
+READ: godot_apple_embedded.xcodeproj/xcshareddata/xcschemes/
+READ: godot_apple_embedded.xcodeproj/xcshareddata/xcschemes/godot_apple_embedded.xcscheme
+ADDING: KrasPass.xcodeproj/xcshareddata/xcschemes/KrasPass.xcscheme size: 3444
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass.xcodeproj/xcshareddata/xcschemes
+READ: libgodot_camera.ios.debug.xcframework/
+READ: libgodot_camera.ios.debug.xcframework/ios-arm64_x86_64-simulator/
+READ: libgodot_camera.ios.debug.xcframework/ios-arm64_x86_64-simulator/empty
+READ: libgodot_camera.ios.debug.xcframework/ios-arm64_x86_64-simulator/libgodot_camera.a
+READ: libgodot_camera.ios.debug.xcframework/Info.plist
+READ: libgodot_camera.ios.debug.xcframework/ios-arm64/
+READ: libgodot_camera.ios.debug.xcframework/ios-arm64/empty
+READ: libgodot_camera.ios.debug.xcframework/ios-arm64/libgodot_camera.a
+READ: libgodot_camera.ios.release.xcframework/
+READ: libgodot_camera.ios.release.xcframework/Info.plist
+READ: libgodot_camera.ios.release.xcframework/ios-arm64/
+READ: libgodot_camera.ios.release.xcframework/ios-arm64/empty
+READ: libgodot_camera.ios.release.xcframework/ios-arm64/libgodot_camera.a
+READ: libgodot_camera.ios.release.xcframework/ios-arm64_x86_64-simulator/
+READ: libgodot_camera.ios.release.xcframework/ios-arm64_x86_64-simulator/empty
+READ: libgodot_camera.ios.release.xcframework/ios-arm64_x86_64-simulator/libgodot_camera.a
+READ: libgodot_camera.visionos.debug.xcframework/
+READ: libgodot_camera.visionos.debug.xcframework/Info.plist
+ADDING: libgodot_camera.visionos.debug.xcframework/Info.plist size: 1011
+Creating /tmp/kras-preflight-7f-ios-export/libgodot_camera.visionos.debug.xcframework
+READ: libgodot_camera.visionos.debug.xcframework/xros-arm64-simulator/
+READ: libgodot_camera.visionos.debug.xcframework/xros-arm64-simulator/empty
+ADDING: libgodot_camera.visionos.debug.xcframework/xros-arm64-simulator/empty size: 42
+Creating /tmp/kras-preflight-7f-ios-export/libgodot_camera.visionos.debug.xcframework/xros-arm64-simulator
+READ: libgodot_camera.visionos.debug.xcframework/xros-arm64/
+READ: libgodot_camera.visionos.debug.xcframework/xros-arm64/empty
+ADDING: libgodot_camera.visionos.debug.xcframework/xros-arm64/empty size: 42
+Creating /tmp/kras-preflight-7f-ios-export/libgodot_camera.visionos.debug.xcframework/xros-arm64
+READ: libgodot_camera.visionos.release.xcframework/
+READ: libgodot_camera.visionos.release.xcframework/xros-arm64-simulator/
+READ: libgodot_camera.visionos.release.xcframework/xros-arm64-simulator/empty
+ADDING: libgodot_camera.visionos.release.xcframework/xros-arm64-simulator/empty size: 42
+Creating /tmp/kras-preflight-7f-ios-export/libgodot_camera.visionos.release.xcframework/xros-arm64-simulator
+READ: libgodot_camera.visionos.release.xcframework/xros-arm64/
+READ: libgodot_camera.visionos.release.xcframework/xros-arm64/empty
+ADDING: libgodot_camera.visionos.release.xcframework/xros-arm64/empty size: 42
+Creating /tmp/kras-preflight-7f-ios-export/libgodot_camera.visionos.release.xcframework/xros-arm64
+READ: libgodot_camera.visionos.release.xcframework/Info.plist
+ADDING: libgodot_camera.visionos.release.xcframework/Info.plist size: 1011
+READ: libgodot.ios.debug.xcframework/
+READ: libgodot.ios.debug.xcframework/Info.plist
+READ: libgodot.ios.debug.xcframework/ios-arm64_x86_64-simulator/
+READ: libgodot.ios.debug.xcframework/ios-arm64_x86_64-simulator/empty
+READ: libgodot.ios.debug.xcframework/ios-arm64_x86_64-simulator/libgodot.a
+READ: libgodot.ios.debug.xcframework/ios-arm64/
+READ: libgodot.ios.debug.xcframework/ios-arm64/empty
+READ: libgodot.ios.debug.xcframework/ios-arm64/libgodot.a
+READ: libgodot.ios.release.xcframework/
+READ: libgodot.ios.release.xcframework/Info.plist
+ADDING: KrasPass.xcframework/Info.plist size: 1028
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass.xcframework
+READ: libgodot.ios.release.xcframework/ios-arm64/
+READ: libgodot.ios.release.xcframework/ios-arm64/empty
+READ: libgodot.ios.release.xcframework/ios-arm64/libgodot.a
+ADDING: KrasPass.xcframework/ios-arm64/libgodot.a size: 188414224
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass.xcframework/ios-arm64
+READ: libgodot.ios.release.xcframework/ios-arm64_x86_64-simulator/
+READ: libgodot.ios.release.xcframework/ios-arm64_x86_64-simulator/empty
+READ: libgodot.ios.release.xcframework/ios-arm64_x86_64-simulator/libgodot.a
+ADDING: KrasPass.xcframework/ios-arm64_x86_64-simulator/libgodot.a size: 174275960
+Creating /tmp/kras-preflight-7f-ios-export/KrasPass.xcframework/ios-arm64_x86_64-simulator
+READ: MoltenVK.xcframework/
+READ: MoltenVK.xcframework/ios-arm64/
+READ: MoltenVK.xcframework/ios-arm64/libMoltenVK.a
+ADDING: MoltenVK.xcframework/ios-arm64/libMoltenVK.a size: 6917632
+Creating /tmp/kras-preflight-7f-ios-export/MoltenVK.xcframework/ios-arm64
+READ: MoltenVK.xcframework/ios-arm64_x86_64-simulator/
+READ: MoltenVK.xcframework/ios-arm64_x86_64-simulator/libMoltenVK.a
+ADDING: MoltenVK.xcframework/ios-arm64_x86_64-simulator/libMoltenVK.a size: 13712744
+Creating /tmp/kras-preflight-7f-ios-export/MoltenVK.xcframework/ios-arm64_x86_64-simulator
+READ: MoltenVK.xcframework/Info.plist
+ADDING: MoltenVK.xcframework/Info.plist size: 3177
+READ: PrivacyInfo.xcprivacy
+ADDING: PrivacyInfo.xcprivacy size: 990
+Exporting launch screen storyboard
+Exporting additional assets
+[  66% ] [90m[1mexport[22m | Code-signing dylibs[39m[0m
+[92m[ DONE ][39m [1mexport[22m
+[0m

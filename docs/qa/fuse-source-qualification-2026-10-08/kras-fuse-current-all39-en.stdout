@@ -1,0 +1,243 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+Metal 4.0 - Forward Mobile - Using Device #0: Apple - Apple M5 (Apple9)
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (1920, 1080)]
+[DBG][Platform] app backgrounded
+[DBG][Platform] app foregrounded
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL tank_arena/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL ring_rumble/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL crumble_court/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL bumper_bowl/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL fawda/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL goal_guard/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL magnet_court/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL storm_heart/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL sky_court/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL blast_ball/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL scrap_karts/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL turret_duel/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL gem_grab/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL star_rush/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL paint_grid/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL mnatiq/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL mukharrib/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL zone_hold/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL crate_smash/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL lab_crates/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL crate_relay/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL hurdle_dash/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL kart_sprint/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL color_stand/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL symbol_echo/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL quick_draw/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL rising_tide/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL sweeper_storm/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL duel_pit/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_forge/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_colossus/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_dreadnought/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_sovereign/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL sabaq_sawarikh/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL relic_hold/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL tag_hunt/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL base_siege/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL drift_floes/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL duo_clash/landscape: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL tank_arena/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL ring_rumble/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL crumble_court/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL bumper_bowl/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL fawda/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL goal_guard/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL magnet_court/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL storm_heart/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL sky_court/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL blast_ball/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL scrap_karts/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL turret_duel/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL gem_grab/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL star_rush/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL paint_grid/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL mnatiq/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL mukharrib/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL zone_hold/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL crate_smash/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL lab_crates/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL crate_relay/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL hurdle_dash/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL kart_sprint/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL color_stand/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL symbol_echo/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL quick_draw/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL rising_tide/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL sweeper_storm/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL duel_pit/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_forge/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_colossus/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_dreadnought/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL boss_sovereign/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL sabaq_sawarikh/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL relic_hold/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL tag_hunt/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL base_siege/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL drift_floes/portrait: PASS
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+STAGE ZERO VISUAL duo_clash/portrait: PASS
+[DBG][Router] screen -> main_menu
+STAGE ZERO VISUAL: 78 captures, 0 failures

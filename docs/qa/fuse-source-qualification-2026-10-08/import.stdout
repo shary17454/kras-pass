@@ -1,0 +1,24 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started تهيئة المشروع (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | يتم مسح هيكل الملفات...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | جارٍ تحميل اسماء الأصناف العالمية...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | جارٍ التحقق من GDExtensions...[39m[0m
+ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension
+   at: parse_gdextension_file (core/extension/gdextension_library_loader.cpp:369)
+ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.
+   at: open_library (core/extension/gdextension.cpp:810)
+[  50% ] [90m[1mfirst_scan_filesystem[22m | جارٍ تحميل البرامج التحميل التلقائي النصية...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | جارٍ تهيئة الإضافات...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | جارٍ بدء مسح الملفات...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension
+   at: parse_gdextension_file (core/extension/gdextension_library_loader.cpp:369)
+ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.
+   at: open_library (core/extension/gdextension.cpp:810)
+[   0% ] [90m[1mloading_editor_layout[22m | Started جارٍ تحميل المحرر (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | جارٍ تحميل تنسيق المحرر...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | جارٍ التحميل الأرصِفة...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
