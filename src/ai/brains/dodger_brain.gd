@@ -120,7 +120,7 @@ func decide(delta: float) -> void:
 	# No band to run to: hold still enough to keep the jump honest and go over.
 	steer_to(me.global_position, 0.15)
 	if eta <= _lead and me.can_jump and me.is_on_floor():
-		press(Btn.JUMP)
+		tap(Btn.JUMP)
 	elif eta > _lead * 2.5 and _dodge_until <= 0.0:
 		# Plenty of time — use it to slide off the arm's line rather than stand
 		# in it, which is what makes the next pass survivable.
