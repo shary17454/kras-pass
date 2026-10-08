@@ -878,6 +878,7 @@ func _update_markers(delta: float) -> void:
 	var ring := _markers.get_node_or_null("Ring") as Node3D
 	if ring != null and is_instance_valid(ring):
 		var pulse := 1.0 + sin(_fx_time * 4.0) * (0.06 if _is_local else 0.03)
+		pulse *= 1.18 if _is_local else 1.0
 		ring.scale = Vector3(pulse, 1.0, pulse)
 
 

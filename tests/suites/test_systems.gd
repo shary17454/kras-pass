@@ -14,9 +14,32 @@ func run(t: TestHarness, host: Node) -> void:
 	_ai_profiles(t)
 	_pooling(t)
 	await _projectile_visual_reuse(t, host)
+	await _local_marker_scale(t, host)
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _local_marker_scale(t: TestHarness, host: Node) -> void:
+	t.test("local identity ring enlargement survives pulse updates")
+	for local in [false, true]:
+		var fighter := Fighter.new()
+		host.add_child(fighter)
+		fighter._build_markers()
+		if local:
+			fighter.mark_as_local()
+		var ring := fighter._markers.get_node("Ring") as Node3D
+		var body_scale := fighter.scale
+		for phase in [0.0, PI / 8.0, PI * 3.0 / 8.0, PI / 2.0]:
+			fighter._fx_time = phase
+			fighter._update_markers(1.0 / 60.0)
+			var expected := (1.18 if local else 1.0) * (1.0 + sin(phase * 4.0) * (0.06 if local else 0.03))
+			t.near(ring.scale.x, expected, 0.00001, "pulse retains the intended identity-ring base size")
+			t.near(ring.scale.z, expected, 0.00001, "ring enlargement is symmetric on the floor")
+			t.near(ring.scale.y, 1.0, 0.00001, "ring never changes floor thickness")
+			t.equal(fighter.scale, body_scale, "identity cue cannot enlarge the collision body")
+		fighter.queue_free()
+		await host.get_tree().process_frame
 
 
 func _projectile_visual_reuse(t: TestHarness, host: Node) -> void:
