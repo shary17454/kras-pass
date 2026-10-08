@@ -1166,6 +1166,23 @@ func _add_weather() -> void:
 
 
 func _add_ice_surface_marks() -> void:
+	for batch in _ice_surface_mark_batches().values():
+		var instances := MultiMesh.new()
+		instances.transform_format = MultiMesh.TRANSFORM_3D
+		instances.mesh = batch.mesh
+		instances.instance_count = batch.transforms.size()
+		for index in instances.instance_count:
+			instances.set_instance_transform(index, batch.transforms[index])
+		var node := MultiMeshInstance3D.new()
+		node.name = "IceSurfaceMarks"
+		node.multimesh = instances
+		node.material_override = batch.material
+		node.cast_shadow = batch.shadow
+		_static_root.add_child(node)
+
+
+func _ice_surface_mark_batches() -> Dictionary:
+	var batches := {}
 	var crack_color := Color(0.42, 0.70, 0.82, 0.55)
 	for i in 26:
 		var strip := MeshFactory.box(Vector3(1.2 + 0.55 * float(i % 4), 0.026, 0.045), crack_color)
@@ -1174,7 +1191,7 @@ func _add_ice_surface_marks() -> void:
 		strip.position = Vector3(cos(ang) * r, 0.08, sin(ang) * r)
 		strip.rotation.y = -ang + 0.35 * sin(float(i))
 		strip.material_override = MeshFactory.transparent(Color(0.25, 0.66, 0.82), 0.5)
-		_static_root.add_child(strip)
+		_collect_ice_mark(batches, strip)
 	for i in 16:
 		var patch := MeshFactory.box(Vector3(1.8 + 0.35 * float(i % 3), 0.028, 0.42 + 0.08 * float(i % 2)), Color(0.98, 1.0, 0.98))
 		var r := def.radius * (0.24 + 0.06 * float(i % 6))
@@ -1182,7 +1199,7 @@ func _add_ice_surface_marks() -> void:
 		patch.position = Vector3(cos(ang) * r, 0.105, sin(ang) * r)
 		patch.rotation.y = -ang + 0.6
 		patch.material_override = MeshFactory.transparent(Color(0.98, 1.0, 0.98), 0.36)
-		_static_root.add_child(patch)
+		_collect_ice_mark(batches, patch)
 	for i in 18:
 		var scratch := MeshFactory.box(Vector3(0.9 + 0.18 * float(i % 4), 0.018, 0.026), Color(0.78, 0.93, 0.98))
 		var r := def.radius * (0.16 + 0.04 * float(i % 10))
@@ -1190,7 +1207,18 @@ func _add_ice_surface_marks() -> void:
 		scratch.position = Vector3(cos(ang) * r, 0.13, sin(ang) * r)
 		scratch.rotation.y = -ang + 1.1
 		scratch.material_override = MeshFactory.transparent(Color(0.86, 0.98, 1.0), 0.5)
-		_static_root.add_child(scratch)
+		_collect_ice_mark(batches, scratch)
+	return batches
+
+
+func _collect_ice_mark(batches: Dictionary, mark: MeshInstance3D) -> void:
+	# Batch identical authored meshes, not scaled unit boxes: keep the bevels.
+	var key := "%d:%d" % [mark.mesh.get_instance_id(), mark.material_override.get_instance_id()]
+	if not batches.has(key):
+		batches[key] = {"mesh": mark.mesh, "material": mark.material_override,
+			"shadow": mark.cast_shadow, "transforms": []}
+	batches[key].transforms.append(mark.transform)
+	mark.free()
 
 
 # --- hazards ---------------------------------------------------------------

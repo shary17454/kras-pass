@@ -36,6 +36,7 @@ const SUITES := [
 	"res://tests/suites/test_platform_ground_routing.gd",
 	"res://tests/suites/test_sweeper_visible_hitbox.gd",
 	"res://tests/suites/test_sweeper_character_clearance.gd",
+	"res://tests/suites/test_ice_surface_batches.gd",
 	"res://tests/suites/test_dodger_camera_visibility.gd",
 	"res://tests/suites/test_storm_warning_reaction.gd",
 	"res://tests/suites/test_storm_incoming_defense.gd",
