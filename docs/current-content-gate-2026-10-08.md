@@ -1,5 +1,11 @@
 # Current-source content gate
 
+This document is an early checkpoint, not current campaign status. The final
+39-game campaign verification and remaining warnings are recorded in
+`natural-balance-final-4000000-2026-10-08.md`. Core CI completion is recorded
+separately in `core-babcf82-2026-10-08.md`. The classification below is the
+original one-report audit, not a rerun using all final campaign reports.
+
 Inspected clean branch `feature/kras-online-random-rotation`, source
 `0fee3c06229385f87f6141e16554e88a1cddee21`, simulation fingerprint
 `3c4a6722c287b7c486e51f875ee80350949c5fe06eaa37bf814f90e795bfb746`.
