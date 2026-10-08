@@ -45,6 +45,15 @@ it was explicitly interrupted with exit 130 to correct this test configuration,
 not counted as a success. A separate fixed-step run uses
 /tmp/kras-portrait-fit-matches-fixed.log and an independent save directory.
 
+The corrected fixed-step integration run completed with exit zero: 6960
+assertions passed in 244.8 seconds. Its strict completed-test log guard passed.
+This covers the registered games' short four-AI match fixtures, multi-round
+flow, pause/restart, device loss, paired difficulty fixtures, vehicle/item rules,
+authored-world geometry, race recovery and extended three-lap AI races. It is
+not the separate natural 42-match-per-game balance campaign or human device QA.
+The final code files remained unchanged throughout this run and the render runs;
+only this report was added afterward.
+
 ## Scope Limits
 
 This is not all-map/all-player-count visual qualification, a long soak, battery
