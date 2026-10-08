@@ -1,0 +1,13 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+PARTY RACE arena=dune_circuit seed=9614
+race progress 120s laps=[2, 2, 2, 2] checkpoints=[40, 48, 51, 49]
+slot=0 pos=(-71.08178, 3.308153, -17.50999) velocity=(-0.050518, 0.0, -22.38423) target=(-64.7433, 3.760048, -26.49914)
+slot=1 pos=(-27.88254, 1.253262, -54.90399) velocity=(8.404179, 0.0, -0.559197) target=(-19.09433, 2.088643, -57.07742)
+slot=2 pos=(-8.411355, 1.021189, -57.27628) velocity=(13.26211, 0.0, 0.407805) target=(2.379988, 1.921693, -56.89605)
+slot=3 pos=(-22.18912, 1.163565, -56.00629) velocity=(14.4876, 0.0, -2.0022) target=(-11.93814, 2.015687, -57.43032)
+finish duration=128.316666666661 rescue counts=[{ "spun": 2, "crates": 5, "hits": 1, "time": 12832, "laps": 3 }, { "crates": 12, "hits": 3, "spun": 6, "time": 12437, "laps": 3 }, { "crates": 13, "hits": 6, "spun": 2, "time": 12090, "laps": 3 }, { "crates": 7, "hits": 2, "spun": 2, "time": 12253, "laps": 3 }]
+PARTY RACE: PASS

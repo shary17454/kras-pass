@@ -1,0 +1,8 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+BOSS_AI game=boss_sovereign time=30 health=630.0 scores=[240, 270, 180, 180]
+BOSS_AI game=boss_sovereign seed=9614 difficulty=3 defeated=true health=0.0 scores=[360, 510, 330, 300]
+BOSS_AI: PASS

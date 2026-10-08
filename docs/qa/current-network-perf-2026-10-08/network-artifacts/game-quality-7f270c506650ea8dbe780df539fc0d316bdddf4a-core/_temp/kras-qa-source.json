@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "checkout_commit": "7f270c506650ea8dbe780df539fc0d316bdddf4a",
+  "checkout_tree": "30c5384cff9628fa8048d7a52945930fd814d86f",
+  "intended_head": "7f270c506650ea8dbe780df539fc0d316bdddf4a",
+  "event": "workflow_dispatch",
+  "ref": "refs/heads/fix/kras-blast-visible-fuse-age",
+  "scenario": "core",
+  "run_id": "37730081774",
+  "run_attempt": "1",
+  "tracked_changes": ""
+}
