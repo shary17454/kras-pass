@@ -116,6 +116,15 @@ func _rival_above() -> int:
 	return -1
 
 
+func _publish_output(movement: Vector2) -> void:
+	var me := self_body()
+	# Intentional braking must overcome stick drift before the jump approach.
+	if me != null and me.is_on_floor() and _prepare_jump and move.is_zero_approx() \
+			and _ledge_target != Vector3.INF and _ledge_target.y > me.global_position.y + 0.4:
+		movement = Vector2.ZERO
+	super._publish_output(movement)
+
+
 ## Nearest static body whose top is above us. Uses the same visible geometry a
 ## player reads, not a hand-authored path.
 func _find_higher_ground(from: Vector3) -> Vector3:

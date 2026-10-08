@@ -3,6 +3,7 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tide ordinary jump access")
+	await _jump_braking_input(t, host)
 	for character in Registry.characters():
 		var scene: Node = load("res://src/match/match_scene.gd").new()
 		host.add_child(scene)
@@ -116,4 +117,38 @@ func run(t: TestHarness, host: Node) -> void:
 	t.near(duel.arena.get_node("Static/Summit").position.y, 9.1, 0.001, "unrelated duel pit keeps original summit")
 	duel.teardown()
 	duel.queue_free()
+	await host.get_tree().process_frame
+
+
+func _jump_braking_input(t: TestHarness, host: Node) -> void:
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": MatchConfig.build("rising_tide", ["fanoos"], 1, 3, 807)})
+	scene.set_physics_process(false)
+	var body: Fighter = scene.ctx.fighter(0)
+	body.set_physics_process(false)
+	body.control_enabled = true
+	for tick in 20:
+		await host.get_tree().physics_frame
+		body.tick(InputFrame.new(), 1.0 / 60.0)
+	t.ok(body.is_on_floor(), "jump braking fixture is on the actual tide floor")
+	for difficulty in 4:
+		var brain = load("res://src/ai/brains/climber_brain.gd").new()
+		brain.configure(0, scene.ctx, difficulty, 807)
+		brain.on_round_start()
+		brain._ledge_target = body.global_position + Vector3(3.5, 1.35, 0)
+		brain.move = Vector2.ZERO
+		brain.bits = InputFrame.Btn.ATTACK
+		brain._publish()
+		t.equal(InputRouter._virtual_pending[0].move, Vector2.ZERO, "tier %d jump preparation publishes an actual stop despite input noise" % difficulty)
+		t.equal(InputRouter._virtual_pending[0].bits, InputFrame.Btn.ATTACK, "jump braking preserves unrelated actions")
+		brain.move = Vector2.RIGHT
+		brain._publish()
+		t.ok(InputRouter._virtual_pending[0].move.length() > 0.5, "jump approach remains enabled")
+		brain.move = Vector2.ZERO
+		brain._prepare_jump = false
+		brain._publish()
+		t.ok(InputRouter._virtual_pending[0].move.length() > 0.0, "ordinary movement retains difficulty input noise")
+	scene.teardown()
+	scene.queue_free()
 	await host.get_tree().process_frame
