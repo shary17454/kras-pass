@@ -38,7 +38,19 @@ func decide(delta: float) -> void:
 	# it actually needs to turn, which grows with speed.
 	var margin := arena.edge_distance(me.global_position)
 	if margin < lerpf(3.5, 9.0, clampf(me.speed_ratio(), 0.0, 1.0)):
-		drive_to(arena.retreat_point(me.global_position))
+		var retreat := arena.retreat_point(me.global_position)
+		drive_to(retreat)
+		var inward := retreat - me.global_position
+		inward.y = 0.0
+		if inward.length_squared() > 0.01:
+			inward = inward.normalized()
+			var outward_speed := maxf(0.0, -me.velocity.dot(inward))
+			var stopping_distance := outward_speed * outward_speed / maxf(2.0 * me.acceleration, 0.1) \
+				+ outward_speed * decision_interval
+			# Turning alone still applies forward throttle. Brake while the nose
+			# points into the drop and the remaining floor cannot fund a stop.
+			if me.facing.dot(inward) < 0.0 and stopping_distance >= maxf(0.0, margin - 1.0):
+				move.y = 1.0
 		return
 
 	# A run-up belongs to one observed rival, not a freshly randomized leader.

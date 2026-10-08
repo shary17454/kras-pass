@@ -56,3 +56,35 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+	await _check_edge_braking(t, host)
+
+
+func _check_edge_braking(t: TestHarness, host: Node) -> void:
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": MatchConfig.build("scrap_karts", ["fanoos", "nabta", "ramla", "sakhra"], 0, 3, 2704242)})
+	scene.set_physics_process(false)
+	for fighter in scene.ctx.fighters:
+		fighter.set_physics_process(false)
+	var me: Fighter = scene.ctx.fighter(0)
+	var arena: Arena = scene.ctx.arena
+	var brain = load("res://src/ai/brains/driver_brain.gd").new()
+	brain.configure(0, scene.ctx, 3, 2704242)
+	for outward in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
+		me.global_position = arena.global_position + outward * (arena.current_radius - 2.0)
+		me.facing = outward
+		me._steer = atan2(outward.x, outward.z)
+		me.velocity = outward * me.top_speed
+		brain.decide(0.1)
+		t.ok(brain.move.y > 0.0, "outward kart brakes before its turning arc crosses the lethal rim")
+		var before := me.velocity.dot(outward)
+		me._integrate_drive(Vector3(brain.move.x, 0.0, brain.move.y), 1.0 / 60.0)
+		t.ok(me.velocity.dot(outward) < before, "normal vehicle physics reduces outward momentum with the braking input")
+		me.facing = -outward
+		me.velocity = -outward * me.top_speed
+		brain.decide(0.1)
+		t.ok(brain.move.y < 0.0, "inward kart keeps driving away from the rim")
+	brain.controller = null
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame

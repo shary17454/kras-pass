@@ -1,0 +1,23 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── driver backoff engagement memory ────────────────────────────
+  ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+  ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+  ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+  ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+
+finished in 1.7s
+
+════════════════════════════════════════════════════════════════
+FAILED — 29 passed, 4 failed
+   ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+   ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+   ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+   ✗ driver backoff engagement memory / : outward kart brakes before its turning arc crosses the lethal rim
+════════════════════════════════════════════════════════════════
