@@ -44,6 +44,45 @@ func run(t: TestHarness, host: Node) -> void:
 	await _shared_arena(t, host)
 	await _safe_shapes(t, host)
 	await _colossus_visibility(t, host)
+	await _portrait_readability(t, host)
+
+
+func _portrait_readability(t: TestHarness, host: Node) -> void:
+	t.test("portrait arena uses vertical play space without cropping the rim")
+	var window := host.get_tree().root
+	var original := window.size
+	for id in ["scrap_yard", "star_meadow"]:
+		var arena := Arena.new()
+		arena.def = Registry.arena(id)
+		arena.current_radius = arena.def.radius
+		host.add_child(arena)
+		var camera := ArenaCamera.new()
+		host.add_child(camera)
+		camera.set_process(false)
+		camera.configure(ArenaCamera.Mode.ARENA, arena)
+		camera.shared_touch_count = 1
+		camera.shared_hud_bottom = func(): return 180.0
+		for resolution in [Vector2i(540, 960), Vector2i(720, 1280)]:
+			window.size = resolution
+			await host.get_tree().process_frame
+			camera._process(1.0 / 60.0)
+			var view := host.get_viewport().get_visible_rect().size
+			var safe := camera.arena_safe_rect(view)
+			var bounds := Rect2(camera.unproject_position(arena.global_position), Vector2.ZERO)
+			for index in 32:
+				var angle := TAU * index / 32.0
+				var point := arena.global_position + Vector3(cos(angle), 0, sin(angle)) * arena.current_radius
+				if arena.def.shape == "square":
+					point = arena.global_position + Vector3(signf(cos(angle)), 0, signf(sin(angle))) * arena.current_radius
+				var screen := camera.unproject_position(point)
+				bounds = bounds.expand(screen)
+				t.ok(safe.grow(1.0).has_point(screen), "all sampled rim points remain within the play region")
+			t.ok(bounds.size.y >= minf(safe.size.y * 0.50, view.x * 0.60), "portrait floor is not flattened into a narrow strip")
+			t.ok(bounds.size.x >= safe.size.x * 0.82, "steeper portrait view does not shrink the arena width")
+		camera.queue_free()
+		arena.queue_free()
+		await host.get_tree().process_frame
+	window.size = original
 
 
 func _colossus_visibility(t: TestHarness, host: Node) -> void:
