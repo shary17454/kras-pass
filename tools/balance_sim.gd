@@ -53,8 +53,8 @@ func _ready() -> void:
 		push_error("Balance simulation requires --test-data-dir with an absolute directory outside player saves")
 		get_tree().quit(2)
 		return
-	if not _parse_args():
-		push_error("Invalid --seed-offset: expected an integer from 0 to 1000000000")
+	if not _parse_args(OS.get_cmdline_user_args()):
+		push_error("Invalid balance arguments: use --runs=2..10000, --only=ID, --out-dir=PATH, --seed-offset=0..1000000000 and optional --clipped-rounds")
 		get_tree().quit(2)
 		return
 	if _games().is_empty():
@@ -117,30 +117,62 @@ func _say(line: String) -> void:
 		_log.flush()
 
 
-func _parse_args() -> bool:
-	for arg in OS.get_cmdline_user_args():
+func _parse_args(arguments: PackedStringArray) -> bool:
+	var next_runs := runs
+	var next_only := only
+	var next_output := out_dir
+	var next_seed := seed_offset
+	var next_natural := natural_rounds
+	var seen := {}
+	for arg in arguments:
+		var key := arg.get_slice("=", 0)
+		if seen.has(key):
+			return false
+		seen[key] = true
 		if arg.begins_with("--runs="):
-			runs = maxi(2, int(arg.split("=")[1]))
-		elif arg.begins_with("--only="):
-			only = arg.split("=")[1]
-		elif arg.begins_with("--out-dir="):
-			out_dir = arg.trim_prefix("--out-dir=")
-		elif arg == "--clipped-rounds":
-			natural_rounds = false
-		elif arg.begins_with("--seed-offset="):
-			if not _set_seed_offset(arg.trim_prefix("--seed-offset=")):
+			next_runs = _bounded_integer(arg.trim_prefix("--runs="), 2, 10000)
+			if next_runs < 0:
 				return false
+		elif arg.begins_with("--only="):
+			next_only = arg.trim_prefix("--only=")
+			if next_only.strip_edges().is_empty():
+				return false
+		elif arg.begins_with("--out-dir="):
+			next_output = arg.trim_prefix("--out-dir=")
+			if next_output.strip_edges().is_empty():
+				return false
+		elif arg == "--clipped-rounds":
+			next_natural = false
+		elif arg.begins_with("--seed-offset="):
+			next_seed = _bounded_integer(arg.trim_prefix("--seed-offset="), 0, 1000000000)
+			if next_seed < 0:
+				return false
+		elif arg.begins_with("--test-data-dir="):
+			# SaveSystem validates the isolated storage path before this parser runs.
+			continue
+		else:
+			return false
+	runs = next_runs
+	only = next_only
+	out_dir = next_output
+	seed_offset = next_seed
+	natural_rounds = next_natural
 	return true
 
 
-func _set_seed_offset(value: String) -> bool:
+static func _bounded_integer(value: String, minimum: int, maximum: int) -> int:
 	if not value.is_valid_int():
-		return false
+		return -1
 	# Bound the significant digits before conversion can overflow int64.
-	if value.trim_prefix("+").trim_prefix("-").lstrip("0").length() > 10:
-		return false
+	if value.trim_prefix("+").trim_prefix("-").lstrip("0").length() > str(maximum).length():
+		return -1
 	var parsed := int(value)
-	if parsed < 0 or parsed > 1000000000:
+	return parsed if parsed >= minimum and parsed <= maximum else -1
+
+
+func _set_seed_offset(value: String) -> bool:
+	var parsed := _bounded_integer(value, 0, 1000000000)
+	if parsed < 0:
 		return false
 	seed_offset = parsed
 	return true

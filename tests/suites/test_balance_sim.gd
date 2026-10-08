@@ -5,6 +5,7 @@ func run(t: TestHarness) -> void:
 	_evidence_policy(t)
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
+	_arguments(t, sim)
 	for unsafe in ["", ".", "relative-save", "user://", "user://simulation", "res://build/save", "/", "C:/"]:
 		t.ok(not sim._storage_is_isolated(unsafe), "simulator rejects a non-isolated save directory")
 	var player_directory := OS.get_user_data_dir()
@@ -86,6 +87,28 @@ func run(t: TestHarness) -> void:
 	probe.require_suite_assertions(before)
 	t.equal(probe.failed, 2, "a completed suite retains its original result")
 	sim.free()
+
+
+func _arguments(t: TestHarness, sim: Node) -> void:
+	t.test("balance arguments reject ambiguous or malformed evidence requests")
+	t.equal(sim._parse_args.get_argument_count(), 1, "argument validation accepts an explicit argument vector")
+	if sim._parse_args.get_argument_count() != 1:
+		return
+	var before := [sim.runs, sim.only, sim.out_dir, sim.seed_offset, sim.natural_rounds]
+	for invalid in ["--out=/tmp/report", "--runs=abc", "--runs=1", "--runs=2.5", "--runs=10001", "--runs=999999999999999999999", "--only=", "--out-dir=", "--clipped-round", "--seed-offset=-1"]:
+		t.ok(not sim._parse_args(PackedStringArray(["--runs=24", "--seed-offset=4200000", invalid])), "invalid argument is rejected before any configuration changes")
+		t.equal([sim.runs, sim.only, sim.out_dir, sim.seed_offset, sim.natural_rounds], before, "failed parsing preserves the whole prior configuration")
+	t.ok(not sim._parse_args(PackedStringArray(["--runs=24", "--runs=8"])), "duplicate campaign settings are rejected")
+	t.ok(sim._parse_args(PackedStringArray(["--runs=24", "--only=blast_ball", "--seed-offset=4200000", "--out-dir=/tmp/report with spaces", "--test-data-dir=/tmp/isolated"])), "production workflow arguments and isolated storage remain supported")
+	t.equal([sim.runs, sim.only, sim.out_dir, sim.seed_offset], [24, "blast_ball", "/tmp/report with spaces", 4200000], "valid arguments retain exact campaign identity and output path")
+	t.ok(sim._parse_args(PackedStringArray(["--runs=1000", "--clipped-rounds"])), "large balance simulations and explicit smoke mode remain available")
+	t.equal(sim.runs, 1000, "requested simulation count is not silently clamped")
+	t.ok(not sim.natural_rounds, "smoke mode requires the exact explicit option")
+	sim.runs = before[0]
+	sim.only = before[1]
+	sim.out_dir = before[2]
+	sim.seed_offset = before[3]
+	sim.natural_rounds = before[4]
 
 
 func _boss_outcomes(t: TestHarness, sim: Node) -> void:
