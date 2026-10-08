@@ -147,6 +147,9 @@ func _resolve() -> void:
 			ctx.bump_detail(slot, "correct")
 	if _order.size() > 0:
 		AudioManager.play_sfx("score")
+		if bool(ctx.config.rule("party_tiebreak", false)):
+			# Keep same-tick winners tied; the tournament remaps the contenders.
+			ctx.early_finish = true
 	if _pillar != null and is_instance_valid(_pillar):
 		_pillar.material_override = MeshFactory.toon(UIKit.PANEL_HI)
 
