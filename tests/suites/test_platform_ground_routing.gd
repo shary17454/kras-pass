@@ -14,6 +14,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_arrival_control(t, host)
 	await _test_walk_before_jump(t, host)
 	await _test_equal_routes(t, host)
+	await _test_equal_shortest_paths(t, host)
 	var arena := Arena.new()
 	host.add_child(arena)
 	var body := Fighter.new()
@@ -322,6 +323,49 @@ func _test_equal_routes(t: TestHarness, host: Node) -> void:
 	t.equal(unique.rng.state, rng_before, "a unique best route consumes no tie RNG")
 	arena.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_equal_shortest_paths(t: TestHarness, host: Node) -> void:
+	for quarter in 4:
+		var arena := Arena.new()
+		host.add_child(arena)
+		var ctx := MatchContext.new()
+		ctx.arena = arena
+		ctx.config = MatchConfig.build("crumble_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 734)
+		for slot in 4:
+			var body := Fighter.new()
+			arena.add_child(body)
+			body.set_physics_process(false)
+			body.hide()
+			ctx.fighters.append(body)
+		var first: Array[ArenaTile] = []
+		for cell in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(0, 1), Vector2i(2, 0), Vector2i(2, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2)]:
+			var rotated: Vector2i = cell
+			for turn in quarter:
+				rotated = Vector2i(-rotated.y, rotated.x)
+			var state := ArenaTile.State.SOLID if cell == Vector2i(2, 2) else ArenaTile.State.WARNING
+			var tile := _tile(arena, rotated.x, rotated.y, state)
+			if cell in [Vector2i(1, 0), Vector2i(0, 1)]:
+				first.append(tile)
+		for slot in 4:
+			var counts := [0, 0]
+			for seed_value in range(1000, 1064):
+				var brain := RoutingProbe.new()
+				brain.configure(slot, ctx, 3, seed_value)
+				var picked := brain._pick_tile(arena, Vector3.ZERO)
+				t.ok(picked in first, "equal shortest path stays on a visible cardinal first step")
+				if picked in first:
+					counts[first.find(picked)] += 1
+			t.ok(counts[0] >= 16 and counts[1] >= 16,
+				"rotation %d seat %d can use both equally short routes to one destination: %s" % [quarter, slot, counts])
+		var unique := RoutingProbe.new()
+		unique.configure(0, ctx, 3, 734)
+		first[0].hide()
+		var before := unique.rng.state
+		t.equal(unique._pick_tile(arena, Vector3.ZERO), first[1], "a hidden alternative cannot enter shortest-path tie selection")
+		t.equal(unique.rng.state, before, "one remaining shortest route consumes no tie RNG")
+		arena.queue_free()
+		await host.get_tree().process_frame
 
 
 func _tile(arena: Arena, x: int, z: int, state: ArenaTile.State) -> ArenaTile:

@@ -93,7 +93,8 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 			visible_ground[Vector2i(tile.grid_x, tile.grid_z)] = tile
 	var start := Vector2i(origin.grid_x, origin.grid_z)
 	# Cardinal steps cannot cut diagonally across the corner of a missing tile.
-	var first_steps := {start: origin}
+	var first_steps := {start: [origin]}
+	var depths := {start: 0}
 	var pending: Array[ArenaTile] = [origin]
 	var cursor := 0
 	while cursor < pending.size():
@@ -102,13 +103,24 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 		var cell := Vector2i(tile.grid_x, tile.grid_z)
 		for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 			var next: Vector2i = cell + offset
-			if first_steps.has(next) or not visible_ground.has(next):
+			if not visible_ground.has(next):
 				continue
 			var neighbour: ArenaTile = visible_ground[next]
 			if Vector2(neighbour.global_position.x - from.x, neighbour.global_position.z - from.z).length() > 12.0:
 				continue
-			first_steps[next] = neighbour if cell == start else first_steps[cell]
-			pending.append(neighbour)
+			var depth: int = int(depths[cell]) + 1
+			var options: Array = [neighbour] if cell == start else first_steps[cell]
+			if depths.has(next):
+				if int(depths[next]) != depth:
+					continue
+				# All shortest predecessors arrive before this BFS cell expands.
+				for step in options:
+					if step not in first_steps[next]:
+						first_steps[next].append(step)
+			else:
+				depths[next] = depth
+				first_steps[next] = options.duplicate()
+				pending.append(neighbour)
 	var candidates: Array[ArenaTile] = []
 	var best_score := -INF
 	for cell in first_steps:
@@ -121,19 +133,19 @@ func _pick_tile(arena: Arena, from: Vector3) -> ArenaTile:
 		var score := -d
 		# Prefer tiles with solid neighbours: a lone island is a death sentence.
 		score += _solid_neighbours(arena, t, visible_ground) * lerp(0.4, 2.4, edge_awareness)
-		var step: ArenaTile = first_steps[cell]
-		# A promising destination cannot make its shaking first step safe.
-		# Keep it as a fallback, but favour escaping onto untouched ground.
-		if step.state == ArenaTile.State.WARNING:
-			score -= 24.0 * edge_awareness
 		if _occupied(t):
 			score -= 4.0
-		if candidates.is_empty() or (score > best_score and not is_equal_approx(score, best_score)):
-			best_score = score
-			candidates.clear()
-			candidates.append(step)
-		elif is_equal_approx(score, best_score) and step not in candidates:
-			candidates.append(step)
+		for step: ArenaTile in first_steps[cell]:
+			# Score every equally short first step, not only the BFS direction winner.
+			var route_score := score
+			if step.state == ArenaTile.State.WARNING:
+				route_score -= 24.0 * edge_awareness
+			if candidates.is_empty() or (route_score > best_score and not is_equal_approx(route_score, best_score)):
+				best_score = route_score
+				candidates.clear()
+				candidates.append(step)
+			elif is_equal_approx(route_score, best_score) and step not in candidates:
+				candidates.append(step)
 	if candidates.is_empty():
 		return null
 	if candidates.size() == 1:
