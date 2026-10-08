@@ -37,7 +37,7 @@ jobs:
     # Colossus runs two ordinary (450s) and two tournament (800s) peer groups.
     # Kart: 2 x 960s ordinary + 3 x 1740s tournament/final + 10m setup < 130m.
     # Fawda: 3 x 180s ordinary + 5 x 360s tournament + 10m setup < 55m.
-    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 130 || matrix.scenario == 'lab_crates' && 85 || matrix.scenario == 'fawda' && 55 || 30 }}
+    timeout-minutes: ${{ matrix.scenario == 'sabaq_sawarikh' && 90 || matrix.scenario == 'boss_colossus' && 50 || matrix.scenario == 'kart_sprint' && 130 || matrix.scenario == 'lab_crates' && 85 || matrix.scenario == 'crate_smash' && 60 || matrix.scenario == 'fawda' && 55 || 30 }}
     strategy:
       fail-fast: false
       max-parallel: 3

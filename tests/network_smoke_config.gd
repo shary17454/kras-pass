@@ -28,6 +28,17 @@ static func lab_deadline(tournament: bool) -> int:
 	return int(budget.setup_seconds) + matches * int(budget.rounds_per_match) * int(budget.round_seconds)
 
 
+static func configure_crate(config: MatchConfig) -> void:
+	if config.minigame_id == "crate_smash":
+		config.duration_override = 0.0
+
+
+static func crate_deadline(tournament: bool) -> int:
+	var budget: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/crate_smoke_budget.json"))
+	var matches := int(budget.tournament_matches) + int(budget.maximum_finals) if tournament else 1
+	return int(budget.setup_seconds) + matches * int(budget.rounds_per_match) * int(budget.round_seconds)
+
+
 static func siege_evidence(hit: bool, destroyed: bool, contenders: Array, scores: Array) -> bool:
 	if not hit:
 		return false

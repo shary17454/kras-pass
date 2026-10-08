@@ -284,6 +284,8 @@ func _ready() -> void:
 		deadline = preload("res://tests/network_smoke_config.gd").kart_deadline(tournament_mode)
 	if requested_game_id == "lab_crates":
 		deadline = preload("res://tests/network_smoke_config.gd").lab_deadline(tournament_mode)
+	if requested_game_id == "crate_smash":
+		deadline = preload("res://tests/network_smoke_config.gd").crate_deadline(tournament_mode)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
@@ -369,6 +371,7 @@ func _start(cfg: MatchConfig) -> void:
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
 	preload("res://tests/network_smoke_config.gd").configure_boss(cfg)
 	preload("res://tests/network_smoke_config.gd").configure_lab(cfg)
+	preload("res://tests/network_smoke_config.gd").configure_crate(cfg)
 	if game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign", "boss_colossus"] and not cfg.rule("online_contenders", []).is_empty():
 		observed_boss_final = true
 		if boss_final_cups.is_empty(): boss_final_cups = Net.tournament.get("cups", []).duplicate()
