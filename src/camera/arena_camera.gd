@@ -343,7 +343,14 @@ func _apply(weight: float, delta: float) -> void:
 		var heading: Vector3 = local_target.facing.normalized()
 		offset = -heading * _distance * framing
 		look_focus += heading * follow_lookahead
-	var pos := live_focus + Vector3(offset.x, _height * _zoom * framing, offset.z)
+	var height := _height
+	if mode == Mode.ARENA:
+		var view := get_viewport().get_visible_rect().size
+		var portrait_blend := clampf((1.0 - view.x / maxf(view.y, 1.0)) / 0.4, 0.0, 1.0)
+		# A steeper portrait angle exposes the floor rather than enlarging it
+		# past the rim. Safe-region projection below still owns the final fit.
+		height *= lerpf(1.0, 1.65, portrait_blend)
+	var pos := live_focus + Vector3(offset.x, height * _zoom * framing, offset.z)
 	if mode == Mode.WORLD and is_inside_tree():
 		var ray := PhysicsRayQueryParameters3D.create(live_focus + Vector3.UP * 2, pos, 1)
 		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
@@ -414,6 +421,9 @@ func _fit_arena_region() -> void:
 		var ratio := maxf(bounds.size.x / safe.size.x, bounds.size.y / safe.size.y)
 		if behind or ratio > 0.98:
 			global_position += global_basis.z * depth * (clampf(ratio * 1.04, 1.04, 2.0) - 1.0)
+			continue
+		if mode == Mode.ARENA and view.x < view.y and ratio < 0.92:
+			global_position += global_basis.z * depth * (maxf(0.5, ratio / 0.94) - 1.0)
 			continue
 		global_position += project_position(bounds.get_center(), depth) - project_position(safe.get_center(), depth)
 
