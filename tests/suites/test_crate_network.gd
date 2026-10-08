@@ -18,6 +18,23 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.set_physics_process(false)
 		var game = scene.controller
 		if id == "crate_smash":
+			var fighter: Fighter = scene.ctx.fighter(0)
+			var old_position := fighter.global_position
+			var old_alive: bool = scene.ctx.alive[0]
+			var capsule := (fighter.get_node("Body") as CollisionShape3D).shape as CapsuleShape3D
+			var old_radius := capsule.radius
+			var candidate := Vector3(1000, 0.75, 1000)
+			fighter.global_position = candidate
+			t.ok(not game._spot_is_free(candidate), "crate cannot appear through a live player's body")
+			var near_edge := candidate + Vector3.RIGHT * 1.5
+			t.ok(game._spot_is_free(near_edge), "ordinary body leaves distant spawn space available")
+			capsule.radius = 0.9
+			t.ok(not game._spot_is_free(near_edge), "spawn clearance follows actual enlarged collision radius")
+			scene.ctx.alive[0] = false
+			t.ok(game._spot_is_free(candidate), "eliminated player does not reserve spawn space")
+			fighter.global_position = old_position
+			scene.ctx.alive[0] = old_alive
+			capsule.radius = old_radius
 			var spawn_probe := SpawnProbe.new()
 			spawn_probe.ctx = scene.ctx
 			var children_before: int = scene.ctx.world_root.get_child_count()

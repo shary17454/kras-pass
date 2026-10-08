@@ -77,6 +77,18 @@ func _spot_is_free(p: Vector3) -> bool:
 		var n = c["node"]
 		if is_instance_valid(n) and n.global_position.distance_to(p) < 2.2:
 			return false
+	for slot in ctx.fighters.size():
+		var fighter := ctx.fighter(slot)
+		if not ctx.is_alive(slot) or not is_instance_valid(fighter) or not fighter.alive:
+			continue
+		var shape := fighter.get_node_or_null("Body") as CollisionShape3D
+		var radius: float = shape.shape.radius if shape != null and shape.shape is CapsuleShape3D else 0.42
+		var offset := fighter.global_position - p
+		# Horizontal capsule-to-box clearance also protects an airborne landing.
+		var nearest := Vector2(maxf(0.0, absf(offset.x) - 0.75), maxf(0.0, absf(offset.z) - 0.75))
+		var clearance := radius + 0.1
+		if nearest.length_squared() < clearance * clearance:
+			return false
 	return true
 
 
