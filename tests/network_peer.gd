@@ -20,6 +20,8 @@ var completed := false
 var initial_positions: Array[Vector3] = []
 var moved := false
 var tournament_mode := false
+var tournament_rotation := "random_no_repeat"
+var arena_history: Array[String] = []
 var fawda_final_checkpoint := false
 var game_id := "ring_rumble"
 var requested_game_id := ""
@@ -242,6 +244,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
+		if arg.begins_with("--rotation="): tournament_rotation = arg.trim_prefix("--rotation=")
 		if arg == "--fawda-final-checkpoint": fawda_final_checkpoint = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg == "--race-tiebreak": race_tiebreak = true
@@ -253,6 +256,9 @@ func _ready() -> void:
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
 	requested_game_id = game_id
+	if not tournament_rotation in ["manual", "random", "random_no_repeat"]:
+		_fail("invalid tournament rotation")
+		return
 	if host and "--drop-host-result" in OS.get_cmdline_user_args():
 		result_drop = ResultDropTransport.new()
 		result_drop.delegate = Net.transport
@@ -301,7 +307,7 @@ func _room() -> void:
 			cfg["game"] = game_id
 			cfg["arena"] = Net.ONLINE_ARENAS[game_id][0]
 		if tournament_mode:
-			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat", "points": [5, 3, 2, 1],
+			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": tournament_rotation, "points": [5, 3, 2, 1],
 				"entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
@@ -341,6 +347,10 @@ func _start(cfg: MatchConfig) -> void:
 		_fail("network match resource preparation failed or session changed: %s" % failed_path)
 		return
 	game_id = cfg.minigame_id
+	if tournament_mode and Net.lobby_config.get("tournament", {}).get("rotation", "") != tournament_rotation:
+		_fail("server rotation differs from requested policy")
+		return
+	arena_history.append(cfg.arena_id)
 	draw_tap_sequence = -1
 	observed_remote_input_slots.clear()
 	if game_id == "duo_clash":
@@ -1799,6 +1809,7 @@ func _finished(result: MatchResult) -> void:
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
+		"tournament_rotation": tournament_rotation, "arena_history": arena_history,
 		"fawda_worlds": fawda_worlds,
 		"fawda_event_coverage": fawda_event_coverage,
 		"collection_scored": observed_collection_score, "carrying_seen": observed_carrying}))

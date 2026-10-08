@@ -74,6 +74,8 @@ service.rooms.close = (room, reason) => {
 };
 const children = [];
 const tournament = process.argv.includes('--tournament');
+const rotation = process.argv.find(arg => arg.startsWith('--rotation='))?.slice(11);
+assert.ok(rotation === undefined || (tournament && ['manual', 'random', 'random_no_repeat'].includes(rotation)));
 const duoTiebreak = process.argv.includes('--duo-tiebreak');
 const raceTiebreak = process.argv.includes('--race-tiebreak');
 const siegeTiebreak = process.argv.includes('--siege-tiebreak');
@@ -114,7 +116,8 @@ try {
         `--test-data-dir=${join(out, `${name}-save`)}`, `--humans=${humans}`,
         `--game=${game}`,
         index === 0 ? '--host' : `--room=${code}`, ...(index === 0 ? ['--drop-host-result'] : []),
-        ...(tournament ? ['--tournament'] : []), ...(duoTiebreak ? ['--duo-tiebreak'] : []),
+        ...(tournament ? ['--tournament'] : []), ...(rotation ? [`--rotation=${rotation}`] : []),
+        ...(duoTiebreak ? ['--duo-tiebreak'] : []),
         ...(fawdaFinalCheckpoint ? ['--fawda-final-checkpoint'] : []),
         ...(raceTiebreak ? ['--race-tiebreak'] : []), ...(siegeTiebreak ? ['--siege-tiebreak'] : []),
         ...(forgeTiebreak ? ['--forge-tiebreak'] : []), ...(dreadTiebreak ? ['--dread-tiebreak'] : []),
@@ -161,6 +164,11 @@ try {
         assert.ok(result.matches >= (fawdaFinalCheckpoint ? 1 : 3));
         assert.equal(result.tournament.complete, true);
         assert.deepEqual(result.tournament, results[0].tournament);
+        if (rotation) {
+          assert.equal(result.tournament_rotation, rotation);
+          assert.deepEqual(result.arena_history, results[0].arena_history);
+          assert.equal(result.arena_history.length, result.matches);
+        }
       }
     }
     if (duoTiebreak) {
