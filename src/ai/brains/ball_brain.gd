@@ -28,6 +28,8 @@ func decide(_delta: float) -> void:
 	if fuse < 0.0:
 		steer_to(arena.global_position)
 		return
+	# The displayed countdown was sampled before the reaction delay elapsed.
+	fuse = maxf(0.0, fuse - maxf(0.0, float(observed.get("age", 0.0))))
 	var dist := me.global_position.distance_to(position)
 	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
 	# Aggression does not buy escape time. Better planning tempers risk and

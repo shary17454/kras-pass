@@ -287,7 +287,9 @@ func perceive_ball(ball: GameBall) -> Dictionary:
 	# A relaunch reuses the node, not the preceding ball's observed trajectory.
 	if sample.is_empty() or int(sample["generation"]) != ball.launch_generation:
 		return {}
-	return sample.duplicate()
+	var observed := sample.duplicate()
+	observed["age"] = maxf(0.0, _time - float(_history_times[idx]))
+	return observed
 
 
 func can_observe(node: Node3D) -> bool:

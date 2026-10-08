@@ -1200,6 +1200,9 @@ func _test_ball_delay(t: TestHarness, scene: Node) -> void:
 	t.equal(keeper._most_dangerous_ball(), balls[1], "keeper updates threat ranking after the observation delay")
 	balls[1].velocity = Vector3(999, 0, 0)
 	var observation: Dictionary = keeper.perceive_ball(balls[1])
+	t.near(float(observation.get("age", -1.0)), 0.3, 0.0001, "observation age uses the retained sample time, not merely the configured reaction delay")
+	observation["age"] = 999.0
+	t.near(float(keeper.perceive_ball(balls[1]).get("age", -1.0)), 0.3, 0.0001, "returned observation age cannot mutate retained history")
 	t.equal(observation.get("velocity"), Vector3(-10, 0, 0), "ball prediction infers motion instead of reading private velocity")
 	observation["position"] = Vector3(999, 0, 0)
 	t.equal(keeper.perceive_ball(balls[1]).get("position"), Vector3(4, 0, 0), "returned observation cannot mutate retained history")

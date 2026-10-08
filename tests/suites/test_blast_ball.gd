@@ -124,6 +124,11 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.decide(0.1)
 	t.ok(not brain.escaped, "early close contact retains an offensive opportunity")
 	brain.escaped = false
+	brain.observed["age"] = 4.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "elapsed time since the visible fuse sample cannot fund a late approach")
+	brain.observed.erase("age")
+	brain.escaped = false
 	me.top_speed = 1.0
 	brain.decide(0.1)
 	t.ok(brain.escaped, "slow movement cannot borrow the escape budget of a faster character")
