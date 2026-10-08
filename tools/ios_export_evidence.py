@@ -6,7 +6,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-INPUT_ROOTS = ("src/", "data/", "assets/", "native/apple/", "tools/", "ci_scripts/")
+INPUT_ROOTS = ("src/", "scenes/", "addons/", "data/", "assets/", "native/apple/",
+               "tools/", "ci_scripts/")
 INPUT_FILES = {"project.godot", "export_presets.cfg"}
 STAMP = ".kras-source-export.json"
 REQUIRED_OUTPUTS = {"KrasPass.pck", "KrasPass.xcodeproj/project.pbxproj",

@@ -1,0 +1,24 @@
+{
+  "bundle": "com.shary.kraspass",
+  "version": "1.1.11",
+  "build": "110",
+  "minIOS": "15.0",
+  "families": [
+    1,
+    2
+  ],
+  "phoneOrientations": [
+    "UIInterfaceOrientationLandscapeLeft",
+    "UIInterfaceOrientationLandscapeRight",
+    "UIInterfaceOrientationPortrait"
+  ],
+  "padOrientations": [
+    "UIInterfaceOrientationLandscapeLeft",
+    "UIInterfaceOrientationLandscapeRight",
+    "UIInterfaceOrientationPortrait",
+    "UIInterfaceOrientationPortraitUpsideDown"
+  ],
+  "controllers": true,
+  "multipleControllers": true,
+  "permissionKeys": []
+}
