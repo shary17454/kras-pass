@@ -1,5 +1,12 @@
 extends RefCounted
 
+class SpawnProbe extends "res://src/minigames/crate_smash.gd":
+	var blocked := true
+	var attempts := 0
+	func _spot_is_free(_position: Vector3) -> bool:
+		attempts += 1
+		return not blocked
+
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("crate network presentation")
@@ -10,6 +17,24 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.setup({"config": cfg, "on_finished": func(_r): pass})
 		scene.set_physics_process(false)
 		var game = scene.controller
+		if id == "crate_smash":
+			var spawn_probe := SpawnProbe.new()
+			spawn_probe.ctx = scene.ctx
+			var children_before: int = scene.ctx.world_root.get_child_count()
+			spawn_probe._spawn_crate()
+			t.equal(spawn_probe.attempts, 20, "blocked spawn search is bounded")
+			t.ok(spawn_probe._crates.is_empty(), "exhausted spawn cannot append an overlapping crate")
+			t.equal(scene.ctx.world_root.get_child_count(), children_before, "exhausted spawn cannot add orphan world nodes")
+			spawn_probe.cleanup()
+			await host.get_tree().process_frame
+			spawn_probe.blocked = false
+			spawn_probe.attempts = 0
+			spawn_probe._spawn_crate()
+			t.equal(spawn_probe.attempts, 1, "spawn retries normally when a free spot becomes available")
+			t.equal(spawn_probe._crates.size(), 1, "a deferred crate can be created later")
+			spawn_probe.cleanup()
+			spawn_probe.free()
+			await host.get_tree().process_frame
 		if id == "lab_crates":
 			await _mixed_break_feedback(t, host)
 		if id == "lab_crates":

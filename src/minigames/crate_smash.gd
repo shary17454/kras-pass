@@ -45,6 +45,16 @@ func _spawn_crate() -> void:
 	if arena == null:
 		return
 	var is_bomb := ctx.rng.randf() < BOMB_RATIO
+	var spawn_position := Vector3.INF
+	for attempt in 20:
+		var ang := ctx.rng.randf() * TAU
+		var r := sqrt(ctx.rng.randf()) * arena.def.radius * 0.85
+		var p := arena.global_position + Vector3(cos(ang) * r, 0.75, sin(ang) * r)
+		if _spot_is_free(p):
+			spawn_position = p
+			break
+	if not spawn_position.is_finite():
+		return
 	var body := StaticBody3D.new()
 	body.collision_layer = 1
 	body.collision_mask = 0
@@ -57,14 +67,7 @@ func _spawn_crate() -> void:
 	cs.shape = box
 	body.add_child(cs)
 	ctx.world_root.add_child(body)
-	for attempt in 20:
-		var ang := ctx.rng.randf() * TAU
-		var r := sqrt(ctx.rng.randf()) * arena.def.radius * 0.85
-		var p := arena.global_position + Vector3(cos(ang) * r, 0.75, sin(ang) * r)
-		if _spot_is_free(p):
-			body.global_position = p
-			break
-		body.global_position = arena.global_position + Vector3(cos(ang) * r, 0.75, sin(ang) * r)
+	body.global_position = spawn_position
 	body.add_to_group("crates")
 	_crates.append({"node": body, "bomb": is_bomb})
 
