@@ -209,6 +209,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	var scores_seen: Array[int] = []
 	var baseline_seeds: Array[int] = []
 	var boss_outcomes: Array[Dictionary] = []
+	var team_outcomes: Array[Dictionary] = []
 
 	for run in runs:
 		_say("  %s run %d/%d" % [def.id, run + 1, runs])
@@ -228,6 +229,9 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		if result == null:
 			continue
 		completed += 1
+		if def.supports_teams:
+			var outcome: Dictionary = result.get_meta("balance_team_outcome", {})
+			team_outcomes.append({"seed": cfg.seed, "outcome": outcome.duplicate(true)})
 		for cid_played in chars:
 			appearances[cid_played] = int(appearances.get(cid_played, 0)) + 1
 		durations.append(result.duration)
@@ -282,6 +286,10 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		row["boss_defeated_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "defeated").size()
 		row["boss_survived_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "survived").size()
 		row["boss_unknown_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "unknown").size()
+	if def.supports_teams:
+		row["team_outcomes"] = team_outcomes
+		row["team_draw_runs"] = team_outcomes.filter(func(sample): return sample["outcome"].get("draw", false)).size()
+		row["team_unknown_runs"] = team_outcomes.filter(func(sample): return sample["outcome"].is_empty()).size()
 	row["flags"] = _flags(def, row)
 	row["severity"] = _severity(row["flags"])
 	return row
@@ -487,10 +495,37 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	while captured.is_empty() and guard < max_ticks:
 		await tree.physics_frame
 		guard += 1
+	if not captured.is_empty() and cfg.definition().supports_teams:
+		captured[0].set_meta("balance_team_outcome", _team_outcome(scene.controller, cfg.players.size()))
 	scene.teardown()
 	scene.queue_free()
 	await tree.process_frame
 	return captured[0] if captured.size() > 0 else null
+
+
+static func _team_outcome(controller: Node, player_count: int) -> Dictionary:
+	if not is_instance_valid(controller) or not controller.has_method("team_of") or not controller.has_method("team_score"):
+		return {}
+	var scores := {}
+	for slot in player_count:
+		var team = controller.call("team_of", slot)
+		if not team is int or team < 0:
+			return {}
+		var score = controller.call("team_score", team)
+		if not score is int or score < 0 or scores.has(team) and scores[team] != score:
+			return {}
+		scores[team] = score
+	if scores.size() < 2:
+		return {}
+	var best := -1
+	var winners: Array[int] = []
+	for team in scores:
+		if int(scores[team]) > best:
+			best = int(scores[team])
+			winners.assign([int(team)])
+		elif int(scores[team]) == best:
+			winners.append(int(team))
+	return {"scores": scores, "winners": winners, "draw": winners.size() > 1}
 
 
 func _tick_budget(cfg: MatchConfig) -> int:

@@ -1,11 +1,40 @@
 extends RefCounted
 
 
+class InvalidTeamController extends Node:
+	func team_of(slot: int) -> int:
+		return slot % 2
+
+	func team_score(_team: int):
+		return 1.5
+
+
 func run(t: TestHarness) -> void:
 	_evidence_policy(t)
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
 	_arguments(t, sim)
+	t.test("team draw diagnostics distinguish a shared team win from a competitive draw")
+	var duo = load("res://src/minigames/duo_clash.gd").new()
+	duo._team_score.assign([4, 2])
+	var team_outcome: Dictionary = sim._team_outcome(duo, 4)
+	t.equal(team_outcome.get("scores"), {0: 4, 1: 2}, "diagnostic retains authoritative shared totals")
+	t.equal(team_outcome.get("winners"), [0], "two winning partners represent one winning team")
+	t.equal(team_outcome.get("draw"), false, "partner co-winners do not imply opposing-team draw")
+	var shared := MatchResult.make("duo_clash", "sweeper_ring", [40, 20, 40, 20])
+	t.ok(shared.is_draw(), "individual co-first evidence is preserved independently")
+	duo._team_score.assign([2, 4])
+	t.equal(sim._team_outcome(duo, 4).get("winners"), [1], "either opposing side can win without a tie")
+	duo._team_score.assign([4, 4])
+	t.equal(sim._team_outcome(duo, 4).get("draw"), true, "equal opposing totals remain a real team draw")
+	t.equal(sim._team_outcome(duo, 1), {}, "missing opposing team cannot be certified")
+	var invalid_controller := InvalidTeamController.new()
+	t.equal(sim._team_outcome(invalid_controller, 4), {}, "invalid fractional score cannot masquerade as a verified outcome")
+	invalid_controller.free()
+	var unsupported := Node.new()
+	t.equal(sim._team_outcome(unsupported, 4), {}, "unsupported controller retains unknown rather than false success")
+	unsupported.free()
+	duo.free()
 	for unsafe in ["", ".", "relative-save", "user://", "user://simulation", "res://build/save", "/", "C:/"]:
 		t.ok(not sim._storage_is_isolated(unsafe), "simulator rejects a non-isolated save directory")
 	var player_directory := OS.get_user_data_dir()
