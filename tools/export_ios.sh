@@ -165,9 +165,11 @@ if [[ "$TARGET" == "project" ]]; then
 fi
 if [[ "$TARGET" == "simulator" ]]; then
 	SDK="iphonesimulator"
-	# The simulator slice of Godot's static library is x86_64-only in this
-	# release, so an arm64 simulator build links nothing. Pin the architecture.
-	EXTRA=(-arch x86_64)
+	SIM_ARCH="${KRAS_IOS_SIM_ARCH:-$(uname -m)}"
+	SIM_LIBRARY="$OUT/KrasPass.xcframework/ios-arm64_x86_64-simulator/libgodot.a"
+	node "$ROOT/tools/check-ios-simulator-arch.mjs" "$SIM_LIBRARY" "$SIM_ARCH"
+	EXTRA=(-arch "$SIM_ARCH")
+	echo "==> Simulator compilation only; launch on a matching runtime remains required"
 else
 	SDK="iphoneos"
 	EXTRA=()
