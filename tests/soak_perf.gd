@@ -267,6 +267,10 @@ func _pipeline_counts() -> Dictionary:
 	}
 
 
+func _result_exit_code() -> int:
+	return 0 if report.get("complete_duration", false) == true and not samples.is_empty() else 1
+
+
 func _finish() -> void:
 	done = true
 	set_process(false)
@@ -310,4 +314,9 @@ func _finish() -> void:
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
 	print("SOAK_RESULT ", JSON.stringify(report))
-	get_tree().quit(0 if not samples.is_empty() else 1)
+	# Measurements are complete; drain playback before the engine removes its mixer.
+	AudioManager.shutdown()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	OS.delay_msec(100)
+	get_tree().quit(_result_exit_code())

@@ -99,4 +99,11 @@ func run(t: TestHarness, _host: Node) -> void:
 	t.equal(soak.slow_frames[0].frame_ms, 70.0, "soak retains worst frame first")
 	t.equal(soak.slow_frames[7].frame_ms, 63.0, "soak retains worst eight frames")
 	t.equal(soak.slow_frames[0].pipeline_delta.draw, 1, "soak copies nested diagnostics at capture")
+	soak.report["complete_duration"] = true
+	t.equal(soak._result_exit_code(), 1, "no steady samples cannot qualify a completed soak")
+	soak.samples.append(16.0)
+	soak.report["complete_duration"] = false
+	t.equal(soak._result_exit_code(), 1, "partial steady samples cannot qualify an interrupted soak")
+	soak.report["complete_duration"] = true
+	t.equal(soak._result_exit_code(), 0, "complete duration with steady samples qualifies measurement only")
 	soak.free()
