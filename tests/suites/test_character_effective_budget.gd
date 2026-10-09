@@ -47,7 +47,46 @@ func run(t: TestHarness, host: Node) -> void:
 		t.near(vehicle.top_speed, expected_speed, 0.0001, "%s vehicle retains a bounded nonzero character speed difference" % character.id)
 		vehicle.free()
 	neutral_drive.free()
+	_check_drive_direction_budget(t)
 	await host.get_tree().process_frame
+
+
+func _check_drive_direction_budget(t: TestHarness) -> void:
+	t.suite("vehicle planar acceleration budget")
+	for character in Registry.characters():
+		var vehicle := Fighter.new()
+		vehicle.data = character
+		vehicle.locomotion = Fighter.Locomotion.DRIVE
+		vehicle._apply_character()
+		for fps in [30, 60, 120]:
+			var delta := 1.0 / float(fps)
+			for heading in [0.0, PI / 4.0, PI / 2.0, 3.0 * PI / 4.0]:
+				var forward := Vector3(sin(heading), 0.0, cos(heading))
+				for throttle in [-1.0, 1.0]:
+					vehicle._steer = heading
+					vehicle.velocity = Vector3.ZERO
+					vehicle._integrate_drive(Vector3(0.0, 0.0, -throttle), delta)
+					var planar := Vector3(vehicle.velocity.x, 0.0, vehicle.velocity.z)
+					t.near(planar.length(), vehicle.acceleration * delta, 0.00001,
+						"%s %dfps heading %.2f uses one acceleration budget" % [character.id, fps, heading])
+					t.ok(planar.normalized().is_equal_approx(forward * throttle), "acceleration follows the vehicle heading")
+				vehicle._steer = heading
+				vehicle.velocity = forward * 5.0
+				vehicle._integrate_drive(Vector3.ZERO, delta)
+				var braking := Vector3(vehicle.velocity.x, 0.0, vehicle.velocity.z)
+				t.near(braking.length(), 5.0 - vehicle.friction * 0.7 * delta, 0.00001,
+					"%s %dfps heading %.2f uses one braking budget" % [character.id, fps, heading])
+				vehicle._steer = heading
+				vehicle.velocity = forward * (vehicle.top_speed - 0.01)
+				vehicle._integrate_drive(Vector3(0.0, 0.0, -1.0), delta)
+				t.near(Vector2(vehicle.velocity.x, vehicle.velocity.z).length(), vehicle.top_speed, 0.00001,
+					"acceleration reaches but does not overshoot target speed")
+			vehicle._steer = 0.0
+			vehicle.velocity = Vector3(5.0, 0.0, 0.0)
+			vehicle._integrate_drive(Vector3(0.0, 0.0, -1.0), delta)
+			var turning_change := Vector2(vehicle.velocity.x - 5.0, vehicle.velocity.z)
+			t.near(turning_change.length(), vehicle.acceleration * delta, 0.00001, "redirecting sideways momentum cannot double acceleration")
+		vehicle.free()
 
 
 func _drive_angle(fighter: Fighter) -> float:

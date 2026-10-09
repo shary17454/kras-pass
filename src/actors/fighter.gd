@@ -724,8 +724,11 @@ func _integrate_drive(wish: Vector3, delta: float) -> void:
 	var throttle := -wish.z
 	var target := forward * throttle * top_speed * float(mods["speed"]) * float(mutator["speed"])
 	var a := acceleration * delta
-	velocity.x = move_toward(velocity.x, target.x, a if absf(throttle) > 0.05 else friction * 0.7 * delta)
-	velocity.z = move_toward(velocity.z, target.z, a if absf(throttle) > 0.05 else friction * 0.7 * delta)
+	# One planar budget keeps acceleration and braking independent of road yaw.
+	var planar := Vector2(velocity.x, velocity.z).move_toward(Vector2(target.x, target.z),
+		a if absf(throttle) > 0.05 else friction * 0.7 * delta)
+	velocity.x = planar.x
+	velocity.z = planar.y
 	if not is_on_floor():
 		velocity.y -= _gravity() * delta
 	elif velocity.y < 0.0:
