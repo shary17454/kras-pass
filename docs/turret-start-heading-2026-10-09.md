@@ -25,8 +25,10 @@ Green logs individually passed the strict Godot log checker.
 ## Natural Before/After Comparison
 
 Same local Godot 4.7.1 platform, seed offset 6800000, 64 baseline matches,
-16 paired difficulty matches, two stress matches per run: 82 matches
-before and 82 after. Independent comparison verified identical baseline
+32 paired difficulty matches, two stress matches per run: 98 matches
+before and 98 after. The raw reports were re-read to correct the earlier
+16/82 transcription; neither simulation nor result changed.
+Independent comparison verified identical baseline
 seed and character-roster arrays. No clipped rounds or forced scores.
 
 Before fingerprint:
