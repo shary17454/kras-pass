@@ -64,6 +64,7 @@ var fawda_arenas_seen := {}
 var tank_arenas_seen := {}
 var tank_route := PackedVector3Array()
 var tank_route_target := Vector3.INF
+var tank_pilot_observation := {}
 var tank_final_checkpoint := false
 var observed_duo_score := false
 var observed_duo_life_loss := false
@@ -224,7 +225,8 @@ func _process(_delta: float) -> void:
 			for fighter in game.ctx.fighters:
 				positions.append(str(fighter.global_position))
 			print("NETWORK_ATV=" + JSON.stringify({"positions": positions, "armor": game.controller.armor,
-				"ammo": game.controller.ammo, "inventory_seen": observed_tank_inventory, "route": str(tank_route)}))
+				"ammo": game.controller.ammo, "inventory_seen": observed_tank_inventory, "route": str(tank_route),
+				"pilot": tank_pilot_observation}))
 
 class ResultDropTransport extends Node:
 	var delegate: Node
@@ -905,6 +907,11 @@ func _physics_process(_delta: float) -> void:
 			if game_id == "tank_arena":
 				movement.y *= preload("res://tests/tank_smoke_pilot.gd").throttle(
 					combat_target.length(), fighter.facing.normalized().dot(combat_target.normalized()), tank_combat_clear)
+				tank_pilot_observation = {"position": str(fighter.global_position), "target": str(combat_position),
+					"facing": str(fighter.facing), "distance": combat_target.length(), "clear": tank_combat_clear,
+					"alignment": fighter.facing.normalized().dot(combat_target.normalized()), "movement": str(movement),
+					"can_fire": preload("res://tests/tank_smoke_pilot.gd").can_fire(
+						fighter.global_position, combat_position, fighter.facing, tank_combat_clear)}
 			if to.length() < 8.0 and game_id == "turret_duel":
 				movement.y = -0.2
 			if game_id == "tank_arena" and preload("res://tests/tank_smoke_pilot.gd").can_fire(
