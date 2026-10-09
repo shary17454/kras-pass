@@ -45,6 +45,47 @@ func run(t: TestHarness, host: Node) -> void:
 	await _safe_shapes(t, host)
 	await _colossus_visibility(t, host)
 	await _portrait_readability(t, host)
+	await _oasis_sightlines(t, host)
+
+
+func _oasis_sightlines(t: TestHarness, host: Node) -> void:
+	t.test("oasis natural spawn camera sightlines")
+	var window := host.get_tree().root
+	var original_size := window.size
+	var cfg := MatchConfig.build("tank_arena", ["nabta", "sakhra", "fanoos", "ramla"], 4, 1, 250925)
+	cfg.arena_id = "tank_oasis"
+	for player in cfg.players:
+		player.device_type = 2
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg})
+	scene._set_phase(MatchPhase.P.INSTRUCTIONS)
+	scene._set_phase(MatchPhase.P.COUNTDOWN)
+	scene._set_phase(MatchPhase.P.PLAYING)
+	for frame in 144:
+		await host.get_tree().physics_frame
+	for resolution in [Vector2i(540, 960), Vector2i(1280, 720)]:
+		window.size = resolution
+		for frame in 24:
+			await host.get_tree().physics_frame
+		for index in 4:
+			var camera: ArenaCamera = scene.vehicle_views.cameras[index]
+			var fighter: Fighter = scene.ctx.fighter(index)
+			for height in [0.3, 0.6, 1.0, 2.0]:
+				var subject: Vector3 = fighter.global_position + Vector3.UP * height
+				var ray := PhysicsRayQueryParameters3D.create(subject, camera.global_position, 1, [fighter.get_rid()])
+				var hit := camera.get_world_3d().direct_space_state.intersect_ray(ray)
+				print("OASIS_SIGHTLINE slot=%d height=%s subject=%s camera=%s collider=%s" % [index, height, subject, camera.global_position, hit.get("collider", "none")])
+				t.ok(hit.is_empty(), "natural spawn vehicle centre is unobstructed at height %s, slot %d" % [height, index])
+			for corner in [Vector3(-1.3, 0.15, -1.3), Vector3(1.3, 0.15, -1.3), Vector3(-1.3, 0.15, 1.3), Vector3(1.3, 0.15, 1.3)]:
+				var ray := PhysicsRayQueryParameters3D.create(fighter.global_position + corner, camera.global_position, 1, [fighter.get_rid()])
+				t.ok(camera.get_world_3d().direct_space_state.intersect_ray(ray).is_empty(), "vehicle footprint corners clear cover in both orientations")
+			var bounds: Rect2 = load("res://tests/suites/test_local_vehicle_views.gd").visual_bounds(camera, fighter)
+			t.ok(Rect2(Vector2.ZERO, Vector2(camera.get_viewport().size)).encloses(bounds), "obstruction recovery does not crop the vehicle")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
+	window.size = original_size
 
 
 func _portrait_readability(t: TestHarness, host: Node) -> void:

@@ -352,10 +352,24 @@ func _apply(weight: float, delta: float) -> void:
 		height *= lerpf(1.0, 1.65, portrait_blend)
 	var pos := live_focus + Vector3(offset.x, height * _zoom * framing, offset.z)
 	if mode == Mode.WORLD and is_inside_tree():
-		var ray := PhysicsRayQueryParameters3D.create(live_focus + Vector3.UP * 2, pos, 1)
-		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+		# A head-height ray can clear cover while the vehicle below is hidden.
+		var anchor := live_focus + Vector3.UP * (0.15 if close_follow and is_instance_valid(local_target) else 2.0)
+		var excluded: Array[RID] = []
+		if local_target is CollisionObject3D:
+			excluded.append(local_target.get_rid())
+		var body_side := Vector3(offset.z, 0, -offset.x).normalized() * 1.3 if close_follow else Vector3.ZERO
+		var hit := _world_obstruction(anchor, pos, body_side, excluded)
 		if not hit.is_empty():
-			pos = hit.position + hit.normal * 0.6
+			var clear_above := false
+			# Clear low cover vertically before shortening the follow distance.
+			for step in range(1, 9):
+				var raised := pos + Vector3.UP * float(step)
+				if _world_obstruction(anchor, raised, body_side, excluded).is_empty():
+					pos = raised + Vector3.UP * 0.8
+					clear_above = true
+					break
+			if not clear_above:
+				pos = hit.position + (anchor - hit.position).normalized() * 0.6
 	if _shake > 0.001:
 		var s := minf(_shake, _max_shake)
 		pos += Vector3(sin(_noise_t * 1.7), cos(_noise_t * 2.3), sin(_noise_t * 1.1)) * s * 0.9
@@ -364,6 +378,19 @@ func _apply(weight: float, delta: float) -> void:
 	rotation.x = clampf(rotation.x, deg_to_rad(-88.0), deg_to_rad(-8.0))
 	if mode in [Mode.ARENA, Mode.TOP_DOWN, Mode.ISOMETRIC] and arena != null:
 		_fit_arena_region()
+
+
+func _world_obstruction(anchor: Vector3, candidate: Vector3, side: Vector3, excluded: Array[RID]) -> Dictionary:
+	# Include both sides of the vehicle, not only its centre or HUD marker.
+	var forward := Vector3(-side.z, 0, side.x)
+	for sample in [Vector3.ZERO, side + forward, side - forward, -side + forward, -side - forward]:
+		var ray := PhysicsRayQueryParameters3D.create(anchor + sample, candidate, 1, excluded)
+		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+		if not hit.is_empty():
+			return hit
+		if side.is_zero_approx():
+			break
+	return {}
 
 
 func arena_safe_rect(view: Vector2) -> Rect2:
