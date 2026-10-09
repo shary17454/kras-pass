@@ -53,12 +53,20 @@ func _visible_surface(node: Node3D) -> Vector3:
 	return node.global_position + Vector3.UP
 
 
+func _perceived_water_level() -> float:
+	var arena := ctx.arena as Arena
+	if arena == null:
+		return -INF
+	var observed := perceived_object_position(arena._water)
+	return -INF if observed == Vector3.INF else observed.y
+
+
 func decide(_delta: float) -> void:
 	var me := self_body()
 	var arena := ctx.arena as Arena
 	if me == null or arena == null:
 		return
-	var water := arena.water_level()
+	var water := _perceived_water_level()
 	var urgency := clampf(3.0 / maxf(0.4, me.global_position.y - water), 0.2, 1.0)
 
 	# A rival directly above is worth attacking: knocking them down costs them

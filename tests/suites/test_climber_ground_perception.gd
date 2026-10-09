@@ -88,6 +88,44 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+	await _water_perception(t, host)
+
+
+func _water_perception(t: TestHarness, host: Node) -> void:
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": MatchConfig.build("rising_tide", ["fanoos"], 0, 3, 809)})
+	scene.set_physics_process(false)
+	scene.ctx.fighter(0).set_physics_process(false)
+	scene.ctx.observation_camera = null
+	var brain = load("res://src/ai/brains/climber_brain.gd").new()
+	brain.configure(0, scene.ctx, 3, 809)
+	t.ok(brain.has_method("_perceived_water_level"), "water hazard must use delayed visible perception")
+	if brain.has_method("_perceived_water_level"):
+		for difficulty in 4:
+			brain.configure(0, scene.ctx, difficulty, 809)
+			brain.on_round_start()
+			brain._time = 10.0
+			var water = scene.arena._water
+			water.reset(-3.0)
+			t.equal(brain._perceived_water_level(), -INF, "tier %d unseen water waits for acquisition" % difficulty)
+			brain._time += brain.reaction_time
+			water.reset(-1.0)
+			t.near(brain._perceived_water_level(), -3.0, 0.0001, "tier %d moving water uses prior observation" % difficulty)
+			brain._time += brain.reaction_time
+			t.near(brain._perceived_water_level(), -1.0, 0.0001, "tier %d observed water catches up after reaction delay" % difficulty)
+			water.hide()
+			water.reset(4.0)
+			t.equal(brain._perceived_water_level(), -INF, "hidden water cannot reveal its updated height")
+			water.show()
+			t.equal(brain._perceived_water_level(), -INF, "reappearing water reacquires before revealing height")
+			brain._time += brain.reaction_time
+			t.near(brain._perceived_water_level(), 4.0, 0.0001, "visible water becomes usable after reacquisition")
+			brain.on_round_start()
+			t.equal(brain._perceived_water_level(), -INF, "new round clears water knowledge")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _ground() -> StaticBody3D:
