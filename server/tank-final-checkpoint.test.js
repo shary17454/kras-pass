@@ -1,6 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {restoreTankFinal, TANK_FINAL_SEED, restoreTankThreeFinal, TANK_THREE_FINAL_SEED} from './tank-final-checkpoint.js';
+import {restoreTankRemoteFinal, TANK_REMOTE_FINAL_SEED} from './tank-final-checkpoint.js';
+
+test('recorded remote-only duel preserves a spectating host and a genuine no-hit tie', () => {
+  const room = {roster: [0, 1, 2, 3], epoch: 0, config: {game: 'tank_arena'}};
+  const before = restoreTankRemoteFinal(room);
+  assert.equal(TANK_REMOTE_FINAL_SEED, 1037876078);
+  assert.deepEqual(before.contenders, [1, 3]);
+  assert.equal(room.epoch, 3);
+  assert.deepEqual(room.tournament.next(), {game: 'tank_arena', arena: 'tank_oasis'});
+  room.tournament.record(4, [100, 500, 200, 500]);
+  assert.equal(room.tournament.complete, false);
+  assert.deepEqual(room.tournament.contenders, [1, 3]);
+  assert.deepEqual(room.tournament.points, before.points);
+  assert.throws(() => restoreTankRemoteFinal({...room, epoch: 4}));
+  assert.throws(() => restoreTankRemoteFinal({...room, epoch: 0, roster: [0, 1]}));
+  assert.throws(() => restoreTankRemoteFinal({...room, epoch: 0, config: {game: 'fawda'}}));
+});
 
 test('recorded three-way foundry final preserves standings and cannot invent a hit', () => {
   const room = {roster: [0, 1, 2, 3], epoch: 0, config: {game: 'tank_arena'}};

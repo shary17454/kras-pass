@@ -118,6 +118,9 @@ jobs:
             node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --fawda-final-checkpoint 2>&1 | tee "$RUNNER_TEMP/kras-network-fawda-restored-final.stdout"
             node network-smoke.js --game="$GAME_ID" --tournament --humans=4 --seed=1528023384 2>&1 | tee "$RUNNER_TEMP/kras-network-fawda-missing-explosion.stdout"
           fi
+          if [ "$GAME_ID" = tank_arena ]; then
+            node network-smoke.js --game="$GAME_ID" --tournament --humans=4 --tank-remote-final-checkpoint 2>&1 | tee "$RUNNER_TEMP/kras-network-tank-remote-final.stdout"
+          fi
           node network-smoke.js --game="$GAME_ID" "${match_args[@]}" 2>&1 | tee "$RUNNER_TEMP/kras-network-match.stdout"
           node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
           if [ "$GAME_ID" = tank_arena ]; then

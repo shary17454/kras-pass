@@ -17,6 +17,7 @@ import {labProcessDeadline} from './lab-smoke-budget.js';
 import {crateProcessDeadline} from './crate-smoke-budget.js';
 import {restoreFawdaFinal, assertFawdaNetworkEvidence, FAWDA_FINAL_SEED} from './fawda-final-checkpoint.js';
 import {restoreTankFinal, TANK_FINAL_SEED, restoreTankThreeFinal, TANK_THREE_FINAL_SEED} from './tank-final-checkpoint.js';
+import {restoreTankRemoteFinal, TANK_REMOTE_FINAL_SEED} from './tank-final-checkpoint.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = await mkdtemp(join(tmpdir(), 'kras-network-smoke-'));
@@ -25,11 +26,14 @@ const seedText = process.argv.find(arg => arg.startsWith('--seed='))?.slice(7);
 const fawdaFinalCheckpoint = process.argv.includes('--fawda-final-checkpoint');
 const tankFinalCheckpoint = process.argv.includes('--tank-final-checkpoint');
 const tankThreeFinalCheckpoint = process.argv.includes('--tank-three-final-checkpoint');
-const anyTankCheckpoint = tankFinalCheckpoint || tankThreeFinalCheckpoint;
+const tankRemoteFinalCheckpoint = process.argv.includes('--tank-remote-final-checkpoint');
+const anyTankCheckpoint = tankFinalCheckpoint || tankThreeFinalCheckpoint || tankRemoteFinalCheckpoint;
+assert.ok([tankFinalCheckpoint, tankThreeFinalCheckpoint, tankRemoteFinalCheckpoint].filter(Boolean).length <= 1);
 assert.ok(seedText === undefined || (/^[0-9]+$/.test(seedText)
   && Number.isSafeInteger(Number(seedText)) && Number(seedText) >= 1 && Number(seedText) <= 2147483646));
 const service = attachMultiplayer(server, {enabled: true,
   rooms: fawdaFinalCheckpoint ? new Rooms({seed: () => FAWDA_FINAL_SEED})
+    : tankRemoteFinalCheckpoint ? new Rooms({seed: () => TANK_REMOTE_FINAL_SEED})
     : tankThreeFinalCheckpoint ? new Rooms({seed: () => TANK_THREE_FINAL_SEED})
     : tankFinalCheckpoint ? new Rooms({seed: () => TANK_FINAL_SEED})
     : seedText === undefined ? new Rooms() : new Rooms({seed: () => Number(seedText)})});
@@ -38,7 +42,8 @@ if (fawdaFinalCheckpoint || anyTankCheckpoint) {
   service.rooms.beginRound = room => {
     if (room.epoch === 0) {
       console.log(JSON.stringify({event: anyTankCheckpoint ? 'restored_tank_final' : 'restored_fawda_final',
-        standings: tankThreeFinalCheckpoint ? restoreTankThreeFinal(room)
+        standings: tankRemoteFinalCheckpoint ? restoreTankRemoteFinal(room)
+          : tankThreeFinalCheckpoint ? restoreTankThreeFinal(room)
           : tankFinalCheckpoint ? restoreTankFinal(room) : restoreFawdaFinal(room)}));
     }
     beginRound(room);
@@ -108,6 +113,8 @@ assert.ok(!tankFinalCheckpoint || (tournament && game === 'tank_arena' && select
   && seedText === undefined && !fawdaFinalCheckpoint && !mixedPlaylist && rotation === undefined));
 assert.ok(!tankThreeFinalCheckpoint || (tournament && game === 'tank_arena' && selectedHumans === '4'
   && seedText === undefined && !tankFinalCheckpoint && !fawdaFinalCheckpoint && !mixedPlaylist && rotation === undefined));
+assert.ok(!tankRemoteFinalCheckpoint || (tournament && game === 'tank_arena' && selectedHumans === '4'
+  && seedText === undefined && !fawdaFinalCheckpoint && !mixedPlaylist && rotation === undefined));
 assert.ok(selectedHumans === undefined || ['2', '4'].includes(selectedHumans));
 assert.ok(!duoTiebreak || selectedHumans === undefined || selectedHumans === '4');
 assert.ok(!raceTiebreak || selectedHumans === undefined || selectedHumans === '4');
@@ -191,9 +198,11 @@ try {
     }
     if (anyTankCheckpoint) {
       for (const result of results) {
-        assert.deepEqual(result.tournament.points, tankThreeFinalCheckpoint ? [10, 7, 10, 10] : [10, 7, 10, 7]);
+        assert.deepEqual(result.tournament.points, tankRemoteFinalCheckpoint ? [6, 11, 7, 11]
+          : tankThreeFinalCheckpoint ? [10, 7, 10, 10] : [10, 7, 10, 7]);
         assert.ok(result.tournament.champions.length > 0);
-        assert.ok(result.tournament.champions.every(slot => (tankThreeFinalCheckpoint ? [0, 2, 3] : [0, 2]).includes(slot)));
+        assert.ok(result.tournament.champions.every(slot => (tankRemoteFinalCheckpoint ? [1, 3]
+          : tankThreeFinalCheckpoint ? [0, 2, 3] : [0, 2]).includes(slot)));
         assert.equal(result.round_history[0].epoch, 4);
         assert.equal(result.round_history[0].arena, tankThreeFinalCheckpoint ? 'tank_foundry' : 'tank_oasis');
       }
