@@ -50,3 +50,31 @@ real-time network input scheduling. Root cause is not yet established.
 - JavaScript syntax, workflow YAML and git diff whitespace checks pass.
 - No shipping runtime, final duration, hit assertion or production state changed.
 - Release gate remains OPEN/FAILED; this is diagnosis, not a gameplay fix.
+
+## Test-pilot correction
+
+The synthetic human driver pursued moving rivals along opposite road branches
+and fired whenever its facing aligned, without requiring a clear path. It did
+not hold an engagement distance. The revised pilot approaches the arena center
+when the rival is distant or covered, still routes around actual collision
+geometry, and holds throttle only when aligned within 12 units on a clear path.
+It only requests shots with a clear path. This changes test inputs, not vehicle
+physics, damage, ammo, spawn, final duration, collision or win conditions.
+
+Two local four-engine checkpoint runs passed:
+
+- /private/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-o8zOoB
+- /private/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-9YnNVw
+
+Both produced [100,478,200,465], champion slot 1, matching tournament results
+across all four peers; host and one client reconnected. The first host trace
+records armor [100,78,100,65], proving real damage. All eight individual stdout
+files passed the strict Godot log guard. The network unit suite passed 410
+assertions, including seven pilot checks. An initial sandbox launch crashed
+while opening user://logs; the explicit local log-file run passed. Do not
+discard that environment failure or report the isolated run as successful.
+
+The original failing pilot traces remain retained. Two synthetic successes do
+not prove player experience, AI balance, all maps, mobile performance or
+production connectivity. Current CI must qualify this test change; release
+is still not approved. The runtime source is unchanged.

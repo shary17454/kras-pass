@@ -41,6 +41,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 
 
 func run(t: TestHarness, host: Node) -> void:
+	_tank_smoke_pilot(t)
 	await _rotation_menu(t, host)
 	await _mixed_playlist_menu(t, host)
 	_protocol_policy(t)
@@ -103,6 +104,20 @@ func run(t: TestHarness, host: Node) -> void:
 	Net.leave()
 	_player_mapping(t)
 	await _quick_draw_edges(t, host)
+
+
+func _tank_smoke_pilot(t: TestHarness) -> void:
+	t.suite("Tank smoke pilot reachable engagement")
+	var pilot = preload("res://tests/tank_smoke_pilot.gd")
+	var origin := Vector3(28, 0, 0)
+	var rival := Vector3(-28, 0, 0)
+	t.equal(pilot.approach(origin, rival, Vector3.ZERO, true), Vector3.ZERO, "distant rivals rendezvous rather than chase opposite roads")
+	t.equal(pilot.approach(Vector3.ZERO, Vector3(10, 0, 0), Vector3.ONE, false), Vector3.ONE, "blocked rival requires a reachable road approach")
+	t.equal(pilot.approach(Vector3.ZERO, Vector3(10, 0, 0), Vector3.ONE, true), Vector3(10, 0, 0), "clear nearby rival remains combat target")
+	t.equal(pilot.throttle(10, 1.0, true), 0.0, "aligned shot can hold position in effective range")
+	t.equal(pilot.throttle(10, 1.0, false), 1.0, "cover prevents stationary firing")
+	t.equal(pilot.throttle(30, 1.0, true), 1.0, "distant target needs approach")
+	t.equal(pilot.throttle(10, 0.5, true), 1.0, "turning vehicle still moves to turn")
 
 
 func _protocol_terminal_state(t: TestHarness, host: Node) -> void:

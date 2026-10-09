@@ -876,7 +876,11 @@ func _physics_process(_delta: float) -> void:
 			var to := target - fighter.global_position
 			to.y = 0.0
 			var combat_target := to
+			var tank_combat_clear := false
 			if game_id == "tank_arena":
+				tank_combat_clear = _tank_clear_path(fighter.global_position, target)
+				target = preload("res://tests/tank_smoke_pilot.gd").approach(
+					fighter.global_position, target, game.arena.global_position, tank_combat_clear)
 				if not observed_tank_inventory:
 					var nearest := INF
 					for crate in game.controller.crates:
@@ -891,9 +895,12 @@ func _physics_process(_delta: float) -> void:
 			var current := atan2(fighter.facing.x, fighter.facing.z)
 			var diff := wrapf(desired - current, -PI, PI)
 			movement = Vector2(-clampf(diff * 1.8, -1.0, 1.0), -maxf(0.25, 1.0 - absf(diff) / PI))
+			if game_id == "tank_arena":
+				movement.y *= preload("res://tests/tank_smoke_pilot.gd").throttle(
+					combat_target.length(), fighter.facing.normalized().dot(combat_target.normalized()), tank_combat_clear)
 			if to.length() < 8.0 and game_id == "turret_duel":
 				movement.y = -0.2
-			if fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
+			if (game_id != "tank_arena" or tank_combat_clear) and fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
 				buttons = InputFrame.Btn.DASH if game_id == "scrap_karts" else InputFrame.Btn.ATTACK
 		if game_id == "drift_floes":
 			var fighter: Fighter = game.ctx.fighters[slot]
