@@ -365,8 +365,7 @@ func _poll_pad(slot: int, f: InputFrame) -> void:
 	var dev: int = _device_ids[slot]
 	f.prev_bits = f.bits
 	if not Input.get_connected_joypads().has(dev):
-		f.move = Vector2.ZERO
-		f.bits = 0
+		f.clear()
 		if not f.disconnected:
 			f.disconnected = true
 			EventBus.player_device_lost.emit(slot)
@@ -425,5 +424,6 @@ func _on_joy_changed(device: int, connected: bool) -> void:
 		Log.w("gamepad %d disconnected" % device, "Input")
 		for slot in MAX_SLOTS:
 			if _sources[slot] == Source.PAD and _device_ids[slot] == device:
+				_frames[slot].clear()
 				_frames[slot].disconnected = true
 				EventBus.player_device_lost.emit(slot)
