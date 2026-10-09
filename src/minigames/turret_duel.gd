@@ -41,6 +41,9 @@ func allows_attack() -> bool:
 func on_round_start() -> void:
 	cleanup()
 	_cooldowns.fill(0.0)
+	for fighter in ctx.fighters:
+		if fighter != null and is_instance_valid(fighter):
+			fighter.face_direction(ctx.arena_center() - fighter.global_position)
 
 
 func tick(delta: float) -> void:

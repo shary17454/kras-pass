@@ -9,6 +9,18 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	t.test("turret round starts give all seats an inward heading")
+	for round_index in 2:
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+			fighter.global_position = scene.arena.global_position + scene.arena.spawn_points[fighter.slot]
+			fighter.face_direction(Vector3.FORWARD)
+		game.on_round_start()
+		for fighter in scene.ctx.fighters:
+			var inward: Vector3 = scene.arena.global_position - fighter.global_position
+			inward.y = 0.0
+			t.near(fighter.facing.dot(inward.normalized()), 1.0, 0.00001, "each seat faces the arena centre after round reset")
+			t.near(Vector3(sin(fighter._steer), 0.0, cos(fighter._steer)).dot(inward.normalized()), 1.0, 0.00001, "drive steering agrees with the start heading")
 	for fighter in scene.ctx.fighters:
 		fighter.set_physics_process(false)
 		fighter.global_position = Vector3(100 + fighter.slot * 10, 1, 100)
