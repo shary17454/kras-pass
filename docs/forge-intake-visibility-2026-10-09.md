@@ -30,3 +30,29 @@ New simulation fingerprint:
 The ongoing 37939933912 balance campaign remains on its original a3358777
 source and is not cancelled or relabelled. A complete regression check of
 this new source remains required. No main merge, deployment or Apple upload.
+
+## Completed current-source Core check
+
+Run [37944511261](https://github.com/shary17454/kras-pass/actions/runs/37944511261)
+completed successfully. Downloaded source evidence matches commit
+a69a76ad64d6ed800153396fb7c6d7e80735c690, tree
+1873468c952b60a3dea18ee6ff27698574297c40 and intended head, with no tracked
+changes. Independently checked: 444 compiled scripts, 406153 completed
+assertions, 117 shortened stability matches with empty failure lists,
+275 server tests passed with zero skipped after actual Godot captures.
+All 23 artifact logs passed the repository checker with their proper modes.
+
+Four actual engine peers completed a three-round mixed tournament. All agreed
+on round histories, final points [5, 9, 12, 8], champion slot 2 and completion.
+Host and one guest reconnected. This remains localhost evidence, not Railway.
+Raw artifacts: ../qualification-core-a69a76a-2026-10-09/.
+
+The pre/post seeded Forge host capture differs only in process-local instance
+IDs: forge_replica obtains these with get_instance_id. After independently
+checking unique decimal-string IDs, all remaining captured fields deep-match
+the prior 7681393 fixture. This is one fixture, not all-match determinism.
+The original unnormalized comparison failure is not an engine test failure.
+
+Core regression requirement for this change is now satisfied. Natural balance,
+physical device acceptance, production data authorization and deployment,
+final native archive and Apple upload/review remain separate open gates.
