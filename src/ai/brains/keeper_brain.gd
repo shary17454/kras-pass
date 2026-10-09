@@ -103,7 +103,9 @@ func _most_dangerous_ball() -> GameBall:
 		if controller != null and controller.has_method("keeper_contact_offset"):
 			contact_plane += _goal_normal * controller.keeper_contact_offset(radius)
 		var arrival := (contact_plane - position).dot(_goal_normal) / normal_speed
-		if arrival <= 0.0:
+		# Arrival is measured from the delayed sample, not from the current tick.
+		# A predicted crossing older than that sample's age is no longer incoming.
+		if arrival <= maxf(0.0, float(observed.get("age", 0.0))):
 			continue
 		var crossing := position + velocity * arrival
 		if absf(_goal_axis.dot(crossing - _goal_pos)) > _lane_limit + radius:

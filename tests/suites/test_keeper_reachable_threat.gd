@@ -48,6 +48,19 @@ func run(t: TestHarness, host: Node) -> void:
 		brain.observations.erase(later.get_instance_id())
 		t.equal(brain._most_dangerous_ball(), early, "no reachable alternative still attempts the visible incoming shot")
 		brain.observations[later.get_instance_id()] = observed_later
+		var observed_early: Dictionary = brain.observations[early.get_instance_id()].duplicate()
+		brain.observations[early.get_instance_id()] = {
+			"position": plane + normal * 0.5,
+			"velocity": -normal * 20.0, "radius": early.radius, "age": 0.13}
+		for strength in [0.15, 1.0]:
+			brain.prediction = strength
+			t.equal(brain._most_dangerous_ball(), later,
+				"expired observed crossing does not displace an upcoming save, side=%d prediction=%s" % [slot, strength])
+		brain.prediction = 1.0
+		brain.observations[early.get_instance_id()]["age"] = 0.0
+		t.equal(brain._most_dangerous_ball(), early,
+			"the same imminent crossing remains eligible when its observation is fresh, side=%d" % slot)
+		brain.observations[early.get_instance_id()] = observed_early
 		brain.observations.erase(early.get_instance_id())
 		t.equal(brain._most_dangerous_ball(), later, "hidden threats are never added to the selection")
 		var fighter: Fighter = scene.ctx.fighter(slot)
