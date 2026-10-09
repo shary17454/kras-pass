@@ -1,11 +1,17 @@
 extends Node
 
 var _errors: Array[String] = []
+var _capture_dir := ""
 
 
 func _ready() -> void:
 	if SaveSystem.storage_root == SaveSystem.DIR or DisplayServer.get_name() == "headless":
 		push_error("Party visual QA requires a renderer and isolated --test-data-dir")
+		get_tree().quit(1)
+		return
+	_capture_dir = SaveSystem.storage_root.path_join("screenshots")
+	if DirAccess.make_dir_recursive_absolute(_capture_dir) != OK:
+		push_error("Party visual QA could not create screenshot directory")
 		get_tree().quit(1)
 		return
 	UserSettings.set_value("replay_capture", false)
@@ -158,7 +164,9 @@ func _capture(name: String) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var image := get_viewport().get_texture().get_image()
-	image.save_png("/tmp/kras-party-" + name + ".png")
+	var path := _capture_dir.path_join(name + ".png")
+	if image.save_png(path) != OK:
+		_errors.append(name + " screenshot could not be saved")
 	var colors := {}
 	for x in range(0, image.get_width(), 7):
 		for y in range(0, image.get_height(), 7):
