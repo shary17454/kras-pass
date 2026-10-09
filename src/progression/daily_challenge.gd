@@ -4,6 +4,7 @@ extends RefCounted
 const REWARD_GEMS := 12
 const HISTORY_LIMIT := 32
 const CLAIM_LIMIT := 90
+const MAX_ATTEMPTS := 2147483647
 
 
 static func today_key() -> String:
@@ -81,7 +82,29 @@ static func _record_key(setup: Dictionary) -> String:
 
 
 static func record(profile_id: String, setup: Dictionary) -> Dictionary:
-	return _stored(profile_id).records.get(_record_key(setup), {}).duplicate(true)
+	return _normalized_record(_stored(profile_id).records.get(_record_key(setup)))
+
+
+static func _normalized_record(value: Variant) -> Dictionary:
+	var raw: Dictionary = value if value is Dictionary else {}
+	var row := raw.duplicate(true)
+	row.merge({"attempts": 0, "completed": 0, "last_completed_attempt": 0,
+		"best_score": null, "best_time": null}, true)
+	for field in ["attempts", "completed", "last_completed_attempt"]:
+		var count: Variant = raw.get(field)
+		if (count is int or count is float) and is_finite(float(count)) \
+			and float(count) >= 0.0 and float(count) <= MAX_ATTEMPTS and float(count) == floorf(float(count)):
+			row[field] = int(count)
+	row.completed = mini(row.completed, row.attempts)
+	row.last_completed_attempt = mini(maxi(row.last_completed_attempt, row.completed), row.attempts)
+	var score: Variant = raw.get("best_score")
+	if (score is int or score is float) and is_finite(float(score)) \
+		and float(score) >= 0.0 and float(score) <= MAX_ATTEMPTS and float(score) == floorf(float(score)):
+		row.best_score = int(score)
+	var seconds: Variant = raw.get("best_time")
+	if (seconds is int or seconds is float) and is_finite(float(seconds)) and float(seconds) >= 0.0:
+		row.best_time = float(seconds)
+	return row
 
 
 static func begin_attempt(profile_id: String, setup: Dictionary) -> int:
@@ -89,8 +112,9 @@ static func begin_attempt(profile_id: String, setup: Dictionary) -> int:
 		return 0
 	var data := _stored(profile_id)
 	var key := _record_key(setup)
-	var row: Dictionary = data.records.get(key, {"attempts": 0, "completed": 0,
-		"last_completed_attempt": 0, "best_score": null, "best_time": null})
+	var row := _normalized_record(data.records.get(key))
+	if int(row.attempts) >= MAX_ATTEMPTS:
+		return 0
 	row.attempts = int(row.attempts) + 1
 	data.records[key] = row
 	_trim(data.records, HISTORY_LIMIT)
@@ -108,7 +132,7 @@ static func complete_attempt(profile_id: String, setup: Dictionary, attempt: int
 		return false
 	var data := _stored(profile_id)
 	var key := _record_key(setup)
-	var row: Dictionary = data.records.get(key, {})
+	var row := _normalized_record(data.records.get(key))
 	if row.is_empty() or attempt <= int(row.last_completed_attempt) or attempt > int(row.attempts):
 		return false
 	row.last_completed_attempt = attempt

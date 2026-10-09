@@ -81,8 +81,53 @@ func run(t: TestHarness, _host: Node) -> void:
 	for day in range(1, 29):
 		Daily.begin_attempt(first, Daily.plan("202612%02d" % day))
 	t.ok(SaveSystem.profile_branch(first, "daily_done").records.size() <= Daily.HISTORY_LIMIT, "daily record history is bounded")
+	_test_corrupt_record(t, first, setup)
 	SaveSystem.set_profile(original)
 	Progression._p = original_progress
+
+
+func _test_corrupt_record(t: TestHarness, profile_id: String, setup: Dictionary) -> void:
+	var key := Daily._record_key(setup)
+	var other := {"attempts": 7, "completed": 5, "last_completed_attempt": 7, "best_score": 99, "best_time": 2.0}
+	for malformed in ["broken", [], null, {}, {"attempts": {}, "completed": -4, "last_completed_attempt": [], "best_score": [], "best_time": "bad"}]:
+		SaveSystem.set_profile_branch(profile_id, "daily_done", {"key": setup.key,
+			"claims": {setup.key: true}, "records": {key: malformed, "other-valid-day": other.duplicate(true)}})
+		var stored := SaveSystem.profile_branch(profile_id, "daily_done").duplicate(true)
+		var gems := int(SaveSystem.profile_branch(profile_id, "progress").get("gems", 0))
+		var visible := Daily.record(profile_id, setup)
+		t.equal(SaveSystem.profile_branch(profile_id, "daily_done"), stored, "reading damaged row never rewrites save data")
+		t.ok(visible is Dictionary, "malformed daily record remains readable")
+		t.ok(visible.get("best_score") == null, "malformed best score is not displayed")
+		t.ok(visible.get("best_time") == null, "malformed best time is not displayed")
+		t.equal(Daily.begin_attempt(profile_id, setup), 1, "damaged row can start a fresh attempt")
+		t.equal(Daily.record(profile_id, setup).attempts, 1, "fresh attempt repairs only the damaged row")
+		t.ok(Daily.claimed(profile_id, setup.key), "repair preserves prior reward claim")
+		t.equal(SaveSystem.profile_branch(profile_id, "daily_done").records["other-valid-day"], other, "valid unrelated record survives repair")
+		var result := MatchResult.make(setup.game, setup.arena, [20, 10, 5, 1] as Array[int])
+		t.ok(Daily.complete_attempt(profile_id, setup, 1, result), "repaired row accepts natural completion")
+		t.equal(int(SaveSystem.profile_branch(profile_id, "progress").get("gems", 0)), gems, "repair cannot pay a claimed day twice")
+		t.ok(not Daily.complete_attempt(profile_id, setup, 1, result), "repaired row rejects duplicate completion")
+	for invalid in [-1, 0.5, true, INF, NAN, 2147483648.0]:
+		var normalized := Daily._normalized_record({"attempts": invalid, "completed": invalid,
+			"last_completed_attempt": invalid, "best_score": invalid})
+		t.equal(normalized.attempts, 0, "invalid counter is not coerced into progress")
+		t.equal(normalized.completed, 0, "invalid completion count is not accepted")
+		t.equal(normalized.last_completed_attempt, 0, "invalid completion receipt is not accepted")
+		t.equal(normalized.best_score, null, "invalid best score is not accepted")
+	var valid := Daily._normalized_record(other)
+	t.equal(valid, other, "normalization preserves valid recorded progress")
+	var partial := other.duplicate(true)
+	partial.erase("last_completed_attempt")
+	partial["future_metadata"] = {"medal": "gold"}
+	var repaired := Daily._normalized_record(partial)
+	t.equal(repaired.completed, 5, "missing receipt cannot erase valid completion count")
+	t.equal(repaired.last_completed_attempt, 5, "missing receipt retains a conservative completed-attempt floor")
+	t.equal(repaired.get("future_metadata"), partial.future_metadata, "unknown extension data survives normalization")
+	var capped := other.duplicate(true)
+	capped.attempts = Daily.MAX_ATTEMPTS
+	SaveSystem.set_profile_branch(profile_id, "daily_done", {"records": {key: capped}})
+	t.equal(Daily.begin_attempt(profile_id, setup), 0, "counter cannot overflow")
+	t.equal(SaveSystem.profile_branch(profile_id, "daily_done").records[key], capped, "overflow refusal leaves saved record intact")
 
 
 func _find_race() -> Dictionary:
