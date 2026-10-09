@@ -88,6 +88,18 @@ func decide(_delta: float) -> void:
 	if _ledge_target == Vector3.INF or (me.is_on_floor() and me.global_position.distance_to(_ledge_target) < 0.8):
 		_ledge_target = _find_higher_ground(me.global_position)
 		_prepare_jump = true
+	# Once there is no observed higher route, contest the occupied ledge rather
+	# than waiting beside a rival for the same water tick to eliminate both.
+	if me.is_on_floor() and _ledge_target.y <= me.global_position.y + 0.4:
+		var rival := _same_ledge_rival()
+		if rival >= 0 and rng.randf() < aggression * 0.8:
+			var target := predict(rival, 0.2)
+			steer_to(target)
+			var offset := target - me.global_position
+			offset.y = 0.0
+			if offset.length() > 1.6 and me.facing.dot(offset.normalized()) > 0.9:
+				maybe_dash(0.6)
+			return
 	var flat := Vector2(_ledge_target.x - me.global_position.x, _ledge_target.z - me.global_position.z).length()
 	# Leave room to rise before reaching the solid side of the next ledge.
 	if me.is_on_floor() and _ledge_target.y > me.global_position.y + 0.4 and _prepare_jump:
@@ -109,6 +121,25 @@ func decide(_delta: float) -> void:
 		press(Btn.JUMP)
 	if flat > 6.0:
 		maybe_dash(0.6)
+
+
+func _same_ledge_rival() -> int:
+	var me := self_body()
+	if me == null:
+		return -1
+	var nearest := 16.0
+	var target := -1
+	for i in ctx.fighters.size():
+		if i == slot or not can_target(i):
+			continue
+		var observed := perceive(i)
+		if absf(observed.y - me.global_position.y) > 0.4:
+			continue
+		var distance := Vector2(observed.x - me.global_position.x, observed.z - me.global_position.z).length_squared()
+		if distance < nearest:
+			nearest = distance
+			target = i
+	return target
 
 
 func _rival_above() -> int:
