@@ -1,9 +1,8 @@
 extends RefCounted
 
-static func approach(origin: Vector3, rival: Vector3, center: Vector3, clear: bool) -> Vector3:
-	var separation := rival - origin
-	separation.y = 0.0
-	return rival if clear and separation.length() <= 22.0 else center
+static func approach(_origin: Vector3, rival: Vector3, _center: Vector3, _clear: bool) -> Vector3:
+	# The caller routes around cover. Returning the center strands distant rivals.
+	return rival
 
 
 static func throttle(distance: float, aligned: float, clear: bool) -> float:
