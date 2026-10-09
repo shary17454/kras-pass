@@ -199,6 +199,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duo(t, scene)
 	_test_smasher(t, scene)
 	_test_duellist(t, scene)
+	_test_duellist_ties(t, scene)
 	_test_duellist_delay(t, scene)
 	_test_ball(t, scene)
 	_test_courier(t, scene)
@@ -654,6 +655,38 @@ func _test_duellist(t: TestHarness, scene: Node) -> void:
 	scene.ctx.fighter(1).show()
 	duellist._record_history()
 	t.equal(duellist._best_target(), 1, "duellist can target damaged rival after it reappears")
+
+
+func _test_duellist_ties(t: TestHarness, scene: Node) -> void:
+	var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
+	duellist.configure(0, scene.ctx, 3, 119)
+	duellist.reaction_time = 0.0
+	duellist.strategy = 1.0
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	for rival in range(1, 4):
+		scene.ctx.fighter(rival).show()
+		scene.ctx.fighter(rival).damage_percent = 0.0
+	scene.ctx.fighter(1).global_position = Vector3(2, 1, 0)
+	scene.ctx.fighter(2).global_position = Vector3(-2, 1, 0)
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 6)
+	duellist._record_history()
+	var choices := [0, 0, 0, 0]
+	for seed_value in 256:
+		duellist.rng.seed = seed_value + 12001
+		var selected: int = duellist._best_target()
+		t.ok(selected in [1, 2], "duellist tie selection excludes lower utility rivals")
+		if selected in [1, 2]:
+			choices[selected] += 1
+	t.ok(choices[1] >= 96 and choices[1] <= 160, "equal utility does not always prioritize the lower slot")
+	t.ok(choices[2] >= 96 and choices[2] <= 160, "equal utility gives both rivals a seeded selection opportunity")
+	duellist.rng.seed = 22001
+	var first: int = duellist._best_target()
+	duellist.rng.seed = 22001
+	t.equal(duellist._best_target(), first, "duellist tie selection is reproducible from its seed")
+	scene.ctx.fighter(2).hide()
+	var before: int = duellist.rng.state
+	t.equal(duellist._best_target(), 1, "a hidden co-leader cannot enter the final tie")
+	t.equal(duellist.rng.state, before, "a unique best target consumes no tie-breaking random draw")
 
 
 func _test_duellist_delay(t: TestHarness, scene: Node) -> void:

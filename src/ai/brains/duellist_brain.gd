@@ -55,7 +55,7 @@ func decide(_delta: float) -> void:
 
 ## Prefer the most damaged rival — they fly furthest for the same effort.
 func _best_target() -> int:
-	var best := -1
+	var candidates: Array[int] = []
 	var best_score := -INF
 	var me := self_body()
 	if me == null:
@@ -68,7 +68,15 @@ func _best_target() -> int:
 			continue
 		var dist := me.global_position.distance_to(perceive(i))
 		var score: float = perceived_damage(i) * lerp(0.2, 1.0, strategy) - dist * 2.0
-		if score > best_score:
+		if candidates.is_empty() or (score > best_score and not is_equal_approx(score, best_score)):
 			best_score = score
-			best = i
-	return best
+			candidates.clear()
+			candidates.append(i)
+		elif is_equal_approx(score, best_score):
+			candidates.append(i)
+	if candidates.is_empty():
+		return -1
+	if candidates.size() == 1:
+		return candidates[0]
+	# Match the shared rival selector: only a final utility tie consumes RNG.
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
