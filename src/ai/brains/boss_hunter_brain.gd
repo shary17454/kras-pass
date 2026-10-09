@@ -74,10 +74,21 @@ func perceived_dangers() -> Array:
 		if not cue is Node3D or not can_observe(cue):
 			continue
 		var id: int = cue.get_instance_id()
-		var first_seen: float = _danger_seen.get(id, _time)
-		observed[id] = first_seen
-		if _time - first_seen + 0.000001 >= reaction_time:
-			ready.append(zone)
+		var samples: Array = _danger_seen.get(id, [])
+		if samples.is_empty() or float(samples.back().time) < _time:
+			samples.append({"time": _time, "zone": zone.duplicate(true)})
+		while samples.size() > HISTORY_CAP:
+			samples.pop_front()
+		observed[id] = samples
+		# Mature cues still use delayed geometry, not live controller updates.
+		for index in range(samples.size() - 1, -1, -1):
+			var sample: Dictionary = samples[index]
+			if float(sample.time) <= _time - reaction_time + 0.000001:
+				var danger: Dictionary = sample.zone.duplicate(true)
+				if not bool(danger.get("persistent", false)):
+					danger.left = maxf(0.0, float(danger.left) - maxf(0.0, _time - float(sample.time)))
+				ready.append(danger)
+				break
 	# A removed or hidden cue cannot carry reaction credit into a new warning.
 	_danger_seen = observed
 	return ready

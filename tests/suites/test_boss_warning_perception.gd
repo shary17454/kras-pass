@@ -22,12 +22,28 @@ func run(t: TestHarness, host: Node) -> void:
 		t.empty(brain.perceived_dangers(), id + " warning remains delayed before reaction threshold")
 		brain._time = 10.5
 		t.equal(brain.perceived_dangers().size(), 1, id + " visible warning becomes actionable at threshold")
+		var live: Dictionary = scene.controller._telegraphs.back()
+		live.pos = Vector3(1, 0, 0)
+		cue.global_position = live.pos
+		live.radius = 4.0
+		live.left = 1.4
+		brain._time = 10.6
+		var delayed: Dictionary = brain.perceived_dangers()[0]
+		t.equal(delayed.pos, Vector3.ZERO, id + " mature warning movement still respects reaction delay")
+		t.near(delayed.radius, 3.0, 0.001, id + " mature warning size still comes from delayed observation")
+		delayed.pos = Vector3(999, 0, 0)
+		t.equal(brain.perceived_dangers()[0].pos, Vector3.ZERO, id + " returned danger cannot mutate retained observations")
+		brain._time = 11.1
+		var updated: Dictionary = brain.perceived_dangers()[0]
+		t.equal(updated.pos, Vector3(1, 0, 0), id + " visible warning movement becomes actionable after delay")
+		t.near(updated.radius, 4.0, 0.001, id + " visible warning size becomes actionable after delay")
+		t.near(updated.left, 0.9, 0.001, id + " remaining warning time advances from the observed countdown")
 		cue.hide()
 		t.empty(brain.perceived_dangers(), id + " hidden warning cannot guide escape")
 		t.empty(brain._danger_seen, id + " hidden warning loses prior reaction credit")
 		cue.show()
 		t.empty(brain.perceived_dangers(), id + " reappearing cue starts a fresh delay")
-		brain._time = 11.0
+		brain._time += brain.reaction_time
 		t.equal(brain.perceived_dangers().size(), 1, id + " reappearing cue becomes actionable after delay")
 		brain.on_round_start()
 		t.empty(brain._danger_seen, id + " new round clears warning observations")
@@ -35,6 +51,13 @@ func run(t: TestHarness, host: Node) -> void:
 		t.empty(brain.perceived_dangers(), id + " off-screen warning is not perceived")
 		cue.global_position = Vector3.ZERO
 		brain.perceived_dangers()
+		brain.reaction_time = 0.0
+		for sample in AIBrain.HISTORY_CAP + 3:
+			brain._time += 0.1
+			brain.perceived_dangers()
+		t.equal(brain._danger_seen[cue.get_instance_id()].size(), AIBrain.HISTORY_CAP, id + " danger observation history stays bounded")
+		t.equal(brain.perceived_dangers()[0].pos, live.pos, id + " zero delay uses the latest visible geometry")
+		brain.reaction_time = 0.5
 		scene.controller._clear_telegraphs()
 		t.empty(brain.perceived_dangers(), id + " removed cue cannot persist")
 		if id == "boss_colossus":
