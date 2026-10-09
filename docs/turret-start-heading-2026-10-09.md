@@ -47,9 +47,48 @@ independently recomputed from the checkout.
 
 This supports retaining the inward-heading fix. One matched cohort does
 not establish complete spawn/character fairness or all-arena balance.
-Full current-source regression and actual multi-peer turret matches
-remain required. Existing CI runs retain b61e4b4 and do not certify the
-changed shipping code. No main merge, deploy, archive or submission.
+Current-source follow-up is recorded below. Existing CI runs retain
+b61e4b4 and do not certify the changed shipping code. No main merge,
+deploy, archive or submission.
+
+## Current-Source Regression and Real Peers
+
+Tested commit: `4f78ae6ab044d33d46626f5239b3497eb839eac3`.
+The full local headless suite passed 405925 assertions in 222.9 seconds,
+exit 0. Its log also passed `tools/check_godot_log.sh` in `tests` mode.
+This is a test-suite result, not an iPhone performance qualification.
+
+`node network-smoke.js --game=turret_duel --humans=4 --seed=9614`
+passed, exit 0, using four real Godot processes and a loopback WebSocket
+service. One round ran on iron_flats, with a test-only 25-second duration
+override. All peers agreed on scores `[5,9,3,7]`; the host and one guest
+reconnected while retaining their peer IDs. Guests received 1488, 1508,
+and 1508 world snapshots. The fixture requires observed projectiles,
+damage and scoring, verifies guest replica agreement and rejects guest
+projectile simulation. All four stdout logs passed the strict checker.
+This is not a full-length round, tournament, WAN or Railway test.
+
+The server event-loop monitor observed a maximum delay of 532 ms.
+The separate sampled worst stall was 526.759 ms with 0.895 ms of
+process CPU usage during its 626.759 ms wall-time interval. This makes
+scheduling a candidate explanation, not a proven cause. Keep the
+performance gate open; a functional PASS does not resolve this delay.
+
+A sequential repeat with the same arguments plus `--scheduling-probe`
+also passed, exit 0. All four peers agreed on `[3,5,7,9]`; host and guest
+reconnects passed again. All four stdout logs passed the strict checker.
+The event-loop monitor maximum was 197 ms; both the server's sampled
+stall list and the independent idle probe's stall list were empty.
+This did not reproduce the first run's stall, so its cause remains
+unresolved. Different scores across runs also mean these real-time
+network smokes are not evidence of deterministic input replay.
+Repeat raw evidence: `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-k2U8mM/`;
+preserved as `network-4f78ae6-9614-probe/`.
+
+Raw full-suite log: `/tmp/kras-4f78ae6-full.stdout`.
+Real-peer evidence: `/var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/kras-network-smoke-9Olgn2/`.
+Preserved alongside earlier evidence as `full-4f78ae6.stdout` and
+`network-4f78ae6-9614/` under the directory below.
 
 Raw evidence roots:
 `/tmp/kras-turret-6800000-expanded-report/`,
