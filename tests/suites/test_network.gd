@@ -108,7 +108,7 @@ func run(t: TestHarness, host: Node) -> void:
 
 func _tank_smoke_pilot(t: TestHarness) -> void:
 	t.suite("Tank smoke pilot reachable engagement")
-	var pilot = preload("res://tests/tank_smoke_pilot.gd")
+	var pilot: Script = load("res://tests/tank_smoke_pilot.gd")
 	var origin := Vector3(28, 0, 0)
 	var rival := Vector3(-28, 0, 0)
 	t.equal(pilot.approach(origin, rival, Vector3.ZERO, true), Vector3.ZERO, "distant rivals rendezvous rather than chase opposite roads")
@@ -118,6 +118,19 @@ func _tank_smoke_pilot(t: TestHarness) -> void:
 	t.equal(pilot.throttle(10, 1.0, false), 1.0, "cover prevents stationary firing")
 	t.equal(pilot.throttle(30, 1.0, true), 1.0, "distant target needs approach")
 	t.equal(pilot.throttle(10, 0.5, true), 1.0, "turning vehicle still moves to turn")
+	var supports_fire: bool = pilot.get_script_method_list().any(func(method): return method.name == "can_fire")
+	t.ok(supports_fire, "tank smoke pilot verifies firing-line geometry")
+	if not supports_fire:
+		return
+	t.ok(pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 10), Vector3.BACK, true), "aligned clear rival can be fired at")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(3, 0, 10), Vector3.BACK, true), "old broad cone misses a rival despite dot product above 0.9")
+	t.ok(pilot.call("can_fire", Vector3.ZERO, Vector3(0.3, 0, 10), Vector3.BACK, true), "small lateral error remains in firing corridor")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 10), Vector3.BACK, false), "blocked firing corridor cannot shoot")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, -10), Vector3.BACK, true), "rival behind the muzzle cannot be hit")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 30), Vector3.BACK, true), "smoke pilot approaches distant rivals before shooting")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 1), Vector3.BACK, true), "rival before projectile spawn requires repositioning")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 10), Vector3.ZERO, true), "zero facing cannot authorize a shot")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 4, 10), Vector3.BACK, true), "rival on a different level cannot be hit by a horizontal shell")
 
 
 func _protocol_terminal_state(t: TestHarness, host: Node) -> void:

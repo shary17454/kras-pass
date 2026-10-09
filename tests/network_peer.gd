@@ -879,6 +879,7 @@ func _physics_process(_delta: float) -> void:
 					if d < distance:
 						distance = d
 						target = other.global_position
+			var combat_position := target
 			var to := target - fighter.global_position
 			to.y = 0.0
 			var combat_target := to
@@ -906,7 +907,10 @@ func _physics_process(_delta: float) -> void:
 					combat_target.length(), fighter.facing.normalized().dot(combat_target.normalized()), tank_combat_clear)
 			if to.length() < 8.0 and game_id == "turret_duel":
 				movement.y = -0.2
-			if (game_id != "tank_arena" or tank_combat_clear) and fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
+			if game_id == "tank_arena" and preload("res://tests/tank_smoke_pilot.gd").can_fire(
+				fighter.global_position, combat_position, fighter.facing, tank_combat_clear):
+				buttons = InputFrame.Btn.ATTACK
+			elif game_id != "tank_arena" and fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
 				buttons = InputFrame.Btn.DASH if game_id == "scrap_karts" else InputFrame.Btn.ATTACK
 		if game_id == "drift_floes":
 			var fighter: Fighter = game.ctx.fighters[slot]
