@@ -35,6 +35,9 @@ var slow_frames: Array[Dictionary] = []
 var trace_started := false
 var pipeline_start := {}
 var previous_pipelines := {}
+var _frame_pacing_frames := 0
+var _frame_pacing_matches := true
+var _frame_pacing_values: Array[Vector2i] = []
 
 
 func _configuration_error() -> String:
@@ -183,6 +186,7 @@ func _process(_delta: float) -> void:
 	last_us = now
 	var live: bool = scene.ctx != null and not scene._paused and MatchPhase.is_live(scene.phase)
 	if live:
+		_record_frame_pacing(Engine.max_fps, DisplayServer.window_get_vsync_mode())
 		if not trace_started:
 			DevTools.operations.reset()
 			pipeline_start = _pipeline_counts()
@@ -272,9 +276,19 @@ func _pipeline_counts() -> Dictionary:
 	}
 
 
+func _record_frame_pacing(engine_cap: int, vsync_mode: int) -> void:
+	_frame_pacing_frames += 1
+	_frame_pacing_matches = _frame_pacing_matches and engine_cap == cap and vsync_mode == DisplayServer.VSYNC_DISABLED
+	var value := Vector2i(engine_cap, vsync_mode)
+	if not _frame_pacing_values.has(value) and _frame_pacing_values.size() < 8:
+		_frame_pacing_values.append(value)
+
+
 func _result_exit_code() -> int:
 	var complete: bool = report.get("complete_duration", false) == true and not samples.is_empty()
-	return 0 if complete and (not firing or projectile_peak > 0) else 1
+	var pacing_valid := _frame_pacing_frames > 0 and _frame_pacing_matches \
+		and _frame_pacing_frames == samples.size() + cold_samples.size()
+	return 0 if complete and pacing_valid and (not firing or projectile_peak > 0) else 1
 
 
 func _finish() -> void:
@@ -285,6 +299,13 @@ func _finish() -> void:
 	report["live_seconds"] = live_seconds
 	report["simulation_seconds"] = scene._round_elapsed
 	report["complete_duration"] = live_seconds >= seconds + 3.0
+	var pacing_values: Array[Dictionary] = []
+	for value in _frame_pacing_values:
+		pacing_values.append({"engine_max_fps": value.x, "vsync_mode": value.y})
+	report["frame_pacing"] = {"frames_observed": _frame_pacing_frames,
+		"matches_requested": _frame_pacing_frames > 0 and _frame_pacing_matches,
+		"requested_engine_max_fps": cap, "requested_vsync_mode": DisplayServer.VSYNC_DISABLED,
+		"observed_values": pacing_values}
 	report["distance_per_player_m"] = distances
 	report["static_memory_before_mb"] = memory_before
 	report["static_memory_peak_mb"] = memory_peak
