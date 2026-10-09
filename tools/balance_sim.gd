@@ -31,6 +31,7 @@ const NULL_TRIALS := 4000
 
 var runs := 6
 var only := ""
+var arena_override := ""
 var natural_rounds := true
 var balanced_rosters := false
 var seed_offset := 0
@@ -55,7 +56,7 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 	if not _parse_args(OS.get_cmdline_user_args()):
-		push_error("Invalid balance arguments: use --runs=2..10000, --only=ID, --out-dir=PATH, --seed-offset=0..1000000000 and optional --clipped-rounds or --balanced-rosters")
+		push_error("Invalid balance arguments: use --runs=2..10000, --only=ID, optional --arena=ID belonging to --only, --out-dir=PATH, --seed-offset=0..1000000000 and optional --clipped-rounds or --balanced-rosters")
 		get_tree().quit(2)
 		return
 	if _games().is_empty():
@@ -123,6 +124,7 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 	var next_only := only
 	var next_output := out_dir
 	var next_seed := seed_offset
+	var next_arena := arena_override
 	var next_natural := natural_rounds
 	var next_balanced := balanced_rosters
 	var seen := {}
@@ -138,6 +140,10 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 		elif arg.begins_with("--only="):
 			next_only = arg.trim_prefix("--only=")
 			if next_only.strip_edges().is_empty():
+				return false
+		elif arg.begins_with("--arena="):
+			next_arena = arg.trim_prefix("--arena=")
+			if next_arena.strip_edges().is_empty():
 				return false
 		elif arg.begins_with("--out-dir="):
 			next_output = arg.trim_prefix("--out-dir=")
@@ -158,7 +164,12 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 			return false
 	if next_balanced and (Registry.characters().size() < 4 or Registry.characters().size() % 4 != 0):
 		return false
+	if not next_arena.is_empty():
+		var definition := Registry.minigame(next_only)
+		if definition == null or Registry.arena(next_arena) == null or not definition.arena_ids.has(next_arena):
+			return false
 	runs = next_runs
+	arena_override = next_arena
 	only = next_only
 	out_dir = next_output
 	seed_offset = next_seed
@@ -285,6 +296,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 
 	var row := {
 		"id": def.id,
+		"arena_id": arena_override if not arena_override.is_empty() else def.arena_ids[0],
 		"name": def.display_name(),
 		"category": def.category_name(),
 		"runs": completed,
@@ -510,7 +522,13 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 	return row
 
 
+func _apply_arena(cfg: MatchConfig) -> void:
+	if not arena_override.is_empty():
+		cfg.arena_id = arena_override
+
+
 func _play(cfg: MatchConfig) -> MatchResult:
+	_apply_arena(cfg)
 	var script: Script = load("res://src/match/match_scene.gd")
 	var scene: Node = script.new()
 	add_child(scene)
@@ -529,6 +547,9 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	scene.teardown()
 	scene.queue_free()
 	await tree.process_frame
+	if not captured.is_empty() and captured[0].arena_id != cfg.arena_id:
+		push_error("Balance match returned an unexpected arena; result is unqualified")
+		return null
 	return captured[0] if captured.size() > 0 else null
 
 
@@ -702,6 +723,7 @@ func _write_reports() -> void:
 	var json := FileAccess.open("%s/report.json" % out_dir, FileAccess.WRITE)
 	if json != null:
 		json.store_string(JSON.stringify({
+			"arena_override": arena_override,
 			"simulation_source_start": _source_start,
 			"simulation_source_end": _source_end,
 			"engine_version": Engine.get_version_info().string,

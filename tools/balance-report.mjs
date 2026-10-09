@@ -29,6 +29,9 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
       throw new Error('Mismatched simulation source fingerprint or engine');
     }
     observedFingerprint = fingerprint;
+    if (report.arena_override !== undefined && report.arena_override !== '') {
+      throw new Error('Targeted arena evidence cannot replace the default-arena campaign');
+    }
     const game = report.games?.[0];
     const smoke = report.mutator_smoke?.[0];
     const paired = source.difficultyPolicy === 'matched_seed_character';

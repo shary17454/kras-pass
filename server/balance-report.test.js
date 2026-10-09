@@ -39,6 +39,13 @@ test('partial campaign names missing games explicitly', () => {
   assert.equal(result.sourceConsistencyVerified, false);
   assert.throws(() => summarizeBalance([entry('one')], options), /Missing/);
 });
+test('targeted arena evidence cannot be presented as the default campaign', () => {
+  const one = entry('one');
+  one.report.arena_override = 'tank_oasis';
+  assert.throws(() => summarizeBalance([one, entry('two')], options), /Targeted arena/);
+  one.report.arena_override = '';
+  assert.equal(summarizeBalance([one, entry('two')], options).complete, true);
+});
 test('warnings survive aggregation instead of becoming green readiness', () => {
   const one = entry('one');
   one.report.games[0].severity = 1;

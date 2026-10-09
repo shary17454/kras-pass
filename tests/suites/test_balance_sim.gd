@@ -14,6 +14,7 @@ func run(t: TestHarness) -> void:
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
 	_arguments(t, sim)
+	_arena_arguments(t, sim)
 	_balanced_rosters(t, sim)
 	t.test("team draw diagnostics distinguish a shared team win from a competitive draw")
 	var duo = load("res://src/minigames/duo_clash.gd").new()
@@ -185,6 +186,29 @@ func _arguments(t: TestHarness, sim: Node) -> void:
 	sim.out_dir = before[2]
 	sim.seed_offset = before[3]
 	sim.natural_rounds = before[4]
+
+
+func _arena_arguments(t: TestHarness, sim: Node) -> void:
+	t.test("targeted arena evidence validates membership and preserves rejected configuration")
+	for arguments in [
+		["--arena=tank_oasis"],
+		["--only=tank_arena", "--arena="],
+		["--only=tank_arena", "--arena=unknown"],
+		["--only=ring_rumble", "--arena=tank_oasis"],
+		["--only=tank_arena", "--arena=tank_oasis", "--arena=tank_frost"],
+	]:
+		t.ok(not sim._parse_args(PackedStringArray(arguments)), "invalid arena request is rejected")
+		t.equal(sim.arena_override, "", "rejected selection does not mutate arena")
+		t.equal(sim.only, "", "rejected selection does not mutate game")
+	var cfg := MatchConfig.build("tank_arena", ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 119)
+	cfg.arena_id = "tank_frost"
+	sim._apply_arena(cfg)
+	t.equal(cfg.arena_id, "tank_frost", "no override preserves caller arena")
+	t.ok(sim._parse_args(PackedStringArray(["--only=tank_arena", "--arena=tank_oasis"])), "registered alternative arena is accepted")
+	sim._apply_arena(cfg)
+	t.equal(cfg.arena_id, "tank_oasis", "selected arena reaches the actual match configuration")
+	sim.only = ""
+	sim.arena_override = ""
 
 
 func _boss_outcomes(t: TestHarness, sim: Node) -> void:
