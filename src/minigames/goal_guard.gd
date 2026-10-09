@@ -204,6 +204,9 @@ func _defend_ball(ball: GameBall, delta: float) -> void:
 
 
 func _on_goal(ball: GameBall, side: int) -> void:
+	# Other balls can cross later in the same tick after the winner is decided.
+	if is_round_over():
+		return
 	var conceder := -1
 	for slot in _side_of_slot:
 		if int(_side_of_slot[slot]) == side:

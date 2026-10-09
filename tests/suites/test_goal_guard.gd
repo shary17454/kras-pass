@@ -90,6 +90,43 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.queue_free()
 	await host.get_tree().process_frame
 	await _network_replica(t, host)
+	await _terminal_goal_boundary(t, host)
+
+
+func _terminal_goal_boundary(t: TestHarness, host: Node) -> void:
+	t.test("later balls cannot concede after the last keeper has won")
+	for game_id in ["goal_guard", "storm_heart"]:
+		for count in [2, 3, 4]:
+			var cfg := MatchConfig.build(game_id, ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 73)
+			cfg.players.resize(count)
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			host.add_child(scene)
+			scene.setup({"config": cfg, "on_finished": func(_r): pass})
+			scene.set_physics_process(false)
+			var game = scene.controller
+			for first in count:
+				for survivor in count:
+					if first == survivor:
+						continue
+					game.on_round_start()
+					for slot in count:
+						scene.ctx.set_score(slot, 1 if slot in [first, survivor] else 0)
+						if slot not in [first, survivor]:
+							scene.ctx.eliminate(slot)
+							scene.ctx.fighter(slot).alive = false
+					var ball: GameBall = game.balls[0]
+					game._on_goal(ball, game.side_for(first))
+					t.ok(game.is_round_over(), "penultimate concession ends the keeper round")
+					var before_details: Array = scene.ctx.details.duplicate(true)
+					var generation := ball.launch_generation
+					game._on_goal(ball, game.side_for(survivor))
+					t.equal(scene.ctx.scores[survivor], 1, "later goal cannot erase the winner's retained point")
+					t.ok(scene.ctx.is_alive(survivor), "terminal survivor is not eliminated by a later ball")
+					t.equal(scene.ctx.details, before_details, "terminal goal cannot add a conceded event")
+					t.equal(ball.launch_generation, generation, "terminal goal cannot relaunch a ball")
+			scene.teardown()
+			scene.queue_free()
+			await host.get_tree().process_frame
 
 
 func _test_keeper_interception(t: TestHarness, scene: Node) -> void:
