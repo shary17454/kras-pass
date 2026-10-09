@@ -47,7 +47,32 @@ It remains incomplete. Network run 37950626662 remains live on older b5e4f9e;
 it was not cancelled/replaced. New source network/Core evidence remains needed.
 
 This is a qualification archive, not final product acceptance or an upload.
-No IPA/distribution validation, upload, processing or submission. Balance
+At the archive inspection no IPA had been exported; see the follow-up below.
+No Apple distribution validation, upload, processing or submission. Balance
 review, content polish, device/controller/thermal/battery acceptance and
 production backup/restore authorization, migrations and actual connection
 remain separate open gates. No main merge or production mutation.
+
+## Local Distribution Export Follow-Up
+
+Local Xcode 27 exportArchive exited 0, EXPORT SUCCEEDED, with explicit
+destination=export, manual signing, unchanged version/build and uploadSymbols
+disabled. It did not request upload or automatic provisioning updates.
+IPA: /tmp/kras-452f92f-local-distribution/KrasPass.ipa.
+IPA SHA256: 8037a098b4e8d47201011a6ad17c1f7cd85062e8a4344d2e2ccf63e8bf92f8fe.
+
+Independently read Info.plist and streamed the PCK from inside the ZIP. Identity
+remains com.shary.kraspass / 1.1.11 / 110; PCK SHA256 remains bbf3e4a6ef99ba5b29799b855ff4c3c678bba83fd61bc4ea8474aeb4a38de747.
+Both iPhone and iPad plist orientation declarations include portrait and both
+landscapes. PrivacyInfo.xcprivacy is present. Camera, microphone, photo library,
+photo-add, location and contacts usage-description keys are absent. These are
+static declarations, not proof of every permission prompt or responsive layout
+on physical hardware.
+
+Extracted final IPA app into /tmp/kras-452f92f-ipa-verification/Payload/.
+Deep strict codesign verification exited 0; actual Distribution Authority and
+team match the request. Final embedded App Store profile UUID, application ID,
+team and get-task-allow=false also match. Export/codesign logs, export options,
+distribution summary and packaging log are retained in the same evidence
+directory above. The package remains local; no Apple upload, processing,
+validation service or review submission occurred, and the open gates remain.
