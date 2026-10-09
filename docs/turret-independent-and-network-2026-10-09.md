@@ -42,3 +42,26 @@ b5e4f9e7d61c3dedbb6e79b6741ebf86f57a9c69. Current balance run 37950278256 uses
 the same source, seed offset 8300000. Both remain incomplete at this inspection.
 No live campaign was cancelled/restarted. No main merge, production mutation,
 device installation, upload, App Review submission or new stage DONE.
+
+## Independent peer-result inspection
+
+Read all 78 match/tournament coordinator stdout files, not only their PASS
+labels: 156 cases (two and four humans per scenario), 468 peer results and
+337 authoritative round histories. Every peer agreed on scores, arena history
+and round history; completed tournaments also agreed on the full tournament
+state, had champions and matched their reported match/history counts. Every
+case retained the host identity after reconnect and a reconnecting guest.
+
+Read the corresponding raw peer stdout files for each case. Their 1016 round
+records comprised 999 active participants and 17 spectators. Every active
+non-Reaction participant recorded movement. A first overly broad audit that
+required final `moved` to be true for spectators failed on blast_ball; the
+per-round records and tests/network_peer.gd explicitly distinguish spectators
+in sudden death. The corrected inspection checks movement per active round,
+not the final spectator summary. No fixture, outcome or test was changed to
+make that inspection pass.
+
+These checks strengthen the older cae5136 localhost evidence only. They do
+not establish current-source qualification, production connectivity, latency
+on mobile networks, or physical device performance. Current runs 37950278256
+and 37950626662 still have live jobs at the follow-up inspection.
