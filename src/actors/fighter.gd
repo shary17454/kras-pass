@@ -386,6 +386,7 @@ func _handle_buttons(frame: InputFrame) -> void:
 	if can_jump and frame.just_pressed(InputFrame.Btn.JUMP) and is_on_floor():
 		velocity.y = jump_velocity * float(mods["jump"])
 		_squash = Vector3(0.78, 1.3, 0.78)
+		EventBus.player_jumped.emit(slot)
 	if can_dash and frame.just_pressed(InputFrame.Btn.DASH) and _dash_cd <= 0.0:
 		_do_dash(frame)
 	if can_attack and frame.just_pressed(InputFrame.Btn.ATTACK) and _attack_cd <= 0.0:

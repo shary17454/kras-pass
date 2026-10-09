@@ -112,6 +112,17 @@ func _ready() -> void:
 				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count(),
 				"human_count": human_count, "touch_slots": touch_slots,
 				"control_bounds_valid": control_bounds_valid})
+			if game.id == "rising_tide":
+				var observations: Array = []
+				for slot in scene._brains.size():
+					var brain = scene._brains[slot]
+					if brain == null:
+						continue
+					var water = scene.arena._water
+					var history: Array = brain._object_history.get(water.get_instance_id(), [])
+					observations.append({"slot": slot, "visible": brain.can_observe(water),
+						"history_entries": history.size(), "water_level": scene.arena.water_level()})
+				_rows[-1]["water_observation"] = observations
 			if not success:
 				_failures.append(game.id + "/" + orientation)
 			print("STAGE ZERO VISUAL %s/%s: %s" % [game.id, orientation, "PASS" if success else "FAIL"])

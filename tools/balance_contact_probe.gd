@@ -20,7 +20,7 @@ func _begin_probe(cfg: MatchConfig) -> void:
 		_contacts.append({"character": player.character_id,
 			"environment_hits": 0, "player_hits": 0, "blocked_feedback": 0,
 			"environment_push": 0.0, "player_push": 0.0,
-			"jump_requests": 0, "alive_seconds": null})
+			"jump_requests": 0, "accepted_jumps": 0, "alive_seconds": null})
 
 
 func _physics_process(_delta: float) -> void:
@@ -33,6 +33,16 @@ func _physics_process(_delta: float) -> void:
 
 func _on_round_started(_index: int) -> void:
 	_round_tick = _physics_tick()
+
+
+func _on_jump(slot: int) -> void:
+	if _probe_config == null or _round_tick < 0 or _round_complete:
+		return
+	if slot < 0 or slot >= _contacts.size():
+		_invalid_contacts += 1
+		return
+	if _contacts[slot].alive_seconds == null:
+		_contacts[slot].accepted_jumps += 1
 
 
 func _physics_tick() -> int:
@@ -56,6 +66,8 @@ func _disconnect_feedback() -> void:
 		var event: Signal = binding[0]
 		if event.is_connected(binding[1]):
 			event.disconnect(binding[1])
+	if EventBus.player_jumped.is_connected(_on_jump):
+		EventBus.player_jumped.disconnect(_on_jump)
 
 
 func _on_contact(attacker: int, victim: int, strength: float) -> void:
@@ -80,6 +92,7 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	EventBus.round_started.connect(_on_round_started)
 	EventBus.player_eliminated.connect(_on_eliminated)
 	EventBus.round_finished.connect(_on_round_finished)
+	EventBus.player_jumped.connect(_on_jump)
 	var result: MatchResult = await super._play(cfg)
 	_disconnect_feedback()
 	_probe_config = null
