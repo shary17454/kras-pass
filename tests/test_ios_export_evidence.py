@@ -1,4 +1,5 @@
 import importlib.util
+import configparser
 import json
 import os
 import plistlib
@@ -202,6 +203,22 @@ class DistributionExportPolicyTests(unittest.TestCase):
         self.assertEqual(options.get("method"), "app-store-connect")
         self.assertEqual(options.get("provisioningProfiles"), {
             "com.shary.kraspass": "Kras Pass App Store Xcode 27 2026-09-20"})
+
+
+class ShippingContentPolicyTests(unittest.TestCase):
+    def test_documentation_is_not_imported_or_exported(self):
+        root = Path(__file__).parents[1]
+        self.assertTrue((root / "docs/.gdignore").is_file(),
+                        "QA screenshots must not be imported as game textures")
+        config = configparser.ConfigParser(interpolation=None)
+        config.read(root / "export_presets.cfg")
+        for section in config.sections():
+            if not section.startswith("preset.") or section.endswith(".options"):
+                continue
+            with self.subTest(preset=section):
+                exclusions = config[section]["exclude_filter"].strip('"').split(",")
+                self.assertIn("docs/*", exclusions,
+                              "Developer reports and QA captures are not shipping content")
 
 
 if __name__ == "__main__":
