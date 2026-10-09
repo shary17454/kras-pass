@@ -106,6 +106,7 @@ jobs:
           node network-smoke.js --game="$GAME_ID" --tournament 2>&1 | tee "$RUNNER_TEMP/kras-network-tournament.stdout"
           if [ "$GAME_ID" = tank_arena ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --tank-final-checkpoint 2>&1 | tee "$RUNNER_TEMP/kras-network-tank-recorded-final.stdout"
+            node network-smoke.js --game="$GAME_ID" --tournament --humans=4 --tank-three-final-checkpoint 2>&1 | tee "$RUNNER_TEMP/kras-network-tank-three-final.stdout"
           fi
           if [ "$GAME_ID" = lab_crates ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --humans=4 --seed=1366831714 2>&1 | tee "$RUNNER_TEMP/kras-network-lab-simulation-input-regression.stdout"

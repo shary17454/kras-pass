@@ -22,6 +22,11 @@ static func configure_lab(config: MatchConfig) -> void:
 		config.duration_override = 0.0
 
 
+static func configure_tank(config: MatchConfig) -> void:
+	if config.minigame_id == "tank_arena":
+		config.duration_override = 30.0 if config.rule("online_contenders", []).is_empty() else 20.0
+
+
 static func lab_deadline(tournament: bool) -> int:
 	var budget: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/lab_smoke_budget.json"))
 	var matches := int(budget.tournament_matches) + int(budget.maximum_finals) if tournament else 1

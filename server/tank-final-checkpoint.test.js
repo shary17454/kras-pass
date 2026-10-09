@@ -1,6 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {restoreTankFinal, TANK_FINAL_SEED} from './tank-final-checkpoint.js';
+import {restoreTankFinal, TANK_FINAL_SEED, restoreTankThreeFinal, TANK_THREE_FINAL_SEED} from './tank-final-checkpoint.js';
+
+test('recorded three-way foundry final preserves standings and cannot invent a hit', () => {
+  const room = {roster: [0, 1, 2, 3], epoch: 0, config: {game: 'tank_arena'}};
+  const before = restoreTankThreeFinal(room);
+  assert.equal(TANK_THREE_FINAL_SEED, 1962702799);
+  assert.deepEqual(before.contenders, [0, 2, 3]);
+  assert.deepEqual(before.points, [10, 7, 10, 10]);
+  assert.deepEqual(room.tournament.next(), {game: 'tank_arena', arena: 'tank_foundry'});
+  room.tournament.record(4, [500, 100, 500, 500]);
+  assert.equal(room.tournament.complete, false);
+  assert.deepEqual(room.tournament.contenders, [0, 2, 3]);
+  assert.deepEqual(room.tournament.points, before.points);
+  assert.throws(() => restoreTankThreeFinal({...room, epoch: 4}));
+  assert.throws(() => restoreTankThreeFinal({...room, epoch: 0, roster: [0, 1]}));
+});
 
 test('recorded tank results restore the actual host versus bot final', () => {
   const room = {roster: [0, 1, 2, 3], epoch: 0, config: {game: 'tank_arena'}};

@@ -393,7 +393,7 @@ func _start(cfg: MatchConfig) -> void:
 	if game_id == "turret_duel":
 		cfg.duration_override = 25.0
 	if game_id == "tank_arena":
-		cfg.duration_override = 30.0
+		preload("res://tests/network_smoke_config.gd").configure_tank(cfg)
 		tank_arenas_seen[cfg.arena_id] = true
 		tank_route.clear()
 		tank_route_target = Vector3.INF

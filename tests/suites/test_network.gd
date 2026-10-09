@@ -490,6 +490,17 @@ func _player_mapping(t: TestHarness) -> void:
 		t.equal(smoke_config.duration_override, 20.0, "actual boss final smoke preserves short final")
 		Net.match_data.erase("tournament")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
+	Net.match_data.config.game = "tank_arena"
+	Net.match_data.config.arena = "tank_foundry"
+	var tank_smoke := Net.make_match_config()
+	preload("res://tests/network_smoke_config.gd").configure_tank(tank_smoke)
+	t.equal(tank_smoke.duration_override, 30.0, "ordinary tank smoke retains shortened fixture")
+	Net.match_data["tournament"] = {"contenders": [0, 2, 3]}
+	tank_smoke = Net.make_match_config()
+	preload("res://tests/network_smoke_config.gd").configure_tank(tank_smoke)
+	t.equal(tank_smoke.duration_override, 20.0, "tank final smoke preserves production final duration")
+	t.ok(tank_smoke.duration_override < float(tank_smoke.rule("maximum_duration", 0)), "tank final clock finishes before watchdog")
+	Net.match_data.erase("tournament")
 	var frame := InputFrame.new()
 	frame.bits = 4
 	t.ok(not Net.consume_input(0, frame, 10), "stale inputs expire instead of moving forever")
