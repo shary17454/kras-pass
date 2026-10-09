@@ -57,14 +57,15 @@ func _check_resistance_response(t: TestHarness) -> void:
 		var original := body.knock_resist
 		sweeper.set("resistance_influence", 1.0)
 		t.near(sweeper.call("impact_strength", body), sweeper.power, 0.00001, "other games keep authored strength")
-		sweeper.set("resistance_influence", 0.5)
-		var incoming: float = sweeper.call("impact_strength", body)
-		var relative_push := incoming / body.knock_resist / (sweeper.power / neutral.knock_resist)
-		var expected := sqrt(neutral.knock_resist / body.knock_resist)
-		t.near(relative_push, expected, 0.00001, "weight still matters with half its logarithmic influence")
-		t.ok(absf(relative_push - 1.0) <= absf(neutral.knock_resist / body.knock_resist - 1.0) + 0.00001,
-			"hazard cannot exaggerate the original character difference")
-		t.near(body.knock_resist, original, 0.00001, "fighter combat and mass properties are unchanged")
+		for influence in [0.25, 0.5]:
+			sweeper.set("resistance_influence", influence)
+			var incoming: float = sweeper.call("impact_strength", body)
+			var relative_push := incoming / body.knock_resist / (sweeper.power / neutral.knock_resist)
+			var expected := pow(neutral.knock_resist / body.knock_resist, influence)
+			t.near(relative_push, expected, 0.00001, "weight retains the configured logarithmic influence")
+			t.ok(absf(relative_push - 1.0) <= absf(neutral.knock_resist / body.knock_resist - 1.0) + 0.00001,
+				"hazard cannot exaggerate the original character difference")
+			t.near(body.knock_resist, original, 0.00001, "fighter combat and mass properties are unchanged")
 		sweeper.set("resistance_influence", -1.0)
 		t.near(sweeper.call("impact_strength", body) / body.knock_resist,
 			sweeper.power / neutral.knock_resist, 0.00001, "lower clamp cannot invert light and heavy advantage")
@@ -72,8 +73,9 @@ func _check_resistance_response(t: TestHarness) -> void:
 		t.near(sweeper.call("impact_strength", body), sweeper.power, 0.00001,
 			"upper clamp cannot amplify light and heavy differences")
 		body.free()
-	sweeper.set("resistance_influence", 0.5)
-	t.near(sweeper.call("impact_strength", neutral), sweeper.power, 0.00001, "neutral character retains the original hazard power")
+	for influence in [0.25, 0.5]:
+		sweeper.set("resistance_influence", influence)
+		t.near(sweeper.call("impact_strength", neutral), sweeper.power, 0.00001, "neutral character retains the original hazard power")
 	sweeper.set("resistance_influence", -1.0)
 	t.near(sweeper.call("impact_strength", neutral), sweeper.power, 0.00001, "low bound keeps neutral strength")
 	sweeper.set("resistance_influence", 2.0)
