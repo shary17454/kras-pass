@@ -63,7 +63,28 @@ func run(t: TestHarness, _host: Node) -> void:
 		t.equal(touch._throttle, 1.0, "steering control scheme receives throttle")
 		t.equal(touch._bits, 0, "drive-only sample does not claim a projectile stress test")
 	touch.free()
+	soak.game = "tank_arena"
+	soak.arena_id = "tank_oasis"
+	soak.firing = true
+	t.equal(soak._configuration_error(), "", "firing workload accepts ordinary local tank controls")
+	soak.game = "sabaq_sawarikh"
+	soak.arena_id = ""
+	t.ok(not soak._configuration_error().is_empty(), "tank firing fixture cannot qualify another game's weapons")
+	soak.game = "tank_arena"
+	soak.arena_id = "tank_oasis"
+	var shooter := TouchSource.new()
+	for slot in 4:
+		shooter.slot = slot
+		var pressed_at := 0.9 - slot * 0.2
+		soak.drive_touch(shooter, pressed_at + 0.01, true)
+		t.equal(shooter._bits, InputFrame.Btn.ATTACK, "firing fixture presses only the ordinary attack action")
+		t.near(shooter._move.length(), 1.0, 0.001, "firing retains normal driving magnitude")
+		soak.drive_touch(shooter, pressed_at + 0.3, true)
+		t.equal(shooter._bits, 0, "firing releases between pulses for just-pressed actions")
+	shooter.free()
 	soak.humans = 0
+	t.ok(not soak._configuration_error().is_empty(), "scripted firing cannot mislabel a bot-only probe")
+	soak.firing = false
 	soak.game = "tank_arena"
 	soak.arena_id = "tank_oasis"
 	soak.arena_id = "dune_ruins"
@@ -106,4 +127,8 @@ func run(t: TestHarness, _host: Node) -> void:
 	t.equal(soak._result_exit_code(), 1, "partial steady samples cannot qualify an interrupted soak")
 	soak.report["complete_duration"] = true
 	t.equal(soak._result_exit_code(), 0, "complete duration with steady samples qualifies measurement only")
+	soak.firing = true
+	t.equal(soak._result_exit_code(), 1, "a firing sample without observed projectiles cannot qualify weapon workload")
+	soak.projectile_peak = 1
+	t.equal(soak._result_exit_code(), 0, "completed firing sample requires an observed live projectile")
 	soak.free()

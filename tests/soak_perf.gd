@@ -9,6 +9,7 @@ var game := "sabaq_sawarikh"
 var arena_id := "sky_causeway"
 var output := "/tmp/kras-soak.json"
 var humans := 0
+var firing := false
 var scene: Node
 var samples: Array[float] = []
 var cold_samples: Array[float] = []
@@ -50,6 +51,8 @@ func _configuration_error() -> String:
 		return "Local human view count must be between zero and four"
 	if humans > 0 and game not in ["tank_arena", "sabaq_sawarikh"]:
 		return "Scripted local driving is only supported by vehicle probes"
+	if firing and (game != "tank_arena" or humans == 0):
+		return "Scripted firing requires local tank input slots"
 	return ""
 
 
@@ -62,6 +65,7 @@ func _ready() -> void:
 		if arg.begins_with("--arena="): arena_id = arg.get_slice("=", 1)
 		if arg.begins_with("--output="): output = arg.get_slice("=", 1)
 		if arg.begins_with("--humans="): humans = int(arg.get_slice("=", 1))
+		if arg == "--fire": firing = true
 	var error := _configuration_error()
 	if not error.is_empty():
 		push_error(error)
@@ -143,7 +147,7 @@ func _ready() -> void:
 	report.merge({"game": game, "arena": cfg.arena_id, "engine": Engine.get_version_info().string,
 		"human_slots": cfg.human_slots(), "bot_count": 4 - humans,
 		"personal_view_count": scene.vehicle_views.viewports.size() if scene.vehicle_views != null else 0,
-		"input_fixture": "scripted_touch_driving" if humans > 0 else "four_bots",
+		"input_fixture": "scripted_touch_driving_and_firing" if firing else "scripted_touch_driving" if humans > 0 else "four_bots",
 		"built_arena": scene.arena.def.id,
 		"os": OS.get_name(), "renderer": RenderingServer.get_current_rendering_method(),
 		"quality": quality, "cap": cap, "render_scale": get_viewport().scaling_3d_scale,
@@ -159,16 +163,17 @@ func _physics_process(_delta: float) -> void:
 	if not MatchPhase.is_live(scene.phase):
 		return
 	for source in scene.touch_sources:
-		drive_touch(source, live_seconds)
+		drive_touch(source, live_seconds, firing)
 
 
-static func drive_touch(source: TouchSource, elapsed: float) -> void:
+static func drive_touch(source: TouchSource, elapsed: float, fire := false) -> void:
 	# Repeatable workload, not a claim of human skill or a race-finishing agent.
 	var steering := sin(elapsed * 0.5) * 0.6
 	source._move = Vector2(steering, -1.0).normalized()
 	source._steer = steering
 	source._throttle = 1.0
-	source._bits = 0
+	# Ordinary press/release pulses; ammo, cooldowns and collisions remain live.
+	source._bits = InputFrame.Btn.ATTACK if fire and fposmod(elapsed + source.slot * 0.2, 0.9) < 0.12 else 0
 
 
 func _process(_delta: float) -> void:
@@ -268,7 +273,8 @@ func _pipeline_counts() -> Dictionary:
 
 
 func _result_exit_code() -> int:
-	return 0 if report.get("complete_duration", false) == true and not samples.is_empty() else 1
+	var complete: bool = report.get("complete_duration", false) == true and not samples.is_empty()
+	return 0 if complete and (not firing or projectile_peak > 0) else 1
 
 
 func _finish() -> void:
