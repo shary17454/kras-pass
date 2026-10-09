@@ -160,6 +160,7 @@ const SUITES := [
 	"res://tests/suites/test_echo_network.gd",
 	"res://tests/suites/test_draw_network.gd",
 	"res://tests/suites/test_goal_guard.gd",
+	"res://tests/suites/test_keeper_reachable_threat.gd",
 	"res://tests/suites/test_magnet_network.gd",
 	"res://tests/suites/test_storm_network.gd",
 	"res://tests/suites/test_sky_court.gd",

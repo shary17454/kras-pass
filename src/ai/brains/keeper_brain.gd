@@ -72,6 +72,8 @@ func _most_dangerous_ball() -> GameBall:
 	var best_score := -INF
 	var incoming: GameBall = null
 	var earliest := INF
+	var reachable: GameBall = null
+	var earliest_reachable := INF
 	for node in _tree.get_nodes_in_group("balls"):
 		var b := node as GameBall
 		if not can_observe(b):
@@ -101,11 +103,33 @@ func _most_dangerous_ball() -> GameBall:
 		if controller != null and controller.has_method("keeper_contact_offset"):
 			contact_plane += _goal_normal * controller.keeper_contact_offset(radius)
 		var arrival := (contact_plane - position).dot(_goal_normal) / normal_speed
-		if arrival <= 0.0 or arrival >= earliest:
+		if arrival <= 0.0:
 			continue
 		var crossing := position + velocity * arrival
 		if absf(_goal_axis.dot(crossing - _goal_pos)) > _lane_limit + radius:
 			continue
-		earliest = arrival
-		incoming = b
+		if arrival < earliest:
+			earliest = arrival
+			incoming = b
+		if prediction >= 0.5 and arrival < earliest_reachable \
+				and _can_reach_crossing(crossing, arrival, observed):
+			earliest_reachable = arrival
+			reachable = b
+	if reachable != null:
+		return reachable
 	return incoming if incoming != null else best
+
+
+func _can_reach_crossing(crossing: Vector3, arrival: float, observed: Dictionary) -> bool:
+	var me := self_body()
+	if me == null:
+		return true
+	# An optimistic bound skips only clearly impossible saves, not marginal ones.
+	var remaining := maxf(0.0, arrival - float(observed.get("age", 0.0)))
+	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	var speed_bound := maxf(walk_speed, absf(me.velocity.dot(_goal_axis)))
+	if me.can_dash and me.can_afford_dash():
+		speed_bound += Balance.num("tuning", "fighter.dash_impulse", 15.0) * float(me.mods["speed"])
+	var shield_width := float(controller.PADDLE_HALF) * 1.25 + float(observed.get("radius", 0.0))
+	var needed := absf((crossing - me.global_position).dot(_goal_axis))
+	return needed <= shield_width + maxf(0.0, speed_bound) * remaining
