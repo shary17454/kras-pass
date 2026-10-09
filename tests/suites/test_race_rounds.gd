@@ -3,6 +3,7 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("race round reset")
+	await _check_circuit_start_grid(t, host)
 	var cfg := MatchConfig.build("kart_sprint", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 117)
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	host.add_child(scene)
@@ -60,6 +61,44 @@ func run(t: TestHarness, host: Node) -> void:
 	await _check_finished_collision(t, host)
 	await _check_finished_weapons(t, host)
 	await _check_weapon_character_response(t, host)
+
+
+func _check_circuit_start_grid(t: TestHarness, host: Node) -> void:
+	var tested := 0
+	for definition: ArenaDef in Registry.arenas():
+		if definition.shape != "circuit":
+			continue
+		var arena := Arena.new()
+		host.add_child(arena)
+		arena.build(definition)
+		await host.get_tree().physics_frame
+		await host.get_tree().physics_frame
+		var start := arena.circuit_line[0]
+		var forward := (arena.circuit_line[1] - arena.circuit_line[-1]).normalized()
+		forward.y = 0.0
+		forward = forward.normalized()
+		var expected := (arena.spawn_points[0] - start).dot(forward)
+		var road := arena.get_node_or_null("FantasyWorld/RoadCollision")
+		t.ok(road != null, "%s exposes its authored physical road" % definition.id)
+		t.equal(arena.spawn_points.size(), 4, "%s has four circuit start positions" % definition.id)
+		for slot in 4:
+			var point := arena.spawn_points[slot]
+			t.near((point - start).dot(forward), expected, 0.0001,
+				"%s slot %d has equal distance behind the start" % [definition.id, slot])
+			t.ok(arena.is_inside(point, 0.6), "%s slot %d keeps chassis clearance on the road" % [definition.id, slot])
+			var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 2.0,
+				point + Vector3.DOWN * 4.0, 1)
+			var ground := arena.get_world_3d().direct_space_state.intersect_ray(query)
+			t.ok(not ground.is_empty() and ground.collider == road,
+				"%s slot %d starts over physical road collision (hit %s)" % [definition.id, slot,
+					"none" if ground.is_empty() else str(ground.collider.get_path())])
+			for other in range(slot):
+				t.ok(point.distance_to(arena.spawn_points[other]) >= 1.2,
+					"%s starting chassis cannot overlap" % definition.id)
+		tested += 1
+		arena.queue_free()
+		await host.get_tree().process_frame
+	t.ok(tested > 0, "authored racing circuits were checked")
 
 
 func _check_weapon_character_response(t: TestHarness, host: Node) -> void:
