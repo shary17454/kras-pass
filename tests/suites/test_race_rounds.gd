@@ -4,12 +4,18 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("race round reset")
 	await _check_circuit_start_grid(t, host)
+	await _check_oval_start_grid(t, host)
+	_check_seeded_start_allocation(t)
 	var cfg := MatchConfig.build("kart_sprint", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 117)
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	host.add_child(scene)
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	for rider in scene.ctx.fighters: rider.set_physics_process(false)
+	scene.arena.assign_race_starts(cfg.seed)
+	for slot in 4:
+		t.ok(scene.ctx.fighter(slot).global_position.is_equal_approx(scene.arena.global_position + scene.arena.spawn_points[slot]),
+			"match setup uses its seeded lane allocation before spawning players")
 	var game: Node = scene.controller
 	var pad: Dictionary = game._boost_pads[0]
 	var rider: Fighter = scene.ctx.fighter(0)
@@ -99,6 +105,66 @@ func _check_circuit_start_grid(t: TestHarness, host: Node) -> void:
 		arena.queue_free()
 		await host.get_tree().process_frame
 	t.ok(tested > 0, "authored racing circuits were checked")
+
+
+func _check_oval_start_grid(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	arena.build(Registry.arena("circuit_loop"))
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.equal(arena.spawn_points.size(), 4, "oval has four start positions")
+	for slot in 4:
+		var point := arena.spawn_points[slot]
+		t.near(point.z, arena.spawn_points[0].z, 0.0001, "oval slot %d has equal start depth" % slot)
+		t.ok(arena.is_inside(point, 0.6), "oval chassis remains inside road edges")
+		var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 2.0,
+			point + Vector3.DOWN * 4.0, 1)
+		var ground := arena.get_world_3d().direct_space_state.intersect_ray(query)
+		t.ok(not ground.is_empty() and ground.collider.get_parent() == arena._static_root,
+			"oval starting chassis has physical road support")
+		for other in range(slot):
+			t.ok(point.distance_to(arena.spawn_points[other]) >= 1.2, "oval starting chassis cannot overlap")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _check_seeded_start_allocation(t: TestHarness) -> void:
+	var arena := Arena.new()
+	if not arena.has_method("assign_race_starts"):
+		t.ok(false, "racing starts have a seeded allocation API")
+		arena.free()
+		return
+	arena.def = Registry.arena("dune_circuit")
+	var authored: Array[Vector3] = [Vector3.ZERO, Vector3.RIGHT, Vector3.RIGHT * 2.0, Vector3.RIGHT * 3.0]
+	arena.spawn_points.assign(authored)
+	var counts := [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+	var orders := {}
+	for seed_value in range(1, 257):
+		arena.call("assign_race_starts", seed_value)
+		var first := arena.spawn_points.duplicate()
+		arena.call("assign_race_starts", seed_value)
+		t.equal(arena.spawn_points, first, "same seed remains idempotent without reshuffling the current grid")
+		var key := ""
+		var seen := {}
+		for slot in 4:
+			var index := authored.find(first[slot])
+			t.ok(index >= 0 and not seen.has(index), "seeded assignment preserves unique authored positions")
+			if index >= 0:
+				counts[slot][index] += 1
+			seen[index] = true
+			key += str(index)
+		orders[key] = true
+	t.equal(orders.size(), 24, "all four-position permutations occur in the fixed seed sample")
+	for slot in 4:
+		for lane in 4:
+			t.ok(counts[slot][lane] >= 40 and counts[slot][lane] <= 90,
+				"no slot owns a preferred lane in the fixed seed sample: %s" % [counts])
+	arena.def = Registry.arena("hurdle_track")
+	arena.spawn_points.assign(authored)
+	arena.call("assign_race_starts", 256)
+	t.equal(arena.spawn_points, authored, "straight-track lane controls retain their authored positions")
+	arena.free()
 
 
 func _check_weapon_character_response(t: TestHarness, host: Node) -> void:

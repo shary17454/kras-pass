@@ -21,6 +21,7 @@ var _island_routes := AStar3D.new()
 var def: ArenaDef
 var tiles: Array[ArenaTile] = []
 var spawn_points: Array[Vector3] = []
+var _race_start_points: Array[Vector3] = []
 var fall_y := -14.0
 var current_radius := 12.0
 
@@ -67,6 +68,7 @@ var _sky_dome: SkyDome
 
 func build(arena_def: ArenaDef) -> void:
 	def = arena_def
+	_race_start_points.clear()
 	fall_y = def.fall_y
 	current_radius = def.radius
 	_static_root = Node3D.new()
@@ -101,6 +103,25 @@ func build(arena_def: ArenaDef) -> void:
 		var structures: Node3D = load("res://src/arenas/race_structures.gd").new()
 		add_child(structures)
 		structures.build(self)
+
+
+func assign_race_starts(match_seed: int) -> void:
+	if def == null or def.shape not in ["oval", "circuit"] or spawn_points.size() != 4:
+		return
+	if _race_start_points.is_empty():
+		_race_start_points.assign(spawn_points)
+	# Keep lane allocation independent of the shared AI/item random stream.
+	var random := RandomNumberGenerator.new()
+	random.seed = match_seed ^ 0x4b525347
+	var order := [0, 1, 2, 3]
+	for index in range(3, 0, -1):
+		var other := random.randi_range(0, index)
+		var previous: int = order[index]
+		order[index] = order[other]
+		order[other] = previous
+	spawn_points.clear()
+	for index in order:
+		spawn_points.append(_race_start_points[index])
 
 
 static func scenery_script(arena_def: ArenaDef) -> String:
@@ -768,8 +789,9 @@ func _build_oval() -> void:
 	line.rotation.y = PI * 0.5
 	_static_root.add_child(line)
 	spawn_points.clear()
+	var lane_spacing := minf((def.radius - inner) * 0.22, 1.6)
 	for i in 4:
-		spawn_points.append(Vector3(ring_mid + (i % 2) * 1.8 - 0.9, 1.3, -1.4 - float(i / 2) * 2.6))
+		spawn_points.append(Vector3(ring_mid + (float(i) - 1.5) * lane_spacing, 1.3, -1.4))
 
 
 ## Authored centre lines are shared by road geometry, checkpoints and the AI.

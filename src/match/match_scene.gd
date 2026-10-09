@@ -191,6 +191,8 @@ func _build() -> void:
 	arena.name = "Arena"
 	add_child(arena)
 	arena.build(arena_def)
+	if def.category == MiniGameDef.Category.RACE:
+		arena.assign_race_starts(config.seed)
 	arena.fighter_submerged.connect(_on_submerged)
 	# Heavy hits fracture the floor they land on. The arena has no idea who the
 	# players are, so the match layer resolves the victim and hands over a point.
