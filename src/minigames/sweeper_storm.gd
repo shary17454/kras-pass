@@ -26,6 +26,8 @@ func on_round_start() -> void:
 	# from the round's seed keeps rounds fair and replays reproducible.
 	for child in arena.get_children():
 		if child is ArenaHazards.Sweeper:
+			var tuning: Dictionary = Balance.table("tuning").get("sweeper_storm", {})
+			child.resistance_influence = clampf(float(tuning.get("resistance_influence", 1.0)), 0.0, 1.0)
 			child.rotation.y = ctx.rng.randf() * TAU
 
 

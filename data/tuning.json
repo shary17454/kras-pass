@@ -49,6 +49,9 @@
     "spin_out_push": 9.0,
     "spin_out_time": 0.45
   },
+  "sweeper_storm": {
+    "resistance_influence": 0.5
+  },
   "match": {
     "intro_seconds": 3.2,
     "instructions_seconds": 7.0,

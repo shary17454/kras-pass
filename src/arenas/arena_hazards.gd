@@ -14,6 +14,7 @@ class Sweeper extends Node3D:
 	var length := 9.0
 	var power := 15.0
 	var accel_over_time := 0.06
+	var resistance_influence := 1.0
 	var _area: Area3D
 	var _arm_mesh: MeshInstance3D
 	var _age := 0.0
@@ -44,6 +45,16 @@ class Sweeper extends Node3D:
 	func current_speed() -> float:
 		return speed * (1.0 + _age * accel_over_time)
 
+	func impact_strength(body: Fighter) -> float:
+		var influence := clampf(resistance_influence, 0.0, 1.0)
+		if influence >= 1.0:
+			return power
+		var tuning: Dictionary = Balance.table("tuning").get("fighter", {})
+		var neutral := float(tuning.get("resist_base", 0.7)) + float(tuning.get("resist_range", 0.75)) * 0.5
+		# Compress hazard sensitivity, leaving fighter mass and combat untouched.
+		var ratio := maxf(0.3, body.knock_resist) / maxf(0.3, neutral)
+		return power * pow(ratio, 1.0 - influence)
+
 	func visible_arm_geometry() -> Dictionary:
 		if not is_inside_tree() or not is_visible_in_tree() or is_queued_for_deletion() \
 			or not is_instance_valid(_arm_mesh) or not _arm_mesh.is_visible_in_tree() \
@@ -73,7 +84,7 @@ class Sweeper extends Node3D:
 				# not "shoved from the centre".
 				var tangent := -global_transform.basis.z * signf(current_speed())
 				var push := (dir.normalized() * 0.55 + tangent.normalized() * 0.75).normalized()
-				body.take_hit(-1, push, power, 0.0)
+				body.take_hit(-1, push, impact_strength(body), 0.0)
 
 
 class Bumper extends Node3D:

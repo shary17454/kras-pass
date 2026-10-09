@@ -11,6 +11,7 @@ class HitProbe extends Fighter:
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("sweeper physical impact direction")
+	_check_resistance_response(t)
 	for angle in [0.0, 0.7, -1.4]:
 		for speed in [1.0, -1.0]:
 			var world := Node3D.new()
@@ -38,3 +39,44 @@ func run(t: TestHarness, host: Node) -> void:
 				t.near(body.strengths[0], sweeper.power, 0.0001, "direction correction does not change authored impact strength")
 			world.queue_free()
 			await host.get_tree().process_frame
+
+
+func _check_resistance_response(t: TestHarness) -> void:
+	var sweeper := ArenaHazards.Sweeper.new()
+	t.ok(sweeper.has_method("impact_strength"), "sweeper supports a bounded character resistance influence")
+	if not sweeper.has_method("impact_strength"):
+		sweeper.free()
+		return
+	var neutral := Fighter.new()
+	neutral.data = CharacterData.new()
+	neutral._apply_character()
+	for character in Registry.characters():
+		var body := Fighter.new()
+		body.data = character
+		body._apply_character()
+		var original := body.knock_resist
+		sweeper.set("resistance_influence", 1.0)
+		t.near(sweeper.call("impact_strength", body), sweeper.power, 0.00001, "other games keep authored strength")
+		sweeper.set("resistance_influence", 0.5)
+		var incoming: float = sweeper.call("impact_strength", body)
+		var relative_push := incoming / body.knock_resist / (sweeper.power / neutral.knock_resist)
+		var expected := sqrt(neutral.knock_resist / body.knock_resist)
+		t.near(relative_push, expected, 0.00001, "weight still matters with half its logarithmic influence")
+		t.ok(absf(relative_push - 1.0) <= absf(neutral.knock_resist / body.knock_resist - 1.0) + 0.00001,
+			"hazard cannot exaggerate the original character difference")
+		t.near(body.knock_resist, original, 0.00001, "fighter combat and mass properties are unchanged")
+		sweeper.set("resistance_influence", -1.0)
+		t.near(sweeper.call("impact_strength", body) / body.knock_resist,
+			sweeper.power / neutral.knock_resist, 0.00001, "lower clamp cannot invert light and heavy advantage")
+		sweeper.set("resistance_influence", 2.0)
+		t.near(sweeper.call("impact_strength", body), sweeper.power, 0.00001,
+			"upper clamp cannot amplify light and heavy differences")
+		body.free()
+	sweeper.set("resistance_influence", 0.5)
+	t.near(sweeper.call("impact_strength", neutral), sweeper.power, 0.00001, "neutral character retains the original hazard power")
+	sweeper.set("resistance_influence", -1.0)
+	t.near(sweeper.call("impact_strength", neutral), sweeper.power, 0.00001, "low bound keeps neutral strength")
+	sweeper.set("resistance_influence", 2.0)
+	t.near(sweeper.call("impact_strength", neutral), sweeper.power, 0.00001, "high bound keeps neutral strength")
+	neutral.free()
+	sweeper.free()

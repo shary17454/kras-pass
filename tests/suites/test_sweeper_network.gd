@@ -15,6 +15,7 @@ func run(t: TestHarness, host: Node) -> void:
 	for hazard in scene.arena._hazards:
 		if hazard is ArenaHazards.Sweeper:
 			arms.append(hazard)
+			t.near(hazard.resistance_influence, 0.5, 0.00001, "round sets the mode-specific bounded resistance influence")
 			hazard.tick(3.0)
 	var replica = Replica.new()
 	var packet: Dictionary = JSON.parse_string(JSON.stringify(replica.capture(scene)))
