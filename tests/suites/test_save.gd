@@ -11,6 +11,7 @@ func run(t: TestHarness) -> void:
 	_round_trip(t)
 	_corruption(t)
 	_failed_write(t)
+	_failed_backup(t)
 	_migration(t)
 	_future_schema(t)
 	_schema_edge_cases(t)
@@ -92,6 +93,44 @@ func _failed_write(t: TestHarness) -> void:
 	f.store_string('{"body":123,"checksum":[]}')
 	f.close()
 	t.equal(SaveSystem.load_slot(SLOT).get("retry", null), null, "invalid envelope is rejected")
+	SaveSystem.erase(SLOT)
+
+
+func _failed_backup(t: TestHarness) -> void:
+	t.test("failed backup preserves the current save and retries pending progress")
+	SaveSystem.erase(SLOT)
+	SaveSystem._cache[SLOT] = {"generation": 1}
+	SaveSystem.mark_dirty(SLOT)
+	SaveSystem.flush()
+	var path := SaveSystem._path(SLOT)
+	var previous := FileAccess.get_file_as_string(path)
+	DirAccess.make_dir_absolute(path + ".bak")
+	SaveSystem._cache[SLOT] = {"generation": 2}
+	SaveSystem.mark_dirty(SLOT)
+	SaveSystem.flush()
+	t.ok(SaveSystem._dirty.has(SLOT), "backup failure keeps progress pending")
+	t.equal(FileAccess.get_file_as_string(path), previous, "backup failure cannot replace main")
+	DirAccess.remove_absolute(path + ".bak")
+	SaveSystem.flush()
+	t.ok(not SaveSystem._dirty.has(SLOT), "retry succeeds after backup destination recovers")
+	t.equal(int(SaveSystem.load_slot(SLOT).get("generation", 0)), 2, "latest progress survives retry")
+	var backup = SaveSystem._read(path + ".bak")
+	t.ok(backup is Dictionary, "retry creates a readable backup")
+	if backup is Dictionary:
+		t.equal(int(backup.get("generation", 0)), 1, "retry retains previous good generation")
+	var current_bytes := FileAccess.get_file_as_string(path)
+	var backup_bytes := FileAccess.get_file_as_string(path + ".bak")
+	DirAccess.make_dir_absolute(path + ".bak.tmp")
+	SaveSystem._cache[SLOT] = {"generation": 3}
+	SaveSystem.mark_dirty(SLOT)
+	SaveSystem.flush()
+	t.ok(SaveSystem._dirty.has(SLOT), "backup staging failure stays pending")
+	t.equal(FileAccess.get_file_as_string(path), current_bytes, "staging failure preserves main bytes")
+	t.equal(FileAccess.get_file_as_string(path + ".bak"), backup_bytes, "staging failure preserves backup bytes")
+	DirAccess.remove_absolute(path + ".bak.tmp")
+	SaveSystem.flush()
+	t.ok(not SaveSystem._dirty.has(SLOT), "staging recovery permits retry")
+	t.equal(int(SaveSystem.load_slot(SLOT).get("generation", 0)), 3, "staged retry saves latest progress")
 	SaveSystem.erase(SLOT)
 
 

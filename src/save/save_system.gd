@@ -338,18 +338,30 @@ func _write_slot(slot: String, data: Dictionary) -> bool:
 	f.close()
 	if write_error != OK:
 		return false
+	var da := DirAccess.open(storage_root)
+	if da == null:
+		return false
 	# Rotate: current good file becomes the backup, tmp becomes current.
 	if _read(_path(slot)) != null:
 		var prev := FileAccess.open(_path(slot), FileAccess.READ)
-		if prev != null:
-			var prev_text := prev.get_as_text()
-			prev.close()
-			var bf := FileAccess.open(_path(slot) + ".bak", FileAccess.WRITE)
-			if bf != null:
-				bf.store_string(prev_text)
-				bf.close()
-	var da := DirAccess.open(storage_root)
-	return da != null and da.rename(tmp.get_file(), _path(slot).get_file()) == OK
+		if prev == null:
+			return false
+		var prev_text := prev.get_as_text()
+		var read_error := prev.get_error()
+		prev.close()
+		if read_error != OK and read_error != ERR_FILE_EOF:
+			return false
+		var backup_tmp := _path(slot) + ".bak.tmp"
+		var bf := FileAccess.open(backup_tmp, FileAccess.WRITE)
+		if bf == null:
+			return false
+		bf.store_string(prev_text)
+		bf.flush()
+		var backup_error := bf.get_error()
+		bf.close()
+		if backup_error != OK or da.rename(backup_tmp.get_file(), (_path(slot) + ".bak").get_file()) != OK:
+			return false
+	return da.rename(tmp.get_file(), _path(slot).get_file()) == OK
 
 
 func _read(path: String):
