@@ -24,6 +24,7 @@ var tournament_rotation := "random_no_repeat"
 var arena_history: Array[String] = []
 var mixed_playlist := false
 var round_history: Array[Dictionary] = []
+var race_start_history: Array[Dictionary] = []
 var round_snapshot_start := 0
 var fawda_final_checkpoint := false
 var game_id := "ring_rumble"
@@ -470,6 +471,11 @@ func _start(cfg: MatchConfig) -> void:
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
+	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
+		var positions: Array = []
+		for point in game.arena.spawn_points:
+			positions.append([point.x, point.y, point.z])
+		race_start_history.append({"seed": cfg.seed, "arena": cfg.arena_id, "positions": positions})
 	preparation.release()
 	match_preparation = null
 	preparing_match = false
@@ -1860,6 +1866,7 @@ func _finished(result: MatchResult) -> void:
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
 		"tournament_rotation": tournament_rotation, "arena_history": arena_history,
 		"round_history": round_history,
+		"race_start_history": race_start_history,
 		"fawda_worlds": fawda_worlds,
 		"fawda_event_coverage": fawda_event_coverage,
 		"collection_scored": observed_collection_score, "carrying_seen": observed_carrying}))

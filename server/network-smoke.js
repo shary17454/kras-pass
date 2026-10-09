@@ -13,6 +13,7 @@ import {startSchedulingProbe} from './scheduling-probe.js';
 import {attachMultiplayer} from './multiplayer.js';
 import {ONLINE_GAMES, Rooms} from './rooms.js';
 import {kartProcessDeadline} from './race-smoke-budget.js';
+import {assertRaceStartEvidence} from './race-start-evidence.js';
 import {labProcessDeadline} from './lab-smoke-budget.js';
 import {crateProcessDeadline} from './crate-smoke-budget.js';
 import {restoreFawdaFinal, assertFawdaNetworkEvidence, FAWDA_FINAL_SEED} from './fawda-final-checkpoint.js';
@@ -178,6 +179,7 @@ try {
     const code = await Promise.race([roomCode, host.then(() => { throw new Error('host exited before room'); })]);
     const results = await Promise.all([host, ...Array.from({length: humans - 1}, (_, i) => peer(i + 1, code))]);
     for (const result of results) assert.deepEqual(result.scores, results[0].scores);
+    if (['kart_sprint', 'sabaq_sawarikh'].includes(game)) assertRaceStartEvidence(results);
     if (game === 'fawda') {
       assertFawdaNetworkEvidence(results, fawdaFinalCheckpoint);
     }
