@@ -196,9 +196,9 @@ func _build() -> void:
 		_hint_label.anchor_right = 0.92 if portrait else 0.75
 		_hint_label.anchor_top = 0.0 if portrait else 1.0
 		_hint_label.anchor_bottom = _hint_label.anchor_top
-		var hint_y := 230 if ctx.definition.id == "goal_guard" else 460
-		_hint_label.offset_top = hint_y + Platform.safe_insets().y if portrait else -120
-		_hint_label.offset_bottom = hint_y + 100 + Platform.safe_insets().y if portrait else -22
+		var hint_y := occupied_top() + 12.0
+		_hint_label.offset_top = hint_y if portrait else -120
+		_hint_label.offset_bottom = hint_y + 100.0 if portrait else -22
 		var touch_count := 0
 		for p in ctx.config.players:
 			if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
@@ -371,7 +371,7 @@ func _fit_toasts() -> void:
 	_toast_box.offset_top = occupied_top() + 12.0
 	_toast_box.offset_bottom = _toast_box.offset_top
 	if _hint_label != null and _hint_label.anchor_top == 0.0:
-		var hint_y := (230 if ctx.definition.id == "goal_guard" else 460) + inset.y
+		var hint_y := occupied_top() + 12.0
 		var overlay_bottom := auxiliary_overlay_top() + _auxiliary_overlay_height
 		_hint_label.offset_top = maxf(hint_y, overlay_bottom + (12.0 if _auxiliary_overlay_height > 0.0 else 0.0))
 		_hint_label.offset_bottom = _hint_label.offset_top + 100.0

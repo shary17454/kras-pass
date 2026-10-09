@@ -93,7 +93,8 @@ func _ready() -> void:
 					colors[image.get_pixel(x, y).to_html()] = true
 			var success: bool = image.save_png(file) == OK and colors.size() >= 15 \
 				and scene.ctx.fighters.size() == 4 and Log.error_count() == errors_before \
-				and scene.touch_sources.size() == human_count
+				and scene.touch_sources.size() == human_count and not scene._paused \
+				and scene._pause_menu == null and MatchPhase.is_live(scene.phase)
 			var control_bounds_valid := true
 			var touch_slots: Array[int] = []
 			for source in scene.touch_sources:
@@ -107,6 +108,7 @@ func _ready() -> void:
 			_rows.append({"id": game.id, "arena": cfg.arena_id, "orientation": orientation,
 				"image": file, "nonblank_colors": colors.size(), "hud_bottom": hud_bottom, "passed": success,
 				"requested_play_seconds": play_seconds, "phase": scene.phase,
+				"paused": scene._paused, "pause_menu_present": scene._pause_menu != null,
 				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count(),
 				"human_count": human_count, "touch_slots": touch_slots,
 				"control_bounds_valid": control_bounds_valid})

@@ -163,6 +163,11 @@ func _catalog_layout(t: TestHarness, host: Node) -> void:
 				hud.tick(1.0)
 				for frame in 4:
 					await host.get_tree().process_frame
+				hud.tick(1.0)
+				if resolution.x < resolution.y:
+					var hint_top: float = hud._hint_label.get_global_rect().position.y
+					t.ok(hint_top >= hud.occupied_top(), "portrait objective stays below header: " + definition.id)
+					t.ok(hint_top <= hud.occupied_top() + 24.0, "portrait objective remains in header strip, not arena: %s %s hint=%s header=%s" % [definition.id, resolution, hint_top, hud.occupied_top()])
 				for chip in hud._chips:
 					var bounds: Rect2 = chip.root.get_global_rect()
 					t.ok(bounds.position.x >= 0 and bounds.end.x <= host.get_viewport().get_visible_rect().size.x, "catalog HUD cards fit: " + definition.id)
