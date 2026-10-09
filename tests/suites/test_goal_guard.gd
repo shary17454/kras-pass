@@ -95,7 +95,7 @@ func run(t: TestHarness, host: Node) -> void:
 
 func _terminal_goal_boundary(t: TestHarness, host: Node) -> void:
 	t.test("later balls cannot concede after the last keeper has won")
-	for game_id in ["goal_guard", "storm_heart"]:
+	for game_id in ["goal_guard", "storm_heart", "magnet_court", "sky_court"]:
 		for count in [2, 3, 4]:
 			var cfg := MatchConfig.build(game_id, ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 73)
 			cfg.players.resize(count)
