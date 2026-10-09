@@ -141,6 +141,7 @@ func _terrain() -> void:
 			var px := float(x - 100) * 3
 			var pz := float(z - 100) * 3
 			surface.set_uv(Vector2(px, pz) * 0.12)
+			surface.set_color(terrain_color(px, pz))
 			var bridge_cut: float = preload("res://src/arenas/race_structures.gd").excavation(arena, Vector3(px, 0, pz))
 			surface.add_vertex(Vector3(px, ground_height(px, pz) - bridge_cut, pz))
 	for z in side - 1:
@@ -169,6 +170,10 @@ func _terrain() -> void:
 	add_child(body)
 	body.set_meta("observation_mesh", body.get_path_to(terrain))
 	_add_distant_rocks()
+
+
+func terrain_color(_x: float, _z: float) -> Color:
+	return Color.WHITE
 
 
 func _add_distant_rocks() -> void:

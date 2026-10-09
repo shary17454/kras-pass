@@ -2,11 +2,15 @@ extends "res://src/arenas/natural_valley.gd"
 ## Natural battlefield; the road graph remains the AI's navigation contract.
 
 const CoverHulls = preload("res://src/arenas/cover_hull_cache.gd")
+const RockyPassLayout = preload("res://src/arenas/rocky_pass_layout.gd")
 
 var roads := AStar3D.new()
 var buildings: Array[StaticBody3D] = []
 var _variant := 0
 var _cover_shapes := {}
+var _road_segments: Array[Vector4] = []
+var _last_road_query := Vector2(INF, INF)
+var _last_road_distance := INF
 
 
 func build(a: Arena) -> void:
@@ -23,24 +27,25 @@ func build(a: Arena) -> void:
 	# Replace the old tile and neon rim, retaining the arena's safety collision.
 	for child in arena._static_root.find_children("*", "MeshInstance3D", true, false):
 		child.visible = false
-	for x in 5:
-		for z in 5:
-			var id := x * 5 + z
-			roads.add_point(id, _bend(Vector3((x - 2) * 18, 0, (z - 2) * 18)))
-			if x > 0:
-				roads.connect_points(id, id - 5)
-			if z > 0:
-				roads.connect_points(id, id - 1)
+	_build_roads()
 	_terrain()
 	var terrain := get_node("WoodlandTerrain") as MeshInstance3D
 	var material := terrain.material_override as ShaderMaterial
 	material.shader = load("res://src/arenas/battlefield_terrain.gdshader")
+	material.set_shader_parameter("authored_road_mask", _variant == 0)
 	for map in ["diff", "nor_gl", "rough"]:
 		material.set_shader_parameter("road_" + map, load(ROOT + "gravel_floor/gravel_floor_" + map + "_2k.jpg"))
 	# _terrain() already owns the collision and its AI observation mesh.
-	for x in 4:
-		for z in 4:
-			_cover(x * 4 + z, _bend(Vector3(-27 + x * 18, 0.05, -27 + z * 18)))
+	if _variant == 0:
+		var positions := RockyPassLayout.cover_positions()
+		for index in positions.size():
+			var p := positions[index]
+			p.y = ground_height(p.x, p.z) + 0.05
+			_cover(index, p)
+	else:
+		for x in 4:
+			for z in 4:
+				_cover(x * 4 + z, _bend(Vector3(-27 + x * 18, 0.05, -27 + z * 18)))
 	_vegetation()
 	for side in [-1, 1]:
 		for i in 10:
@@ -51,6 +56,10 @@ func build(a: Arena) -> void:
 
 
 func ground_height(x: float, z: float) -> float:
+	if _variant == 0:
+		var distance := _road_distance(x, z)
+		var ridge := 7.0 + absf(noise.get_noise_2d(x, z)) * 12.0
+		return 0.02 + smoothstep(4.5, 10.5, distance) * ridge
 	var distance := minf(absf(fposmod(x - sin(z * 0.045) * 2 + 9, 18) - 9), absf(fposmod(z - sin(x * 0.05) * 2 + 9, 18) - 9))
 	var outside := smoothstep(43, 80, maxf(absf(x), absf(z)))
 	var interior := 0.02 + smoothstep(4.0, 8.0, distance) * (0.3 + absf(noise.get_noise_2d(x, z)) * 1.2)
@@ -58,6 +67,48 @@ func ground_height(x: float, z: float) -> float:
 	mountains += smoothstep(65, 135, Vector2(x, z).length()) * 24.0
 	var river := 1.0 - smoothstep(5, 15, absf(x + 72 + sin(z * 0.035) * 5))
 	return lerpf(interior, mountains, outside) - river * 18.0
+
+
+func _build_roads() -> void:
+	if _variant == 0:
+		var points := RockyPassLayout.points()
+		for id in points.size():
+			roads.add_point(id, points[id])
+		for edge in RockyPassLayout.edges():
+			roads.connect_points(edge.x, edge.y)
+			var a := points[edge.x]
+			var b := points[edge.y]
+			_road_segments.append(Vector4(a.x, a.z, b.x, b.z))
+		return
+	for x in 5:
+		for z in 5:
+			var id := x * 5 + z
+			roads.add_point(id, _bend(Vector3((x - 2) * 18, 0, (z - 2) * 18)))
+			if x > 0:
+				roads.connect_points(id, id - 5)
+			if z > 0:
+				roads.connect_points(id, id - 1)
+
+
+func _road_distance(x: float, z: float) -> float:
+	var query := Vector2(x, z)
+	if query == _last_road_query:
+		return _last_road_distance
+	var best := INF
+	for segment in _road_segments:
+		var a := Vector2(segment.x, segment.y)
+		var direction := Vector2(segment.z, segment.w) - a
+		var along := clampf((query - a).dot(direction) / direction.length_squared(), 0.0, 1.0)
+		best = minf(best, query.distance_squared_to(a + direction * along))
+	_last_road_query = query
+	_last_road_distance = sqrt(best)
+	return _last_road_distance
+
+
+func terrain_color(x: float, z: float) -> Color:
+	if _variant != 0:
+		return Color.WHITE
+	return Color(1.0 - smoothstep(3.4, 5.0, _road_distance(x, z)), 1, 1, 1)
 
 
 func _rock(index: int, p: Vector3, scale_value: float) -> void:

@@ -196,6 +196,28 @@ func run(t: TestHarness, host: Node) -> void:
 		t.ok(shape.shape.get_faces() == terrain.mesh.get_faces(), "collision preserves the rendered terrain triangles: " + arena_id)
 		t.equal(body.get_node(body.get_meta("observation_mesh")), terrain, "AI observation resolves the same terrain mesh: " + arena_id)
 		t.equal(world.roads.get_point_count(), 25, "road navigation graph remains intact: " + arena_id)
+		if arena_id == "tank_foundry":
+			t.ok(world.roads.get_point_position(24).is_equal_approx(Vector3.ZERO), "rocky pass has a central junction, not another grid corner")
+			for id in 24:
+				var point: Vector3 = world.roads.get_point_position(id)
+				t.near(Vector2(point.x, point.z).length(), 36.0 if id < 16 else 18.0, 0.001, "rocky pass authored ring radius")
+			var road_shader: ShaderMaterial = world.get_node("WoodlandTerrain").material_override
+			t.equal(road_shader.get_shader_parameter("authored_road_mask"), true, "road appearance follows the authored network")
+			var connections := 0
+			for id in 25:
+				t.ok(not world.route(world.roads.get_point_position(id), Vector3.ZERO).is_empty(), "every authored junction reaches the centre")
+				for neighbour in world.roads.get_point_connections(id):
+					connections += 1
+					if neighbour < id:
+						continue
+					for fraction in [0.0, 0.25, 0.5, 0.75, 1.0]:
+						var p: Vector3 = world.roads.get_point_position(id).lerp(world.roads.get_point_position(neighbour), fraction)
+						t.near(world.ground_height(p.x, p.z), 0.02, 0.001, "all authored route segments retain level driveable ground")
+			t.equal(connections, 72, "two rings and radial shortcuts form 36 bidirectional edges")
+			for direction in [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]:
+				var p: Vector3 = direction * 28.52
+				t.near(world.ground_height(p.x, p.z), 0.02, 0.001, "all four natural spawns have equal clear approach height")
+			t.ok(world.ground_height(7.0, 7.0) > 2.0, "terrain between the routes rises into a rocky pass rather than a flat grid")
 		t.ok(not world.route(world.roads.get_point_position(0), world.roads.get_point_position(24)).is_empty(),
 			"opposite corners remain connected: " + arena_id)
 		await host.get_tree().physics_frame
