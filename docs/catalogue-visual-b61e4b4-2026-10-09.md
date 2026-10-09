@@ -53,3 +53,38 @@ No game is promoted to READY from these screenshots. Current-source
 network run `37915365019` and balance run `37915371500` were still
 live at this observation. No main merge, Railway deployment, native
 archive, upload or App Review submission was performed here.
+
+## Four-Touch Follow-Up
+
+A separate real-renderer run used English, four human touch slots and no
+bots for `tank_arena`, `goal_guard`, `ring_rumble`, `sabaq_sawarikh` and
+`crate_relay`. Both orientations and two additional play seconds were
+captured: ten passes, zero failures, exit 0, strict Godot log check passed.
+The portrait contact sheet was inspected: vehicle personal views and four
+control regions rendered. This checks configured human slots, not four
+physical people operating a device, simultaneous touch correctness or
+controller support. No source changes were required.
+
+Raw evidence: `/tmp/kras-b61e4b4-four-touch-en/visual-report.json`,
+its `screenshots/` directory, `/tmp/kras-b61e4b4-four-touch-en.stdout`,
+and `/tmp/kras-b61e4b4-four-touch-en-portrait.jpg`.
+
+## Partial Balance Observation
+
+Downloaded artifacts from run `37915371500` covered `tank_arena`,
+`ring_rumble`, `crumble_court`, `bumper_bowl`, `fawda`, and `goal_guard`.
+The existing `tools/balance-report.mjs` verifier passed with `--partial`,
+`--paired`, seed offset 6800000, expected source commit b61e4b4 and
+fingerprint `c35bd3679f7c9ae4b2efa01f92af3470237b84028f49da1e8e258dfcb7e95093`.
+All downloaded simulation start/end fingerprints match this source.
+
+252 natural matches completed: 24 baseline, 16 paired difficulty, and two
+stress matches per game. The six reports have no flags in this sample.
+The verifier deliberately returns `complete: false`, 33 missing games,
+`balanceReviewComplete: false`, and `releaseReady: false`. A small sample
+with no flags is not proof of equal character or spawn win rates.
+`crumble_court` slot wins were [2, 3, 10, 9], for example; extended
+samples remain appropriate before balance acceptance.
+
+Downloaded artifacts: `/tmp/kras-b61-balance-37915371500-observation/`.
+No remote campaign was cancelled, restarted or promoted to a release gate.
