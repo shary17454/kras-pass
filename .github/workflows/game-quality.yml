@@ -10,6 +10,10 @@ on:
         description: Run the complete core regression and stability gate without the separate per-game networking matrix
         type: boolean
         default: false
+      tank_only:
+        description: Diagnose tank networking including recorded finals; not a full release gate
+        type: boolean
+        default: false
       balance_campaign:
         description: Run the full natural-round balance campaign instead of the networking matrix
         type: boolean
@@ -19,19 +23,19 @@ permissions:
   contents: read
 
 concurrency:
-  group: game-quality-${{ github.workflow }}-${{ github.ref }}${{ inputs.core_only && '-core-only' || '' }}
+  group: game-quality-${{ github.workflow }}-${{ github.ref }}${{ inputs.core_only && '-core-only' || inputs.tank_only && '-tank-only' || '' }}
   cancel-in-progress: true
 
 jobs:
   balance:
-    if: github.event_name == 'workflow_dispatch' && inputs.balance_campaign
+    if: github.event_name == 'workflow_dispatch' && inputs.balance_campaign && !inputs.core_only && !inputs.tank_only
     permissions:
       contents: read
       actions: read
     uses: ./.github/workflows/balance-campaign.yml
 
   godot:
-    if: github.event_name != 'workflow_dispatch' || !inputs.balance_campaign
+    if: github.event_name != 'workflow_dispatch' || !inputs.balance_campaign || inputs.core_only || inputs.tank_only
     name: ${{ matrix.scenario == 'core' && 'godot' || format('network-{0}', matrix.scenario) }}
     runs-on: ubuntu-24.04
     # Colossus runs two ordinary (450s) and two tournament (800s) peer groups.
@@ -42,11 +46,23 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        scenario: ${{ inputs.core_only && fromJSON('["core"]') || fromJSON('["core","ring_rumble","goal_guard","gem_grab","star_rush","zone_hold","relic_hold","tag_hunt","paint_grid","mnatiq","mukharrib","magnet_court","storm_heart","sky_court","crumble_court","blast_ball","color_stand","quick_draw","symbol_echo","crate_smash","lab_crates","crate_relay","hurdle_dash","rising_tide","sweeper_storm","duel_pit","bumper_bowl","duo_clash","drift_floes","turret_duel","tank_arena","scrap_karts","fawda","kart_sprint","sabaq_sawarikh","base_siege","boss_forge","boss_dreadnought","boss_sovereign","boss_colossus"]') }}
+        scenario: ${{ inputs.core_only && fromJSON('["core"]') || inputs.tank_only && fromJSON('["tank_arena"]') || fromJSON('["core","ring_rumble","goal_guard","gem_grab","star_rush","zone_hold","relic_hold","tag_hunt","paint_grid","mnatiq","mukharrib","magnet_court","storm_heart","sky_court","crumble_court","blast_ball","color_stand","quick_draw","symbol_echo","crate_smash","lab_crates","crate_relay","hurdle_dash","rising_tide","sweeper_storm","duel_pit","bumper_bowl","duo_clash","drift_floes","turret_duel","tank_arena","scrap_karts","fawda","kart_sprint","sabaq_sawarikh","base_siege","boss_forge","boss_dreadnought","boss_sovereign","boss_colossus"]') }}
     env:
       GODOT_VERSION: 4.7.1
       GODOT_SHA256: c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba
     steps:
+      - name: Reject conflicting diagnostic modes
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CORE_ONLY: ${{ inputs.core_only }}
+          TANK_ONLY: ${{ inputs.tank_only }}
+          BALANCE_CAMPAIGN: ${{ inputs.balance_campaign }}
+        run: |
+          selected=0
+          for mode in "$CORE_ONLY" "$TANK_ONLY" "$BALANCE_CAMPAIGN"; do
+            if [ "$mode" = true ]; then selected=$((selected + 1)); fi
+          done
+          test "$selected" -le 1
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
