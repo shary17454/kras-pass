@@ -36,8 +36,10 @@ func decide(_delta: float) -> void:
 	else:
 		_warning_tile = null
 	var unsafe := current == null or current.state != ArenaTile.State.SOLID
-	if not can_observe(_target_tile) or _target_tile.state != ArenaTile.State.SOLID \
-			or (unsafe and rng.randf() < edge_awareness):
+	var displaced := can_observe(_target_tile) and current != null \
+		and absi(_target_tile.grid_x - current.grid_x) + absi(_target_tile.grid_z - current.grid_z) > 1
+	# Finish a fresh first step; rerolling on every origin warning reverses escape input.
+	if not can_observe(_target_tile) or _target_tile.state != ArenaTile.State.SOLID or displaced:
 		_target_tile = _pick_tile(arena, me.global_position)
 	# Keep ground control when the next visible step is fresh; jump to rescue
 	# a trapped route rather than hop on every floor warning.

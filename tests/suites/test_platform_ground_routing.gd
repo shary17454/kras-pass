@@ -13,6 +13,7 @@ func run(t: TestHarness, host: Node) -> void:
 	await _test_edge_support(t, host)
 	await _test_arrival_control(t, host)
 	await _test_walk_before_jump(t, host)
+	await _test_committed_escape(t, host)
 	await _test_equal_routes(t, host)
 	await _test_equal_shortest_paths(t, host)
 	var arena := Arena.new()
@@ -284,6 +285,49 @@ func _test_walk_before_jump(t: TestHarness, host: Node) -> void:
 	brain.decide(0.1)
 	t.equal(brain.bits & InputFrame.Btn.JUMP, 0,
 		"losing a safe route does not bypass the new warning reaction clock")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_committed_escape(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	_tile(arena, 0, 0, ArenaTile.State.WARNING)
+	var left := _tile(arena, -1, 0, ArenaTile.State.SOLID)
+	var right := _tile(arena, 1, 0, ArenaTile.State.SOLID)
+	var body := Fighter.new()
+	arena.add_child(body)
+	body.set_physics_process(false)
+	var ctx := MatchContext.new()
+	ctx.arena = arena
+	ctx.config = MatchConfig.build("crumble_court", ["fanoos"], 0, 3, 734)
+	ctx.fighters.append(body)
+	var brain := RoutingProbe.new()
+	brain.configure(0, ctx, 3, 734)
+	brain.edge_awareness = 1.0
+	brain.accuracy = 1.0
+	for seed_value in range(1000, 1128):
+		brain.rng.seed = seed_value
+		brain._target_tile = right
+		brain.decide(0.1)
+		t.equal(brain._target_tile, right, "a fresh committed escape step does not reroll while the origin shakes")
+		t.ok(brain.move.x > 0.0, "escape input keeps its chosen direction until the fresh step becomes unsafe")
+	right.state = ArenaTile.State.FALLING
+	brain.decide(0.1)
+	t.equal(brain._target_tile, left, "a collapsing committed step immediately replans onto visible fresh ground")
+	right.state = ArenaTile.State.SOLID
+	brain._target_tile = right
+	right.hide()
+	brain.decide(0.1)
+	t.equal(brain._target_tile, left, "a hidden committed step cannot retain the escape route")
+	right.show()
+	_tile(arena, -4, 0, ArenaTile.State.WARNING)
+	var displaced_step := _tile(arena, -5, 0, ArenaTile.State.SOLID)
+	body.position = Vector3(-8.0, 0.0, 0.0)
+	brain._target_tile = right
+	brain.decide(0.1)
+	t.equal(brain._target_tile, displaced_step,
+		"being displaced onto another visible island invalidates the old remote first step")
 	arena.queue_free()
 	await host.get_tree().process_frame
 
