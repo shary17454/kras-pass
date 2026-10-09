@@ -196,6 +196,27 @@ func run(t: TestHarness, host: Node) -> void:
 		t.ok(shape.shape.get_faces() == terrain.mesh.get_faces(), "collision preserves the rendered terrain triangles: " + arena_id)
 		t.equal(body.get_node(body.get_meta("observation_mesh")), terrain, "AI observation resolves the same terrain mesh: " + arena_id)
 		t.equal(world.roads.get_point_count(), 25, "road navigation graph remains intact: " + arena_id)
+		if arena_id == "tank_oasis":
+			var recipe := load("res://src/arenas/woodland_valley_layout.gd")
+			var points: PackedVector3Array = recipe.points()
+			var connections := 0
+			for id in points.size():
+				t.ok(world.roads.get_point_position(id).is_equal_approx(points[id]), "forest junction follows winding meadow recipe")
+				t.ok(not world.route(points[id], Vector3.ZERO).is_empty(), "all meadow routes reach the central crossing")
+				for neighbour in world.roads.get_point_connections(id):
+					connections += 1
+					if neighbour < id:
+						continue
+					for fraction in [0.0, 0.25, 0.5, 0.75, 1.0]:
+						var p: Vector3 = points[id].lerp(points[neighbour], fraction)
+						t.near(world.ground_height(p.x, p.z), 0.02, 0.001, "forest route stays driveable along the whole segment")
+			t.equal(connections, 60, "paired meadows have 30 bidirectional connections, not the old grid")
+			for direction in [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]:
+				var spawn: Vector3 = direction * 28.52
+				t.near(world.ground_height(spawn.x, spawn.z), 0.02, 0.001, "forest cardinal spawn stays on a clear level route")
+			var road_shader: ShaderMaterial = terrain.material_override
+			t.equal(road_shader.get_shader_parameter("authored_road_mask"), true, "forest rendered roads follow the navigation recipe")
+			t.ok(not points == load("res://src/arenas/rocky_pass_layout.gd").points(), "forest geography differs from rocky loops")
 		if arena_id == "tank_foundry":
 			t.ok(world.roads.get_point_position(24).is_equal_approx(Vector3.ZERO), "rocky pass has a central junction, not another grid corner")
 			for id in 24:

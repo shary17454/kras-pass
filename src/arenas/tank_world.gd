@@ -3,6 +3,7 @@ extends "res://src/arenas/natural_valley.gd"
 
 const CoverHulls = preload("res://src/arenas/cover_hull_cache.gd")
 const RockyPassLayout = preload("res://src/arenas/rocky_pass_layout.gd")
+const WoodlandValleyLayout = preload("res://src/arenas/woodland_valley_layout.gd")
 
 var roads := AStar3D.new()
 var buildings: Array[StaticBody3D] = []
@@ -32,12 +33,12 @@ func build(a: Arena) -> void:
 	var terrain := get_node("WoodlandTerrain") as MeshInstance3D
 	var material := terrain.material_override as ShaderMaterial
 	material.shader = load("res://src/arenas/battlefield_terrain.gdshader")
-	material.set_shader_parameter("authored_road_mask", _variant == 0)
+	material.set_shader_parameter("authored_road_mask", _variant in [0, 1])
 	for map in ["diff", "nor_gl", "rough"]:
 		material.set_shader_parameter("road_" + map, load(ROOT + "gravel_floor/gravel_floor_" + map + "_2k.jpg"))
 	# _terrain() already owns the collision and its AI observation mesh.
-	if _variant == 0:
-		var positions := RockyPassLayout.cover_positions()
+	if _variant in [0, 1]:
+		var positions := RockyPassLayout.cover_positions() if _variant == 0 else WoodlandValleyLayout.cover_positions()
 		for index in positions.size():
 			var p := positions[index]
 			p.y = ground_height(p.x, p.z) + 0.05
@@ -60,6 +61,14 @@ func ground_height(x: float, z: float) -> float:
 		var distance := _road_distance(x, z)
 		var ridge := 7.0 + absf(noise.get_noise_2d(x, z)) * 12.0
 		return 0.02 + smoothstep(4.5, 10.5, distance) * ridge
+	if _variant == 1:
+		var distance := _road_distance(x, z)
+		var outside := smoothstep(43, 80, maxf(absf(x), absf(z)))
+		var meadow := 0.02 + smoothstep(4.5, 10.5, distance) * (0.8 + absf(noise.get_noise_2d(x, z)) * 2.0)
+		var hills := 5.0 + noise.get_noise_2d(x, z) * 14.0
+		hills += smoothstep(65, 135, Vector2(x, z).length()) * 24.0
+		var river := 1.0 - smoothstep(5, 15, absf(x + 72 + sin(z * 0.035) * 5))
+		return lerpf(meadow, hills, outside) - river * 18.0
 	var distance := minf(absf(fposmod(x - sin(z * 0.045) * 2 + 9, 18) - 9), absf(fposmod(z - sin(x * 0.05) * 2 + 9, 18) - 9))
 	var outside := smoothstep(43, 80, maxf(absf(x), absf(z)))
 	var interior := 0.02 + smoothstep(4.0, 8.0, distance) * (0.3 + absf(noise.get_noise_2d(x, z)) * 1.2)
@@ -70,11 +79,12 @@ func ground_height(x: float, z: float) -> float:
 
 
 func _build_roads() -> void:
-	if _variant == 0:
-		var points := RockyPassLayout.points()
+	if _variant in [0, 1]:
+		var points := RockyPassLayout.points() if _variant == 0 else WoodlandValleyLayout.points()
+		var edges := RockyPassLayout.edges() if _variant == 0 else WoodlandValleyLayout.edges()
 		for id in points.size():
 			roads.add_point(id, points[id])
-		for edge in RockyPassLayout.edges():
+		for edge in edges:
 			roads.connect_points(edge.x, edge.y)
 			var a := points[edge.x]
 			var b := points[edge.y]
@@ -106,7 +116,7 @@ func _road_distance(x: float, z: float) -> float:
 
 
 func terrain_color(x: float, z: float) -> Color:
-	if _variant != 0:
+	if _variant not in [0, 1]:
 		return Color.WHITE
 	return Color(1.0 - smoothstep(3.4, 5.0, _road_distance(x, z)), 1, 1, 1)
 
