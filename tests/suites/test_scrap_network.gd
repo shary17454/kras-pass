@@ -5,6 +5,8 @@ const Replica = preload("res://src/net/match_replica.gd")
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("scrap network presentation")
+	await _test_spawn_heading(t, host)
+	await _test_simultaneous_contacts(t, host)
 	var enabled: bool = AudioManager.enabled
 	AudioManager.enabled = true
 	var cfg := MatchConfig.build("scrap_karts", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 117)
@@ -193,3 +195,124 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.queue_free()
 	AudioManager.enabled = enabled
 	await host.get_tree().process_frame
+
+
+func _test_simultaneous_contacts(t: TestHarness, host: Node) -> void:
+	t.test("simultaneous lethal contacts cannot pick a survivor by roster order")
+	var cfg := MatchConfig.build("scrap_karts", ["fanoos", "mowja", "ramla", "nabta"], 0, 2, 117)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	var game = scene.controller
+	for slots in [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0], [1, 2, 3], [3, 0, 2]]:
+		_reset_contact_scene(scene)
+		for role in 3:
+			var fighter: Fighter = scene.ctx.fighter(slots[role])
+			var angle := role * TAU / 3.0
+			var radial := Vector3(cos(angle), 0, sin(angle))
+			fighter.global_position = Vector3.UP + radial * 1.2
+			fighter.facing = -radial
+			fighter.velocity = -radial * 10.0
+			game.health[slots[role]] = 5.0
+		game._resolve_rams()
+		t.equal(game.ram_serial, 3, "all three simultaneous pairs count before any elimination")
+		t.equal(scene.ctx.alive_count(), 1, "all three mortally struck riders leave, independent of slots")
+		var scores: Array[int] = game.compute_scores()
+		for slot in slots:
+			t.near(game.health[slot], 0.0, 0.00001, "each rider receives the same frame's full contact set")
+			t.equal(game.wrecks[slot], 1, "a multi-contact wreck emits once")
+			t.equal(int(scene.ctx.details[slot].get("knockouts", 0)), 2, "equally strongest contributors share direct wreck credit, not loop order")
+			t.equal(scores[slot], scores[slots[0]], "simultaneous identical wrecks share score rather than elimination-loop rank")
+		var previous: int = game.ram_serial
+		game._resolve_rams()
+		t.equal(game.ram_serial, previous, "dead riders cannot generate another contact")
+	_reset_contact_scene(scene)
+	for slot in 2:
+		var fighter: Fighter = scene.ctx.fighter(slot)
+		fighter.global_position = Vector3.UP + Vector3.RIGHT * (-1.0 if slot == 0 else 1.0)
+		fighter.facing = Vector3.RIGHT if slot == 0 else Vector3.LEFT
+		fighter.velocity = fighter.facing * 10.0
+		game.health[slot] = 5.0
+	game._resolve_rams()
+	t.equal(game.compute_scores()[0], game.compute_scores()[1], "a mutual head-on KO also shares survival rank")
+	_reset_contact_scene(scene)
+	t.equal(game.health, [100.0, 100.0, 100.0, 100.0], "new round clears multi-contact damage")
+	t.ok(game._ram_ranks.is_empty(), "new round cannot inherit a prior simultaneous elimination rank")
+	_test_contact_credit(t, scene)
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
+
+
+func _test_contact_credit(t: TestHarness, scene: Node) -> void:
+	var game = scene.controller
+	for attackers in [[0, 1], [1, 0]]:
+		_reset_contact_scene(scene)
+		var hits: Array[Dictionary] = []
+		game._queue_ram_hit(hits, 2, attackers[0], 60.0, Vector3.RIGHT)
+		game._queue_ram_hit(hits, 2, attackers[1], 10.0, Vector3.FORWARD)
+		game._apply_ram_hits(hits)
+		t.equal(scene.ctx.fighter(2)._last_hit_by, attackers[0], "largest actual push owns a later fall regardless of attacker slot")
+		t.equal(game.wrecks[2], 0, "nonlethal combined contact cannot award a wreck")
+		game._queue_ram_hit(hits, 2, attackers[0], 60.0, Vector3.RIGHT)
+		game._apply_ram_hits(hits)
+		t.equal(game.wrecks[2], 1, "combined lethal contacts award only one wreck")
+		t.equal(int(scene.ctx.details[attackers[0]].get("knockouts", 0)), 1, "strongest contribution receives knockout credit")
+		t.equal(int(scene.ctx.details[attackers[1]].get("knockouts", 0)), 0, "weaker last-processed contact cannot steal credit")
+		game._apply_ram_hits(hits)
+		t.equal(game.wrecks[2], 1, "duplicate hits after elimination are ignored")
+	_reset_contact_scene(scene)
+	var tied: Array[Dictionary] = []
+	game._queue_ram_hit(tied, 2, 0, 10.0, Vector3.RIGHT)
+	game._queue_ram_hit(tied, 2, 1, 10.0, Vector3.LEFT)
+	game._apply_ram_hits(tied)
+	t.equal(scene.ctx.fighter(2)._last_hit_by, -1, "equal nonlethal pushes have no arbitrarily selected fall owner")
+	_reset_contact_scene(scene)
+
+
+func _test_spawn_heading(t: TestHarness, host: Node) -> void:
+	t.test("every demolition seat starts driving into the arena, including round resets")
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": MatchConfig.build("scrap_karts", ["fanoos", "fanoos", "fanoos", "fanoos"], 0, 2, 9617)})
+	scene.set_physics_process(false)
+	var spawns: Array[Vector3] = []
+	for fighter in scene.ctx.fighters:
+		fighter.set_physics_process(false)
+		spawns.append(fighter.global_position)
+	for round_index in 2:
+		for slot in 4:
+			var fighter: Fighter = scene.ctx.fighter(slot)
+			fighter.global_position = spawns[slot]
+			fighter.velocity = Vector3.ZERO
+			if round_index == 1:
+				fighter.face_direction(fighter.global_position - scene.ctx.arena_center())
+		scene.controller.on_round_start()
+		for slot in 4:
+			var fighter: Fighter = scene.ctx.fighter(slot)
+			var inward: Vector3 = scene.ctx.arena_center() - fighter.global_position
+			inward.y = 0.0
+			inward = inward.normalized()
+			t.ok(fighter.facing.dot(inward) > 0.999, "seat %d round %d faces inward before movement" % [slot, round_index])
+			fighter.control_enabled = true
+			var frame := InputFrame.new()
+			frame.move = Vector2(0, -1)
+			fighter.tick(frame, 1.0 / 60.0)
+			t.ok(fighter.facing.dot(inward) > 0.999, "seat %d round %d keeps inward motor heading on the first throttle tick" % [slot, round_index])
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
+
+
+func _reset_contact_scene(scene: Node) -> void:
+	scene.ctx.alive.fill(true)
+	scene.ctx.elimination_order.clear()
+	for slot in 4:
+		var fighter: Fighter = scene.ctx.fighter(slot)
+		fighter.alive = true
+		fighter.visible = true
+		fighter.global_position = Vector3(30 + slot * 10, 1, 30)
+		fighter.velocity = Vector3.ZERO
+		scene.ctx.details[slot].clear()
+	scene.controller.on_round_start()

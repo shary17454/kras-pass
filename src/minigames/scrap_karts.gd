@@ -18,6 +18,7 @@ var _bars: Array = []
 var ram_serial := 0
 var ram_position := Vector3.ZERO
 var wrecks: Array[int] = []
+var _ram_ranks := {}
 
 
 func configure() -> void:
@@ -37,6 +38,7 @@ func build() -> void:
 	health.fill(_max_health)
 	wrecks.resize(ctx.player_count())
 	wrecks.fill(0)
+	_ram_ranks.clear()
 	for i in ctx.player_count():
 		_bars.append(_make_bar(i))
 
@@ -70,6 +72,10 @@ func on_round_start() -> void:
 	ram_serial = 0
 	ram_position = Vector3.ZERO
 	wrecks.fill(0)
+	_ram_ranks.clear()
+	for fighter in ctx.fighters:
+		if fighter != null and is_instance_valid(fighter):
+			fighter.face_direction(ctx.arena_center() - fighter.global_position)
 
 
 func tick(delta: float) -> void:
@@ -82,6 +88,7 @@ func tick(delta: float) -> void:
 
 
 func _resolve_rams() -> void:
+	var hits: Array[Dictionary] = []
 	for i in ctx.fighters.size():
 		if not ctx.is_alive(i):
 			continue
@@ -89,8 +96,6 @@ func _resolve_rams() -> void:
 		if a == null or not is_instance_valid(a):
 			continue
 		for j in range(i + 1, ctx.fighters.size()):
-			if not ctx.is_alive(i):
-				break
 			if not ctx.is_alive(j):
 				continue
 			var b := ctx.fighter(j)
@@ -125,18 +130,25 @@ func _resolve_rams() -> void:
 			if is_equal_approx(a_into, b_into):
 				# Neither rider is the attacker in an equal closing contact.
 				# Share the existing primary/backwash budget, not the slot order.
-				_damage(j, i, _ram_damage * scale * (0.6 * flank_a + _backwash) * 0.5, dir)
-				_damage(i, j, _ram_damage * scale * (0.6 * flank_b + _backwash) * 0.5, -dir)
+				_queue_ram_hit(hits, j, i, _ram_damage * scale * (0.6 * flank_a + _backwash) * 0.5, dir)
+				_queue_ram_hit(hits, i, j, _ram_damage * scale * (0.6 * flank_b + _backwash) * 0.5, -dir)
 			elif a_into > b_into:
-				_damage(j, i, _ram_damage * scale * 0.6 * flank_a, dir)
-				_damage(i, j, _ram_damage * scale * _backwash, -dir)
+				_queue_ram_hit(hits, j, i, _ram_damage * scale * 0.6 * flank_a, dir)
+				_queue_ram_hit(hits, i, j, _ram_damage * scale * _backwash, -dir)
 			else:
-				_damage(i, j, _ram_damage * scale * 0.6 * flank_b, -dir)
-				_damage(j, i, _ram_damage * scale * _backwash, dir)
+				_queue_ram_hit(hits, i, j, _ram_damage * scale * 0.6 * flank_b, -dir)
+				_queue_ram_hit(hits, j, i, _ram_damage * scale * _backwash, dir)
 			ram_serial += 1
 			ram_position = a.global_position
 			EventBus.shake(0.35, 0.2)
 			AudioManager.play_sfx("hit", a.global_position)
+	# All contacts describe the same physics frame; an early wreck cannot
+	# erase its already-occurring contact with the next rider.
+	_apply_ram_hits(hits)
+
+
+func _queue_ram_hit(hits: Array[Dictionary], victim: int, attacker: int, amount: float, dir: Vector3) -> void:
+	hits.append({"victim": victim, "attacker": attacker, "amount": amount, "direction": dir})
 
 
 ## 1.0 head-on, rising toward `FLANK_BONUS` as the hit swings round to the
@@ -156,18 +168,74 @@ func _flank_multiplier(victim, impact: Vector3) -> float:
 
 
 func _damage(victim: int, attacker: int, amount: float, dir: Vector3) -> void:
-	if not ctx.is_alive(victim):
+	if not ctx.is_alive(attacker):
 		return
-	health[victim] = maxf(0.0, health[victim] - amount)
-	var f := ctx.fighter(victim)
-	if f != null and is_instance_valid(f):
-		f.take_ram_hit(attacker, dir, amount * 0.5)
-	if health[victim] <= 0.0:
+	var hits: Array[Dictionary] = []
+	_queue_ram_hit(hits, victim, attacker, amount, dir)
+	_apply_ram_hits(hits)
+
+
+func _apply_ram_hits(hits: Array[Dictionary]) -> void:
+	var contributions := {}
+	for hit in hits:
+		var victim: int = hit.victim
+		if not ctx.is_alive(victim):
+			continue
+		var attacker: int = hit.attacker
+		var amount: float = hit.amount
+		health[victim] = maxf(0.0, health[victim] - amount)
+		var f := ctx.fighter(victim)
+		if f != null and is_instance_valid(f):
+			f.take_ram_hit(attacker, hit.direction, amount * 0.5)
+		var row: Dictionary = contributions.get(victim, {})
+		row[attacker] = float(row.get(attacker, 0.0)) + amount
+		contributions[victim] = row
+	var destroyed: Array[int] = []
+	var credits := {}
+	for victim in contributions:
+		var strongest := 0.0
+		var leaders: Array[int] = []
+		var row: Dictionary = contributions[victim]
+		for attacker in row:
+			var amount: float = row[attacker]
+			if is_equal_approx(amount, strongest):
+				leaders.append(attacker)
+			elif amount > strongest:
+				strongest = amount
+				leaders.assign([attacker])
+		credits[victim] = leaders
+		var f := ctx.fighter(victim)
+		if f != null and is_instance_valid(f):
+			# A tied push has no single owner for a later fall. A direct wreck
+			# below credits the equally strongest contributors together.
+			f._last_hit_by = leaders[0] if leaders.size() == 1 else -1
+			if leaders.size() != 1:
+				f._last_hit_timer = 0.0
+		if health[victim] <= 0.0:
+			destroyed.append(victim)
+	var tied_rank := ctx.elimination_order.size() + 1
+	for victim in destroyed:
+		if destroyed.size() > 1:
+			_ram_ranks[victim] = tied_rank
 		wrecks[victim] += 1
-		ctx.bump_detail(attacker, "knockouts")
+		for attacker in credits[victim]:
+			ctx.bump_detail(attacker, "knockouts")
 		ctx.bump_detail(victim, "falls")
+		var f := ctx.fighter(victim)
+		var wreck_position := f.global_position if f != null else Vector3.ZERO
 		ctx.eliminate(victim)
-		AudioManager.play_sfx("explode", f.global_position if f != null else Vector3.ZERO)
+		AudioManager.play_sfx("explode", wreck_position)
+
+
+func compute_scores() -> Array[int]:
+	if _ram_ranks.is_empty() or def == null or def.scoring != MiniGameDef.Scoring.SURVIVAL:
+		return super.compute_scores()
+	var scores := ctx.survival_scores()
+	for slot in scores.size():
+		if not ctx.is_alive(slot) and _ram_ranks.has(slot):
+			scores[slot] = int(_ram_ranks[slot])
+		scores[slot] = scores[slot] * 2 + int(ctx.details[slot].get("knockouts", 0)) * survival_knockout_weight
+	return _prioritize_survivors(scores)
 
 
 func _refresh_bars() -> void:

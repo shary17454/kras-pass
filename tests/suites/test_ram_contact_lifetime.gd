@@ -54,11 +54,18 @@ func _scrap_wreck(t: TestHarness, host: Node) -> void:
 	game.health[0] = 1.0
 	var third_health: float = game.health[2]
 	game._resolve_rams()
-	t.ok(not scene.ctx.is_alive(0), "backwash eliminates fragile attacker in the first pair")
+	t.ok(not scene.ctx.is_alive(0), "backwash eliminates fragile attacker after the simultaneous contact batch")
 	t.ok(game.health[1] < game._max_health, "the first live collision still damages its victim")
-	t.equal(game.health[2], third_health, "wrecked attacker cannot damage another kart later in the same tick")
-	t.ok(not game._hit_cooldown.has("0_2"), "wreck cannot create a new collision cooldown")
-	t.equal(game.ram_serial, 1, "only the live collision produces ram feedback")
+	t.ok(game.health[2] < third_health, "both contacts that began alive deliver their simultaneous damage")
+	t.equal(game.ram_serial, 2, "simultaneous contacts retain both impact events regardless of the wreck")
+	third_health = game.health[2]
+	game._hit_cooldown.clear()
+	game._resolve_rams()
+	t.equal(game.health[2], third_health, "already wrecked attacker cannot damage another kart in a later contact batch")
+	t.ok(not game._hit_cooldown.has("0_2"), "already wrecked kart cannot create a new collision cooldown")
+	t.equal(game.ram_serial, 2, "rechecking a wreck cannot emit another impact event")
+	game._damage(2, 0, 50.0, Vector3.BACK)
+	t.equal(game.health[2], third_health, "direct damage entry rejects an already eliminated attacker")
 	game.on_round_start()
 	scene.ctx.revive(0)
 	a.alive = true

@@ -58,9 +58,16 @@ content audit and network peer logs.
 
 ## Remaining gates
 
-The original CI run remains failed. The focused local successes require a
-fresh CI run on the committed correction; they do not qualify all 39 games.
-Balance warnings for storm_heart, base_siege and scrap_karts remain open.
+The original CI run remains failed. Follow-up run
+[37875342110](https://github.com/shary17454/kras-pass/actions/runs/37875342110)
+completed successfully on `3dd51dfec7ee97f7cfc179e6c7b0408c1ae9ae30`.
+Its original downloaded artifacts confirm ordinary two/four-peer matches,
+a multi-round tournament, recorded two-human final, three-contender final,
+and remote-only final PASS. All 22 raw peer logs passed the runtime log guard.
+Artifacts are retained at `/tmp/kras-tank-3dd-ci-completed/`.
+This does not qualify all 39 games. Storm/base-siege balance warnings remain
+open; the subsequent Scrap contact/heading correction has separate evidence
+in [its report](scrap-contact-fairness-2026-10-09.md).
 Physical iPhone/iPad gameplay, sustained frame-time/thermal/battery QA,
 production deployment/database/connection gates, and the full requirements
 audit remain unfinished.
