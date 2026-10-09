@@ -88,3 +88,45 @@ samples remain appropriate before balance acceptance.
 
 Downloaded artifacts: `/tmp/kras-b61-balance-37915371500-observation/`.
 No remote campaign was cancelled, restarted or promoted to a release gate.
+
+## All-Game Four-Touch Follow-Up
+
+English, four configured human touch slots, no bots, all 39 games, both
+orientations, two additional play seconds: initial exit 1, 78 captures,
+75 passes and three failures. `sweeper_storm/landscape`,
+`boss_colossus/portrait`, and `relic_hold/portrait` were paused with a
+pause menu; each capture has a preceding `app backgrounded` log entry.
+All retained four live players and valid control bounds.
+
+A separate rerun of those three games passed all six captures, exit 0.
+Both logs passed the strict log check. The full initial run is still a
+failed run, not an uninterrupted 78/78 success. No application focus or
+pause behavior was disabled to pass the checks. The initial portrait
+contact sheet was inspected, including its visible paused captures.
+
+Raw roots: `/tmp/kras-b61e4b4-all-four-touch-en/` and
+`/tmp/kras-b61e4b4-four-focus-recheck/`, corresponding `.stdout` files,
+and `/tmp/kras-b61e4b4-all-four-touch-en-portrait.jpg`.
+These checks do not establish physical four-person touch acceptance.
+
+## Independent Linux Core Qualification
+
+Run `37915365019`, job `113770119868`, source b61e4b4 completed successfully:
+442 scripts compiled, stage-zero inventory had 545 resources, 22 autoloads,
+27 routes and zero issues; full regression passed 405909 assertions.
+Stability completed 117 matches with zero failures. Its memory-warning
+message was deliberately exercised by `tests/stage_zero_stability.gd:65`,
+not evidence of an actual device memory warning. Cache release reduced
+the measured engine memory from 260753045 to 139019397 bytes; this is
+one Linux test, not proof of no iOS leaks or acceptable thermal behavior.
+
+Four real Godot peer processes completed a three-round random-no-repeat
+tournament: hurdle_dash, goal_guard and ring_rumble. Host and one guest
+reconnected; all four agreed on round histories, final points [8,7,12,7]
+and champion slot 2. This is a local test server, not Railway production.
+
+The initial server run passed 260 tests and skipped six capture-dependent
+tests; after actual Godot capture, the server run passed all 266 tests.
+The larger per-game network matrix is still running. Core success does
+not certify all 39 network games or all product requirements.
+Raw job log: `/tmp/kras-b61e4b4-core-linux-113770119868.stdout`.
