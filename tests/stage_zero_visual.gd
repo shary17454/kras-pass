@@ -136,6 +136,20 @@ func _ready() -> void:
 				for control in source.control_rects():
 					control_bounds_valid = control_bounds_valid and source.get_global_rect().grow(1.0).encloses(control)
 			success = success and control_bounds_valid and touch_slots == cfg.human_slots()
+			var objective: Label = scene.hud._hint_label
+			var objective_visible := objective.is_visible_in_tree()
+			var objective_matches := objective.text == Loc.t(game.desc_key)
+			var objective_bounds_valid := true
+			if objective_visible:
+				var bounds := objective.get_global_rect()
+				objective_bounds_valid = get_viewport().get_visible_rect().grow(1.0).encloses(bounds)
+				for chip in scene.hud._chips:
+					if chip.root.is_visible_in_tree():
+						objective_bounds_valid = objective_bounds_valid and not bounds.intersects(chip.root.get_global_rect())
+				for source in scene.touch_sources:
+					for control in source.control_rects():
+						objective_bounds_valid = objective_bounds_valid and not bounds.intersects(control)
+			success = success and objective_matches and objective_bounds_valid
 			var hud_bottom: float = scene.hud.occupied_top()
 			if game.id.begins_with("boss_") and resolution.x < resolution.y:
 				success = success and hud_bottom < image.get_height() * 0.35
@@ -146,7 +160,10 @@ func _ready() -> void:
 				"paused": scene._paused, "pause_menu_present": scene._pause_menu != null,
 				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count(),
 				"human_count": human_count, "touch_slots": touch_slots,
-				"control_bounds_valid": control_bounds_valid})
+				"control_bounds_valid": control_bounds_valid,
+				"objective_key": game.desc_key, "objective_text": objective.text,
+				"objective_visible": objective_visible, "objective_matches": objective_matches,
+				"objective_bounds_valid": objective_bounds_valid})
 			if game.id == "rising_tide":
 				var observations: Array = []
 				for slot in scene._brains.size():
