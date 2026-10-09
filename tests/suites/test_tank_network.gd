@@ -31,6 +31,22 @@ class RoutingWorld extends RefCounted:
 		return PackedVector3Array([from, waypoint])
 
 
+class CombatSteeringProbe extends "res://src/ai/brains/tank_brain.gd":
+	var target := Vector3.ZERO
+	var clear := true
+	var crate: Node3D
+	func priority_rival() -> int:
+		return 1
+	func predict(_target_slot: int, _lead: float = 0.35) -> Vector3:
+		return target
+	func _has_line_of_sight(_from: Vector3, _to: Vector3) -> bool:
+		return clear
+	func _visible_weapon_crate() -> Node3D:
+		return crate
+	func _perceived_crate_position(_node: Node3D) -> Vector3:
+		return target + Vector3.RIGHT * 10.0
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tank network presentation")
 	var enabled: bool = AudioManager.enabled
@@ -43,6 +59,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var game = scene.controller
 	_test_routing_clock(t, scene)
 	_test_ammo_perception(t, scene)
+	_test_combat_distance(t, scene)
 	var peer: Node = load("res://tests/network_peer.gd").new()
 	peer.game = scene
 	var origin: Vector3 = game.world.roads.get_point_position(0)
@@ -186,6 +203,41 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_combat_distance(t: TestHarness, scene: Node) -> void:
+	t.test("tank bots hold a clear firing lane without abandoning a close rival for ammo")
+	var me: Fighter = scene.ctx.fighter(0)
+	var origin := me.global_position
+	var facing := me.facing
+	me.global_position = scene.ctx.arena_center() + Vector3.UP
+	me.facing = Vector3.FORWARD
+	var brain := CombatSteeringProbe.new()
+	brain.configure(0, scene.ctx, 3, 117)
+	brain.controller = scene.controller
+	for tier in 4:
+		brain.configure(0, scene.ctx, tier, 117)
+		brain.target = me.global_position + Vector3.FORWARD * 10.0
+		brain.decide(0.0)
+		t.near(brain.move.y, 0.0, 0.00001, "every tier stops closing inside effective firing range")
+		brain.target = me.global_position + Vector3.FORWARD * 30.0
+		brain.decide(0.0)
+		t.ok(brain.move.y < 0.0, "distant observed opponent still needs normal forward movement")
+		brain.target = me.global_position + Vector3.FORWARD * 2.0
+		brain.decide(0.0)
+		t.ok(brain.move.y > 0.0, "point-blank approach reverses instead of passing the muzzle through a rival")
+	brain.target = me.global_position + Vector3.FORWARD * 10.0
+	brain.crate = scene.controller.crates[0].node
+	brain.decide(0.0)
+	t.near(brain.move.y, 0.0, 0.00001, "visible ammo does not override a close clear engagement")
+	brain.crate = null
+	brain.clear = false
+	brain._route = PackedVector3Array([me.global_position + Vector3.FORWARD * 6.0])
+	brain._route_refresh_at = INF
+	brain.decide(0.0)
+	t.ok(brain.move.y < 0.0, "blocked firing lane follows known road instead of stopping at cover")
+	me.global_position = origin
+	me.facing = facing
 
 
 func _test_ammo_perception(t: TestHarness, scene: Node) -> void:

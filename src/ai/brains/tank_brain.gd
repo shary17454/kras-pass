@@ -1,4 +1,6 @@
 extends "res://src/ai/brains/gunner_brain.gd"
+const FIRING_RANGE := 12.0
+const MUZZLE_CLEARANCE := 3.0
 var _route := PackedVector3Array()
 var _route_refresh_at := -INF
 var _crate_history := {}
@@ -42,8 +44,14 @@ func decide(_delta: float) -> void:
 	var target := predict(rival, 0.2)
 	var delta := target - me.global_position
 	delta.y = 0.0
-	if _has_line_of_sight(me.global_position, target):
+	var clear := _has_line_of_sight(me.global_position, target)
+	var close_engagement := clear and delta.length() <= FIRING_RANGE
+	if clear:
 		drive_to(target)
+		# DRIVE can steer while stationary. Keep the muzzle clear instead of
+		# continually driving through the delayed target during every shot.
+		if close_engagement:
+			move.y = 0.65 if delta.length() < MUZZLE_CLEARANCE else 0.0
 	else:
 		if _time >= _route_refresh_at:
 			_route = arena.get_meta("tank_world").route(me.global_position, target)
@@ -52,9 +60,9 @@ func decide(_delta: float) -> void:
 			_route.remove_at(0)
 		drive_to(target if _route.is_empty() else _route[0])
 	if delta.length() < 25.0 and me.facing.dot(delta.normalized()) > lerpf(0.85, 0.97, accuracy):
-		if _has_line_of_sight(me.global_position, target):
+		if clear:
 			press(Btn.ATTACK)
-	if crate != null:
+	if crate != null and not close_engagement:
 		drive_to(_perceived_crate_position(crate))
 
 
