@@ -60,6 +60,7 @@ var _native_pause = preload("res://src/ui/native_pause_presenter.gd").new()
 var _native_pause_requested := false
 var _pause_message := ""
 var _on_finished: Callable = Callable()
+var _completion_owner: RefCounted
 var _next_match_config: MatchConfig
 var _tuning := {}
 const REPLAY_MAX_TICKS := 60 * 60 * 30
@@ -123,6 +124,10 @@ func setup(args: Dictionary) -> void:
 	if playback != null:
 		config = playback.to_config()
 	_on_finished = args.get("on_finished", Callable())
+	# A Callable does not retain its RefCounted target after the launching
+	# screen is freed. Keep session/reward ownership through match completion.
+	if _on_finished.is_valid():
+		_completion_owner = _on_finished.get_object() as RefCounted
 	_next_match_config = args.get("next_config")
 	if config == null:
 		Log.e("match started without a config", "Match")
@@ -381,6 +386,8 @@ func teardown() -> void:
 	if _torn_down:
 		return
 	_torn_down = true
+	_on_finished = Callable()
+	_completion_owner = null
 	_close_pause_menu()
 	_native_pause.dispose()
 	# queue_free is deferred; retire simulation before shared pools disappear.

@@ -13,6 +13,38 @@ func run(t: TestHarness, host: Node) -> void:
 	_background_flushes_and_is_idempotent(t)
 	await _match_pauses_on_real_background_signal(t)
 	await _teardown_retires_live_match(t)
+	await _completion_owner_lifetime(t)
+
+
+func _completion_owner_lifetime(t: TestHarness) -> void:
+	t.test("completion targets survive their caller and are released at teardown")
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	_host.add_child(scene)
+	var target := _attach_completion_target(scene)
+	t.ok(target.get_ref() != null, "match retains its temporary RefCounted callback owner")
+	t.ok(scene._on_finished.is_valid(), "callback remains callable after launcher returns")
+	if scene._on_finished.is_valid():
+		scene._on_finished.call(null)
+		t.equal(target.get_ref().calls, 1, "retained callback receives completion")
+	scene.teardown()
+	t.equal(target.get_ref(), null, "teardown releases callback owner instead of leaking it")
+	t.ok(scene._on_finished.is_null(), "retired match has no completion callback")
+	scene.queue_free()
+	await _host.get_tree().process_frame
+
+
+func _attach_completion_target(scene: Node) -> WeakRef:
+	var target := CompletionTarget.new()
+	var config := MatchConfig.build("ring_rumble", _characters(), 0, PlayerConfig.Difficulty.EASY, 78)
+	scene.setup({"config": config, "on_finished": Callable(target, "accept")})
+	return weakref(target)
+
+
+class CompletionTarget extends RefCounted:
+	var calls := 0
+
+	func accept(_result: MatchResult) -> void:
+		calls += 1
 
 
 func _teardown_retires_live_match(t: TestHarness) -> void:

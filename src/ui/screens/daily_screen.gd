@@ -93,8 +93,7 @@ func _start() -> void:
 	_starting = true
 	var profile_id := SaveSystem.active_profile_id()
 	var cfg := Daily.configuration(_plan, profile_id)
-	# The screen is freed the moment the match opens, so the reward callback
-	# cannot live on it. A RefCounted helper kept alive by the Callable can.
+	# MatchScene retains this helper after the launching screen is freed.
 	var reward := DailyReward.new()
 	reward.plan = _plan.duplicate(true)
 	reward.profile_id = profile_id
