@@ -4,6 +4,7 @@ import {createServer} from 'node:http';
 import test from 'node:test';
 import WebSocket from 'ws';
 import {attachMultiplayer} from './multiplayer.js';
+import {Rooms, PROTOCOL} from './rooms.js';
 
 async function fixture(t, options = {}) {
   const server = createServer();
@@ -100,4 +101,67 @@ test('invalid JSON returns only a stable error code and never reflects supplied 
   assert.deepEqual(JSON.parse(data), {op: 'error', code: 'invalid_request'});
   assert.ok(!data.toString().includes('development-only-canary'));
   assert.equal(f.multiplayer.rooms.rooms.size, 0);
+});
+
+test('control rate limit rejects the thirteenth request and recovers after its window', async t => {
+  let now = 1000;
+  const f = await fixture(t, {enabled: true, rooms: new Rooms({now: () => now})});
+  const socket = f.connect();
+  await hello(socket);
+  for (let stamp = 0; stamp < 12; stamp++) {
+    const response = event(socket, 'message');
+    socket.send(JSON.stringify({v: PROTOCOL, op: 'ping', stamp}));
+    const [data] = await response;
+    assert.deepEqual(JSON.parse(data), {op: 'pong', stamp});
+  }
+  let response = event(socket, 'message');
+  socket.send(JSON.stringify({v: PROTOCOL, op: 'ping', stamp: 12}));
+  assert.deepEqual(JSON.parse((await response)[0]), {op: 'error', code: 'rate_limit'});
+  now += 1000;
+  response = event(socket, 'message');
+  socket.send(JSON.stringify({v: PROTOCOL, op: 'ping', stamp: 13}));
+  assert.deepEqual(JSON.parse((await response)[0]), {op: 'pong', stamp: 13});
+  assert.equal(f.multiplayer.rooms.rooms.size, 0);
+});
+
+test('message flood closes the connection without creating room state', async t => {
+  const f = await fixture(t, {enabled: true, rooms: new Rooms({now: () => 1000})});
+  const socket = f.connect();
+  await hello(socket);
+  const closed = event(socket, 'close');
+  for (let request = 0; request < 91; request++) socket.send('null');
+  const [code, reason] = await closed;
+  assert.equal(code, 1008);
+  assert.equal(reason.toString(), 'rate_or_format');
+  assert.equal(f.multiplayer.rooms.rooms.size, 0);
+  assert.equal(f.multiplayer.rooms.sessions.size, 0);
+});
+
+test('payload above 64 KiB is rejected by the transport before room parsing', async t => {
+  const f = await fixture(t, {enabled: true});
+  const socket = f.connect();
+  await hello(socket);
+  const closed = event(socket, 'close');
+  socket.send('x'.repeat(65537));
+  assert.equal((await closed)[0], 1009);
+  assert.equal(f.multiplayer.rooms.rooms.size, 0);
+  assert.equal(f.multiplayer.rooms.sessions.size, 0);
+});
+
+test('per-address connection budget rejects the seventeenth socket and releases a closed slot', async t => {
+  const f = await fixture(t, {enabled: true});
+  const sockets = [];
+  for (let index = 0; index < 16; index++) {
+    const socket = f.connect();
+    sockets.push(socket);
+    await hello(socket);
+  }
+  await rejected(f.connect());
+  const closed = event(sockets[0], 'close');
+  sockets[0].close();
+  await closed;
+  await new Promise(resolve => setImmediate(resolve));
+  await hello(f.connect());
+  assert.equal(f.multiplayer.rooms.rooms.size, 0);
+  assert.equal(f.multiplayer.rooms.sessions.size, 0);
 });
