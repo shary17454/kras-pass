@@ -14,6 +14,7 @@ func run(t: TestHarness) -> void:
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
 	_arguments(t, sim)
+	_balanced_rosters(t, sim)
 	t.test("team draw diagnostics distinguish a shared team win from a competitive draw")
 	var duo = load("res://src/minigames/duo_clash.gd").new()
 	duo._team_score.assign([4, 2])
@@ -116,6 +117,52 @@ func run(t: TestHarness) -> void:
 	probe.require_suite_assertions(before)
 	t.equal(probe.failed, 2, "a completed suite retains its original result")
 	sim.free()
+
+
+func _balanced_rosters(t: TestHarness, sim: Node) -> void:
+	t.test("balanced roster experiments separate character strength from fixed partners")
+	t.ok(sim.has_method("_baseline_roster"), "baseline roster selection has a reproducible explicit policy")
+	if not sim.has_method("_baseline_roster"):
+		return
+	var roster := Registry.characters()
+	sim.balanced_rosters = false
+	for run in 16:
+		var expected: Array[String] = []
+		for slot in 4:
+			expected.append(roster[(slot + run) % roster.size()].id)
+		t.equal(sim._baseline_roster(run), expected, "default campaigns preserve their legacy roster policy")
+	sim.balanced_rosters = true
+	sim.seed_offset = 5800000
+	var counts := {}
+	var partners := {}
+	for character in roster:
+		counts[character.id] = [0, 0, 0, 0]
+		partners[character.id] = {}
+	for run in 1000:
+		var selected: Array = sim._baseline_roster(run)
+		t.equal(selected.size(), 4, "balanced match contains exactly four characters")
+		t.equal(sim._baseline_roster(run), selected, "roster selection is reproducible without mutable RNG state")
+		var unique := {}
+		for slot in 4:
+			var character: String = selected[slot]
+			t.ok(counts.has(character), "balanced match uses an original registered character")
+			unique[character] = true
+			counts[character][slot] += 1
+			partners[character][selected[(slot + 2) % 4]] = true
+		t.equal(unique.size(), 4, "one match does not duplicate its character")
+	for character in roster:
+		t.equal(counts[character.id], [125, 125, 125, 125], "all eight characters appear equally in every seat")
+		t.equal(partners[character.id].size(), 7, "all possible partners are exercised instead of a fixed adjacent subset")
+	var before: Array = sim._baseline_roster(0)
+	sim.seed_offset = 5900000
+	t.ok(sim._baseline_roster(0) != before, "independent campaign seeds vary actual roster composition")
+	t.ok(not sim._parse_args(PackedStringArray(["--balanced-rosters", "--runs=bad"])), "invalid arguments cannot partially change the experiment policy")
+	t.ok(sim.balanced_rosters, "rejected parsing preserves the previous policy")
+	sim.balanced_rosters = false
+	t.ok(sim._parse_args(PackedStringArray(["--balanced-rosters"])), "balanced roster experiments require an explicit supported option")
+	t.ok(sim.balanced_rosters, "the experiment option is applied")
+	sim.balanced_rosters = false
+	sim.seed_offset = 0
 
 
 func _arguments(t: TestHarness, sim: Node) -> void:

@@ -32,6 +32,7 @@ const NULL_TRIALS := 4000
 var runs := 6
 var only := ""
 var natural_rounds := true
+var balanced_rosters := false
 var seed_offset := 0
 var _difficulty_attempted := 0
 var _difficulty_completed := 0
@@ -54,7 +55,7 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 	if not _parse_args(OS.get_cmdline_user_args()):
-		push_error("Invalid balance arguments: use --runs=2..10000, --only=ID, --out-dir=PATH, --seed-offset=0..1000000000 and optional --clipped-rounds")
+		push_error("Invalid balance arguments: use --runs=2..10000, --only=ID, --out-dir=PATH, --seed-offset=0..1000000000 and optional --clipped-rounds or --balanced-rosters")
 		get_tree().quit(2)
 		return
 	if _games().is_empty():
@@ -123,6 +124,7 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 	var next_output := out_dir
 	var next_seed := seed_offset
 	var next_natural := natural_rounds
+	var next_balanced := balanced_rosters
 	var seen := {}
 	for arg in arguments:
 		var key := arg.get_slice("=", 0)
@@ -143,6 +145,8 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 				return false
 		elif arg == "--clipped-rounds":
 			next_natural = false
+		elif arg == "--balanced-rosters":
+			next_balanced = true
 		elif arg.begins_with("--seed-offset="):
 			next_seed = _bounded_integer(arg.trim_prefix("--seed-offset="), 0, 1000000000)
 			if next_seed < 0:
@@ -152,11 +156,14 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 			continue
 		else:
 			return false
+	if next_balanced and (Registry.characters().size() < 4 or Registry.characters().size() % 4 != 0):
+		return false
 	runs = next_runs
 	only = next_only
 	out_dir = next_output
 	seed_offset = next_seed
 	natural_rounds = next_natural
+	balanced_rosters = next_balanced
 	return true
 
 
@@ -182,6 +189,30 @@ func _baseline_seed(run: int) -> int:
 	return seed_offset + 9001 + run * 613
 
 
+func _baseline_roster(run: int) -> Array[String]:
+	var roster: Array[String] = []
+	for character in Registry.characters():
+		roster.append(character.id)
+	var selected: Array[String] = []
+	if not balanced_rosters:
+		for slot in 4:
+			selected.append(roster[(slot + run) % roster.size()])
+		return selected
+	# Each batch partitions a seeded shuffle into quartets, then seats each
+	# quartet four times. All characters appear once per seat in every batch.
+	var random := RandomNumberGenerator.new()
+	random.seed = _baseline_seed(int(run / roster.size()))
+	for i in range(roster.size() - 1, 0, -1):
+		var other := random.randi_range(0, i)
+		var previous := roster[i]
+		roster[i] = roster[other]
+		roster[other] = previous
+	var group := int((run % roster.size()) / 4)
+	for slot in 4:
+		selected.append(roster[group * 4 + (slot + run) % 4])
+	return selected
+
+
 func _games() -> Array[MiniGameDef]:
 	if only == "":
 		return Registry.all_minigames()
@@ -193,7 +224,6 @@ func _games() -> Array[MiniGameDef]:
 
 
 func _simulate(def: MiniGameDef) -> Dictionary:
-	var roster := Registry.characters()
 	var wins_by_slot := [0, 0, 0, 0]
 	var wins_by_character := {}
 	# Every character that actually took the field, win or lose. Without this a
@@ -208,19 +238,16 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	var completed := 0
 	var scores_seen: Array[int] = []
 	var baseline_seeds: Array[int] = []
+	var baseline_rosters: Array = []
 	var boss_outcomes: Array[Dictionary] = []
 	var team_outcomes: Array[Dictionary] = []
 
 	for run in runs:
 		_say("  %s run %d/%d" % [def.id, run + 1, runs])
-		# Rotate the roster through the slots so slot bias and character bias
-		# are separable rather than confounded.
-		var chars: Array = []
-		for slot in 4:
-			var cid_played := roster[(slot + run) % roster.size()].id
-			chars.append(cid_played)
+		var chars := _baseline_roster(run)
 		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, _baseline_seed(run))
 		baseline_seeds.append(cfg.seed)
+		baseline_rosters.append(chars.duplicate())
 		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
 		var result := await _play(cfg)
@@ -265,6 +292,8 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"sample_mode": "natural" if natural_rounds else "clipped",
 		"seed_offset": seed_offset,
 		"baseline_seeds": baseline_seeds,
+		"roster_policy": "seeded_partition_seat_rotation" if balanced_rosters else "adjacent_rotation",
+		"baseline_rosters": baseline_rosters,
 		"round_window": _window_for(def),
 		"difficulty_attempted": _difficulty_attempted,
 		"difficulty_completed": _difficulty_completed,

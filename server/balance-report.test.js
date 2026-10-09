@@ -47,6 +47,19 @@ test('warnings survive aggregation instead of becoming green readiness', () => {
     [{ game: 'one', flags: ['character advantage'] }]);
 });
 
+test('explicit legacy roster policy remains compatible with ordinary campaigns', () => {
+  const one = entry('one');
+  one.report.games[0].roster_policy = 'adjacent_rotation';
+  assert.equal(summarizeBalance([one, entry('two')], options).complete, true);
+});
+for (const policy of ['seeded_partition_seat_rotation', 'unknown', null, 0]) {
+  test(`diagnostic roster policy ${policy} cannot replace ordinary campaign evidence`, () => {
+    const one = entry('one');
+    one.report.games[0].roster_policy = policy;
+    assert.throws(() => summarizeBalance([one, entry('two')], options), /roster policy/i);
+  });
+}
+
 for (const [name, mutate] of [
   ['missing start', e => { delete e.report.simulation_source_start; }],
   ['missing end', e => { delete e.report.simulation_source_end; }],

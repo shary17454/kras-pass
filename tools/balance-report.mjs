@@ -48,6 +48,10 @@ export function summarizeBalance(entries, { commit, run, gameIds, characterIds =
         ![0, 1].includes(game.severity) || (game.flags.length > 0) !== (game.severity === 1)) {
       throw new Error(`Invalid or incomplete campaign evidence: ${source.game}`);
     }
+    // Experimental compositions are not interchangeable with the existing campaign.
+    if (game.roster_policy !== undefined && game.roster_policy !== 'adjacent_rotation') {
+      throw new Error(`Unqualified roster policy: ${source.game}`);
+    }
     for (const value of [source.seedOffset, report.seed_offset, game.seed_offset]) {
       if ((value ?? 0) !== seedOffset || (seedOffset !== 0 && value === undefined)) {
         throw new Error('Mismatched campaign seed offset');
