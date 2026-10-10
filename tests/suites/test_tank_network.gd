@@ -188,6 +188,18 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(reused.launch_serial, serial + 1, "reused shell has a fresh launch generation")
 	Pool.release(game.POOL_KEY, reused)
 	game.on_round_start()
+	for slot in 4:
+		var fighter: Fighter = scene.ctx.fighter(slot)
+		var inward: Vector3 = scene.ctx.arena_center() - fighter.global_position
+		inward.y = 0.0
+		t.ok(fighter.facing.is_equal_approx(inward.normalized()), "round start faces every ATV toward the arena, independent of slot")
+		fighter.face_direction(-inward)
+	game.on_round_start()
+	for slot in 4:
+		var fighter: Fighter = scene.ctx.fighter(slot)
+		var inward: Vector3 = scene.ctx.arena_center() - fighter.global_position
+		inward.y = 0.0
+		t.ok(fighter.facing.is_equal_approx(inward.normalized()), "round restart resets the previous ATV heading")
 	packet = JSON.parse_string(JSON.stringify(replica.capture(scene)))
 	packet.round = 1
 	packet.phase = MatchPhase.P.INTRO

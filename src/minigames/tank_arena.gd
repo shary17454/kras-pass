@@ -52,7 +52,7 @@ func build() -> void:
 
 
 func on_round_start() -> void:
-	cleanup()
+	super.on_round_start()
 	armor.fill(MAX_ARMOR)
 	_cooldowns.fill(0.0)
 	_shot_damage = 25.0
