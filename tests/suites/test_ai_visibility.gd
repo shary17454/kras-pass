@@ -220,6 +220,74 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+	await _test_siege_cue_history(t, host)
+
+
+func _test_siege_cue_history(t: TestHarness, host: Node) -> void:
+	t.test("siege crystal cues retain profile delay and invalidate hidden or replaced targets")
+	for difficulty in 4:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("base_siege", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 853)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		scene.ctx.observation_camera = null
+		var brain = load("res://src/ai/brains/siege_brain.gd").new()
+		brain.controller = scene.controller
+		brain.configure(0, scene.ctx, difficulty, 853)
+		brain.on_round_start()
+		var base: Dictionary = scene.controller._bases[1]
+		var delay: float = brain.reaction_time
+		t.ok(delay > 0.0, "tier %d uses its actual nonzero profile delay" % difficulty)
+		brain._time = 10.0
+		t.ok(brain._base_cue(1).is_empty(), "tier %d first crystal sight is not immediately actionable" % difficulty)
+		brain._time = 10.0 + delay - 0.001
+		t.ok(brain._base_cue(1).is_empty(), "tier %d crystal cue waits until reaction threshold" % difficulty)
+		brain._time = 10.0 + delay
+		t.equal(brain._base_cue(1).get("health"), 100, "tier %d initial health becomes actionable at threshold" % difficulty)
+
+		var changed_at: float = brain._time + 0.01
+		brain._time = changed_at
+		base.health = 25.0
+		scene.controller._refresh_base(base)
+		t.equal(brain._base_cue(1).get("health"), 100, "tier %d changed health cannot leak through the old cue" % difficulty)
+		brain._time = changed_at + delay - 0.001
+		t.equal(brain._base_cue(1).get("health"), 100, "tier %d changed health is delayed for the full profile interval" % difficulty)
+		brain._time = changed_at + delay
+		t.equal(brain._base_cue(1).get("health"), 25, "tier %d observed health update becomes actionable" % difficulty)
+
+		base.crystal.hide()
+		base.health = 0.0
+		t.ok(brain._base_cue(1).is_empty(), "tier %d hidden destruction cannot return old actionable health" % difficulty)
+		t.ok(not brain._base_history.has(1), "tier %d occlusion discards crystal cue history" % difficulty)
+		base.health = 50.0
+		scene.controller._refresh_base(base)
+		base.crystal.show()
+		var appeared_at: float = brain._time + 1.0
+		brain._time = appeared_at
+		t.ok(brain._base_cue(1).is_empty(), "tier %d reappearance cannot reuse prior sight credit" % difficulty)
+		brain._time = appeared_at + delay - 0.001
+		t.ok(brain._base_cue(1).is_empty(), "tier %d reacquired crystal retains full reaction delay" % difficulty)
+		brain._time = appeared_at + delay
+		t.equal(brain._base_cue(1).get("health"), 50, "tier %d reacquired crystal exposes only delayed new health" % difficulty)
+
+		var old_crystal: Node3D = base.crystal
+		var replacement := MeshInstance3D.new()
+		replacement.mesh = BoxMesh.new()
+		base.node.add_child(replacement)
+		base.crystal = replacement
+		base.health = 75.0
+		old_crystal.queue_free()
+		t.ok(brain._base_cue(1).is_empty(), "tier %d replacement identity cannot inherit old crystal samples" % difficulty)
+		brain._time += delay
+		t.equal(brain._base_cue(1).get("health"), 75, "tier %d replacement is observed after its own delay" % difficulty)
+		brain.on_round_start()
+		t.equal(brain._base_history.size(), 0, "tier %d round restart clears crystal history" % difficulty)
+		t.ok(brain._base_cue(1).is_empty(), "tier %d restarted round cannot reuse actionable cues" % difficulty)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
 
 
 func _test_camera_bounds(t: TestHarness, scene: Node) -> void:
