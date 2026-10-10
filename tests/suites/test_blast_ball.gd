@@ -155,6 +155,22 @@ func run(t: TestHarness, host: Node) -> void:
 	me.global_position = Vector3(1.1, 1.0, 0)
 	brain.decide(0.1)
 	t.ok(brain.target.x > brain.observed["position"].x, "aligned approach follows through the ball rather than stopping outside contact range")
+	var planning_body := me.get_node("Body") as CollisionShape3D
+	var planning_scale := planning_body.global_basis.get_scale().abs()
+	var planning_radius: float = 0.62 + planning_body.shape.radius * maxf(planning_scale.x, planning_scale.z)
+	for direction in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
+		me.global_position = Vector3.UP
+		var ball_position: Vector3 = me.global_position + direction * 2.5
+		brain.victim_position = ball_position + direction.rotated(Vector3.UP, PI / 2.0) * 8.0
+		brain.observed = {"position": ball_position, "radius": 0.62,
+			"fuse": escape_budget + maxf(0.0, 2.5 - planning_radius) / walk_speed + 0.02}
+		brain.escaped = false
+		brain.decide(0.1)
+		t.ok(brain.escaped, "side alignment cannot spend only the shorter direct-contact travel budget")
+		brain.observed["fuse"] = 5.0
+		brain.escaped = false
+		brain.decide(0.1)
+		t.ok(not brain.escaped, "a funded side alignment still permits an offensive approach")
 	brain.victim = -1
 	me.global_position = Vector3(0, 1.0, 0)
 	brain.escaped = false

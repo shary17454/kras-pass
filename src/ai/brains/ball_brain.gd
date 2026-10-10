@@ -49,10 +49,11 @@ func decide(_delta: float) -> void:
 	# These are our own status timers; Fighter cannot steer until both expire.
 	var movement_delay := maxf(maxf(0.0, me._stun), maxf(0.0, float(me.mods["frozen"])))
 
-	if fuse > commit_window + travel_time + movement_delay and dist < 9.0 and rng.randf() < aggression + 0.25:
+	var approach := fuse > commit_window + travel_time + movement_delay and dist < 9.0 and rng.randf() < aggression + 0.25
+	var push_from: Vector3 = position
+	if approach:
 		# Approach from the side opposite the rival we want to send it toward.
 		var victim := _best_victim(position)
-		var push_from: Vector3 = position
 		if victim >= 0:
 			var dir: Vector3 = perceive(victim) - position
 			dir.y = 0.0
@@ -66,6 +67,12 @@ func decide(_delta: float) -> void:
 				# beyond the combined ball/player collision radii.
 				if alignment.length() < 0.9:
 					push_from = position + dir * 0.8
+				else:
+					# Fund the selected line-up route and subsequent contact, not
+					# the shorter direct path we are no longer steering along.
+					travel_time = (alignment.length() + maxf(0.0, 1.4 - contact_distance)) / maxf(walk_speed, 0.1)
+					approach = fuse > commit_window + travel_time + movement_delay
+	if approach:
 		steer_to(push_from)
 		if dist < 3.0:
 			tap(Btn.ATTACK)
