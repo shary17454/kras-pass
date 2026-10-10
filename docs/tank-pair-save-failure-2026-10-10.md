@@ -63,3 +63,21 @@ the failed qualification. Do not insert this report into an accepted balance
 index, clear previous warnings, promote READY, or deploy/release from it.
 Main/Railway backup approval and current signed archive/upload/review remain
 separate unresolved gates.
+
+## Small Recovery Check
+
+After Git access recovered, the gate correction was committed locally as
+`8a72560b6b171bc1f87bf17b58b43e41a7f26de4`; no main push or deployment occurred.
+Free space increased to 652 MiB, still reported at 100% capacity. No deletion
+or cleanup was performed by this agent to produce that change.
+
+The existing Godot save suite then completed with 111 assertions, exit 0,
+against `/tmp/kras-storage-recovery-unit-save`. Its strict `tests` guard passed.
+The sole emitted Save error belongs to the explicit `failed write stays dirty
+and can be retried` fixture on `test_profile.json.tmp`; the suite verifies
+retry, corruption recovery, backup failure, future-schema protection and
+migration. Evidence: `/tmp/kras-storage-recovery-unit.engine`.
+
+This small successful regression neither explains the previous runtime save
+errors conclusively nor retroactively qualifies the 170-match campaign.
+Large campaigns and the current Xcode archive still need sufficient storage.
