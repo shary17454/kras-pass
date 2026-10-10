@@ -29,7 +29,26 @@ class EngagementObserver:
 		return null
 
 
+class FiringObserver:
+	extends Observer
+	var seen := Vector3.ZERO
+	var seen_velocity := Vector3.ZERO
+
+	func priority_rival() -> int:
+		return 1
+
+	func perceive(_target_slot: int) -> Vector3:
+		return seen
+
+	func _perceived_velocity(_target_slot: int) -> Vector3:
+		return seen_velocity
+
+	func _visible_weapon_crate() -> Node3D:
+		return null
+
+
 func run(t: TestHarness, host: Node) -> void:
+	await _check_projectile_lead(t, host)
 	await _check_close_target_turn(t, host)
 	t.suite("tank weapon crate reaction and visible positions")
 	for difficulty in 4:
@@ -159,6 +178,61 @@ func _check_close_target_turn(t: TestHarness, host: Node) -> void:
 					var after := absf(wrapf(target_yaw - me._steer, -PI, PI))
 					t.ok(after < before, "tier %d close target turn reduces yaw error at distance %.1f" % [difficulty, distance])
 					t.ok(brain.move.y > 0.0 if distance < 3.0 else is_zero_approx(brain.move.y), "muzzle clearance still reverses or holds as intended")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
+
+
+func _check_projectile_lead(t: TestHarness, host: Node) -> void:
+	t.suite("tank firing lead uses delayed cues and own shell speed")
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": MatchConfig.build("tank_arena", ["fanoos", "nabta", "ramla", "sakhra"], 0, 3, 1604242)})
+	scene.set_physics_process(false)
+	for fighter in scene.ctx.fighters:
+		fighter.set_physics_process(false)
+	var me: Fighter = scene.ctx.fighter(0)
+	me.global_position = Vector3(0, 100, 0)
+	me.facing = Vector3.RIGHT
+	scene.ctx.fighter(1).velocity = Vector3(99, 0, -99)
+	for difficulty in 4:
+		var brain := FiringObserver.new()
+		brain.configure(0, scene.ctx, difficulty, 1604242)
+		brain.controller = scene.controller
+		brain.prediction = 1.0
+		brain.seen_velocity = Vector3(0, 0, 6)
+		for distance in [6.0, 12.0, 20.0]:
+			brain.seen = me.global_position + Vector3.RIGHT * distance
+			for kind in scene.controller.SHELL_SPEED.size():
+				scene.controller.shell_types[0] = kind
+				scene.controller.ammo[0] = 3
+				brain.decide(1.0 / 60.0)
+				var lead: float = brain.destination.z / 6.0
+				var flight: float = lead - brain.reaction_time
+				var travel: float = (brain.destination - me.global_position - me.facing * 1.6).length()
+				t.near(travel, scene.controller.SHELL_SPEED[kind] * flight, 0.001, "tier %d shell %d intercept travel at %.1f" % [difficulty, kind, distance])
+				t.near(brain.destination.x, brain.seen.x, 0.001, "live hidden velocity never changes observed trajectory")
+		brain.prediction = 0.0
+		brain.decide(1.0 / 60.0)
+		t.equal(brain.destination, brain.seen, "no prediction retains delayed position")
+		brain.prediction = 1.0
+		brain.seen_velocity = Vector3.ZERO
+		brain.decide(1.0 / 60.0)
+		t.equal(brain.destination, brain.seen, "stationary target is never over-led")
+		brain.seen_velocity = Vector3(0, 100, 6)
+		brain.decide(1.0 / 60.0)
+		t.near(brain.destination.y, brain.seen.y, 0.001, "vertical velocity cannot distort ground aim")
+		brain.seen_velocity = Vector3(40, 0, 0)
+		brain.decide(1.0 / 60.0)
+		t.ok(brain.destination.is_finite(), "unreachable target keeps finite fallback")
+		t.ok(brain.destination.x <= brain.seen.x + 40.0 * (brain.reaction_time + 2.0) + 0.00001, "unreachable prediction horizon remains bounded within float precision")
+		brain.seen_velocity = Vector3(18, 0, 0)
+		brain.decide(1.0 / 60.0)
+		t.ok(brain.destination.is_finite(), "equal projectile and target speed keeps finite fallback")
+	scene.controller.ammo[0] = 0
+	t.equal(scene.controller.projectile_speed_for(0), 22.0, "empty special ammo uses standard projectile speed")
+	scene.ctx.config.rules["tank_variant"] = "ricochet"
+	t.equal(scene.controller.projectile_speed_for(0), 26.0, "ricochet-only rules override empty inventory")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

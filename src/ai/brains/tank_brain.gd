@@ -41,7 +41,7 @@ func decide(_delta: float) -> void:
 		else:
 			drive_to(ctx.arena_center())
 		return
-	var target := predict(rival, 0.2)
+	var target := _firing_target(rival)
 	var delta := target - me.global_position
 	delta.y = 0.0
 	var clear := _has_line_of_sight(me.global_position, target)
@@ -64,6 +64,36 @@ func decide(_delta: float) -> void:
 			press(Btn.ATTACK)
 	if crate != null and not close_engagement:
 		drive_to(_perceived_crate_position(crate))
+
+
+func _firing_target(rival: int) -> Vector3:
+	var me := self_body()
+	var velocity := _perceived_velocity(rival) * prediction
+	velocity.y = 0.0
+	var offset := perceive(rival) + velocity * reaction_time - me.global_position - me.facing.normalized() * 1.6
+	offset.y = 0.0
+	var speed := 22.0
+	if controller != null and controller.has_method("projectile_speed_for"):
+		speed = maxf(0.01, float(controller.projectile_speed_for(slot)))
+	# Intercept uses delayed observations and the bot's own loaded shell only.
+	var a := velocity.length_squared() - speed * speed
+	var b := 2.0 * offset.dot(velocity)
+	var c := offset.length_squared()
+	var flight := offset.length() / speed
+	if absf(a) < 0.000001:
+		if absf(b) > 0.000001 and -c / b >= 0.0:
+			flight = -c / b
+	else:
+		var discriminant := b * b - 4.0 * a * c
+		if discriminant >= 0.0:
+			var root := sqrt(discriminant)
+			var first := (-b - root) / (2.0 * a)
+			var second := (-b + root) / (2.0 * a)
+			if first >= 0.0:
+				flight = first
+			if second >= 0.0 and (first < 0.0 or second < first):
+				flight = second
+	return predict(rival, reaction_time + clampf(flight, 0.0, 2.0))
 
 
 func _visible_weapon_crate() -> Node3D:

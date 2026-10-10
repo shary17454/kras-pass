@@ -137,6 +137,16 @@ func wants_fire(frame: InputFrame) -> bool:
 	return frame.held(InputFrame.Btn.ATTACK)
 
 
+func projectile_speed_for(slot: int) -> float:
+	return SHELL_SPEED[_shell_kind_for(slot)]
+
+
+func _shell_kind_for(slot: int) -> int:
+	if String(ctx.config.rule("tank_variant", "normal")) == "ricochet":
+		return 4
+	return shell_types[slot] if ammo[slot] > 0 else 0
+
+
 func _fire(slot: int) -> void:
 	var fighter := ctx.fighter(slot)
 	var origin := fighter.global_position + Vector3.UP
@@ -145,9 +155,7 @@ func _fire(slot: int) -> void:
 	if not get_world_3d().direct_space_state.intersect_ray(query).is_empty():
 		_cooldowns[slot] = _cooldown
 		return
-	var kind := shell_types[slot] if ammo[slot] > 0 else 0
-	if String(ctx.config.rule("tank_variant", "normal")) == "ricochet":
-		kind = 4
+	var kind := _shell_kind_for(slot)
 	var dir := fighter.facing.normalized()
 	_spawn_shell(slot, kind, origin, dir)
 	if kind == 5:
