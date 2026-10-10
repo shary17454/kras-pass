@@ -75,6 +75,7 @@ static var _contacts := {}
 static var _pair_cooldown := {}
 var health := 100.0
 var max_health := 100.0
+var health_defeat_enabled := true
 var damage_percent := 0.0    ## combat games: higher = flies further
 var lives := 1
 var carrying := 0            ## generic "carried items" counter for crate/gem games
@@ -491,7 +492,8 @@ func _apply_hit(from_slot: int, direction: Vector3, strength: float, damage: flo
 	_impulse += direction * push
 	_impulse.y += push * float(_tuning.get("knock_lift", 0.22))
 	damage_percent += damage
-	health -= damage
+	if health_defeat_enabled:
+		health -= damage
 	_stun = maxf(_stun, float(_tuning.get("hit_stun", 0.16)) * (data.perk_factor("recovery") if data != null else 1.0))
 	_invuln = maxf(_invuln, float(_tuning.get("hit_invuln", 0.12)) * (data.perk_factor("invulnerability") if data != null else 1.0))
 	_hitstop = float(_tuning.get("hitstop", 0.05))
@@ -516,7 +518,7 @@ func _apply_hit(from_slot: int, direction: Vector3, strength: float, damage: flo
 	InputRouter.rumble(slot, clampf(push * 0.035, 0.15, 0.95), 0.16)
 	AudioManager.play_sfx("hit", global_position, _voice())
 	_spawn_burst(data.accent if data != null else Color.WHITE, 7)
-	if health <= 0.0:
+	if health_defeat_enabled and health <= 0.0:
 		_on_defeated(from_slot)
 	return true
 
