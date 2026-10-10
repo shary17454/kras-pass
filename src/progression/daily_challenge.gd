@@ -5,6 +5,7 @@ const REWARD_GEMS := 12
 const HISTORY_LIMIT := 32
 const CLAIM_LIMIT := 90
 const MAX_ATTEMPTS := 2147483647
+const MONTH_DAYS := [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 
 static func today_key() -> String:
@@ -13,7 +14,7 @@ static func today_key() -> String:
 
 
 static func plan(day_key: String) -> Dictionary:
-	if RegEx.create_from_string("^[0-9]{8}$").search(day_key) == null:
+	if not _valid_day_key(day_key):
 		return {}
 	var games := Registry.minigames().duplicate()
 	games.sort_custom(func(a, b): return a.id < b.id)
@@ -39,6 +40,20 @@ static func plan(day_key: String) -> Dictionary:
 	return {"key": day_key, "catalog": PartyPlaylist.catalog(), "seed": seed_value,
 		"game": game.id, "arena": arena, "character": character.id,
 		"difficulty": rng.randi_range(1, 3), "mutators": mutators}
+
+
+static func _valid_day_key(day_key: String) -> bool:
+	if day_key.length() != 8 or RegEx.create_from_string("^[0-9]{8}$").search(day_key) == null:
+		return false
+	var year := day_key.substr(0, 4).to_int()
+	var month := day_key.substr(4, 2).to_int()
+	var day := day_key.substr(6, 2).to_int()
+	if year < 1 or month < 1 or month > 12 or day < 1:
+		return false
+	var days_in_month: int = MONTH_DAYS[month - 1]
+	if month == 2 and year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+		days_in_month = 29
+	return day <= days_in_month
 
 
 static func configuration(setup: Dictionary, profile_id: String) -> MatchConfig:

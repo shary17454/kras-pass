@@ -3,6 +3,7 @@ const Daily = preload("res://src/progression/daily_challenge.gd")
 
 
 func run(t: TestHarness, _host: Node) -> void:
+	_test_calendar(t)
 	t.suite("shared daily challenge and profile records")
 	var original := SaveSystem.profile().duplicate(true)
 	var original_progress := Progression._p.duplicate(true)
@@ -84,6 +85,29 @@ func run(t: TestHarness, _host: Node) -> void:
 	_test_corrupt_record(t, first, setup)
 	SaveSystem.set_profile(original)
 	Progression._p = original_progress
+
+
+func _test_calendar(t: TestHarness) -> void:
+	t.suite("daily challenge Gregorian date validity")
+	var profile_id := SaveSystem.active_profile_id()
+	var original := SaveSystem.profile().duplicate(true)
+	for key in ["20260001", "20261301", "20260100", "20260132", "20260431",
+			"20260631", "20260931", "20261131", "20260229", "20260230",
+			"20240230", "19000229", "21000229", "00000101", "00000000",
+			"2026101", "202610010", "2026-10-01", "abcdefgh", "20261001\n"]:
+		var setup := Daily.plan(key)
+		t.equal(setup, {}, "invalid calendar date has no daily plan: " + key)
+		if setup.is_empty():
+			t.equal(Daily.configuration(setup, profile_id), null, "invalid date cannot configure a match")
+			t.equal(Daily.begin_attempt(profile_id, setup), 0, "invalid date cannot create an attempt")
+	t.equal(SaveSystem.profile(), original, "invalid date flow leaves saved progress intact")
+	for key in ["00010101", "19000228", "20000229", "20240229", "20260228",
+			"20260430", "20260630", "20260930", "20261130", "20261231",
+			"24000229", "99991231"]:
+		var setup := Daily.plan(key)
+		t.ok(not setup.is_empty(), "valid calendar date creates a plan: " + key)
+		t.equal(setup.get("key"), key, "valid key remains unchanged")
+		t.equal(setup.get("seed"), int(key.hash()) & 0x7FFFFFFF, "valid date seed algorithm stays unchanged")
 
 
 func _test_corrupt_record(t: TestHarness, profile_id: String, setup: Dictionary) -> void:
