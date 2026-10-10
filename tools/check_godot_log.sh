@@ -15,6 +15,11 @@ if [ "$mode" = import ] && grep -q 'ERROR:' "$log"; then
   printf 'Godot import error in %s\n' "$log" >&2
   exit 1
 fi
+# Only unit suites may inject persistence failures; real campaigns must save.
+if [ "$mode" != tests ] && grep -q '\[ERR\]\[Save\]' "$log"; then
+  printf 'Unexpected Godot save failure in %s\n' "$log" >&2
+  exit 1
+fi
 if [ "$mode" = tests ] && ! grep -Eq '^ALL TESTS PASSED[^0-9]*[1-9][0-9]* assertions$' "$log"; then
   printf 'Missing positive completed test summary in %s\n' "$log" >&2
   exit 1

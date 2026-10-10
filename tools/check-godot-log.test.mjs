@@ -62,3 +62,13 @@ test('import remains stricter than runtime', () => {
   assert.notEqual(inspect('ERROR: import failure\n', 'import'), 0);
   assert.equal(inspect('import completed\n', 'import'), 0);
 });
+
+test('unexpected save failures invalidate runtime qualification', () => {
+  const failure = 'ERROR: [ERR][Save] cannot open /tmp/isolated/profile.json.tmp for write\n';
+  for (const mode of ['runtime', 'balance', 'stability', 'compile']) {
+    assert.notEqual(inspect(`compile check: 458 scripts\nOK - every script compiles\n${failure}`, mode), 0);
+  }
+  // Save regression suites intentionally simulate unwritable destinations.
+  assert.equal(inspect(`${failure}ALL TESTS PASSED - 12 assertions\n`, 'tests'), 0);
+  assert.notEqual(inspect(failure, 'tests'), 0);
+});
