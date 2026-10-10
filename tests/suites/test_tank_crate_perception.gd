@@ -12,7 +12,25 @@ class Observer:
 		destination = target
 
 
+class EngagementObserver:
+	extends "res://src/ai/brains/tank_brain.gd"
+	var target_position := Vector3.ZERO
+
+	func priority_rival() -> int:
+		return 1
+
+	func predict(_target_slot: int, _lead: float = 0.35) -> Vector3:
+		return target_position
+
+	func _has_line_of_sight(_from: Vector3, _to: Vector3) -> bool:
+		return true
+
+	func _visible_weapon_crate() -> Node3D:
+		return null
+
+
 func run(t: TestHarness, host: Node) -> void:
+	await _check_close_target_turn(t, host)
 	t.suite("tank weapon crate reaction and visible positions")
 	for difficulty in 4:
 		var scene: Node = load("res://src/match/match_scene.gd").new()
@@ -110,3 +128,37 @@ func run(t: TestHarness, host: Node) -> void:
 		scene.teardown()
 		scene.queue_free()
 		await host.get_tree().process_frame
+
+
+func _check_close_target_turn(t: TestHarness, host: Node) -> void:
+	t.suite("tank close engagement steering follows actual drive physics")
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": MatchConfig.build("tank_arena", ["fanoos", "nabta", "ramla", "sakhra"], 0, 3, 1604242)})
+	scene.set_physics_process(false)
+	for fighter in scene.ctx.fighters:
+		fighter.set_physics_process(false)
+	var me: Fighter = scene.ctx.fighter(0)
+	me.global_position = Vector3(0, 100, 0)
+	for difficulty in 4:
+		var brain := EngagementObserver.new()
+		brain.configure(0, scene.ctx, difficulty, 1604242)
+		brain.controller = scene.controller
+		brain.accuracy = 1.0
+		for yaw in [0.0, PI / 2.0, PI, -PI / 2.0]:
+			for angle in [-2.6, 2.6]:
+				for distance in [2.0, 6.0]:
+					me._steer = yaw
+					me.facing = Vector3(sin(yaw), 0, cos(yaw))
+					me.velocity = Vector3.ZERO
+					var target_yaw: float = yaw + angle
+					brain.target_position = me.global_position + Vector3(sin(target_yaw), 0, cos(target_yaw)) * distance
+					brain.decide(1.0 / 60.0)
+					var before := absf(wrapf(target_yaw - me._steer, -PI, PI))
+					me._integrate_drive(Vector3(brain.move.x, 0, brain.move.y), 1.0 / 60.0)
+					var after := absf(wrapf(target_yaw - me._steer, -PI, PI))
+					t.ok(after < before, "tier %d close target turn reduces yaw error at distance %.1f" % [difficulty, distance])
+					t.ok(brain.move.y > 0.0 if distance < 3.0 else is_zero_approx(brain.move.y), "muzzle clearance still reverses or holds as intended")
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
