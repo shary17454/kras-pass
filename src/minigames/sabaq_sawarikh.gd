@@ -173,6 +173,8 @@ func _tick_crates(delta: float) -> void:
 			continue
 		if is_instance_valid(node):
 			node.rotation.y += delta * 1.6
+		var claimants: Array[int] = []
+		var nearest := 1.9
 		for i in ctx.fighters.size():
 			var f := ctx.fighter(i)
 			if f == null or not is_instance_valid(f) or not ctx.is_alive(i):
@@ -181,16 +183,26 @@ func _tick_crates(delta: float) -> void:
 				continue
 			var to: Vector3 = f.global_position - crate["pos"]
 			to.y = 0.0
-			if to.length() > 1.9:
+			var distance := to.length()
+			if distance > 1.9:
 				continue
-			held[i] = _roll_item(i)
-			crate["cooldown"] = CRATE_RESPAWN
-			if is_instance_valid(node):
-				node.visible = false
-			ctx.bump_detail(i, "crates")
-			_weapon_event("pickup", f.global_position)
-			AudioManager.play_sfx("pickup", f.global_position)
-			break
+			if claimants.is_empty() or (distance < nearest and not is_equal_approx(distance, nearest)):
+				nearest = distance
+				claimants.clear()
+				claimants.append(i)
+			elif is_equal_approx(distance, nearest):
+				claimants.append(i)
+		if claimants.is_empty():
+			continue
+		# Consume an extra seeded choice only for the final nearest-distance tie.
+		var winner := claimants[0] if claimants.size() == 1 else claimants[ctx.rng.randi_range(0, claimants.size() - 1)]
+		held[winner] = _roll_item(winner)
+		crate["cooldown"] = CRATE_RESPAWN
+		if is_instance_valid(node):
+			node.visible = false
+		ctx.bump_detail(winner, "crates")
+		_weapon_event("pickup", ctx.fighter(winner).global_position)
+		AudioManager.play_sfx("pickup", ctx.fighter(winner).global_position)
 
 
 ## Item odds by position. Last place gets the tools to close a gap; the leader
