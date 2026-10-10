@@ -8,6 +8,14 @@ class SpawnProbe extends "res://src/minigames/crate_smash.gd":
 		return not blocked
 
 
+class LabSpawnProbe extends "res://src/minigames/lab_crates.gd":
+	var blocked := true
+	var attempts := 0
+	func _spot_is_free(_position: Vector3) -> bool:
+		attempts += 1
+		return not blocked
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("crate network presentation")
 	for id in ["crate_smash", "lab_crates"]:
@@ -54,6 +62,7 @@ func run(t: TestHarness, host: Node) -> void:
 			await host.get_tree().process_frame
 		if id == "lab_crates":
 			await _mixed_break_feedback(t, host)
+			await _lab_spawn_failure(t, host, scene.ctx)
 		if id == "lab_crates":
 			game._volley(0, Vector3(2, 1, 3))
 		var replica = load("res://src/net/match_replica.gd").new()
@@ -204,6 +213,44 @@ func _mixed_break_feedback(t: TestHarness, host: Node) -> void:
 	AudioManager.enabled = audio_enabled
 	scene.teardown()
 	scene.queue_free()
+	await host.get_tree().process_frame
+
+
+func _lab_spawn_failure(t: TestHarness, host: Node, ctx: MatchContext) -> void:
+	var probe := LabSpawnProbe.new()
+	probe.ctx = ctx
+	probe.blocked = false
+	probe._spawn_crate()
+	t.equal(probe._crates.size(), 1, "lab probe creates its initial crate")
+	var before: Dictionary = probe._crates[0].duplicate()
+	var body: Node3D = before.node
+	var children := body.get_children()
+	probe.blocked = true
+	probe.attempts = 0
+	var expected := RandomNumberGenerator.new()
+	expected.state = ctx.rng.state
+	# One kind draw and two position draws for each exhausted parent attempt.
+	for draw in 41:
+		expected.randf()
+	probe._spawn_crate()
+	t.equal(probe.attempts, 20, "lab blocked spawn retains bounded parent search")
+	t.equal(probe._crates.size(), 1, "lab blocked spawn retains its existing crate")
+	t.equal(probe._crates[0], before, "failed lab spawn cannot promote an existing crate")
+	t.equal(body.get_children(), children, "failed lab spawn cannot replace existing crate visuals")
+	t.equal(ctx.rng.state, expected.state, "failed lab spawn consumes no weapon promotion RNG")
+	probe.cleanup()
+	await host.get_tree().process_frame
+	probe.attempts = 0
+	var world_children := ctx.world_root.get_child_count()
+	probe._spawn_crate()
+	t.equal(probe.attempts, 20, "empty lab still bounds an exhausted spawn search")
+	t.ok(probe._crates.is_empty(), "empty blocked lab does not index a nonexistent crate")
+	t.equal(ctx.world_root.get_child_count(), world_children, "empty blocked lab adds no orphan node")
+	probe.blocked = false
+	probe._spawn_crate()
+	t.equal(probe._crates.size(), 1, "lab can retry after spawn space becomes available")
+	probe.cleanup()
+	probe.free()
 	await host.get_tree().process_frame
 
 
