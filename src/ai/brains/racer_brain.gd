@@ -24,10 +24,10 @@ func decide(_delta: float) -> void:
 	# pads are the track's only free speed and they are big glowing squares:
 	# planning a line through one is exactly what a practised player does, and
 	# `strategy` gates how far off the line a bot will bend to take one.
-	if controller.has_method("boost_pad_positions") and rng.randf() < strategy:
+	if controller.has_method("boost_pad_nodes") and rng.randf() < strategy:
 		var best_pad := Vector3.INF
 		var best_cost := lerp(1.2, 5.0, strategy)
-		for pad in controller.call("boost_pad_positions", slot):
+		for pad in _perceived_pad_positions():
 			var p3 := pad as Vector3
 			var ahead: float = me.facing.dot((p3 - me.global_position).normalized())
 			if ahead < 0.5:
@@ -41,6 +41,22 @@ func decide(_delta: float) -> void:
 	drive_to(aim_point)
 	if me.speed_ratio() > 0.75 and rng.randf() < dash_chance * 0.5:
 		tap(Btn.DASH)
+
+
+func _perceived_pad_positions() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	if controller == null or not controller.has_method("boost_pad_available"):
+		return out
+	for node: Node3D in controller.call("boost_pad_nodes"):
+		if not is_instance_valid(node):
+			continue
+		if not can_observe(node) or not controller.call("boost_pad_available", slot, node):
+			_object_history.erase(node.get_instance_id())
+			continue
+		var position := perceived_object_position(node)
+		if position != Vector3.INF:
+			out.append(position)
+	return out
 
 
 ## Perpendicular distance from point `p` to the segment a->b.
