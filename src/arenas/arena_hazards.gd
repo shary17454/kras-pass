@@ -15,6 +15,7 @@ class Sweeper extends Node3D:
 	var power := 15.0
 	var accel_over_time := 0.06
 	var resistance_influence := 1.0
+	var opening_grace := 0.0
 	var _area: Area3D
 	var _arm_mesh: MeshInstance3D
 	var _age := 0.0
@@ -72,7 +73,8 @@ class Sweeper extends Node3D:
 	func tick(delta: float) -> void:
 		_age += delta
 		rotate_y(current_speed() * delta)
-		if _area == null:
+		# Keep visible motion readable while newly spawned fighters land.
+		if _area == null or _age < clampf(opening_grace, 0.0, 2.0):
 			return
 		for body in _area.get_overlapping_bodies():
 			if body is Fighter and body.alive:

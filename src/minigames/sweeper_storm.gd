@@ -28,6 +28,7 @@ func on_round_start() -> void:
 		if child is ArenaHazards.Sweeper:
 			var tuning: Dictionary = Balance.table("tuning").get("sweeper_storm", {})
 			child.resistance_influence = clampf(float(tuning.get("resistance_influence", 1.0)), 0.0, 1.0)
+			child.opening_grace = clampf(float(tuning.get("opening_grace", 0.0)), 0.0, 2.0)
 			child.rotation.y = ctx.rng.randf() * TAU
 
 

@@ -50,7 +50,8 @@
     "spin_out_time": 0.45
   },
   "sweeper_storm": {
-    "resistance_influence": 0.25
+    "resistance_influence": 0.25,
+    "opening_grace": 1.0
   },
   "match": {
     "intro_seconds": 3.2,

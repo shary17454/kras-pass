@@ -12,6 +12,7 @@ class HitProbe extends Fighter:
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("sweeper physical impact direction")
 	_check_resistance_response(t)
+	await _check_opening_grace(t, host)
 	for angle in [0.0, 0.7, -1.4]:
 		for speed in [1.0, -1.0]:
 			var world := Node3D.new()
@@ -39,6 +40,46 @@ func run(t: TestHarness, host: Node) -> void:
 				t.near(body.strengths[0], sweeper.power, 0.0001, "direction correction does not change authored impact strength")
 			world.queue_free()
 			await host.get_tree().process_frame
+
+
+func _check_opening_grace(t: TestHarness, host: Node) -> void:
+	var world := Node3D.new()
+	host.add_child(world)
+	world.position.y = 1000.0
+	var sweeper := ArenaHazards.Sweeper.new()
+	world.add_child(sweeper)
+	sweeper.build(Color.WHITE, 8.0, 0.85)
+	t.near(sweeper.opening_grace, 0.0, 0.0001, "other modes have no added opening grace")
+	sweeper.opening_grace = 1.0
+	var body := HitProbe.new()
+	world.add_child(body)
+	body.set_physics_process(false)
+	body.global_position = sweeper.global_position + Vector3.RIGHT * 3.0
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.ok(sweeper._area.get_overlapping_bodies().has(body), "grace test uses a real physical overlap")
+	sweeper.tick(0.4)
+	t.equal(body.hits.size(), 0, "opening overlap cannot hit while fighters land")
+	t.ok(absf(sweeper.rotation.y) > 0.1, "arm still visibly rotates during grace")
+	t.near(sweeper.current_speed(), sweeper.speed * 1.024, 0.0001, "motion acceleration is not paused by grace")
+	body.global_position = sweeper.global_position + sweeper.global_transform.basis.x.normalized() * 3.0
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	sweeper.tick(0.59)
+	t.equal(body.hits.size(), 0, "grace remains active before its boundary")
+	body.global_position = sweeper.global_position + sweeper.global_transform.basis.x.normalized() * 3.0
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.ok(sweeper._area.get_overlapping_bodies().has(body), "contact is physically current when grace expires")
+	sweeper.tick(0.02)
+	t.equal(body.hits.size(), 1, "real contact hits again once the opening grace expires")
+	sweeper._age = 0.0
+	sweeper.tick(0.0)
+	t.equal(body.hits.size(), 1, "round-age reset restores opening protection")
+	t.near(float(Balance.table("tuning").get("sweeper_storm", {}).get("opening_grace", 0.0)),
+		1.0, 0.0001, "Sweeper Storm explicitly configures one-second grace")
+	world.queue_free()
+	await host.get_tree().process_frame
 
 
 func _check_resistance_response(t: TestHarness) -> void:
