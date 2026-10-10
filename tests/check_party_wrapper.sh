@@ -4,7 +4,9 @@ cd "$(dirname "$0")/.."
 OUT="$(mktemp -d "${TMPDIR:-/tmp}/kras-wrapper-test.XXXXXX")"
 export TMPDIR="$OUT"
 export GODOT_BIN="$PWD/tests/fixtures/fake_godot.sh"
-sh tools/check_party.sh > "$OUT/success.stdout" 2>&1
+KRAS_FAKE_TRACE="$OUT/invocations.log" sh tools/check_party.sh > "$OUT/success.stdout" 2>&1
+test "$(grep -c -- '--cycles=1 --human-matrix' "$OUT/invocations.log")" -eq 1
+grep -F 'tests/stage_zero_stability.tscn' "$OUT/invocations.log" | grep -F -- '--human-matrix' >/dev/null
 for pattern in \
   'SCRIPT ERROR: runtime failure' \
   'Parse Error: invalid script' \
@@ -32,4 +34,8 @@ if KRAS_FAKE_EXIT=2 sh tools/check_party.sh > "$OUT/exit.stdout" 2>&1; then
   printf 'FAILED: wrapper ignored an engine failure\n' >&2
   exit 1
 fi
-printf 'Wrapper checks passed: success path and 18 failure cases. Evidence: %s\n' "$OUT"
+if KRAS_FAKE_MATRIX_EXIT=2 sh tools/check_party.sh > "$OUT/matrix-failure.stdout" 2>&1; then
+  printf 'FAILED: wrapper ignored the local matrix failure\n' >&2
+  exit 1
+fi
+printf 'Wrapper checks passed: matrix invocation, success path, 18 general failure cases and matrix failure. Evidence: %s\n' "$OUT"

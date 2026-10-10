@@ -248,4 +248,5 @@ jobs:
             ${{ runner.temp }}/kras-party-check.*/saves-tests/sovereign-world.json
             ${{ runner.temp }}/kras-party-check.*/saves-tests/colossus-world.json
             ${{ runner.temp }}/kras-party-check.*/saves-stability/stability.json
+            ${{ runner.temp }}/kras-party-check.*/saves-local_matrix/stability.json
             build/stage0/inventory.json
