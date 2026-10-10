@@ -48,8 +48,6 @@ var alive := true
 ## every race.
 var charge := 1.0
 var ram_enabled := true      ## body-to-body impacts; a game may switch them off
-## Some combat rules use character weight only for incoming resistance.
-var ram_character_mass_enabled := true
 ## Slots this body refuses to be hurt by. Team games fill it in; a free-for-all
 ## leaves it empty. Teammates still collide physically — they just cannot shove
 ## each other into the water.
@@ -1089,18 +1087,17 @@ static func clear_impact_state() -> void:
 	_pair_cooldown.clear()
 
 
-## One half of an exchange. Power-up mass always applies; character mass is
-## optional because resistance already applies to the incoming hit.
+## One half of an exchange: what *this* body's weight and strength do to the
+## other. Mass ratio uses `knock_resist`, which is already the weight axis of a
+## character, so the heavy/light contrast the roster is built on carries into
+## rams for free.
 func _deal_ram(victim: Fighter, into: Vector3, closing: float, tangential: Vector3, t: Dictionary) -> void:
-	var my_mass := float(mods["weight"])
-	var their_mass := float(victim.mods["weight"])
-	if ram_character_mass_enabled:
-		my_mass *= knock_resist
-		their_mass *= victim.knock_resist
+	var my_mass := knock_resist * float(mods["weight"])
+	var their_mass := maxf(0.3, victim.knock_resist * float(victim.mods["weight"]))
 	# Narrow on purpose. Weight already buys resistance through `knock_resist`
 	# in `take_hit`; letting it buy the same advantage again on the delivering
 	# side compounds it, and the heavy characters started winning everywhere.
-	var ratio := clampf(my_mass / maxf(0.3, their_mass), 0.78, 1.35)
+	var ratio := clampf(my_mass / their_mass, 0.78, 1.35)
 	var strength := closing * float(t.get("ram_scale", 1.3)) * ratio \
 		* knock_power * float(mods["push"])
 	if is_dashing():

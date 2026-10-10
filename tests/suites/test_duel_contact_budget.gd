@@ -2,7 +2,7 @@ extends RefCounted
 
 
 func run(t: TestHarness, host: Node) -> void:
-	t.suite("duel contact uses power once and character weight as resistance")
+	t.suite("shared contact equation across duel and ring")
 	var rows: Array[Dictionary] = []
 	for game_id in ["duel_pit", "ring_rumble"]:
 		var cfg := MatchConfig.build(game_id, ["nabta", "sakhra", "fanoos", "ramla"], 0, 2, 117)
@@ -35,11 +35,8 @@ func run(t: TestHarness, host: Node) -> void:
 								victim.damage_percent = damage
 								victim.health = victim.max_health
 								var tuning: Dictionary = attacker._tuning
-								var mass := float(attacker.mods["weight"])
-								var their_mass := float(victim.mods["weight"])
-								if game_id != "duel_pit":
-									mass *= attacker.knock_resist
-									their_mass *= victim.knock_resist
+								var mass := attacker.knock_resist * float(attacker.mods["weight"])
+								var their_mass := victim.knock_resist * float(victim.mods["weight"])
 								var ratio := clampf(mass / maxf(0.3, their_mass), 0.78, 1.35)
 								var strength: float = closing * float(tuning.get("ram_scale", 1.3)) \
 									* ratio * attacker.knock_power * float(attacker.mods["push"])

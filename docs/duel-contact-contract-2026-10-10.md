@@ -1,5 +1,13 @@
 # Duel contact budget and qualification guard - 2026-10-10
 
+## Subsequent disposition
+
+The gameplay candidate described below was rejected after its matched natural
+comparison did not improve the balance warning (Sakhra 26 -> 31 wins).
+Its gameplay changes were removed; the log-guard correction was retained.
+This document is historical candidate evidence, not the current gameplay state.
+See [matched comparison and restoration](rejected-duel-contact-candidate-2026-10-10.md).
+
 ## Source and scope
 
 Parent `fe189a74a6f835e6231734ce2669a7473d92a7f5`, initially clean,

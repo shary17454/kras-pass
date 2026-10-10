@@ -18,7 +18,6 @@ func build() -> void:
 		var f := ctx.fighter(i)
 		if f != null and is_instance_valid(f):
 			f.health_defeat_enabled = false
-			f.ram_character_mass_enabled = false
 			f.reset_damage()
 
 
