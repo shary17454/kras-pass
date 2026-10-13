@@ -1,6 +1,9 @@
 extends RefCounted
 
 const CASES := [
+	["tank_arena", "tank_foundry"],
+	["tank_arena", "tank_oasis"],
+	["tank_arena", "tank_frost"],
 	["duel_pit", "duel_pit"],
 	["duel_pit", "iron_flats"],
 	["turret_duel", "iron_flats"],
@@ -16,7 +19,16 @@ func run(t: TestHarness, host: Node) -> void:
 		["barq", "mowja", "ghaim", "turs"],
 	]
 	for pair in CASES:
-		for roster in rosters:
+		var variants: Array[Array] = rosters.duplicate()
+		if pair[0] == "tank_arena":
+			variants.clear()
+			for roster in rosters:
+				for rotation in 4:
+					var rotated: Array = []
+					for seat in 4:
+						rotated.append(roster[(seat + rotation) % 4])
+					variants.append(rotated)
+		for roster in variants:
 			var characters: Array[String] = []
 			characters.assign(roster)
 			var config := MatchConfig.build(String(pair[0]), characters, 0, 3, 80009001)
