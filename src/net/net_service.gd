@@ -431,6 +431,11 @@ func _receive(m: Dictionary) -> void:
 			_set_state(State.LOBBY if room_state in ["lobby", "results"] else State.IN_MATCH)
 			room_updated.emit()
 		"start":
+			if not _valid_start_message(m):
+				online_error.emit("invalid_response")
+				return
+			if not match_data.is_empty() and int(m.epoch) < epoch:
+				return
 			var fresh := int(m.epoch) != epoch or match_data.is_empty()
 			epoch = int(m.epoch)
 			match_data = m.duplicate(true)
@@ -469,6 +474,59 @@ func _receive(m: Dictionary) -> void:
 			var reason := String(m.get("reason", "disconnected"))
 			reset()
 			connection_lost.emit(reason)
+
+
+func _valid_start_message(message: Dictionary) -> bool:
+	if not _protocol_integer(message.get("epoch"), 1, 9007199254740991) \
+			or not _protocol_integer(message.get("seed"), 0, 2147483647):
+		return false
+	var config: Variant = message.get("config")
+	var players: Variant = message.get("players")
+	if not config is Dictionary or not players is Array or players.size() < 2 or players.size() > 4:
+		return false
+	var game: Variant = config.get("game")
+	var arena: Variant = config.get("arena")
+	if not game is String or not arena is String or not ONLINE_ARENAS.has(game) \
+			or arena not in ONLINE_ARENAS[game] \
+			or not _protocol_integer(config.get("rounds"), 1, 10) \
+			or not _protocol_integer(config.get("difficulty"), 0, 3):
+		return false
+	if config.has("race_laps") and not _protocol_integer(config.race_laps, 3, 10):
+		return false
+	var identities := {}
+	for index in players.size():
+		var player: Variant = players[index]
+		if not player is Dictionary or not _protocol_integer(player.get("id"), 0, 9007199254740991) \
+				or not _protocol_integer(player.get("slot"), index, index) \
+				or not _protocol_integer(player.get("character"), 0, Registry.characters().size() - 1) \
+				or not player.get("name") is String or player.name.length() > 24:
+			return false
+		var identity := int(player.id)
+		# Bot placeholders share ID zero; real peer identities must be unique.
+		if identity > 0:
+			if identities.has(identity):
+				return false
+			identities[identity] = true
+	if identities.is_empty() or not identities.has(local_peer_id):
+		return false
+	var standings: Variant = message.get("tournament")
+	if standings != null:
+		if not standings is Dictionary:
+			return false
+		var contenders: Variant = standings.get("contenders", [])
+		if not contenders is Array or contenders.size() > players.size():
+			return false
+		var seen := {}
+		for contender in contenders:
+			if not _protocol_integer(contender, 0, players.size() - 1) or seen.has(int(contender)):
+				return false
+			seen[int(contender)] = true
+	return true
+
+
+static func _protocol_integer(value: Variant, minimum: int, maximum: int) -> bool:
+	return (value is int or value is float) and is_finite(float(value)) \
+		and float(value) == floorf(float(value)) and value >= minimum and value <= maximum
 
 
 func _protocol_rejected() -> void:
