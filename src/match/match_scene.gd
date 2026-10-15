@@ -421,6 +421,9 @@ func _set_phase(next: int) -> void:
 	EventBus.match_phase_changed.emit(next)
 	_enter_phase(next)
 	_phase_duration = _phase_timer
+	# Backgrounding during preparation predates the live-only pause signal.
+	if Platform.is_backgrounded and MatchPhase.is_live(phase):
+		_on_app_backgrounded()
 
 
 func _enter_phase(p: int) -> void:

@@ -13,6 +13,10 @@ static func parse_human_count(value: String) -> int:
 	return count if count >= 1 and count <= 4 else -1
 
 
+static func capture_is_live(phase: int, paused: bool, pause_menu_present: bool, backgrounded: bool) -> bool:
+	return MatchPhase.is_live(phase) and not paused and not pause_menu_present and not backgrounded
+
+
 static func capture_cases(games: Array, selected: PackedStringArray, all_arenas: bool,
 		selected_arenas: PackedStringArray = PackedStringArray()) -> Array:
 	var cases: Array = []
@@ -126,8 +130,8 @@ func _ready() -> void:
 					colors[image.get_pixel(x, y).to_html()] = true
 			var success: bool = image.save_png(file) == OK and colors.size() >= 15 \
 				and scene.ctx.fighters.size() == 4 and Log.error_count() == errors_before \
-				and scene.touch_sources.size() == human_count and not scene._paused \
-				and scene._pause_menu == null and MatchPhase.is_live(scene.phase)
+				and scene.touch_sources.size() == human_count \
+				and capture_is_live(scene.phase, scene._paused, scene._pause_menu != null, Platform.is_backgrounded)
 			success = success and scene.ctx.arena_def.id == cfg.arena_id
 			var control_bounds_valid := true
 			var touch_slots: Array[int] = []
@@ -158,6 +162,7 @@ func _ready() -> void:
 				"image": file, "nonblank_colors": colors.size(), "hud_bottom": hud_bottom, "passed": success,
 				"requested_play_seconds": play_seconds, "phase": scene.phase,
 				"paused": scene._paused, "pause_menu_present": scene._pause_menu != null,
+				"app_backgrounded": Platform.is_backgrounded,
 				"time_left": scene.ctx.time_left, "alive_players": scene.ctx.alive_count(),
 				"human_count": human_count, "touch_slots": touch_slots,
 				"control_bounds_valid": control_bounds_valid,

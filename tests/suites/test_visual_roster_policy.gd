@@ -4,6 +4,15 @@ extends RefCounted
 func run(t: TestHarness) -> void:
 	t.suite("visual roster policy")
 	var probe := load("res://tests/stage_zero_visual.gd")
+	t.test("background or paused captures cannot qualify as live gameplay")
+	for phase in MatchPhase.P.values():
+		for paused in [false, true]:
+			for menu in [false, true]:
+				for backgrounded in [false, true]:
+					var expected: bool = phase in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH] \
+						and not paused and not menu and not backgrounded
+					t.equal(probe.capture_is_live(phase, paused, menu, backgrounded), expected,
+						"capture requires foreground, no pause and a live phase")
 	t.test("visual roster accepts all supported local human counts")
 	for count in range(1, 5):
 		t.equal(probe.parse_human_count(str(count)), count, "supported local roster is retained")
