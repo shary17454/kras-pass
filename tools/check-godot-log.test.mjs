@@ -52,9 +52,18 @@ test('test completion requires at least one assertion', () => {
   assert.notEqual(inspect('Godot Engine\n', 'tests'), 0);
 });
 
-test('runtime preserves intentional error injection and platform warnings', () => {
-  assert.equal(inspect('ERROR: intentional save failure injection\n'), 0);
-  assert.equal(inspect('ERROR: Condition "ret != noErr" is true. Returning: ""\n'), 0);
+test('engine errors invalidate qualification even after a success summary', () => {
+  for (const mode of ['runtime', 'balance', 'stability', 'compile', 'import']) {
+    for (const message of ['ERROR: intentional save failure injection',
+      'ERROR: Condition "ret != noErr" is true. Returning: ""',
+      'ERROR: unexpected engine failure']) {
+      assert.notEqual(inspect(`compile check: 462 scripts\nOK - every script compiles\n${message}\n`, mode), 0);
+    }
+  }
+});
+
+test('ordinary platform warnings are not engine errors', () => {
+  assert.equal(inspect('WARNING: screen-space AA is unsupported\n'), 0);
   assert.equal(inspect('balance simulation completed\n'), 0);
 });
 

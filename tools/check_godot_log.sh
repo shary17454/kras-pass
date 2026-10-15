@@ -11,8 +11,8 @@ if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Failed loading (resource|
   printf 'Godot failure in %s\n' "$log" >&2
   exit 1
 fi
-if [ "$mode" = import ] && grep -q 'ERROR:' "$log"; then
-  printf 'Godot import error in %s\n' "$log" >&2
+if [ "$mode" != tests ] && grep -q 'ERROR:' "$log"; then
+  printf 'Godot engine error in %s\n' "$log" >&2
   exit 1
 fi
 # Only unit suites may inject persistence failures; real campaigns must save.
