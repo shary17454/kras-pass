@@ -1,5 +1,7 @@
 extends "res://src/minigames/turret_duel.gd"
 
+signal armor_damaged(shooter: int, victim: int, damage: int, armor_left: int)
+
 const MAX_ARMOR := 100
 const SHELLS := ["standard", "rapid", "heavy", "homing", "ricochet", "triple", "sticky"]
 const SHELL_COLORS := [Color("ffd66b"), Color("63e6fc"), Color("ff7459"), Color("aaef71"), Color("bca4fa"), Color("ffffff"), Color("f19cb8")]
@@ -211,6 +213,7 @@ func _on_hit(_projectile: Projectile, shooter: int, victim: int) -> void:
 	var damage := mini(armor[victim], int(_projectile.damage))
 	armor[victim] -= damage
 	ctx.bump_detail(shooter, "damage", damage)
+	armor_damaged.emit(shooter, victim, damage, armor[victim])
 	AudioManager.play_sfx("explode", ctx.fighter(victim).global_position)
 	InputRouter.haptic(victim, InputRouter.Haptic.HEAVY)
 	if armor[victim] <= 0:

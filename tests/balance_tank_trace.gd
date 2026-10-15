@@ -1,10 +1,13 @@
 extends "res://tests/balance_pair_sim.gd"
-## Passive elimination snapshots. Never publishes inputs or advances RNG.
+## Passive damage/elimination snapshots. Never publishes inputs or advances RNG.
 
 var _match_index := 0
 var _eliminations: Array[Dictionary] = []
 var _seen_slots := {}
 var _player_count := 0
+var _hits: Array[Dictionary] = []
+var _observed_controllers: Array[WeakRef] = []
+var _physics_start := 0
 
 
 func _parse_args(arguments: PackedStringArray) -> bool:
@@ -12,21 +15,28 @@ func _parse_args(arguments: PackedStringArray) -> bool:
 
 
 func _begin_ledger(count: int) -> void:
+	_disconnect_controllers()
 	_player_count = count
 	_eliminations.clear()
 	_seen_slots.clear()
+	_hits.clear()
+	_physics_start = Engine.get_physics_frames()
 
 
 func _play(cfg: MatchConfig) -> MatchResult:
 	_begin_ledger(cfg.players.size())
 	EventBus.player_eliminated.connect(_record_elimination)
+	get_tree().node_added.connect(_observe_controller)
 	var result: MatchResult = await super._play(cfg)
+	get_tree().node_added.disconnect(_observe_controller)
+	_disconnect_controllers()
 	EventBus.player_eliminated.disconnect(_record_elimination)
 	var players: Array[Dictionary] = []
 	for player in cfg.players:
 		players.append(player.to_dict())
 	var row := {"match_index": _match_index, "seed": cfg.seed,
 		"arena_id": cfg.arena_id, "players": players,
+		"hits": _hits.duplicate(true),
 		"eliminations": _eliminations.duplicate(true), "completed": result != null}
 	if result != null:
 		row["scores"] = result.scores.duplicate()
@@ -43,6 +53,46 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	file.close()
 	_match_index += 1
 	return result
+
+
+func _observe_controller(node: Node) -> void:
+	var script: Script = node.get_script()
+	if script == null or script.resource_path != "res://src/minigames/tank_arena.gd":
+		return
+	var callback := _record_damage.bind(node)
+	if not node.is_connected("armor_damaged", callback):
+		node.connect("armor_damaged", callback)
+		_observed_controllers.append(weakref(node))
+
+
+func _disconnect_controllers() -> void:
+	for reference in _observed_controllers:
+		var node: Node = reference.get_ref()
+		if is_instance_valid(node):
+			var callback := _record_damage.bind(node)
+			if node.is_connected("armor_damaged", callback):
+				node.disconnect("armor_damaged", callback)
+	_observed_controllers.clear()
+
+
+func _record_damage(shooter: int, victim: int, damage: int, armor_left: int, controller: Node) -> void:
+	var context: MatchContext = controller.ctx
+	if context == null or shooter < 0 or shooter >= _player_count \
+			or victim < 0 or victim >= _player_count or shooter == victim:
+		return
+	var bodies: Array[Dictionary] = []
+	for slot in [shooter, victim]:
+		var body := context.fighter(slot)
+		if not is_instance_valid(body):
+			return
+		var position := body.global_position
+		var velocity := body.velocity
+		bodies.append({"slot": slot, "position": [position.x, position.y, position.z],
+			"velocity": [velocity.x, velocity.y, velocity.z]})
+	_hits.append({"shooter": shooter, "victim": victim, "damage": damage,
+		"armor_left": armor_left, "round": context.round_index,
+		"time_left": context.time_left, "physics_tick": Engine.get_physics_frames() - _physics_start,
+		"bodies": bodies})
 
 
 func _record_elimination(slot: int, place: int) -> void:
