@@ -100,6 +100,7 @@ func _build() -> void:
 	# One container with an expanding gap in the middle means the clock can
 	# never overlap a chip at any window width.
 	var chips := GridContainer.new()
+	chips.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	chips.columns = 5
 	chips.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	chips.offset_top = 14
@@ -239,6 +240,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# be studied rather than glanced at, which is the opposite of what a chip is
 	# for.
 	var card := UIKit.panel(Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16)
+	card.layout_direction = Control.LAYOUT_DIRECTION_RTL if Loc.is_rtl() else Control.LAYOUT_DIRECTION_LTR
 	card.add_theme_stylebox_override("panel", UIKit.stylebox(
 		Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16, 3, col))
 	# Menu padding is generous on purpose; a match chip cannot afford it. Four
