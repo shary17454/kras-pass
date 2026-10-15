@@ -542,9 +542,12 @@ func _player_mapping(t: TestHarness) -> void:
 	Net.online_result.connect(on_result)
 	Net.epoch = 3
 	Net.room_state = "playing"
+	Net.match_data = _result_context()
 	Net._receive({"op": "result", "epoch": 2, "scores": [1, 0]})
 	t.equal(results.size(), 0, "ignore another match's result")
-	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3], "tournament": {"points": [5, 3], "complete": false}})
+	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3], "tournament": {
+		"mode": "points", "target": 3, "round": 1, "points": [5, 3], "cups": [1, 0],
+		"awards": [5, 3], "contenders": [], "champions": [], "tie_attempts": 0, "complete": false}})
 	t.equal(Net.tournament.points, [5, 3], "standings arrive before the result UI")
 	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3]})
 	t.equal(results.size(), 1, "reconnect does not apply the same result twice")
@@ -565,6 +568,7 @@ func _player_mapping(t: TestHarness) -> void:
 	Net.is_host = true
 	Net.epoch = 8
 	Net.room_state = "playing"
+	Net.match_data = _result_context()
 	var scores: Array[int] = [5, 3]
 	Net.match_running = true
 	Net.publish_result(scores)
@@ -586,6 +590,12 @@ func _player_mapping(t: TestHarness) -> void:
 	Net.transport = transport
 	recorder.free()
 	Net.leave()
+
+
+func _result_context() -> Dictionary:
+	return {"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
+		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0},
+			{"id": 2, "slot": 1, "name": "Guest", "character": 1}]}
 
 
 func _packet(slot: int, bits: int, sequence := 1, epoch := 3) -> Dictionary:
