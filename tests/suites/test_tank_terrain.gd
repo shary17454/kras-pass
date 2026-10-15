@@ -210,7 +210,7 @@ func run(t: TestHarness, host: Node) -> void:
 					for fraction in [0.0, 0.25, 0.5, 0.75, 1.0]:
 						var p: Vector3 = points[id].lerp(points[neighbour], fraction)
 						t.near(world.ground_height(p.x, p.z), 0.02, 0.001, "forest route stays driveable along the whole segment")
-			t.equal(connections, 60, "paired meadows have 30 bidirectional connections, not the old grid")
+			t.equal(connections, 64, "paired meadows retain 32 bidirectional routes including equal cardinal approaches")
 			for direction in [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]:
 				var spawn: Vector3 = direction * 28.52
 				t.near(world.ground_height(spawn.x, spawn.z), 0.02, 0.001, "forest cardinal spawn stays on a clear level route")

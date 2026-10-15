@@ -25,7 +25,7 @@ static func edges() -> Array[Vector2i]:
 			result.append(Vector2i(start + index, start + (index + 1) % 11))
 	for edge in [Vector2i(0, 22), Vector2i(11, 22), Vector2i(9, 23),
 		Vector2i(20, 23), Vector2i(7, 24), Vector2i(18, 24),
-		Vector2i(22, 23), Vector2i(23, 24)]:
+		Vector2i(22, 23), Vector2i(23, 24), Vector2i(4, 9), Vector2i(15, 20)]:
 		result.append(edge)
 	return result
 
