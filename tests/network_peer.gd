@@ -100,6 +100,7 @@ var observed_blast_explosion := false
 var observed_color_drop := false
 var observed_draw_signal := false
 var observed_draw_response := false
+var observed_draw_response_prompts := {}
 var draw_tap_sequence := -1
 var observed_remote_input_slots := {}
 var observed_echo_cue := false
@@ -370,6 +371,7 @@ func _start(cfg: MatchConfig) -> void:
 	arena_history.append(cfg.arena_id)
 	round_snapshot_start = snapshots
 	draw_tap_sequence = -1
+	observed_draw_response_prompts.clear()
 	observed_remote_input_slots.clear()
 	if game_id == "duo_clash":
 		duo_arenas_seen[cfg.arena_id] = true
@@ -673,6 +675,8 @@ func _physics_process(_delta: float) -> void:
 	if game_id == "quick_draw":
 		observed_draw_signal = observed_draw_signal or game.controller.is_signalled()
 		observed_draw_response = observed_draw_response or game.controller._order.has(slot)
+		if game.controller._order.has(slot):
+			observed_draw_response_prompts[game.controller.signal_sequence] = true
 	if game_id == "color_stand":
 		observed_color_drop = observed_color_drop or game.controller.is_dropping()
 	if game_id == "blast_ball":
@@ -1593,6 +1597,10 @@ func _finished(result: MatchResult) -> void:
 				or game.controller._order != host_order:
 			_fail("draw prompt or response order diverged: local=%s/%s/%s host=%s/%s/%s" % [game.controller._stage, game.controller._round_no, game.controller._order, world.stage, world.prompt, world.order])
 			return
+		for key in ["signal_sequence", "correct_sequence", "wrong_sequence", "resolve_sequence"]:
+			if game.controller.get(key) != int(world[key]):
+				_fail("draw event identity diverged: " + key)
+				return
 		for player_slot in world.locked.size():
 			if game.controller.is_locked(player_slot) != bool(world.locked[player_slot]):
 				_fail("draw false-start state diverged")
@@ -1861,6 +1869,10 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "quick_draw" and (not observed_draw_signal or not observed_draw_response):
 		_fail("draw never signalled or accepted this player's response")
 		return
+	if game_id == "quick_draw" and not bool(game.config.rule("party_tiebreak", false)) \
+			and observed_draw_response_prompts.size() < 2:
+		_fail("draw did not accept responses to multiple distinct prompts")
+		return
 	if game_id == "symbol_echo" and (not observed_echo_cue or not observed_echo_score):
 		_fail("echo never displayed a cue or accepted this player's observed answer")
 		return
@@ -1873,6 +1885,7 @@ func _finished(result: MatchResult) -> void:
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
+		"draw_response_prompts": observed_draw_response_prompts.keys(),
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
 		"tournament_rotation": tournament_rotation, "arena_history": arena_history,
