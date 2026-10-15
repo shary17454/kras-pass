@@ -30,8 +30,7 @@ func decide(_delta: float) -> void:
 	var arena := ctx.arena as Arena
 	if me == null or arena == null:
 		return
-	if arena.edge_distance(me.global_position) < 2.0:
-		drive_to(arena.retreat_point(me.global_position))
+	if retreat_drive_from_edge():
 		return
 	var crate := _visible_weapon_crate()
 	var rival := priority_rival()
