@@ -35,7 +35,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if ctx == null:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.04, 0.09, 0.1, 0.82))
+	draw_rect(Rect2(Vector2.ZERO, size), Color(UIKit.PANEL, 0.94))
 	var world = ctx.arena.get_meta("tank_world", null)
 	if world != null:
 		for id in world.roads.get_point_ids():
@@ -45,12 +45,12 @@ func _draw() -> void:
 					continue
 				var to: Vector3 = world.roads.get_point_position(other)
 				draw_line(Vector2(60, 60) + Vector2(from.x, from.z) * 1.15,
-					Vector2(60, 60) + Vector2(to.x, to.z) * 1.15, Color("647d80"), 5)
+					Vector2(60, 60) + Vector2(to.x, to.z) * 1.15, UIKit.TEXT_DIM, 5)
 	for f in ctx.fighters:
 		if not f.alive:
 			continue
 		var p := Vector2(60, 60) + Vector2(f.position.x, f.position.z) * 1.15
 		var human := ctx.config.human_slots().has(f.slot)
-		draw_circle(p, 4 if human else 3, Color.WHITE if human else Color("ff805e"))
+		draw_circle(p, 4 if human else 3, UIKit.TEXT if human else Color("ff805e"))
 		if human:
-			draw_line(p, p + Vector2(f.facing.x, f.facing.z) * 9, Color.WHITE, 2)
+			draw_line(p, p + Vector2(f.facing.x, f.facing.z) * 9, UIKit.TEXT, 2)

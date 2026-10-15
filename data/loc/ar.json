@@ -1,4 +1,8 @@
 {
+  "settings.appearance": "المظهر",
+  "settings.appearance.system": "حسب إعدادات الجهاز",
+  "settings.appearance.light": "نهاري",
+  "settings.appearance.dark": "ليلي",
 	"hud.boss_health": "صحة الزعيم: {value}%",
   "save.newer_version": "بيانات محفوظة بإصدار أحدث. حدّث اللعبة لاستعادة تقدمك. اللعب متاح مؤقتًا دون حفظ التغييرات.",
   "playlist.delete": "حذف البطولة",

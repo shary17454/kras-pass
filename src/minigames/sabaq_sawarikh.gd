@@ -272,7 +272,7 @@ func _use(slot: int, f) -> void:
 ## live the instant it leaves the kart detonates on the kart that dropped it
 ## every time the road curves.
 func _drop_bomb(slot: int, f) -> void:
-	var mesh := MeshFactory.sphere(0.42, UIKit.DANGER, 0.9)
+	var mesh := MeshFactory.sphere(0.42, MeshFactory.WORLD_DANGER, 0.9)
 	var pos: Vector3 = f.global_position - f.facing.normalized() * 2.4 + Vector3(0, 0.45, 0)
 	mesh.position = pos
 	ctx.world_root.add_child(mesh)
@@ -327,7 +327,7 @@ func _detonate(bomb: Dictionary, owner: int) -> void:
 
 
 func present_bomb_explosion(pos: Vector3) -> void:
-	var burst := MeshFactory.burst(UIKit.DANGER, 16, 3.4, 0.6)
+	var burst := MeshFactory.burst(MeshFactory.WORLD_DANGER, 16, 3.4, 0.6)
 	ctx.world_root.add_child(burst)
 	burst.global_position = pos
 	EventBus.shake(0.4, 0.28)

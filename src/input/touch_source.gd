@@ -539,15 +539,15 @@ func _draw() -> void:
 	if size.x <= 0.0:
 		return
 	var a := clampf(_opacity, 0.05, 1.0)
-	var ink := Color(1, 1, 1, a)
-	var fill := Color(1, 1, 1, a * 0.14)
+	var ink := Color(UIKit.TEXT, a)
+	var fill := Color(UIKit.PANEL, maxf(0.65, a * 0.85))
 	if touch_count > 1:
 		draw_line(Vector2.ZERO, Vector2(size.x, 0), ink, 2.0)
-		_label("P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[slot]], Vector2(size.x * 0.5, 24), Color.WHITE, 24)
+		_label("P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[slot]], Vector2(size.x * 0.5, 24), ink, 24)
 
 	if ControlProfile.full_screen_tap(profile) != 0:
 		var active := _bits != 0
-		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, a * (0.16 if active else 0.05)))
+		draw_rect(Rect2(Vector2.ZERO, size), Color(UIKit.PANEL, a * (0.32 if active else 0.15)))
 		_label(Loc.t("touch.tap_anywhere"), size * 0.5, ink, 42, size.x - 24)
 		return
 
@@ -557,7 +557,7 @@ func _draw() -> void:
 		var states := [_steer < -0.5, _steer > 0.5, _throttle > 0.5]
 		for i in 3:
 			var r: Rect2 = rects[i]
-			draw_rect(r, Color(1, 1, 1, a * (0.22 if states[i] else 0.10)), true)
+			draw_rect(r, Color(UIKit.PANEL_HI if states[i] else UIKit.PANEL, maxf(0.65, a)), true)
 			draw_rect(r, ink, false, 3.0)
 			_label(glyphs[i], r.get_center(), ink, mini(52, int(r.size.y * 0.65)), r.size.x - 12)
 	elif ControlProfile.shows_move_stick(profile):
@@ -569,11 +569,11 @@ func _draw() -> void:
 			var radius := STICK_RADIUS * _scale
 			for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
 				var glyph := "▲" if direction == Vector2.UP else "▼" if direction == Vector2.DOWN else "◀" if direction == Vector2.LEFT else "▶"
-				_label(glyph, origin + direction * radius * 0.77, Color.WHITE, 25)
+				_label(glyph, origin + direction * radius * 0.77, ink, 25)
 		if profile == ControlProfile.Kind.KEEPER:
 			var origin := _move_origin if _owners_has("move") else _stick_centre()
 			for direction in [-1.0, 1.0]:
-				_label("◀" if direction < 0 else "▶", origin + Vector2(direction * STICK_RADIUS * _scale * 0.77, 0), Color.WHITE, 25)
+				_label("◀" if direction < 0 else "▶", origin + Vector2(direction * STICK_RADIUS * _scale * 0.77, 0), ink, 25)
 
 	if ControlProfile.shows_aim_stick(profile):
 		_draw_stick(_aim_centre() if not _owners_has("aim") else _aim_origin,

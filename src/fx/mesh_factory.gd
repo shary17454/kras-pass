@@ -14,6 +14,12 @@ static var _mat_cache := {}
 static var _tex_cache := {}
 static var _mesh_cache := {}
 
+# Gameplay cues must not change when the interface follows the device theme.
+const WORLD_GOLD := Color("#ffb347")
+const WORLD_TEAL := Color("#57e0c0")
+const WORLD_DANGER := Color("#ff5f6d")
+const WORLD_PANEL := Color("#252c52")
+
 ## How far box corners are pulled toward a sphere. Hard 90-degree edges are the
 ## single loudest "untextured primitive" tell: a real edge catches a specular
 ## highlight along its length, a mathematical one cannot. Small value on

@@ -11,7 +11,7 @@ func configure(player: PlayerConfig) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	size = Vector2(56, 56)
 	tint = UIKit.adapt(player.color())
-	_symbol = UIKit.centered(player.symbol(), 26, Color.WHITE, true)
+	_symbol = UIKit.centered(player.symbol(), 26, UIKit.text_color(), true)
 	_symbol.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_symbol)
@@ -29,7 +29,7 @@ func place(cue: Dictionary) -> void:
 
 func _draw() -> void:
 	var centre := size * 0.5
-	draw_circle(centre, 22.0, Color(0.04, 0.07, 0.09, 0.94))
+	draw_circle(centre, 22.0, Color(UIKit.PANEL, 0.94))
 	draw_arc(centre, 22.0, 0.0, TAU, 24, tint, 3.0, true)
 	var tip := centre + direction * 28.0
 	var base := centre + direction * 20.0

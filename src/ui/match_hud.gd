@@ -76,6 +76,8 @@ func _build() -> void:
 	top.add_child(_round_label)
 	_banner_label = UIKit.centered("", UIKit.SIZE_BODY, UIKit.ACCENT_2, true)
 	top.add_child(_banner_label)
+	for label in [_timer_label, _round_label, _banner_label]:
+		UIKit.back_label(label)
 	_boss_meter = ProgressBar.new()
 	_boss_meter.custom_minimum_size = Vector2(240, 10)
 	_boss_meter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -164,6 +166,7 @@ func _build() -> void:
 
 	# --- centre announcements ---------------------------------------------
 	_centre_label = UIKit.centered("", ANNOUNCEMENT_SIZE, UIKit.ACCENT, true)
+	UIKit.back_label(_centre_label)
 	_centre_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_centre_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_centre_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -241,7 +244,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# for.
 	var card := UIKit.panel(Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16)
 	card.layout_direction = Control.LAYOUT_DIRECTION_RTL if Loc.is_rtl() else Control.LAYOUT_DIRECTION_LTR
-	card.add_theme_stylebox_override("panel", UIKit.stylebox(
+	card.add_theme_stylebox_override("panel", UIKit.tinted_stylebox(
 		Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16, 3, col))
 	# Menu padding is generous on purpose; a match chip cannot afford it. Four
 	# chips at menu padding measured 356 px each, which put the outermost one
@@ -304,7 +307,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 		name_label.add_theme_font_size_override("font_size", 22)
 	name_row.add_child(name_label)
 
-	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
+	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, UIKit.text_color(), true)
 	value.text_direction = Control.TEXT_DIRECTION_LTR
 	value.name = "Value"
 	if _compact_players():
@@ -315,7 +318,7 @@ func _make_chip(p: PlayerConfig) -> Control:
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	score_row.add_child(value)
 	box.add_child(score_row)
-	var detail := UIKit.label("", UIKit.SIZE_SMALL, Color.WHITE)
+	var detail := UIKit.label("", UIKit.SIZE_SMALL, UIKit.text_color())
 	detail.name = "Detail"
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -468,7 +471,7 @@ func _make_rules_card() -> Control:
 	var controls := UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(controls)
-	v.add_child(UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, Color.WHITE))
+	v.add_child(UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, UIKit.text_color()))
 	var start := UIKit.button(Loc.t("common.start"), UIKit.SIZE_HEADING)
 	start.custom_minimum_size.y = 80
 	start.pressed.connect(func(): ready_requested.emit())
@@ -561,7 +564,9 @@ func _fit_announcement() -> void:
 	_centre_label.pivot_offset = _centre_label.size * 0.5
 
 
-func announce(text: String, color: Color = UIKit.ACCENT, hold := 0.75, countdown := false) -> void:
+func announce(text: String, color: Color = Color.TRANSPARENT, hold := 0.75, countdown := false) -> void:
+	if color == Color.TRANSPARENT:
+		color = UIKit.ACCENT
 	if _announcement_tween != null and _announcement_tween.is_valid():
 		_announcement_tween.kill()
 	_announcement_tween = null

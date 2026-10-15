@@ -33,7 +33,7 @@ func _spawn_gem(at: Vector3 = Vector3.INF) -> void:
 		return
 	if item.get_parent() == null:
 		ctx.world_root.add_child(item)
-	item.configure("gem", UIKit.ACCENT, 1)
+	item.configure("gem", MeshFactory.WORLD_GOLD, 1)
 	if not item.taken.is_connected(_on_taken):
 		item.taken.connect(_on_taken)
 	item.add_to_group("pickups")
@@ -108,7 +108,7 @@ func on_credited_knockout(attacker: int, victim: int) -> void:
 			break
 		if item.get_parent() == null:
 			ctx.world_root.add_child(item)
-		item.configure("gem", UIKit.ACCENT, maxi(1, loss / 6))
+		item.configure("gem", MeshFactory.WORLD_GOLD, maxi(1, loss / 6))
 		if not item.taken.is_connected(_on_taken):
 			item.taken.connect(_on_taken)
 		item.add_to_group("pickups")
