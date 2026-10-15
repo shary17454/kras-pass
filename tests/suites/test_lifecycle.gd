@@ -13,8 +13,48 @@ func run(t: TestHarness, host: Node) -> void:
 	_background_flushes_and_is_idempotent(t)
 	await _match_pauses_on_real_background_signal(t)
 	await _background_before_live(t)
+	await _paused_pickup_overlap(t)
 	await _teardown_retires_live_match(t)
 	await _completion_owner_lifetime(t)
+
+
+func _paused_pickup_overlap(t: TestHarness) -> void:
+	t.test("physics overlap cannot grant a powerup while a local match is paused")
+	for ambient_enabled in [true, false]:
+		var cfg := MatchConfig.build("ring_rumble", _characters(), 1, PlayerConfig.Difficulty.EASY, 80)
+		cfg.players[0].device_type = 2
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		_host.add_child(scene)
+		scene.setup({"config": cfg})
+		for next in [MatchPhase.P.INSTRUCTIONS, MatchPhase.P.COUNTDOWN, MatchPhase.P.PLAYING]:
+			scene._set_phase(next)
+		scene.powerups.enabled = ambient_enabled
+		var fighter: Fighter = scene.ctx.fighter(0)
+		var events := [0]
+		var on_collected := func(slot, id):
+			if slot == 0 and id == "speed":
+				events[0] += 1
+		EventBus.powerup_collected.connect(on_collected)
+		scene.powerups.spawn_at("speed", fighter.global_position + Vector3.UP)
+		scene.powerups.spawn_at("shield", fighter.global_position + Vector3.UP)
+		scene._toggle_pause()
+		for tick in 4:
+			await _host.get_tree().physics_frame
+		t.equal(events[0], 0, "paused physics cannot emit a collection event")
+		t.near(float(fighter.mods["speed"]), 1.0, 0.001, "paused overlap cannot change player modifiers")
+		t.equal(scene.powerups._active_pickups.size(), 2, "paused overlaps cannot retire either pickup")
+		scene._toggle_pause()
+		for tick in 4:
+			await _host.get_tree().physics_frame
+		t.equal(events[0], 1, "resume collects the overlapping speed pickup exactly once")
+		t.near(float(fighter.mods["speed"]), Registry.powerup("speed").magnitude, 0.001,
+			"resumed simulation applies the ordinary powerup effect")
+		t.near(float(fighter.mods["shield"]), 1.0, 0.001, "retiring one overlap does not skip the other")
+		t.equal(scene.powerups._active_pickups.size(), 0, "both scripted pickups collect even with ambient spawning disabled")
+		EventBus.powerup_collected.disconnect(on_collected)
+		scene.teardown()
+		scene.queue_free()
+		await _host.get_tree().process_frame
 
 
 func _background_before_live(t: TestHarness) -> void:
