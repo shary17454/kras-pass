@@ -199,6 +199,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duo(t, scene)
 	_test_smasher(t, scene)
 	_test_duellist(t, scene)
+	_test_duellist_initialization(t, scene)
 	_test_duellist_ties(t, scene)
 	_test_duellist_delay(t, scene)
 	_test_ball(t, scene)
@@ -699,6 +700,23 @@ func _test_smasher(t: TestHarness, scene: Node) -> void:
 	smasher.controller = null
 	controller.cleanup()
 	controller.free()
+
+
+func _test_duellist_initialization(t: TestHarness, scene: Node) -> void:
+	for difficulty in 4:
+		for seed_value in [119, 821]:
+			for slot in 4:
+				var generic = load("res://src/ai/brains/generic_brain.gd").new()
+				generic.configure(slot, scene.ctx, difficulty, seed_value)
+				var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
+				duellist.configure(slot, scene.ctx, difficulty, seed_value)
+				t.equal(duellist._tree, scene.get_tree(), "duellist retains shared fallback pickup access")
+				t.near(duellist._idle_phase, generic._idle_phase, 0.000001,
+					"duellist retains seeded shared fallback direction instead of a fixed world bearing")
+				t.ok(duellist._tracks_damage, "specialized delayed damage perception remains enabled")
+				var repeated = load("res://src/ai/brains/duellist_brain.gd").new()
+				repeated.configure(slot, scene.ctx, difficulty, seed_value)
+				t.equal(repeated._idle_phase, duellist._idle_phase, "same seed and seat reproduce fallback direction")
 
 
 func _test_duellist(t: TestHarness, scene: Node) -> void:

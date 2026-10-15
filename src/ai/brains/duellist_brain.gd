@@ -6,6 +6,7 @@ extends "res://src/ai/brains/generic_brain.gd"
 
 
 func on_configured() -> void:
+	super.on_configured()
 	_tracks_damage = true
 
 
