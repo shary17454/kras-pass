@@ -1,8 +1,11 @@
 import importlib.util
+import configparser
 import json
 import os
+import plistlib
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -30,11 +33,104 @@ class ExportEvidenceTests(unittest.TestCase):
             path = self.out / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b"test output")
+        self.info = self.out / "KrasPass/KrasPass-Info.plist"
+        self.privacy = self.out / "PrivacyInfo.xcprivacy"
+        self.entitlements = self.out / "KrasPass/KrasPass.entitlements"
+        self.write_plist(self.info, {"UIFileSharingEnabled": False})
+        self.write_plist(self.privacy, {"NSPrivacyTracking": False,
+            "NSPrivacyCollectedDataTypes": [{"NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+                "NSPrivacyCollectedDataTypeTracking": False}]})
+        self.write_plist(self.entitlements, {"com.apple.developer.applesignin": ["Default"]})
         self.stamp = self.out / EVIDENCE.STAMP
         self.record()
 
     def git(self, *args):
         return subprocess.check_output(["git", "-C", str(self.root), *args])
+
+    def write_plist(self, path, value):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(plistlib.dumps(value))
+
+    def test_hashed_export_cannot_attest_unneeded_permissions(self):
+        for key in ["NSCameraUsageDescription", "NSMicrophoneUsageDescription",
+                    "NSPhotoLibraryUsageDescription", "NSPhotoLibraryAddUsageDescription",
+                    "NSContactsUsageDescription", "NSLocationWhenInUseUsageDescription",
+                    "NSLocationAlwaysUsageDescription", "NSLocationAlwaysAndWhenInUseUsageDescription",
+                    "NSUserTrackingUsageDescription"]:
+            with self.subTest(key=key):
+                self.write_plist(self.info, {key: "fixture permission"})
+                self.record()
+                self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def test_hashed_export_cannot_attest_tracking(self):
+        for privacy in [{"NSPrivacyTracking": True}, {"NSPrivacyTracking": 0},
+                        {"NSPrivacyTracking": False, "NSPrivacyTrackingDomains": ["example.invalid"]},
+                        {"NSPrivacyTracking": False, "NSPrivacyCollectedDataTypes": [
+                            {"NSPrivacyCollectedDataTypeTracking": True}]}]:
+            with self.subTest(privacy=privacy):
+                self.write_plist(self.privacy, privacy)
+                self.record()
+                self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def test_hashed_export_cannot_expose_local_save_files(self):
+        for key in ["UIFileSharingEnabled", "LSSupportsOpeningDocumentsInPlace"]:
+            with self.subTest(key=key):
+                self.write_plist(self.info, {key: True})
+                self.record()
+                self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def test_sensitive_entitlements_cannot_be_hidden_in_a_valid_stamp(self):
+        for key in EVIDENCE.FORBIDDEN_ENTITLEMENTS:
+            for value in [True, 0, "false"]:
+                with self.subTest(key=key, value=value):
+                    self.write_plist(self.entitlements, {key: value})
+                    self.record()
+                    self.assertFalse(EVIDENCE.verify(self.root, self.out))
+        self.write_plist(self.entitlements, {"com.apple.security.device.camera": False,
+                                          "com.apple.developer.applesignin": ["Default"]})
+        self.record()
+        self.assertTrue(EVIDENCE.verify(self.root, self.out))
+
+    def test_malformed_or_missing_privacy_documents_fail_closed(self):
+        for path in [self.info, self.privacy, self.entitlements]:
+            original = path.read_bytes()
+            for content in [b"invalid plist", plistlib.dumps([]), b"<?xml version='1.0'?><plist><dict>"]:
+                with self.subTest(file=path.name, content=content):
+                    path.write_bytes(content)
+                    self.record()
+                    self.assertFalse(EVIDENCE.verify(self.root, self.out))
+            path.unlink()
+            self.record()
+            self.assertFalse(EVIDENCE.verify(self.root, self.out))
+            path.write_bytes(original)
+        self.record()
+        self.assertTrue(EVIDENCE.verify(self.root, self.out))
+
+    def test_malformed_tracking_metadata_fails_closed(self):
+        for privacy in [{}, {"NSPrivacyTracking": False, "NSPrivacyTrackingDomains": ""},
+                        {"NSPrivacyTracking": False, "NSPrivacyCollectedDataTypes": {}},
+                        {"NSPrivacyTracking": False, "NSPrivacyCollectedDataTypes": ["invalid entry"]},
+                        {"NSPrivacyTracking": False, "NSPrivacyCollectedDataTypes": [{}]}]:
+            with self.subTest(privacy=privacy):
+                self.write_plist(self.privacy, privacy)
+                self.record()
+                self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def test_record_command_preserves_stamp_when_policy_fails(self):
+        before = self.root / "source-before.json"
+        before.write_text(json.dumps(EVIDENCE.source_identity(self.root)))
+        stamp = self.stamp.read_bytes()
+        self.write_plist(self.info, {"NSCameraUsageDescription": "fixture"})
+        result = subprocess.run([sys.executable, SPEC.origin, "record", str(self.root),
+                                 str(self.out), str(before)], capture_output=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.stamp.read_bytes(), stamp)
+        self.assertIn(b"permission/tracking policy", result.stderr)
+        self.write_plist(self.info, {"UIFileSharingEnabled": False})
+        result = subprocess.run([sys.executable, SPEC.origin, "record", str(self.root),
+                                 str(self.out), str(before)], capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertTrue(EVIDENCE.verify(self.root, self.out))
 
     def record(self):
         self.stamp.write_text(json.dumps({"schema_version": 1,
@@ -63,6 +159,53 @@ class ExportEvidenceTests(unittest.TestCase):
         self.assertFalse(EVIDENCE.verify(self.root, self.out))
         with self.assertRaises(RuntimeError):
             EVIDENCE.source_identity(self.root)
+
+    def test_changed_scene_requires_commit_and_new_export(self):
+        scene = self.root / "scenes/boot.tscn"
+        scene.parent.mkdir()
+        scene.write_text('[gd_scene format=3]\n[node name="Boot" type="Node"]\n')
+        self.git("add", "scenes")
+        self.git("commit", "-qm", "Add boot scene")
+        before = EVIDENCE.source_identity(self.root)
+        self.record()
+        scene.write_text('[gd_scene format=3]\n[node name="Changed" type="Node"]\n')
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+        with self.assertRaises(RuntimeError):
+            EVIDENCE.source_identity(self.root)
+        self.git("add", "scenes")
+        self.git("commit", "-qm", "Change boot scene")
+        self.assertNotEqual(EVIDENCE.source_identity(self.root)["inputs_sha256"],
+                            before["inputs_sha256"])
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+
+    def test_untracked_scene_or_addon_cannot_enter_an_attested_pack(self):
+        for name in ["scenes/extra.tscn", "addons/helper/helper.gd"]:
+            with self.subTest(name=name):
+                path = self.root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture\n")
+                self.assertFalse(EVIDENCE.verify(self.root, self.out))
+                with self.assertRaises(RuntimeError):
+                    EVIDENCE.source_identity(self.root)
+                path.unlink()
+
+    def test_changed_addon_requires_commit_and_new_export(self):
+        addon = self.root / "addons/helper/helper.gd"
+        addon.parent.mkdir(parents=True)
+        addon.write_text("extends Node\n")
+        self.git("add", "addons")
+        self.git("commit", "-qm", "Add helper addon")
+        before = EVIDENCE.source_identity(self.root)
+        self.record()
+        addon.write_text("extends Node3D\n")
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
+        with self.assertRaises(RuntimeError):
+            EVIDENCE.source_identity(self.root)
+        self.git("add", "addons")
+        self.git("commit", "-qm", "Change helper addon")
+        self.assertNotEqual(EVIDENCE.source_identity(self.root)["inputs_sha256"],
+                            before["inputs_sha256"])
+        self.assertFalse(EVIDENCE.verify(self.root, self.out))
 
     def test_generated_script_uid_must_be_committed(self):
         uid = self.input.with_suffix(".gd.uid")
@@ -139,6 +282,37 @@ class ExportEvidenceTests(unittest.TestCase):
         result, destination = self.fetch("0" * 64)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(destination.read_bytes(), b"stale cache")
+
+
+class DistributionExportPolicyTests(unittest.TestCase):
+    def test_export_preserves_frozen_build_and_existing_manual_identity(self):
+        filename = Path(__file__).parents[1] / "tools/ExportOptions.app-store-connect.plist"
+        with filename.open("rb") as source:
+            options = plistlib.load(source)
+        self.assertIs(options.get("manageAppVersionAndBuildNumber"), False)
+        self.assertEqual(options.get("signingStyle"), "manual")
+        self.assertEqual(options.get("signingCertificate"),
+                         "Apple Distribution: Shary ALADHYANI (4HM66AD594)")
+        self.assertEqual(options.get("teamID"), "4HM66AD594")
+        self.assertEqual(options.get("method"), "app-store-connect")
+        self.assertEqual(options.get("provisioningProfiles"), {
+            "com.shary.kraspass": "Kras Pass App Store Xcode 27 2026-09-20"})
+
+
+class ShippingContentPolicyTests(unittest.TestCase):
+    def test_documentation_is_not_imported_or_exported(self):
+        root = Path(__file__).parents[1]
+        self.assertTrue((root / "docs/.gdignore").is_file(),
+                        "QA screenshots must not be imported as game textures")
+        config = configparser.ConfigParser(interpolation=None)
+        config.read(root / "export_presets.cfg")
+        for section in config.sections():
+            if not section.startswith("preset.") or section.endswith(".options"):
+                continue
+            with self.subTest(preset=section):
+                exclusions = config[section]["exclude_filter"].strip('"').split(",")
+                self.assertIn("docs/*", exclusions,
+                              "Developer reports and QA captures are not shipping content")
 
 
 if __name__ == "__main__":

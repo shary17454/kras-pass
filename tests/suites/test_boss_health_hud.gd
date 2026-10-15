@@ -34,6 +34,7 @@ func run(t: TestHarness, host: Node) -> void:
 				t.near(meter.value, 0.5, 0.00001, "meter reads authoritative health fraction")
 				t.ok(not meter.show_percentage, "percentage is not duplicated inside the small meter")
 				if resolution.x < resolution.y:
+					t.ok(scene.hud.occupied_top() < resolution.y * 0.35, "portrait boss HUD leaves the majority of the screen for gameplay")
 					for chip in scene.hud._chips:
 						t.ok(chip.root.get_global_rect().position.y >= meter.get_global_rect().end.y, "portrait player chips do not overlap health meter")
 			for fraction in [1.0, 0.0, 2.0, -0.5]:

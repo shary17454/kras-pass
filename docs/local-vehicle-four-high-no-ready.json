@@ -1,0 +1,73 @@
+{
+	"arena": "tank_oasis",
+	"benchmark_cap": 60,
+	"bot_count": 0,
+	"built_arena": "tank_oasis",
+	"cap": 60,
+	"complete_duration": false,
+	"display_refresh_hz": 60.0,
+	"distance_per_player_m": [
+		0.0,
+		0.0,
+		0.0,
+		0.0
+	],
+	"engine": "4.7.1-stable (official)",
+	"first_3_seconds": {},
+	"game": "tank_arena",
+	"human_slots": [
+		0,
+		1,
+		2,
+		3
+	],
+	"input_fixture": "scripted_touch_driving",
+	"live_pipeline_compilations": {
+		"canvas": 5,
+		"draw": 15,
+		"mesh": 8,
+		"specialization": 25,
+		"surface": 17
+	},
+	"live_seconds": 0.0,
+	"live_texture_reported_sizes": [],
+	"live_window_sizes": [],
+	"nodes_after": 51,
+	"nodes_before": 51,
+	"operation_trace_enabled": false,
+	"operations": {
+		"costs": {},
+		"retained": [],
+		"scope": "inclusive-script-wall-intervals-not-GPU-or-exclusive-CPU",
+		"slow_count": 0,
+		"threshold_usec": 4000
+	},
+	"os": "macOS",
+	"output_size": "(1280, 720)",
+	"peak_active_weapons": 0,
+	"peak_draw_calls": 0.0,
+	"peak_primitives": 0.0,
+	"personal_view_count": 4,
+	"physics_mean_ms": 0.0,
+	"prepared_effect_labels_per_player": [
+		22,
+		22,
+		22,
+		22
+	],
+	"prepared_state_visuals": 4,
+	"process_mean_ms": 0.0,
+	"quality": 2,
+	"render_memory_peak_mb": 0.0,
+	"render_scale": 1.0,
+	"renderer": "mobile",
+	"requested_seconds": 30.0,
+	"setup_ms": 1018.656,
+	"simulation_seconds": 0.0,
+	"slow_frame_samples": [],
+	"startup_output_size": "(854.0, 480.0)",
+	"static_memory_after_mb": 126.516830444336,
+	"static_memory_before_mb": 50.0182781219482,
+	"static_memory_peak_mb": 0.0,
+	"steady": {}
+}

@@ -12,7 +12,7 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 		Color(col.r * 0.3, col.g * 0.3, col.b * 0.3, 0.95) if unlocked else Color(0.12, 0.13, 0.2, 0.9),
 		18)
 	if selected:
-		card.add_theme_stylebox_override("panel", UIKit.stylebox(
+		card.add_theme_stylebox_override("panel", UIKit.tinted_stylebox(
 			Color(col.r * 0.4, col.g * 0.4, col.b * 0.4, 1.0), 18, 4, UIKit.ACCENT))
 	card.custom_minimum_size = Vector2(300, 360)
 	var v := UIKit.vbox(6)
@@ -75,12 +75,15 @@ static func palette_card(id: String, unlocked: bool, selected: bool) -> Control:
 		Color(swatch_color.r * 0.3, swatch_color.g * 0.3, swatch_color.b * 0.3, 0.95) if unlocked
 			else Color(0.12, 0.13, 0.2, 0.9), 18)
 	if selected:
-		card.add_theme_stylebox_override("panel", UIKit.stylebox(
+		card.add_theme_stylebox_override("panel", UIKit.tinted_stylebox(
 			Color(swatch_color.r * 0.4, swatch_color.g * 0.4, swatch_color.b * 0.4, 1.0), 18, 4, UIKit.ACCENT))
 	card.custom_minimum_size = Vector2(220, 220)
 	var v := UIKit.vbox(6)
 	card.add_child(v)
 	var dot := UIKit.panel(swatch_color if unlocked else Color(0.25, 0.25, 0.3), 12)
+	var swatch := UIKit.stylebox(swatch_color if unlocked else Color(0.25, 0.25, 0.3), 12)
+	swatch.set_meta("appearance_fixed", true)
+	dot.add_theme_stylebox_override("panel", swatch)
 	dot.custom_minimum_size = Vector2(0, 88)
 	v.add_child(dot)
 	v.add_child(UIKit.centered(
@@ -112,7 +115,7 @@ static func stat_block(c: CharacterData) -> Control:
 
 
 static func minigame_card(m: MiniGameDef, unlocked: bool) -> Control:
-	var card := UIKit.panel(UIKit.PANEL if unlocked else Color(0.11, 0.12, 0.18), 16)
+	var card := UIKit.panel(UIKit.PANEL if unlocked else UIKit.PANEL_HI, 16)
 	card.custom_minimum_size = Vector2(360, 185)
 	var v := UIKit.vbox(4)
 	card.add_child(v)
@@ -201,6 +204,10 @@ static func selectable(content: Control, on_press: Callable) -> Button:
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.set_anchors_preset(Control.PRESET_FULL_RECT)
 	b.add_child(content)
+	var fit_content := func():
+		b.custom_minimum_size = b.custom_minimum_size.max(content.get_combined_minimum_size())
+	content.minimum_size_changed.connect(fit_content)
+	b.tree_entered.connect(fit_content)
 	b.pressed.connect(on_press)
 	b.focus_entered.connect(func(): AudioManager.play_ui("ui_move"))
 	return b

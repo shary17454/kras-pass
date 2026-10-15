@@ -1,0 +1,12 @@
+✔ clean logs remain distinguishable from expected editor diagnostics (26.677042ms)
+✔ unknown errors mixed with expected diagnostics still fail (0.312ms)
+✔ wrong platform or extension cannot use the exception (0.157208ms)
+✔ colored diagnostics retain all errors (0.229334ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 402.884667

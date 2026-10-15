@@ -1,0 +1,230 @@
+{
+	"arena": "tank_oasis",
+	"benchmark_cap": 60,
+	"bot_count": 0,
+	"built_arena": "tank_oasis",
+	"cap": 60,
+	"complete_duration": true,
+	"display_refresh_hz": 60.0,
+	"distance_per_player_m": [
+		354.948668719037,
+		326.293908779742,
+		312.515541412868,
+		321.348412047606
+	],
+	"engine": "4.7.1-stable (official)",
+	"first_3_seconds": {
+		"fps": 23.3434955350563,
+		"frames": 70,
+		"frames_above_100ms": 8,
+		"frames_above_25ms": 26,
+		"frames_above_33ms": 25,
+		"frames_above_50ms": 18,
+		"mean_ms": 42.8384857142857,
+		"p95_ms": 173.397,
+		"p99_ms": 208.147,
+		"seconds": 2.998694,
+		"worst_ms": 249.168
+	},
+	"game": "tank_arena",
+	"human_slots": [
+		0,
+		1,
+		2,
+		3
+	],
+	"input_fixture": "scripted_touch_driving",
+	"live_pipeline_compilations": {
+		"canvas": 0,
+		"draw": 0,
+		"mesh": 0,
+		"specialization": 0,
+		"surface": 0
+	},
+	"live_seconds": 33.164917,
+	"live_texture_reported_sizes": [
+		"(854.0, 480.0)"
+	],
+	"live_window_sizes": [
+		"(1280, 720)"
+	],
+	"nodes_after": 51,
+	"nodes_before": 51,
+	"operation_trace_enabled": false,
+	"operations": {
+		"costs": {},
+		"retained": [],
+		"scope": "inclusive-script-wall-intervals-not-GPU-or-exclusive-CPU",
+		"slow_count": 0,
+		"threshold_usec": 4000
+	},
+	"os": "macOS",
+	"output_size": "(1280, 720)",
+	"peak_active_weapons": 0,
+	"peak_draw_calls": 895.0,
+	"peak_primitives": 1699486.0,
+	"personal_view_count": 4,
+	"physics_mean_ms": 13.0266988322066,
+	"prepared_effect_labels_per_player": [
+		22,
+		22,
+		22,
+		22
+	],
+	"prepared_state_visuals": 4,
+	"process_mean_ms": 10.0666717885679,
+	"quality": 0,
+	"render_memory_peak_mb": 265.03125,
+	"render_scale": 0.699999988079071,
+	"renderer": "mobile",
+	"requested_seconds": 30.0,
+	"setup_ms": 1225.944,
+	"simulation_seconds": 32.2666666666661,
+	"slow_frame_samples": [
+		{
+			"elapsed_seconds": 32.718189,
+			"focused": true,
+			"frame_ms": 284.827,
+			"physics_frame": 2293,
+			"physics_monitor_ms": 22.436,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 2045,
+			"process_monitor_ms": 5.871
+		},
+		{
+			"elapsed_seconds": 32.987,
+			"focused": true,
+			"frame_ms": 268.811,
+			"physics_frame": 2301,
+			"physics_monitor_ms": 22.436,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 2046,
+			"process_monitor_ms": 5.871
+		},
+		{
+			"elapsed_seconds": 32.433362,
+			"focused": true,
+			"frame_ms": 219.537,
+			"physics_frame": 2285,
+			"physics_monitor_ms": 22.436,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 2044,
+			"process_monitor_ms": 5.871
+		},
+		{
+			"elapsed_seconds": 33.164917,
+			"focused": true,
+			"frame_ms": 177.917,
+			"physics_frame": 2309,
+			"physics_monitor_ms": 22.436,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 2047,
+			"process_monitor_ms": 5.871
+		},
+		{
+			"elapsed_seconds": 31.006426,
+			"focused": true,
+			"frame_ms": 127.181,
+			"physics_frame": 2205,
+			"physics_monitor_ms": 9.778,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 2018,
+			"process_monitor_ms": 5.351
+		},
+		{
+			"elapsed_seconds": 3.107268,
+			"focused": true,
+			"frame_ms": 108.574,
+			"physics_frame": 532,
+			"physics_monitor_ms": 30.739,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 421,
+			"process_monitor_ms": 5.191
+		},
+		{
+			"elapsed_seconds": 3.488128,
+			"focused": true,
+			"frame_ms": 96.291,
+			"physics_frame": 556,
+			"physics_monitor_ms": 26.001,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 425,
+			"process_monitor_ms": 5.481
+		},
+		{
+			"elapsed_seconds": 3.391837,
+			"focused": true,
+			"frame_ms": 96.2,
+			"physics_frame": 550,
+			"physics_monitor_ms": 26.001,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 424,
+			"process_monitor_ms": 5.481
+		}
+	],
+	"startup_output_size": "(854.0, 480.0)",
+	"static_memory_after_mb": 129.503133773804,
+	"static_memory_before_mb": 50.0191516876221,
+	"static_memory_peak_mb": 163.493398666382,
+	"steady": {
+		"fps": 53.9344948819082,
+		"frames": 1627,
+		"frames_above_100ms": 6,
+		"frames_above_25ms": 108,
+		"frames_above_33ms": 56,
+		"frames_above_50ms": 26,
+		"mean_ms": 18.5410098340504,
+		"p95_ms": 28.002,
+		"p99_ms": 78.668,
+		"seconds": 30.166223,
+		"worst_ms": 284.827
+	}
+}

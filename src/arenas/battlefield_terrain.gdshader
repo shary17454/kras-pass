@@ -1,4 +1,5 @@
 shader_type spatial;
+uniform bool authored_road_mask = false;
 
 uniform sampler2D ground_diff : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D ground_nor_gl : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -30,6 +31,9 @@ void fragment() {
     float edge_noise = texture(ground_rough, p.xz * 0.43).r;
     float road = 1.0 - smoothstep(3.4, 5.0, min(grid.x, grid.y) + edge_noise * 0.65);
     road *= 1.0 - smoothstep(40.0, 47.0, max(abs(world_position.x), abs(world_position.z)));
+    if (authored_road_mask) {
+        road = COLOR.r;
+    }
     vec3 earth = mix(texture(ground_diff, p.xz).rgb, texture(road_diff, p.xz).rgb, road);
     ALBEDO = mix(earth, rocks, slope);
     NORMAL_MAP = mix(mix(texture(ground_nor_gl, p.xz).rgb, texture(road_nor_gl, p.xz).rgb, road), texture(rock_nor_gl, p.xz).rgb, slope);

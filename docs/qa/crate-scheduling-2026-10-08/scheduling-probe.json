@@ -1,0 +1,189 @@
+{
+  "operations": {},
+  "stalls": [
+    {
+      "startEpochMs": 1791458521744.301,
+      "endEpochMs": 1791458521964.5232,
+      "delayMs": 120.2222499999989,
+      "elapsedMs": 220.2222499999989,
+      "cpuMs": 0.128,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458560594.6108,
+      "endEpochMs": 1791458560941.7239,
+      "delayMs": 247.1128749999989,
+      "elapsedMs": 347.1128749999989,
+      "cpuMs": 0.085,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458585764.7327,
+      "endEpochMs": 1791458586197.896,
+      "delayMs": 333.16345800001,
+      "elapsedMs": 433.16345800001,
+      "cpuMs": 0.502,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458586401.2578,
+      "endEpochMs": 1791458586853.1863,
+      "delayMs": 351.9282919999969,
+      "elapsedMs": 451.9282919999969,
+      "cpuMs": 3.051,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458586853.1863,
+      "endEpochMs": 1791458587094.4097,
+      "delayMs": 141.223416000008,
+      "elapsedMs": 241.223416000008,
+      "cpuMs": 0.512,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458588653.8752,
+      "endEpochMs": 1791458588933.7693,
+      "delayMs": 179.89400000000023,
+      "elapsedMs": 279.89400000000023,
+      "cpuMs": 0.097,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458597979.8638,
+      "endEpochMs": 1791458598505.6184,
+      "delayMs": 425.7546250000014,
+      "elapsedMs": 525.7546250000014,
+      "cpuMs": 0.102,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458598505.6184,
+      "endEpochMs": 1791458598749.1245,
+      "delayMs": 143.5061660000065,
+      "elapsedMs": 243.5061660000065,
+      "cpuMs": 0.329,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458610163.9175,
+      "endEpochMs": 1791458610438.985,
+      "delayMs": 175.0674999999901,
+      "elapsedMs": 275.0674999999901,
+      "cpuMs": 0.065,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458641703.5078,
+      "endEpochMs": 1791458641977.366,
+      "delayMs": 173.85812499999884,
+      "elapsedMs": 273.85812499999884,
+      "cpuMs": 0.106,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458650154.5305,
+      "endEpochMs": 1791458650411.2168,
+      "delayMs": 156.68633299999055,
+      "elapsedMs": 256.68633299999055,
+      "cpuMs": 0.09,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458650630.5095,
+      "endEpochMs": 1791458650970.642,
+      "delayMs": 240.13262499999837,
+      "elapsedMs": 340.13262499999837,
+      "cpuMs": 0.079,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458671353.4607,
+      "endEpochMs": 1791458671841.205,
+      "delayMs": 387.7444169999799,
+      "elapsedMs": 487.7444169999799,
+      "cpuMs": 0.289,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458671841.205,
+      "endEpochMs": 1791458672067.661,
+      "delayMs": 126.45583300001454,
+      "elapsedMs": 226.45583300001454,
+      "cpuMs": 0.168,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458672780.059,
+      "endEpochMs": 1791458672992.015,
+      "delayMs": 111.95595799997682,
+      "elapsedMs": 211.95595799997682,
+      "cpuMs": 0.093,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458682101.3215,
+      "endEpochMs": 1791458682302.5396,
+      "delayMs": 101.21812500001397,
+      "elapsedMs": 201.21812500001397,
+      "cpuMs": 0.089,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458682302.5396,
+      "endEpochMs": 1791458682538.3284,
+      "delayMs": 135.78866599997855,
+      "elapsedMs": 235.78866599997855,
+      "cpuMs": 0.134,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458692184.416,
+      "endEpochMs": 1791458692486.8179,
+      "delayMs": 202.40187500001048,
+      "elapsedMs": 302.4018750000105,
+      "cpuMs": 0.079,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458692625.4795,
+      "endEpochMs": 1791458693061.066,
+      "delayMs": 335.58641600000556,
+      "elapsedMs": 435.58641600000556,
+      "cpuMs": 0.102,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458700901.495,
+      "endEpochMs": 1791458701106.797,
+      "delayMs": 105.30187500000466,
+      "elapsedMs": 205.30187500000466,
+      "cpuMs": 0.191,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458713121.6877,
+      "endEpochMs": 1791458713377.0923,
+      "delayMs": 155.40441699998337,
+      "elapsedMs": 255.40441699998337,
+      "cpuMs": 0.079,
+      "rooms": []
+    },
+    {
+      "startEpochMs": 1791458724152.9238,
+      "endEpochMs": 1791458724374.1875,
+      "delayMs": 121.26358400000026,
+      "elapsedMs": 221.26358400000026,
+      "cpuMs": 0.143,
+      "rooms": []
+    }
+  ],
+  "worstStall": {
+    "startEpochMs": 1791458597979.8638,
+    "endEpochMs": 1791458598505.6184,
+    "delayMs": 425.7546250000014,
+    "elapsedMs": 525.7546250000014,
+    "cpuMs": 0.102,
+    "rooms": []
+  }
+}

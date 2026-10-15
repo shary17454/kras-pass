@@ -27,7 +27,7 @@ func decide(_delta: float) -> void:
 		return
 
 	var loot := _preferred_loot()
-	var loot_distance := distance_to(loot.global_position) if loot != null else INF
+	var loot_distance := distance_to(perceived_object_position(loot)) if loot != null else INF
 	var close_loot := lerpf(CLOSE_LOOT_EASY, CLOSE_LOOT_EXPERT, strategy)
 	var mug_range := lerpf(MUG_RANGE_EASY, MUG_RANGE_EXPERT, strategy)
 	var mug_gap := roundi(lerpf(MUG_GAP_EASY, MUG_GAP_EXPERT, strategy))
@@ -60,7 +60,8 @@ func decide(_delta: float) -> void:
 
 
 func _go_get(loot: Node3D, distance: float) -> void:
-	steer_to(loot.global_position, lerpf(0.78, 1.0, accuracy))
+	var position := perceived_object_position(loot)
+	steer_to(position, lerpf(0.78, 1.0, accuracy))
 	# Do not dash past the target: better decision making, not hidden speed.
 	var dash_clearance := lerpf(4.5, 6.8, strategy)
 	if distance > dash_clearance:
@@ -69,7 +70,7 @@ func _go_get(loot: Node3D, distance: float) -> void:
 	var rival := nearest_rival()
 	if rival >= 0 and distance_to(perceive(rival)) < minf(2.2, distance):
 		var origin := self_body().global_position
-		var to_loot := loot.global_position - origin
+		var to_loot := position - origin
 		var to_rival := perceive(rival) - origin
 		to_loot.y = 0.0
 		to_rival.y = 0.0
@@ -92,11 +93,12 @@ func _preferred_loot() -> Node3D:
 	var chosen: Node3D = null
 	var best := INF
 	for node in _tree.get_nodes_in_group("pickups"):
-		if not node is Node3D or not can_observe(node):
+		if not node is Node3D:
 			continue
-		if node.has_method("is_available") and not node.is_available():
+		var position := perceived_object_position(node)
+		if position == Vector3.INF:
 			continue
-		var distance := distance_to(node.global_position)
+		var distance := distance_to(position)
 		var cost := distance
 		# Skilled collectors notice a visible rival will reach a gem first.
 		# Use delayed perception, not the rival's current velocity or intent.
@@ -104,8 +106,8 @@ func _preferred_loot() -> Node3D:
 			for rival in ctx.player_count():
 				if rival == slot or not ctx.is_alive(rival) or not can_observe(ctx.fighter(rival)) or not has_observed(rival):
 					continue
-				var reach := perceive(rival).distance_to(node.global_position)
-				if reach < distance * 0.75 and _contests_loot(rival, node.global_position, reach):
+				var reach := perceive(rival).distance_to(position)
+				if reach < distance * 0.75 and _contests_loot(rival, position, reach):
 					cost += (distance - reach) * strategy
 		if cost < best:
 			best = cost

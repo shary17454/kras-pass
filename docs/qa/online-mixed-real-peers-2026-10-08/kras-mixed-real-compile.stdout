@@ -1,0 +1,19 @@
+ERROR: Failed to open 'user://logs/godot2026-10-08T11.11.01.log'.
+   at: copy (core/io/dir_access.cpp:429)
+
+================================================================
+handle_crash: Program crashed with signal 11
+Engine version: Godot Engine v4.7.1.stable.official (a13da4feb8d8aefc283c3763d33a2f170a18d541)
+Dumping the backtrace. Please include this when reporting the bug on: https://github.com/godotengine/godot/issues
+Load address: 1000f8000
+
+[1] 19834c144 (libsystem_platform.dylib+4144) - _sigtramp + 56
+[2] 104a62fec (main+496afec) - ZSTD_decompressStream_simpleArgs + 2307560
+[3] 104a62fec (main+496afec) - ZSTD_decompressStream_simpleArgs + 2307560
+[4] 104a630e8 (main+496b0e8) - ZSTD_decompressStream_simpleArgs + 2307812
+[5] 10084bfbc (main+753fbc) - main + 32784
+[6] 1007e1f48 (main+6e9f48) - mvk::SPIRVToMSLConverter::convert(mvk::SPIRVToMSLConversionConfiguration&, mvk::SPIRVToMSLConversionResult&, bool, bool, bool)
+[7] 10084435c (main+74c35c) - main (in Godot) + 944
+[8] 197f6be80 (dyld+31e80) - start + 6688
+-- END OF C++ BACKTRACE --
+================================================================

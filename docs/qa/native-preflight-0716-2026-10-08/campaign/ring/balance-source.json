@@ -1,0 +1,11 @@
+{
+  "commit": "50539cbe5ab83f1482700800ccc90bcf68d97254",
+  "run": "37721855569",
+  "game": "ring_rumble",
+  "runs": 24,
+  "difficultyRuns": 16,
+  "difficultyPolicy": "matched_seed_character",
+  "smokeRuns": 2,
+  "mode": "natural",
+  "seedOffset": 1800000
+}

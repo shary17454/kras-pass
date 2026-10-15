@@ -1,5 +1,6 @@
 import {DatabaseSync} from 'node:sqlite';
 import {createHash, randomBytes} from 'node:crypto';
+import {migrateAccounts} from './account-migrations.js';
 
 export const digest = value => createHash('sha256').update(value).digest('hex');
 const random = () => randomBytes(32).toString('base64url');
@@ -9,17 +10,14 @@ export class Accounts {
     this.db = new DatabaseSync(path);
     this.ownerEmail = ownerEmail.trim().toLowerCase();
     this.now = now;
-    this.db.exec(`
-      PRAGMA journal_mode=WAL;
-      PRAGMA foreign_keys=ON;
-      PRAGMA busy_timeout=5000;
-      CREATE TABLE IF NOT EXISTS accounts(subject TEXT PRIMARY KEY, created INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS owner_binding(slot INTEGER PRIMARY KEY CHECK(slot=1),
-        subject TEXT NOT NULL UNIQUE REFERENCES accounts(subject));
-      CREATE TABLE IF NOT EXISTS challenges(id TEXT PRIMARY KEY, nonce TEXT NOT NULL, expires INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,
-        subject TEXT NOT NULL REFERENCES accounts(subject) ON DELETE CASCADE, expires INTEGER NOT NULL);
-    `);
+    try {
+      this.db.exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
+      migrateAccounts(this.db);
+      this.db.exec('PRAGMA journal_mode=WAL;');
+    } catch (error) {
+      this.db.close();
+      throw error;
+    }
   }
 
   challenge() {

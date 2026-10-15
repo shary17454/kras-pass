@@ -48,6 +48,7 @@ var personality := "balanced"
 var move := Vector2.ZERO
 var aim := Vector2.ZERO
 var bits := 0
+var _tap_bits := 0
 
 var _decision_clock := 0.0
 var _history_times := PackedFloat32Array()
@@ -56,17 +57,22 @@ var _history_velocities: Array[PackedVector3Array] = []
 var _history_damage: Array[PackedFloat32Array] = []
 var _history_balls: Array[Dictionary] = []
 var _first_seen_times := PackedFloat64Array()
+var _visible_since_times := PackedFloat64Array()
+var _machine_cue_history := {}
 var _tracks_balls := false
 var _tracks_damage := false
 var _history_head := 0
 var _history_count := 0
 var _history_sample_clock := 0.0
 var _time := 0.0
+var _object_history := {}
 var _mistake_timer := 0.0
 var _noise_phase := 0.0
 
 
 func configure(player_slot: int, context: MatchContext, difficulty: int, seed_value: int) -> void:
+	_object_history.clear()
+	_tap_bits = 0
 	slot = player_slot
 	ctx = context
 	rng.seed = seed_value + player_slot * 7919
@@ -118,6 +124,7 @@ func on_configured() -> void:
 
 
 func on_round_start() -> void:
+	_object_history.clear()
 	_decision_clock = 0.0
 	_history_times.clear()
 	_history_positions.clear()
@@ -125,11 +132,14 @@ func on_round_start() -> void:
 	_history_damage.clear()
 	_history_balls.clear()
 	_first_seen_times.clear()
+	_visible_since_times.clear()
+	_machine_cue_history.clear()
 	_history_head = 0
 	_history_count = 0
 	_history_sample_clock = 0.0
 	move = Vector2.ZERO
 	bits = 0
+	_tap_bits = 0
 
 
 ## Called every physics tick by MatchScene.
@@ -176,15 +186,30 @@ func _publish() -> void:
 
 ## Game-specific safety checks must see the final noisy input, not a proposal.
 func _publish_output(movement: Vector2) -> void:
-	InputRouter.push_virtual(slot, movement, aim, bits)
+	InputRouter.push_virtual(slot, movement, aim, _take_actions())
+
+
+func _take_actions() -> int:
+	var actions := bits | _tap_bits
+	_tap_bits = 0
+	return actions
 
 
 # --- perception ------------------------------------------------------------
 
 func _record_history() -> void:
+	for id in _object_history.keys():
+		var node := instance_from_id(int(id)) as Node3D
+		if is_instance_valid(node):
+			perceived_object_position(node)
+		else:
+			_object_history.erase(id)
 	if _first_seen_times.size() != ctx.fighters.size():
 		_first_seen_times.resize(ctx.fighters.size())
 		_first_seen_times.fill(INF)
+	if _visible_since_times.size() != ctx.fighters.size():
+		_visible_since_times.resize(ctx.fighters.size())
+		_visible_since_times.fill(INF)
 	var positions := PackedVector3Array()
 	var velocities := PackedVector3Array()
 	var damage := PackedFloat32Array()
@@ -197,12 +222,14 @@ func _record_history() -> void:
 		var f := ctx.fighters[i]
 		if can_observe(f):
 			_first_seen_times[i] = minf(_first_seen_times[i], _time)
+			_visible_since_times[i] = minf(_visible_since_times[i], _time)
 			positions[i] = f.global_position
 			velocities[i] = f.velocity
 			if _tracks_damage:
 				# Duel HUD displays whole percentages, not private fractional damage.
 				damage[i] = floorf(f.damage_percent)
 		else:
+			_visible_since_times[i] = INF
 			# Keep a last-seen location, never sample hidden movement or velocity.
 			positions[i] = _history_positions[previous][i] if previous >= 0 else Vector3.ZERO
 			velocities[i] = Vector3.ZERO
@@ -260,7 +287,9 @@ func perceive_ball(ball: GameBall) -> Dictionary:
 	# A relaunch reuses the node, not the preceding ball's observed trajectory.
 	if sample.is_empty() or int(sample["generation"]) != ball.launch_generation:
 		return {}
-	return sample.duplicate()
+	var observed := sample.duplicate()
+	observed["age"] = maxf(0.0, _time - float(_history_times[idx]))
+	return observed
 
 
 func can_observe(node: Node3D) -> bool:
@@ -345,6 +374,10 @@ func _world_sight_clear(target: Node3D, point: Vector3) -> bool:
 			return true
 		if body == target or (body != null and (body.is_ancestor_of(target) or target.is_ancestor_of(body))):
 			return true
+		if body != null and body.has_meta("observation_mesh"):
+			var surface := body.get_node_or_null(NodePath(body.get_meta("observation_mesh")))
+			if surface == target or (surface != null and target.is_ancestor_of(surface)):
+				return true
 		if body == null or _has_visible_geometry(body, camera.cull_mask):
 			return false
 		var excluded := _sight_query.exclude
@@ -353,14 +386,15 @@ func _world_sight_clear(target: Node3D, point: Vector3) -> bool:
 	return false
 
 
-func _has_visible_geometry(root: Node, cull_mask: int) -> bool:
-	if root is CollisionObject3D and root.has_meta("observation_mesh"):
-		var geometry := root.get_node_or_null(NodePath(root.get_meta("observation_mesh"))) as GeometryInstance3D
-		return geometry != null and _geometry_has_visual_cue(geometry, cull_mask)
+func _has_visible_geometry(root: Node, cull_mask: int, follow_reference: bool = true) -> bool:
+	if follow_reference and root is CollisionObject3D and root.has_meta("observation_mesh"):
+		var geometry := root.get_node_or_null(NodePath(root.get_meta("observation_mesh")))
+		return geometry != null and geometry != root and not geometry.is_ancestor_of(root) \
+			and _has_visible_geometry(geometry, cull_mask, false)
 	if root is GeometryInstance3D and _geometry_has_visual_cue(root, cull_mask):
 		return true
 	for child in root.get_children():
-		if _has_visible_geometry(child, cull_mask):
+		if _has_visible_geometry(child, cull_mask, follow_reference):
 			return true
 	return false
 
@@ -439,14 +473,33 @@ func _history_index(want: float) -> int:
 ## Distinguish unknown locations from valid origin coordinates and last-seen
 ## memory. New knowledge becomes actionable only after the reaction delay.
 func has_observed(target_slot: int) -> bool:
-	if target_slot < 0 or target_slot >= _first_seen_times.size():
+	if target_slot < 0 or target_slot >= ctx.fighters.size():
 		return false
-	return _first_seen_times[target_slot] <= _time - reaction_time + 0.000001
+	if target_slot < _first_seen_times.size() \
+			and _first_seen_times[target_slot] <= _time - reaction_time + 0.000001:
+		return true
+	return false
+
+
+func can_target(target_slot: int) -> bool:
+	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return false
+	if not ctx.is_alive(target_slot) or not can_observe(ctx.fighter(target_slot)):
+		if target_slot < _visible_since_times.size():
+			_visible_since_times[target_slot] = INF
+		return false
+	if reaction_time <= 0.0:
+		return true
+	# Last-seen memory survives occlusion, but reacquisition earns fresh delay.
+	return has_observed(target_slot) and target_slot < _visible_since_times.size() \
+		and _visible_since_times[target_slot] <= _time - reaction_time + 0.000001
 
 
 ## Delayed observed position, or a visible fallback before the first sample.
 func perceive(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return Vector3.ZERO
+	if reaction_time > 0.0 and not has_observed(target_slot):
 		return Vector3.ZERO
 	var idx := _history_index(_time - reaction_time)
 	if idx >= 0:
@@ -460,6 +513,8 @@ func perceive(target_slot: int) -> Vector3:
 ## either, so the aim lead is built from the same stale snapshot as its position.
 func _perceived_velocity(target_slot: int) -> Vector3:
 	if target_slot < 0 or target_slot >= ctx.fighters.size():
+		return Vector3.ZERO
+	if reaction_time > 0.0 and not has_observed(target_slot):
 		return Vector3.ZERO
 	var idx := _history_index(_time - reaction_time)
 	if idx >= 0:
@@ -498,16 +553,24 @@ func nearest_rival() -> int:
 	var me := self_body()
 	if me == null:
 		return -1
-	var best := -1
+	var candidates: Array[int] = []
 	var best_d := INF
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var d := me.global_position.distance_squared_to(perceive(i))
-		if d < best_d:
+		if candidates.is_empty() or (d < best_d and not is_equal_approx(d, best_d)):
 			best_d = d
-			best = i
-	return best
+			candidates.clear()
+			candidates.append(i)
+		elif is_equal_approx(d, best_d):
+			candidates.append(i)
+	if candidates.is_empty():
+		return -1
+	if candidates.size() == 1:
+		return candidates[0]
+	# Resolve only the final nearest tie so a unique target consumes no RNG.
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
 ## Rival with the highest score — the one a strategic AI should target.
@@ -515,7 +578,7 @@ func leader_rival() -> int:
 	var best_score := -2147483648
 	var candidates: Array[int] = []
 	for i in ctx.scores.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		if candidates.is_empty() or ctx.scores[i] > best_score:
 			best_score = ctx.scores[i]
@@ -540,11 +603,18 @@ func priority_rival() -> int:
 		return near
 	if near == -1:
 		return lead
+	# Keep unrelated seeded decisions stable even when scores do not justify
+	# chasing a distant rival.
+	var selection_roll := rng.randf()
+	# A tied scoreboard supplies no reason to abandon the nearest eligible
+	# rival. In survival games running scores can stay tied for the whole round.
+	if ctx.scores[lead] <= ctx.scores[near]:
+		return near
 	# A runaway leader pulls attention: the wider the gap, the likelier every
 	# bot independently picks them. `strategy` still sets the baseline, so a
 	# low tier keeps swinging at whoever is closest.
 	var bias: float = clampf(strategy + leader_gap() * 0.45, 0.0, 0.95)
-	return lead if rng.randf() < bias else near
+	return lead if selection_roll < bias else near
 
 
 ## The rival closest to going out. Standing next to the rim is the most
@@ -558,7 +628,7 @@ func edge_pressured_rival(threshold: float = 4.0) -> int:
 	var best := -1
 	var best_margin := threshold
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var margin := arena.edge_distance(perceive(i))
 		if margin < best_margin:
@@ -600,40 +670,64 @@ func leader_gap() -> float:
 
 
 # --- the hover machine, as seen from the ground ----------------------------
-## Everything below is visible: the drone, the beam it is lining up, and the
-## marker over somebody's head.
+## Only currently observable rendered cues can enter the delayed cue history.
 
 func machine() -> Node:
 	return ctx.machine
 
 
-## True when the drone is lining up something unpleasant on this bot. The
-## reaction is deliberately gated on `accuracy`, so a low tier stands in the
-## beam and a high tier steps out of it.
+## A mature red warning near this bot, with difficulty-specific accuracy.
 func machine_threatens_me() -> bool:
-	var m := ctx.machine
-	if m == null or not is_instance_valid(m):
+	var cue := _machine_cue("warning")
+	if cue.is_empty() or not cue.penalty or self_body() == null:
 		return false
-	if not m.is_telegraphing() or not m.target_is_penalty():
-		return false
-	if m.target_slot() != slot:
+	var offset: Vector3 = self_body().global_position - cue.point
+	offset.y = 0.0
+	if offset.length() > 0.75:
 		return false
 	return rng.randf() < accuracy
 
 
 ## The floor spot the drone is about to drop something on, or ZERO.
 func machine_drop_point() -> Vector3:
-	var m := ctx.machine
-	if m == null or not is_instance_valid(m) or not m.is_telegraphing():
-		return Vector3.ZERO
-	if m.target_slot() >= 0 or m.target_is_penalty():
-		return Vector3.ZERO
-	return m.target_point()
+	var cue := _machine_cue("warning")
+	return cue.point if not cue.is_empty() and cue.drop else Vector3.ZERO
 
 
 func marked_slot() -> int:
+	var cue := _machine_cue("mark")
+	return int(cue.slot) if not cue.is_empty() else -1
+
+
+func machine_origin_point() -> Vector3:
+	var cue := _machine_cue("warning")
+	return cue.origin if not cue.is_empty() else Vector3.ZERO
+
+
+func _machine_cue(kind: String) -> Dictionary:
 	var m := ctx.machine
-	return m.marked_slot() if m != null and is_instance_valid(m) else -1
+	if not is_instance_valid(m) or not m.has_method("visual_observation"):
+		_machine_cue_history.erase(kind)
+		return {}
+	var observed: Dictionary = m.visual_observation(kind, Callable(self, "can_observe"))
+	if observed.is_empty():
+		_machine_cue_history.erase(kind)
+		return {}
+	var history: Array = _machine_cue_history.get(kind, [])
+	if not history.is_empty():
+		var previous: Dictionary = history.back().cue
+		if previous.id != observed.id or previous.get("penalty") != observed.get("penalty") \
+				or previous.get("drop") != observed.get("drop"):
+			history.clear()
+	if history.is_empty() or float(history.back().time) != _time:
+		history.append({"time": _time, "cue": observed})
+		if history.size() > HISTORY_CAP:
+			history.pop_front()
+	_machine_cue_history[kind] = history
+	for i in range(history.size() - 1, -1, -1):
+		if float(history[i].time) <= _time - reaction_time + 0.000001:
+			return history[i].cue
+	return {}
 
 
 func distance_to(pos: Vector3) -> float:
@@ -647,6 +741,9 @@ func steer_to(target: Vector3, urgency: float = 1.0) -> void:
 	var me := self_body()
 	if me == null:
 		return
+	var arena := ctx.arena as Arena
+	if arena != null:
+		target = arena.walking_waypoint(me.global_position, target)
 	var to := target - me.global_position
 	move = Vector2(to.x, to.z)
 	if move.length() > 0.05:
@@ -685,6 +782,29 @@ func drive_to(target: Vector3, reverse_when_stuck: bool = true) -> void:
 	move = Vector2(-steer, -maxf(throttle, 0.25))
 
 
+## Own momentum determines whether a vehicle can afford to turn before braking.
+func retreat_drive_from_edge() -> bool:
+	var me := self_body()
+	var arena := ctx.arena as Arena
+	if me == null or arena == null:
+		return false
+	var margin := arena.edge_distance(me.global_position)
+	if margin >= lerpf(3.5, 9.0, clampf(me.speed_ratio(), 0.0, 1.0)):
+		return false
+	var retreat := arena.retreat_point(me.global_position)
+	drive_to(retreat)
+	var inward := retreat - me.global_position
+	inward.y = 0.0
+	if inward.length_squared() > 0.01:
+		inward = inward.normalized()
+		var outward_speed := maxf(0.0, -me.velocity.dot(inward))
+		var stopping_distance := outward_speed * outward_speed / maxf(2.0 * me.acceleration, 0.1) \
+			+ outward_speed * decision_interval
+		if me.facing.dot(inward) < 0.0 and stopping_distance >= maxf(0.0, margin - 1.0):
+			move.y = 1.0
+	return true
+
+
 func steer_away(target: Vector3, urgency: float = 1.0) -> void:
 	var me := self_body()
 	if me == null:
@@ -718,6 +838,11 @@ func press(button: int) -> void:
 	bits |= button
 
 
+## One physics-frame request for actions consumed through just_pressed().
+func tap(button: int) -> void:
+	_tap_bits |= button
+
+
 func maybe_dash(chance_scale: float = 1.0) -> void:
 	var me := self_body()
 	if me == null or not me.can_dash:
@@ -748,23 +873,23 @@ func maybe_dash(chance_scale: float = 1.0) -> void:
 	if fall_is_lethal and rng.randf() < edge_awareness:
 		var arena := ctx.arena as Arena
 		if arena != null:
-			var dir := Vector3(move.x, 0.0, move.y)
+			var dir := me.dash_direction(move)
 			if dir.length_squared() > 0.05:
 				var land: Vector3 = me.global_position + dir.normalized() * 5.0
 				if arena.edge_distance(land) < 1.2:
 					return
-	press(Btn.DASH)
+	tap(Btn.DASH)
 
 
 func maybe_attack(target_slot: int, range_: float = 2.4) -> void:
 	var me := self_body()
-	if me == null or not me.can_attack or target_slot < 0 or not can_observe(ctx.fighter(target_slot)):
+	if me == null or not me.can_attack or not can_target(target_slot):
 		return
 	var target := predict(target_slot, 0.2)
 	if me.global_position.distance_to(target) > range_:
 		return
 	if rng.randf() < attack_chance:
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 
 
 func maybe_jump(chance: float = 0.5) -> void:
@@ -785,12 +910,34 @@ func nearest_in_group(group: String, tree: SceneTree) -> Node3D:
 	for n in tree.get_nodes_in_group(group):
 		if not (n is Node3D) or not is_instance_valid(n):
 			continue
-		if not can_observe(n):
+		var position := perceived_object_position(n)
+		if position == Vector3.INF:
 			continue
-		if n.has_method("is_available") and not n.call("is_available"):
-			continue
-		var d: float = me.global_position.distance_squared_to(n.global_position)
+		var d: float = me.global_position.distance_squared_to(position)
 		if d < best_d:
 			best_d = d
 			best = n
 	return best
+
+
+## Shared visible-object positions: first acquisition and subsequent motion
+## both use the same profile delay as rival perception.
+func perceived_object_position(node: Node3D) -> Vector3:
+	if not is_instance_valid(node):
+		return Vector3.INF
+	var id := node.get_instance_id()
+	if not can_observe(node) or (node.has_method("is_available") and not node.call("is_available")):
+		_object_history.erase(id)
+		return Vector3.INF
+	var history: Array = _object_history.get(id, [])
+	if history.is_empty() or float(history.back().time) < _time:
+		history.append({"time": _time, "position": node.global_position})
+		if history.size() > HISTORY_CAP:
+			history.pop_front()
+	_object_history[id] = history
+	if reaction_time <= 0.0:
+		return node.global_position
+	for index in range(history.size() - 1, -1, -1):
+		if float(history[index].time) <= _time - reaction_time + 0.000001:
+			return history[index].position
+	return Vector3.INF

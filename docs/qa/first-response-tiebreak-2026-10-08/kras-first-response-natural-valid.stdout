@@ -1,0 +1,21 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+[INF][Replay] saved replay 1791438627_39ca423127209069c501311def3c0beb (3.8s, 8.1 KB)
+NATURAL_DECIDER {"champion":3,"contenders":2,"duration":3.83333333333332,"finished_naturally":true,"resolve_sequence":1,"seed":209,"signal_sequence":1,"ticks":640,"time_remaining":16.1666666666669,"tournament_complete":true,"winners":[1]}
+[INF][Replay] saved replay 1791438627_6115714a8887ef2748cfa4cf688d2990 (3.0s, 6.5 KB)
+NATURAL_DECIDER {"champion":1,"contenders":2,"duration":2.94999999999999,"finished_naturally":true,"resolve_sequence":1,"seed":502,"signal_sequence":1,"ticks":587,"time_remaining":17.0500000000002,"tournament_complete":true,"winners":[0]}
+[INF][Replay] saved replay 1791438627_b703f73cc7af1425e32539c1dd3483d5 (4.3s, 9.0 KB)
+NATURAL_DECIDER {"champion":1,"contenders":2,"duration":4.26666666666666,"finished_naturally":true,"resolve_sequence":1,"seed":2003,"signal_sequence":1,"ticks":666,"time_remaining":15.7333333333335,"tournament_complete":true,"winners":[0]}
+[INF][Replay] saved replay 1791438627_20fe6b4b3339eca9210af609a63a9355 (2.5s, 5.7 KB)
+NATURAL_DECIDER {"champion":3,"contenders":2,"duration":2.53333333333333,"finished_naturally":true,"resolve_sequence":1,"seed":4011,"signal_sequence":1,"ticks":562,"time_remaining":17.4666666666668,"tournament_complete":true,"winners":[1]}
+[INF][Replay] saved replay 1791438628_98f1c033ce261756a4849cce8d44ed66 (3.9s, 15.3 KB)
+NATURAL_DECIDER {"champion":1,"contenders":4,"duration":3.84999999999999,"finished_naturally":true,"resolve_sequence":1,"seed":209,"signal_sequence":1,"ticks":641,"time_remaining":16.1500000000002,"tournament_complete":true,"winners":[1]}
+[INF][Replay] saved replay 1791438628_743ef1a362887ae482815f4f5a870d03 (3.3s, 13.2 KB)
+NATURAL_DECIDER {"champion":0,"contenders":4,"duration":3.28333333333333,"finished_naturally":true,"resolve_sequence":1,"seed":502,"signal_sequence":1,"ticks":607,"time_remaining":16.7166666666669,"tournament_complete":true,"winners":[0]}
+[INF][Replay] saved replay 1791438628_9b93f6efd51f36119ef20c16f71faa68 (4.3s, 17.1 KB)
+NATURAL_DECIDER {"champion":3,"contenders":4,"duration":4.31666666666666,"finished_naturally":true,"resolve_sequence":1,"seed":2003,"signal_sequence":1,"ticks":669,"time_remaining":15.6833333333335,"tournament_complete":true,"winners":[3]}
+[INF][Replay] saved replay 1791438628_0f17eaa61f52d208dc2f8dcafb69c7bb (2.7s, 11.1 KB)
+NATURAL_DECIDER {"champion":2,"contenders":4,"duration":2.7,"finished_naturally":true,"resolve_sequence":1,"seed":4011,"signal_sequence":1,"ticks":572,"time_remaining":17.3000000000002,"tournament_complete":true,"winners":[2]}

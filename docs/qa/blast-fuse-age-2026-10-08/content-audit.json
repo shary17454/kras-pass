@@ -1,0 +1,3587 @@
+{
+  "balance_generated": "not measured",
+  "balance_runs_per_game": 0,
+  "counts": {
+    "BROKEN": 0,
+    "NEEDS_BALANCE": 38,
+    "NEEDS_POLISH": 1,
+    "READY": 0,
+    "REWORK": 0
+  },
+  "games": [
+    {
+      "arenas": [
+        "tank_foundry",
+        "tank_oasis",
+        "tank_frost"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "vehicle",
+      "code": {
+        "ai": "res://src/ai/brains/tank_brain.gd",
+        "camera_mode": 5,
+        "controller": "res://src/minigames/tank_arena.gd",
+        "inheritance": [
+          "res://src/minigames/tank_arena.gd",
+          "res://src/minigames/turret_duel.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 1,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 150.0,
+      "id": "tank_arena",
+      "input": "atv",
+      "name_ar": "تحدي دبابات البر",
+      "name_key": "game.tank_arena.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "vortex_ring",
+        "storm_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "push_out",
+      "code": {
+        "ai": "res://src/ai/brains/generic_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/ring_rumble.gd",
+        "inheritance": [
+          "res://src/minigames/ring_rumble.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 95.0,
+      "id": "ring_rumble",
+      "input": "movement_action",
+      "name_ar": "زحام الحلقة",
+      "name_key": "game.ring_rumble.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "crumble_court"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "push_out",
+      "code": {
+        "ai": "res://src/ai/brains/platform_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/crumble_court.gd",
+        "inheritance": [
+          "res://src/minigames/crumble_court.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 90.0,
+      "id": "crumble_court",
+      "input": "movement_action",
+      "name_ar": "الساحة المنهارة",
+      "name_key": "game.crumble_court.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "bumper_bowl"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "push_out",
+      "code": {
+        "ai": "res://src/ai/brains/generic_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/bumper_bowl.gd",
+        "inheritance": [
+          "res://src/minigames/bumper_bowl.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 80.0,
+      "id": "bumper_bowl",
+      "input": "movement_action",
+      "name_ar": "وعاء المصدّات",
+      "name_key": "game.bumper_bowl.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "vortex_ring",
+        "storm_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "push_out",
+      "code": {
+        "ai": "res://src/ai/brains/bomber_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/fawda.gd",
+        "inheritance": [
+          "res://src/minigames/fawda.gd",
+          "res://src/minigames/ring_rumble.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 95.0,
+      "id": "fawda",
+      "input": "movement_action",
+      "name_ar": "الفوضى",
+      "name_key": "game.fawda.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "quad_court"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "ball_zone",
+      "code": {
+        "ai": "res://src/ai/brains/keeper_brain.gd",
+        "camera_mode": 7,
+        "controller": "res://src/minigames/goal_guard.gd",
+        "inheritance": [
+          "res://src/minigames/goal_guard.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 100.0,
+      "id": "goal_guard",
+      "input": "keeper",
+      "name_ar": "حارس المرمى",
+      "name_key": "game.goal_guard.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "quad_court"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "ball_zone",
+      "code": {
+        "ai": "res://src/ai/brains/magnet_keeper_brain.gd",
+        "camera_mode": 7,
+        "controller": "res://src/minigames/magnet_court.gd",
+        "inheritance": [
+          "res://src/minigames/magnet_court.gd",
+          "res://src/minigames/goal_guard.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 100.0,
+      "id": "magnet_court",
+      "input": "keeper",
+      "name_ar": "المغناطيس",
+      "name_key": "game.magnet_court.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "quad_court"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "ball_zone",
+      "code": {
+        "ai": "res://src/ai/brains/storm_keeper_brain.gd",
+        "camera_mode": 7,
+        "controller": "res://src/minigames/storm_heart.gd",
+        "inheritance": [
+          "res://src/minigames/storm_heart.gd",
+          "res://src/minigames/goal_guard.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 100.0,
+      "id": "storm_heart",
+      "input": "keeper",
+      "name_ar": "قلب العاصفة",
+      "name_key": "game.storm_heart.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "quad_court"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "ball_zone",
+      "code": {
+        "ai": "res://src/ai/brains/keeper_brain.gd",
+        "camera_mode": 7,
+        "controller": "res://src/minigames/sky_court.gd",
+        "inheritance": [
+          "res://src/minigames/sky_court.gd",
+          "res://src/minigames/goal_guard.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 100.0,
+      "id": "sky_court",
+      "input": "keeper",
+      "name_ar": "المنصة الطائرة",
+      "name_key": "game.sky_court.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "ember_pit"
+      ],
+      "balance_evidence": {
+        "attempted_runs": 96.0,
+        "avg_duration": 21.39375,
+        "avg_score": 5.13541666666667,
+        "baseline_seeds": [
+          1809001.0,
+          1809614.0,
+          1810227.0,
+          1810840.0,
+          1811453.0,
+          1812066.0,
+          1812679.0,
+          1813292.0,
+          1813905.0,
+          1814518.0,
+          1815131.0,
+          1815744.0,
+          1816357.0,
+          1816970.0,
+          1817583.0,
+          1818196.0,
+          1818809.0,
+          1819422.0,
+          1820035.0,
+          1820648.0,
+          1821261.0,
+          1821874.0,
+          1822487.0,
+          1823100.0,
+          1823713.0,
+          1824326.0,
+          1824939.0,
+          1825552.0,
+          1826165.0,
+          1826778.0,
+          1827391.0,
+          1828004.0,
+          1828617.0,
+          1829230.0,
+          1829843.0,
+          1830456.0,
+          1831069.0,
+          1831682.0,
+          1832295.0,
+          1832908.0,
+          1833521.0,
+          1834134.0,
+          1834747.0,
+          1835360.0,
+          1835973.0,
+          1836586.0,
+          1837199.0,
+          1837812.0,
+          1838425.0,
+          1839038.0,
+          1839651.0,
+          1840264.0,
+          1840877.0,
+          1841490.0,
+          1842103.0,
+          1842716.0,
+          1843329.0,
+          1843942.0,
+          1844555.0,
+          1845168.0,
+          1845781.0,
+          1846394.0,
+          1847007.0,
+          1847620.0,
+          1848233.0,
+          1848846.0,
+          1849459.0,
+          1850072.0,
+          1850685.0,
+          1851298.0,
+          1851911.0,
+          1852524.0,
+          1853137.0,
+          1853750.0,
+          1854363.0,
+          1854976.0,
+          1855589.0,
+          1856202.0,
+          1856815.0,
+          1857428.0,
+          1858041.0,
+          1858654.0,
+          1859267.0,
+          1859880.0,
+          1860493.0,
+          1861106.0,
+          1861719.0,
+          1862332.0,
+          1862945.0,
+          1863558.0,
+          1864171.0,
+          1864784.0,
+          1865397.0,
+          1866010.0,
+          1866623.0,
+          1867236.0
+        ],
+        "category": "ball_zone",
+        "character_bias": 0.0416666666666667,
+        "character_buckets": 8.0,
+        "difficulty_attempted": 48.0,
+        "difficulty_completed": 48.0,
+        "difficulty_pairing": "matched_seed_character",
+        "difficulty_samples": [
+          {
+            "character": "nabta",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              6.0,
+              8.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1804242.0
+          },
+          {
+            "character": "nabta",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              4.0,
+              3.0,
+              1.0
+            ],
+            "scores": [
+              6.0,
+              2.0,
+              4.0,
+              9.0
+            ],
+            "seed": 1804242.0
+          },
+          {
+            "character": "sakhra",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              3.0,
+              2.0,
+              4.0
+            ],
+            "scores": [
+              8.0,
+              4.0,
+              6.0,
+              2.0
+            ],
+            "seed": 1804339.0
+          },
+          {
+            "character": "sakhra",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              4.0,
+              3.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              2.0,
+              4.0,
+              7.0,
+              8.0
+            ],
+            "seed": 1804339.0
+          },
+          {
+            "character": "fanoos",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              4.0,
+              2.0,
+              3.0,
+              1.0
+            ],
+            "scores": [
+              2.0,
+              6.0,
+              4.0,
+              8.0
+            ],
+            "seed": 1804436.0
+          },
+          {
+            "character": "fanoos",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              4.0,
+              2.0,
+              1.0,
+              3.0
+            ],
+            "scores": [
+              2.0,
+              6.0,
+              8.0,
+              5.0
+            ],
+            "seed": 1804436.0
+          },
+          {
+            "character": "ramla",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              4.0,
+              2.0,
+              3.0
+            ],
+            "scores": [
+              8.0,
+              2.0,
+              6.0,
+              4.0
+            ],
+            "seed": 1804533.0
+          },
+          {
+            "character": "ramla",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              4.0,
+              1.0,
+              2.0,
+              3.0
+            ],
+            "scores": [
+              2.0,
+              8.0,
+              6.0,
+              4.0
+            ],
+            "seed": 1804533.0
+          },
+          {
+            "character": "barq",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              4.0,
+              3.0,
+              1.0,
+              2.0
+            ],
+            "scores": [
+              2.0,
+              4.0,
+              8.0,
+              6.0
+            ],
+            "seed": 1804630.0
+          },
+          {
+            "character": "barq",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              4.0,
+              1.0,
+              2.0
+            ],
+            "scores": [
+              4.0,
+              2.0,
+              8.0,
+              7.0
+            ],
+            "seed": 1804630.0
+          },
+          {
+            "character": "mowja",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              4.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              4.0,
+              2.0,
+              6.0,
+              8.0
+            ],
+            "seed": 1804727.0
+          },
+          {
+            "character": "mowja",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              4.0,
+              3.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              2.0,
+              4.0,
+              6.0,
+              9.0
+            ],
+            "seed": 1804727.0
+          },
+          {
+            "character": "ghaim",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              7.0,
+              8.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1804824.0
+          },
+          {
+            "character": "ghaim",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              3.0,
+              4.0,
+              1.0
+            ],
+            "scores": [
+              6.0,
+              4.0,
+              2.0,
+              8.0
+            ],
+            "seed": 1804824.0
+          },
+          {
+            "character": "turs",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              2.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              8.0,
+              6.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1804921.0
+          },
+          {
+            "character": "turs",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              2.0,
+              1.0,
+              4.0
+            ],
+            "scores": [
+              4.0,
+              7.0,
+              8.0,
+              2.0
+            ],
+            "seed": 1804921.0
+          },
+          {
+            "character": "nabta",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              2.0,
+              3.0,
+              4.0,
+              1.0
+            ],
+            "scores": [
+              6.0,
+              4.0,
+              2.0,
+              9.0
+            ],
+            "seed": 1805018.0
+          },
+          {
+            "character": "nabta",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              4.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              4.0,
+              2.0,
+              7.0,
+              8.0
+            ],
+            "seed": 1805018.0
+          },
+          {
+            "character": "sakhra",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              1.0,
+              2.0,
+              4.0
+            ],
+            "scores": [
+              4.0,
+              8.0,
+              6.0,
+              2.0
+            ],
+            "seed": 1805115.0
+          },
+          {
+            "character": "sakhra",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              6.0,
+              9.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1805115.0
+          },
+          {
+            "character": "fanoos",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              1.0,
+              2.0,
+              4.0
+            ],
+            "scores": [
+              4.0,
+              8.0,
+              7.0,
+              2.0
+            ],
+            "seed": 1805212.0
+          },
+          {
+            "character": "fanoos",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              2.0,
+              1.0,
+              4.0
+            ],
+            "scores": [
+              5.0,
+              6.0,
+              8.0,
+              2.0
+            ],
+            "seed": 1805212.0
+          },
+          {
+            "character": "ramla",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              4.0,
+              1.0,
+              2.0
+            ],
+            "scores": [
+              4.0,
+              2.0,
+              8.0,
+              6.0
+            ],
+            "seed": 1805309.0
+          },
+          {
+            "character": "ramla",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              1.0,
+              3.0,
+              4.0,
+              2.0
+            ],
+            "scores": [
+              8.0,
+              4.0,
+              2.0,
+              6.0
+            ],
+            "seed": 1805309.0
+          },
+          {
+            "character": "barq",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              4.0,
+              3.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              2.0,
+              5.0,
+              6.0,
+              8.0
+            ],
+            "seed": 1805406.0
+          },
+          {
+            "character": "barq",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              4.0,
+              1.0,
+              2.0
+            ],
+            "scores": [
+              4.0,
+              2.0,
+              8.0,
+              6.0
+            ],
+            "seed": 1805406.0
+          },
+          {
+            "character": "mowja",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              1.0,
+              4.0,
+              2.0
+            ],
+            "scores": [
+              4.0,
+              8.0,
+              2.0,
+              7.0
+            ],
+            "seed": 1805503.0
+          },
+          {
+            "character": "mowja",
+            "completed": true,
+            "details": [
+              {
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              1.0,
+              4.0,
+              2.0,
+              3.0
+            ],
+            "scores": [
+              9.0,
+              2.0,
+              6.0,
+              4.0
+            ],
+            "seed": 1805503.0
+          },
+          {
+            "character": "ghaim",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              2.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              8.0,
+              6.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1805600.0
+          },
+          {
+            "character": "ghaim",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              4.0,
+              1.0,
+              3.0,
+              2.0
+            ],
+            "scores": [
+              2.0,
+              8.0,
+              4.0,
+              6.0
+            ],
+            "seed": 1805600.0
+          },
+          {
+            "character": "turs",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              2.0,
+              4.0,
+              1.0
+            ],
+            "scores": [
+              4.0,
+              7.0,
+              2.0,
+              8.0
+            ],
+            "seed": 1805697.0
+          },
+          {
+            "character": "turs",
+            "completed": true,
+            "details": [
+              {
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              1.0,
+              4.0,
+              3.0,
+              2.0
+            ],
+            "scores": [
+              9.0,
+              2.0,
+              4.0,
+              6.0
+            ],
+            "seed": 1805697.0
+          },
+          {
+            "character": "nabta",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              2.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              8.0,
+              6.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1805794.0
+          },
+          {
+            "character": "nabta",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              2.0,
+              1.0,
+              4.0
+            ],
+            "scores": [
+              4.0,
+              6.0,
+              9.0,
+              2.0
+            ],
+            "seed": 1805794.0
+          },
+          {
+            "character": "sakhra",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              1.0,
+              4.0,
+              2.0
+            ],
+            "scores": [
+              4.0,
+              8.0,
+              2.0,
+              6.0
+            ],
+            "seed": 1805891.0
+          },
+          {
+            "character": "sakhra",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              4.0,
+              1.0,
+              3.0
+            ],
+            "scores": [
+              6.0,
+              2.0,
+              8.0,
+              4.0
+            ],
+            "seed": 1805891.0
+          },
+          {
+            "character": "fanoos",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              3.0,
+              4.0,
+              2.0
+            ],
+            "scores": [
+              8.0,
+              4.0,
+              2.0,
+              7.0
+            ],
+            "seed": 1805988.0
+          },
+          {
+            "character": "fanoos",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              4.0,
+              3.0,
+              1.0
+            ],
+            "scores": [
+              6.0,
+              2.0,
+              4.0,
+              8.0
+            ],
+            "seed": 1805988.0
+          },
+          {
+            "character": "ramla",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              1.0,
+              2.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              8.0,
+              6.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1806085.0
+          },
+          {
+            "character": "ramla",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              4.0,
+              3.0
+            ],
+            "scores": [
+              7.0,
+              8.0,
+              2.0,
+              4.0
+            ],
+            "seed": 1806085.0
+          },
+          {
+            "character": "barq",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              6.0,
+              8.0,
+              4.0,
+              2.0
+            ],
+            "seed": 1806182.0
+          },
+          {
+            "character": "barq",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              2.0,
+              3.0,
+              1.0,
+              4.0
+            ],
+            "scores": [
+              6.0,
+              4.0,
+              8.0,
+              2.0
+            ],
+            "seed": 1806182.0
+          },
+          {
+            "character": "mowja",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              3.0,
+              2.0,
+              1.0,
+              4.0
+            ],
+            "scores": [
+              4.0,
+              7.0,
+              8.0,
+              2.0
+            ],
+            "seed": 1806279.0
+          },
+          {
+            "character": "mowja",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {}
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              3.0,
+              4.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              4.0,
+              2.0,
+              6.0,
+              8.0
+            ],
+            "seed": 1806279.0
+          },
+          {
+            "character": "ghaim",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {},
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              3.0,
+              4.0
+            ],
+            "scores": [
+              6.0,
+              8.0,
+              5.0,
+              2.0
+            ],
+            "seed": 1806376.0
+          },
+          {
+            "character": "ghaim",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "knockouts": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              4.0,
+              3.0,
+              2.0,
+              1.0
+            ],
+            "scores": [
+              2.0,
+              4.0,
+              6.0,
+              9.0
+            ],
+            "seed": 1806376.0
+          },
+          {
+            "character": "turs",
+            "completed": true,
+            "details": [
+              {
+                "falls": 1.0,
+                "knockouts": 1.0
+              },
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              0.0,
+              1.0
+            ],
+            "places": [
+              2.0,
+              1.0,
+              4.0,
+              3.0
+            ],
+            "scores": [
+              7.0,
+              8.0,
+              2.0,
+              4.0
+            ],
+            "seed": 1806473.0
+          },
+          {
+            "character": "turs",
+            "completed": true,
+            "details": [
+              {},
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              },
+              {
+                "falls": 1.0
+              }
+            ],
+            "expert_slots": [
+              2.0,
+              3.0
+            ],
+            "places": [
+              1.0,
+              4.0,
+              2.0,
+              3.0
+            ],
+            "scores": [
+              8.0,
+              2.0,
+              6.0,
+              4.0
+            ],
+            "seed": 1806473.0
+          }
+        ],
+        "expert_edge": 0.558333333333333,
+        "flags": [],
+        "id": "blast_ball",
+        "name": "الكرة المتفجّرة",
+        "round_window": 90.0,
+        "runs": 96.0,
+        "sample_mode": "natural",
+        "seed_offset": 1800000.0,
+        "severity": 0.0,
+        "slot_bias": 0.0208333333333333,
+        "tie_rate": 0.0,
+        "wins_by_character": {
+          "barq": 12.0,
+          "fanoos": 5.0,
+          "ghaim": 13.0,
+          "mowja": 16.0,
+          "nabta": 14.0,
+          "ramla": 10.0,
+          "sakhra": 16.0,
+          "turs": 10.0
+        },
+        "wins_by_slot": [
+          24.0,
+          21.0,
+          26.0,
+          25.0
+        ],
+        "zero_score_runs": 0.0
+      },
+      "balance_evidence_issues": [],
+      "balance_flags": [],
+      "balance_source": "/tmp/kras-blast-age-expanded-1800000/report.json",
+      "boss": false,
+      "category": "ball_zone",
+      "code": {
+        "ai": "res://src/ai/brains/ball_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/blast_ball.gd",
+        "inheritance": [
+          "res://src/minigames/blast_ball.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 90.0,
+      "id": "blast_ball",
+      "input": "movement_action",
+      "name_ar": "الكرة المتفجّرة",
+      "name_key": "game.blast_ball.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Automated structure valid; game-specific playability and device QA not signed off",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_POLISH",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "scrap_yard"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "vehicle",
+      "code": {
+        "ai": "res://src/ai/brains/driver_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/scrap_karts.gd",
+        "inheritance": [
+          "res://src/minigames/scrap_karts.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 1,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 100.0,
+      "id": "scrap_karts",
+      "input": "steering",
+      "name_ar": "عربات الخردة",
+      "name_key": "game.scrap_karts.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "iron_flats"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "vehicle",
+      "code": {
+        "ai": "res://src/ai/brains/gunner_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/turret_duel.gd",
+        "inheritance": [
+          "res://src/minigames/turret_duel.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 1,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 95.0,
+      "id": "turret_duel",
+      "input": "steering",
+      "name_ar": "نزال المدافع",
+      "name_key": "game.turret_duel.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "gem_hollow",
+        "glass_terrace"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "collect",
+      "code": {
+        "ai": "res://src/ai/brains/collector_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/gem_grab.gd",
+        "inheritance": [
+          "res://src/minigames/gem_grab.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 85.0,
+      "id": "gem_grab",
+      "input": "movement_action",
+      "name_ar": "خطف الجواهر",
+      "name_key": "game.gem_grab.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "star_meadow"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "collect",
+      "code": {
+        "ai": "res://src/ai/brains/courier_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/star_rush.gd",
+        "inheritance": [
+          "res://src/minigames/star_rush.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 90.0,
+      "id": "star_rush",
+      "input": "movement_action",
+      "name_ar": "اندفاع النجوم",
+      "name_key": "game.star_rush.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "paint_grid"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "control",
+      "code": {
+        "ai": "res://src/ai/brains/painter_brain.gd",
+        "camera_mode": 1,
+        "controller": "res://src/minigames/paint_grid.gd",
+        "inheritance": [
+          "res://src/minigames/paint_grid.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 80.0,
+      "id": "paint_grid",
+      "input": "movement_action",
+      "name_ar": "شبكة الألوان",
+      "name_key": "game.paint_grid.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "paint_grid"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "control",
+      "code": {
+        "ai": "res://src/ai/brains/painter_brain.gd",
+        "camera_mode": 1,
+        "controller": "res://src/minigames/mnatiq.gd",
+        "inheritance": [
+          "res://src/minigames/mnatiq.gd",
+          "res://src/minigames/paint_grid.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 95.0,
+      "id": "mnatiq",
+      "input": "movement_action",
+      "name_ar": "المناطق",
+      "name_key": "game.mnatiq.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "paint_grid"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "control",
+      "code": {
+        "ai": "res://src/ai/brains/saboteur_painter_brain.gd",
+        "camera_mode": 1,
+        "controller": "res://src/minigames/mukharrib.gd",
+        "inheritance": [
+          "res://src/minigames/mukharrib.gd",
+          "res://src/minigames/paint_grid.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 95.0,
+      "id": "mukharrib",
+      "input": "movement_action",
+      "name_ar": "المخرب",
+      "name_key": "game.mukharrib.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "dune_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "control",
+      "code": {
+        "ai": "res://src/ai/brains/zone_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/zone_hold.gd",
+        "inheritance": [
+          "res://src/minigames/zone_hold.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 90.0,
+      "id": "zone_hold",
+      "input": "movement_action",
+      "name_ar": "احتلال المنطقة",
+      "name_key": "game.zone_hold.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "crate_yard"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "crates",
+      "code": {
+        "ai": "res://src/ai/brains/smasher_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/crate_smash.gd",
+        "inheritance": [
+          "res://src/minigames/crate_smash.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 75.0,
+      "id": "crate_smash",
+      "input": "movement_action",
+      "name_ar": "تحطيم الصناديق",
+      "name_key": "game.crate_smash.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "crate_yard"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "crates",
+      "code": {
+        "ai": "res://src/ai/brains/smasher_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/lab_crates.gd",
+        "inheritance": [
+          "res://src/minigames/lab_crates.gd",
+          "res://src/minigames/crate_smash.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 90.0,
+      "id": "lab_crates",
+      "input": "movement_action",
+      "name_ar": "المختبر",
+      "name_key": "game.lab_crates.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "relay_docks"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "crates",
+      "code": {
+        "ai": "res://src/ai/brains/courier_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/crate_relay.gd",
+        "inheritance": [
+          "res://src/minigames/crate_relay.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 85.0,
+      "id": "crate_relay",
+      "input": "movement_action",
+      "name_ar": "تناوب الصناديق",
+      "name_key": "game.crate_relay.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "hurdle_track"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "race",
+      "code": {
+        "ai": "res://src/ai/brains/runner_brain.gd",
+        "camera_mode": 4,
+        "controller": "res://src/minigames/hurdle_dash.gd",
+        "inheritance": [
+          "res://src/minigames/hurdle_dash.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 2
+      },
+      "duration": 70.0,
+      "id": "hurdle_dash",
+      "input": "movement_action",
+      "name_ar": "سباق الحواجز",
+      "name_key": "game.hurdle_dash.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "circuit_loop"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "race",
+      "code": {
+        "ai": "res://src/ai/brains/racer_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/kart_sprint.gd",
+        "inheritance": [
+          "res://src/minigames/kart_sprint.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 1,
+        "round_clock": false,
+        "scoring": 2
+      },
+      "duration": 120.0,
+      "id": "kart_sprint",
+      "input": "steering",
+      "name_ar": "سباق العربات",
+      "name_key": "game.kart_sprint.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "color_floor"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "reaction",
+      "code": {
+        "ai": "res://src/ai/brains/color_brain.gd",
+        "camera_mode": 1,
+        "controller": "res://src/minigames/color_stand.gd",
+        "inheritance": [
+          "res://src/minigames/color_stand.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 90.0,
+      "id": "color_stand",
+      "input": "memory",
+      "name_ar": "قف على اللون",
+      "name_key": "game.color_stand.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "echo_hall"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "reaction",
+      "code": {
+        "ai": "res://src/ai/brains/echo_brain.gd",
+        "camera_mode": 1,
+        "controller": "res://src/minigames/symbol_echo.gd",
+        "inheritance": [
+          "res://src/minigames/symbol_echo.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 95.0,
+      "id": "symbol_echo",
+      "input": "memory",
+      "name_ar": "صدى الرموز",
+      "name_key": "game.symbol_echo.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "draw_stage"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "reaction",
+      "code": {
+        "ai": "res://src/ai/brains/draw_brain.gd",
+        "camera_mode": 2,
+        "controller": "res://src/minigames/quick_draw.gd",
+        "inheritance": [
+          "res://src/minigames/quick_draw.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 75.0,
+      "id": "quick_draw",
+      "input": "reaction",
+      "name_ar": "أسرع يد",
+      "name_key": "game.quick_draw.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "tide_spire"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "survival",
+      "code": {
+        "ai": "res://src/ai/brains/climber_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/rising_tide.gd",
+        "inheritance": [
+          "res://src/minigames/rising_tide.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 120.0,
+      "id": "rising_tide",
+      "input": "movement_action",
+      "name_ar": "المدّ الصاعد",
+      "name_key": "game.rising_tide.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "sweeper_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "survival",
+      "code": {
+        "ai": "res://src/ai/brains/dodger_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/sweeper_storm.gd",
+        "inheritance": [
+          "res://src/minigames/sweeper_storm.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 110.0,
+      "id": "sweeper_storm",
+      "input": "movement_action",
+      "name_ar": "عاصفة الأذرع",
+      "name_key": "game.sweeper_storm.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "duel_pit",
+        "iron_flats"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "combat",
+      "code": {
+        "ai": "res://src/ai/brains/duellist_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/duel_pit.gd",
+        "inheritance": [
+          "res://src/minigames/duel_pit.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 3
+      },
+      "duration": 110.0,
+      "id": "duel_pit",
+      "input": "dual_action",
+      "name_ar": "حفرة النزال",
+      "name_key": "game.duel_pit.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "crate_yard"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": true,
+      "category": "combat",
+      "code": {
+        "ai": "res://src/ai/brains/boss_hunter_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/boss_forge.gd",
+        "inheritance": [
+          "res://src/minigames/boss_forge.gd",
+          "res://src/minigames/boss_controller.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 150.0,
+      "id": "boss_forge",
+      "input": "movement_action",
+      "name_ar": "حارس المسبك",
+      "name_key": "game.boss_forge.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "vortex_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": true,
+      "category": "combat",
+      "code": {
+        "ai": "res://src/ai/brains/boss_hunter_brain.gd",
+        "camera_mode": 1,
+        "controller": "res://src/minigames/boss_colossus.gd",
+        "inheritance": [
+          "res://src/minigames/boss_colossus.gd",
+          "res://src/minigames/boss_controller.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 150.0,
+      "id": "boss_colossus",
+      "input": "movement_action",
+      "name_ar": "العملاق",
+      "name_key": "game.boss_colossus.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "iron_flats"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": true,
+      "category": "combat",
+      "code": {
+        "ai": "res://src/ai/brains/boss_hunter_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/boss_dreadnought.gd",
+        "inheritance": [
+          "res://src/minigames/boss_dreadnought.gd",
+          "res://src/minigames/boss_controller.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 150.0,
+      "id": "boss_dreadnought",
+      "input": "movement_action",
+      "name_ar": "المدرعة",
+      "name_key": "game.boss_dreadnought.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "vortex_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": true,
+      "category": "combat",
+      "code": {
+        "ai": "res://src/ai/brains/boss_hunter_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/boss_sovereign.gd",
+        "inheritance": [
+          "res://src/minigames/boss_sovereign.gd",
+          "res://src/minigames/boss_controller.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 150.0,
+      "id": "boss_sovereign",
+      "input": "movement_action",
+      "name_ar": "السيّد",
+      "name_key": "game.boss_sovereign.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "dune_circuit",
+        "neon_spiral",
+        "frost_hairpin",
+        "magma_ring",
+        "sky_causeway",
+        "alula_rain",
+        "sinbad_coast",
+        "pharaoh_valley"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "race",
+      "code": {
+        "ai": "res://src/ai/brains/racer_armed_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/sabaq_sawarikh.gd",
+        "inheritance": [
+          "res://src/minigames/sabaq_sawarikh.gd",
+          "res://src/minigames/kart_sprint.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 1,
+        "round_clock": false,
+        "scoring": 2
+      },
+      "duration": 140.0,
+      "id": "sabaq_sawarikh",
+      "input": "atv",
+      "name_ar": "سباق الصواريخ",
+      "name_key": "game.sabaq_sawarikh.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "star_meadow",
+        "gem_hollow"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "control",
+      "code": {
+        "ai": "res://src/ai/brains/relic_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/relic_hold.gd",
+        "inheritance": [
+          "res://src/minigames/relic_hold.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 95.0,
+      "id": "relic_hold",
+      "input": "movement_action",
+      "name_ar": "حِرْز",
+      "name_key": "game.relic_hold.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "star_meadow",
+        "paint_grid"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "control",
+      "code": {
+        "ai": "res://src/ai/brains/tag_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/tag_hunt.gd",
+        "inheritance": [
+          "res://src/minigames/tag_hunt.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 90.0,
+      "id": "tag_hunt",
+      "input": "movement_action",
+      "name_ar": "المطارد",
+      "name_key": "game.tag_hunt.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "iron_flats",
+        "crate_yard"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "crates",
+      "code": {
+        "ai": "res://src/ai/brains/siege_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/base_siege.gd",
+        "inheritance": [
+          "res://src/minigames/base_siege.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 105.0,
+      "id": "base_siege",
+      "input": "movement_action",
+      "name_ar": "حصار القواعد",
+      "name_key": "game.base_siege.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "vortex_ring",
+        "storm_ring"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "push_out",
+      "code": {
+        "ai": "res://src/ai/brains/generic_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/drift_floes.gd",
+        "inheritance": [
+          "res://src/minigames/drift_floes.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 1
+      },
+      "duration": 100.0,
+      "id": "drift_floes",
+      "input": "movement_action",
+      "name_ar": "الألواح الجارفة",
+      "name_key": "game.drift_floes.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    },
+    {
+      "arenas": [
+        "sweeper_ring",
+        "bumper_bowl"
+      ],
+      "balance_evidence": {},
+      "balance_evidence_issues": [
+        "missing, changed or stale simulation source",
+        "unverified engine version",
+        "natural round evidence required",
+        "incomplete baseline: attempted_runs",
+        "incomplete baseline: runs",
+        "incomplete paired difficulty: difficulty_attempted",
+        "incomplete paired difficulty: difficulty_completed",
+        "matched difficulty policy required",
+        "invalid balance flags"
+      ],
+      "balance_flags": [],
+      "balance_source": "not measured",
+      "boss": false,
+      "category": "push_out",
+      "code": {
+        "ai": "res://src/ai/brains/duo_brain.gd",
+        "camera_mode": 0,
+        "controller": "res://src/minigames/duo_clash.gd",
+        "inheritance": [
+          "res://src/minigames/duo_clash.gd",
+          "res://src/minigames/minigame_controller.gd"
+        ],
+        "locomotion": 0,
+        "round_clock": true,
+        "scoring": 0
+      },
+      "duration": 95.0,
+      "id": "duo_clash",
+      "input": "movement_action",
+      "name_ar": "نزال الثنائيات",
+      "name_key": "game.duo_clash.name",
+      "players": [
+        2,
+        4
+      ],
+      "reason": "Balance evidence is missing, stale or incomplete: missing, changed or stale simulation source; unverified engine version; natural round evidence required; incomplete baseline: attempted_runs; incomplete baseline: runs; incomplete paired difficulty: difficulty_attempted; incomplete paired difficulty: difficulty_completed; matched difficulty policy required; invalid balance flags",
+      "release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required.",
+      "status": "NEEDS_BALANCE",
+      "validation_errors": []
+    }
+  ],
+  "generated": "2026-10-08T07:55:08",
+  "rechecks": [
+    "/tmp/kras-blast-age-expanded-1800000/report.json"
+  ],
+  "simulation_source_fingerprint": "160a0600b0616ed7e26dc2706782afdec832130ea902dd46caf3fb20ab7af1c1"
+}

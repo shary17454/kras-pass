@@ -13,6 +13,14 @@ func run(t: TestHarness, host: Node) -> void:
 		camera.projection = projection
 		t.test("projection %s visible and behind points" % projection)
 		t.ok(OffscreenPlayerCue.project(camera, Vector3(0, 0, -10), bounds).is_empty(), "visible player has no edge marker")
+		for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+			var screen := viewport.size * 0.5
+			var usable := Rect2(screen - Vector2(50, 50) - direction * 150.0, Vector2(100, 100))
+			var obscured := OffscreenPlayerCue.project(camera, Vector3(0, 0, -10), usable)
+			t.ok(not obscured.is_empty(), "HUD-covered player retains a cue for either camera projection")
+			if not obscured.is_empty():
+				t.ok(usable.grow(0.01).has_point(obscured.position), "covered cue stays within its usable bounds")
+				t.ok(obscured.direction.is_equal_approx(direction), "covered cue points toward the actual screen position")
 		var behind := OffscreenPlayerCue.project(camera, Vector3(0, 0, 10), bounds)
 		t.ok(not behind.is_empty(), "behind-camera player retains a recovery cue")
 		t.ok(behind.direction.y > 0.0, "straight behind defaults to bottom, not a NaN direction")
@@ -29,6 +37,12 @@ func run(t: TestHarness, host: Node) -> void:
 	var portrait := OffscreenPlayerCue.project(camera, Vector3(100, 0, -10), bounds)
 	t.ok(bounds.grow(0.01).has_point(portrait.position), "portrait layout uses its own safe rectangle")
 	t.ok(portrait.direction.x > 0.0, "right target points right")
+	var covered_bounds := Rect2(40, 480, 640, 120)
+	var covered := OffscreenPlayerCue.project(camera, Vector3(0, 0, -10), covered_bounds)
+	t.ok(not covered.is_empty(), "player inside the camera but below the playable HUD region retains a recovery cue")
+	if not covered.is_empty():
+		t.ok(covered_bounds.grow(0.01).has_point(covered.position), "HUD-covered player cue stays within the usable region")
+		t.ok(covered.direction.y > 0.0, "covered player below the usable region points down")
 	t.ok(OffscreenPlayerCue.project(camera, Vector3.ZERO, Rect2()).is_empty(), "crowded layout never produces invalid positions")
 	var grouped: Array[Dictionary] = []
 	for slot in 4:

@@ -1,0 +1,653 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 11.2284722222223,
+      "avg_score": 930.71875,
+      "baseline_seeds": [
+        2709001,
+        2709614,
+        2710227,
+        2710840,
+        2711453,
+        2712066,
+        2712679,
+        2713292,
+        2713905,
+        2714518,
+        2715131,
+        2715744,
+        2716357,
+        2716970,
+        2717583,
+        2718196,
+        2718809,
+        2719422,
+        2720035,
+        2720648,
+        2721261,
+        2721874,
+        2722487,
+        2723100
+      ],
+      "category": "race",
+      "character_bias": 0.0833333333333333,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "time": 758
+            },
+            {
+              "time": 670
+            },
+            {
+              "time": 858
+            },
+            {
+              "time": 1408
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            758,
+            670,
+            858,
+            1408
+          ],
+          "seed": 2704242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "time": 1782
+            },
+            {
+              "time": 1547
+            },
+            {
+              "time": 705
+            },
+            {
+              "time": 668
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            1782,
+            1547,
+            705,
+            668
+          ],
+          "seed": 2704242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "time": 808
+            },
+            {
+              "time": 757
+            },
+            {
+              "time": 1547
+            },
+            {
+              "time": 1043
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            4,
+            3
+          ],
+          "scores": [
+            808,
+            757,
+            1547,
+            1043
+          ],
+          "seed": 2704339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "time": 1295
+            },
+            {
+              "time": 1147
+            },
+            {
+              "time": 695
+            },
+            {
+              "time": 825
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            1295,
+            1147,
+            695,
+            825
+          ],
+          "seed": 2704339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "time": 775
+            },
+            {
+              "time": 677
+            },
+            {
+              "time": 1247
+            },
+            {
+              "time": 1305
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            775,
+            677,
+            1247,
+            1305
+          ],
+          "seed": 2704436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "time": 1013
+            },
+            {
+              "time": 1012
+            },
+            {
+              "time": 637
+            },
+            {
+              "time": 698
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            1013,
+            1012,
+            637,
+            698
+          ],
+          "seed": 2704436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "time": 677
+            },
+            {
+              "time": 647
+            },
+            {
+              "time": 1195
+            },
+            {
+              "time": 1560
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            677,
+            647,
+            1195,
+            1560
+          ],
+          "seed": 2704533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "time": 868
+            },
+            {
+              "time": 917
+            },
+            {
+              "time": 820
+            },
+            {
+              "time": 622
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            868,
+            917,
+            820,
+            622
+          ],
+          "seed": 2704533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "time": 733
+            },
+            {
+              "time": 680
+            },
+            {
+              "time": 1905
+            },
+            {
+              "time": 1127
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            4,
+            3
+          ],
+          "scores": [
+            733,
+            680,
+            1905,
+            1127
+          ],
+          "seed": 2704630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "time": 952
+            },
+            {
+              "time": 957
+            },
+            {
+              "time": 610
+            },
+            {
+              "time": 733
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            952,
+            957,
+            610,
+            733
+          ],
+          "seed": 2704630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "time": 698
+            },
+            {
+              "time": 765
+            },
+            {
+              "time": 927
+            },
+            {
+              "time": 1012
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "scores": [
+            698,
+            765,
+            927,
+            1012
+          ],
+          "seed": 2704727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "time": 2195
+            },
+            {
+              "time": 1023
+            },
+            {
+              "time": 737
+            },
+            {
+              "time": 787
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            2195,
+            1023,
+            737,
+            787
+          ],
+          "seed": 2704727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "time": 638
+            },
+            {
+              "time": 688
+            },
+            {
+              "time": 1032
+            },
+            {
+              "time": 1103
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "scores": [
+            638,
+            688,
+            1032,
+            1103
+          ],
+          "seed": 2704824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "time": 1272
+            },
+            {
+              "time": 975
+            },
+            {
+              "time": 760
+            },
+            {
+              "time": 660
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            1272,
+            975,
+            760,
+            660
+          ],
+          "seed": 2704824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "time": 715
+            },
+            {
+              "time": 675
+            },
+            {
+              "time": 1030
+            },
+            {
+              "time": 1390
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            715,
+            675,
+            1030,
+            1390
+          ],
+          "seed": 2704921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "time": 1103
+            },
+            {
+              "time": 1168
+            },
+            {
+              "time": 753
+            },
+            {
+              "time": 772
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            1103,
+            1168,
+            753,
+            772
+          ],
+          "seed": 2704921
+        }
+      ],
+      "expert_edge": 0.7,
+      "flags": [
+        "spawn slot advantage"
+      ],
+      "id": "hurdle_dash",
+      "name": "سباق الحواجز",
+      "round_window": 70.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 2700000,
+      "severity": 1,
+      "slot_bias": 0.25,
+      "tie_rate": 0.0,
+      "wins_by_character": {
+        "barq": 2,
+        "fanoos": 2,
+        "ghaim": 2,
+        "mowja": 5,
+        "nabta": 4,
+        "ramla": 5,
+        "sakhra": 2,
+        "turs": 2
+      },
+      "wins_by_slot": [
+        6,
+        3,
+        12,
+        3
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-08T10:07:20",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 2705502,
+      "flags": [],
+      "id": "hurdle_dash",
+      "mutated_ok": true,
+      "mutated_seed": 2705501,
+      "name": "سباق الحواجز",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 2700000,
+  "simulation_source_end": "ed4d18a506eacd11444c37d384019bdbd1be2a20ee07c56eb59c9934f62c5664",
+  "simulation_source_start": "ed4d18a506eacd11444c37d384019bdbd1be2a20ee07c56eb59c9934f62c5664"
+}

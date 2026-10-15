@@ -21,6 +21,8 @@ func run(t: TestHarness, host: Node) -> void:
 	game.process_respawns(0.75)
 	t.ok(game.is_recovering(1), "real fall starts the original rescue process")
 	var replica = Replica.new()
+	var sample_time := {"now": 1000}
+	replica.receive_clock = func(): return sample_time.now
 	var packet := _packet(replica, source)
 	t.ok(replica.accept(packet, 4, "kart_sprint", "circuit_loop", game._checkpoints.size()), "finished and rescued racers survive JSON serialization")
 	t.ok(not replica.accept(packet, 4, "kart_sprint", "circuit_loop", game._checkpoints.size() + 1), "wrong course geometry rejected before rendering")
@@ -118,6 +120,7 @@ func run(t: TestHarness, host: Node) -> void:
 	AudioManager._last_played.erase("tick")
 	AudioManager._last_played.erase("dash")
 	voice = AudioManager._next_voice
+	sample_time.now += 1000
 	t.ok(replica.accept(packet, 4, "kart_sprint"), "new real lap and boost accepted")
 	replica.render(guest, 0.016)
 	t.equal(AudioManager._next_voice, (voice + 2) % AudioManager.SFX_VOICES, "fresh lap and boost each play once")
@@ -126,6 +129,37 @@ func run(t: TestHarness, host: Node) -> void:
 	voice = AudioManager._next_voice
 	replica.render(guest, 0.016)
 	t.equal(AudioManager._next_voice, voice, "duplicates remain quiet without relying on audio debounce")
+	AudioManager.enabled = false
+	source.ctx.fighter(2).global_position = game._boost_pads[2].pos + Vector3.UP
+	var previous_boost: int = game.boost_serial[2]
+	game._check_boost(2, source.ctx.fighter(2), 2.01)
+	game._check_boost(2, source.ctx.fighter(2), 1.0 / 60.0)
+	t.equal(game.boost_serial[2], previous_boost + 1, "late snapshot contains a real fresh boost event")
+	packet = _packet(replica, source)
+	sample_time.now += 1001
+	AudioManager.enabled = true
+	AudioManager._last_played.erase("dash")
+	voice = AudioManager._next_voice
+	t.ok(replica.accept(packet, 4, "kart_sprint"), "late valid progress remains accepted")
+	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, voice, "1001ms gap suppresses obsolete boost audio")
+	sample_time.now += 50
+	t.ok(replica.accept(packet, 4, "kart_sprint"), "same progress can arrive again promptly")
+	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, voice, "prompt duplicate cannot revive a stale sound")
+	AudioManager.enabled = false
+	source.ctx.fighter(2).global_position = game._boost_pads[3].pos + Vector3.UP
+	previous_boost = game.boost_serial[2]
+	game._check_boost(2, source.ctx.fighter(2), 2.01)
+	game._check_boost(2, source.ctx.fighter(2), 1.0 / 60.0)
+	t.equal(game.boost_serial[2], previous_boost + 1, "timely snapshot contains another real boost event")
+	packet = _packet(replica, source)
+	sample_time.now += 50
+	AudioManager.enabled = true
+	AudioManager._last_played.erase("dash")
+	t.ok(replica.accept(packet, 4, "kart_sprint"), "fresh boost after late progress is accepted")
+	replica.render(guest, 0.016)
+	t.equal(AudioManager._next_voice, (voice + 1) % AudioManager.SFX_VOICES, "new timely boost still plays once")
 	AudioManager.enabled = false
 	game.process_respawns(3.0)
 	_finish_checkpoints(game, source.ctx.fighter(2))
