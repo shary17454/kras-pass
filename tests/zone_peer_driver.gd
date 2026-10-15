@@ -1,5 +1,17 @@
 extends RefCounted
 
+const CAPTURE_TURN_MS := 6000
+
+
+static func minimum_match_seconds(player_count: int) -> float:
+	return float(CAPTURE_TURN_MS) * float(maxi(1, player_count) + 1) / 1000.0
+
+
+static func capture_owner(elapsed_ms: int, player_count: int) -> int:
+	if player_count <= 0:
+		return -1
+	return int(maxi(0, elapsed_ms) / CAPTURE_TURN_MS) % player_count
+
 
 static func input(arena: Arena, fighters: Array, slot: int, zone: Vector3,
 		radius: float, elapsed_ms: int) -> InputFrame:
@@ -7,13 +19,16 @@ static func input(arena: Arena, fighters: Array, slot: int, zone: Vector3,
 	var me: Fighter = fighters[slot]
 	var p := me.global_position - arena.global_position
 	var offset := zone - arena.global_position
-	var angle := atan2(offset.z, offset.x) + slot * 0.9
+	var angle := atan2(offset.z, offset.x) + (slot + 1) * 0.9
 	var current := atan2(p.z, p.x)
 	var next := current + clampf(wrapf(angle - current, -PI, PI), -0.25, 0.25)
 	var target := arena.global_position + Vector3(cos(next), 0, sin(next)) * arena.def.radius * 0.72
+	var capturing := slot == capture_owner(elapsed_ms, fighters.size())
+	if capturing:
+		target = zone
 	var flat := me.global_position - zone
 	flat.y = 0.0
-	if flat.length() <= radius:
+	if capturing and flat.length() <= radius:
 		var nearest := INF
 		var rival: Fighter = null
 		for other: Fighter in fighters:

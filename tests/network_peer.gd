@@ -372,10 +372,14 @@ func _start(cfg: MatchConfig) -> void:
 	round_snapshot_start = snapshots
 	draw_tap_sequence = -1
 	observed_draw_response_prompts.clear()
+	observed_zone_score = false
 	observed_remote_input_slots.clear()
 	if game_id == "duo_clash":
 		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
+	if game_id == "zone_hold":
+		cfg.duration_override = maxf(cfg.duration_override,
+			preload("res://tests/zone_peer_driver.gd").minimum_match_seconds(cfg.players.size()))
 	preload("res://tests/network_smoke_config.gd").configure_boss(cfg)
 	preload("res://tests/network_smoke_config.gd").configure_lab(cfg)
 	preload("res://tests/network_smoke_config.gd").configure_crate(cfg)
@@ -703,9 +707,8 @@ func _physics_process(_delta: float) -> void:
 		observed_warning = observed_warning or game.controller._target != null
 		var sequence: int = game.controller._scrub_sequence if host else int(game._network_replica.target.get("world", {}).get("scrub_sequence", 0))
 		observed_scrub = observed_scrub or sequence > 0
-	if game_id == "zone_hold":
-		for score in game.ctx.scores:
-			observed_zone_score = observed_zone_score or score > 0
+	if game_id == "zone_hold" and slot >= 0:
+		observed_zone_score = observed_zone_score or game.ctx.scores[slot] > 0
 	if game_id == "relic_hold":
 		observed_relic_holder = observed_relic_holder or game.controller.holder() >= 0
 		for score in game.ctx.scores:
@@ -1025,9 +1028,14 @@ func _physics_process(_delta: float) -> void:
 				buttons = InputFrame.Btn.ATTACK
 			movement = Vector2(target.x - position.x, target.z - position.z).limit_length()
 		if game_id == "zone_hold":
+			var round_seconds: float = game.config.duration_override
+			if round_seconds <= 0.0:
+				round_seconds = game.config.definition().duration
+			var capture_elapsed := float(game._round_index) * round_seconds \
+				+ clampf(round_seconds - game.ctx.time_left, 0.0, round_seconds)
 			var frame: InputFrame = load("res://tests/zone_peer_driver.gd").input(game.arena,
 				game.ctx.fighters, slot, game.controller.zone_position, game.controller.zone_radius,
-				Time.get_ticks_msec() - started_at)
+				int(capture_elapsed * 1000.0))
 			movement = frame.move
 			buttons = frame.bits
 		if game_id in ["gem_grab", "star_rush", "crate_relay"]:
@@ -1757,6 +1765,9 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "tank_arena" and (not observed_turret_shot or not observed_tank_armor or not observed_tank_inventory):
 		_fail("ATV shot/armor/inventory evidence missing: %s %s %s" % [observed_turret_shot, observed_tank_armor, observed_tank_inventory])
 		return
+	if game_id == "zone_hold" and not observed_zone_score:
+		_fail("local zone participant never captured: slot=%d scores=%s" % [Net.local_slot(), result.scores])
+		return
 	finished_matches += 1
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
@@ -1769,9 +1780,6 @@ func _finished(result: MatchResult) -> void:
 		return
 	if game_id in ["star_rush", "crate_relay"] and not observed_carrying:
 		_fail("carrying was never observed")
-		return
-	if game_id == "zone_hold" and not observed_zone_score:
-		_fail("zone finished without capture scoring")
 		return
 	if game_id == "turret_duel" and (not observed_turret_shot or not observed_turret_damage or not observed_turret_score):
 		_fail("turret shot/damage/score evidence missing: %s %s %s" % [observed_turret_shot, observed_turret_damage, observed_turret_score])
@@ -1886,6 +1894,7 @@ func _finished(result: MatchResult) -> void:
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
 		"draw_response_prompts": observed_draw_response_prompts.keys(),
+		"zone_scored": observed_zone_score,
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
 		"tournament_rotation": tournament_rotation, "arena_history": arena_history,

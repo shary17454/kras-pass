@@ -157,6 +157,13 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(game._accum, accum, "guest rendering never advances capture progress")
 	t.equal(scene.ctx.scores[0], 1, "guest rendering never awards score")
 	var driver = load("res://tests/zone_peer_driver.gd")
+	for count in range(1, 5):
+		t.equal(driver.minimum_match_seconds(count), float((count + 1) * 6), "fixture duration includes every capture turn and one travel margin")
+		for turn in count * 2:
+			t.equal(driver.capture_owner(turn * 6000, count), turn % count, "capture coverage rotates across every configured seat")
+			t.equal(driver.capture_owner(turn * 6000 + 5999, count), turn % count, "capture turn stays stable until its boundary")
+	t.equal(driver.capture_owner(0, 0), -1, "empty roster cannot have a capture owner")
+	t.equal(driver.capture_owner(-1, 4), 0, "pre-start time cannot select a negative slot")
 	var me: Fighter = scene.ctx.fighter(0)
 	var rival: Fighter = scene.ctx.fighter(1)
 	me.global_position = capture_position
@@ -187,6 +194,21 @@ func run(t: TestHarness, host: Node) -> void:
 	rival.global_position = capture_position + Vector3.BACK * 1.5
 	control = driver.input(arena, scene.ctx.fighters, 0, capture_position - Vector3.BACK * 4.0, 3.4, 0)
 	t.equal(control.bits, 0, "peer routes into zone before contest combat")
+	for fighter in scene.ctx.fighters:
+		fighter.hide()
+	for slot in 4:
+		var body: Fighter = scene.ctx.fighter(slot)
+		body.show()
+		var radial: Vector3 = (capture_position - arena.global_position).normalized()
+		body.global_position = capture_position + radial
+		var before: Vector3 = body.global_position
+		var scores: Array = scene.ctx.scores.duplicate()
+		var toward := Vector2(capture_position.x - before.x, capture_position.z - before.z).normalized()
+		var turn_frame: InputFrame = driver.input(arena, scene.ctx.fighters, slot, capture_position, 3.4, slot * 6000 + 1000)
+		t.ok(turn_frame.move.dot(toward) > 0.99, "scheduled capture turn steers slot %d into the actual zone" % slot)
+		t.equal(body.global_position, before, "coverage driver does not teleport a player")
+		t.equal(scene.ctx.scores, scores, "coverage driver does not award points")
+		body.hide()
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
