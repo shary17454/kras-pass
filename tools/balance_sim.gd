@@ -311,6 +311,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"difficulty_completed": _difficulty_completed,
 		"difficulty_pairing": "matched_seed_character",
 		"difficulty_samples": _difficulty_samples.duplicate(true),
+		"difficulty_outcomes": difficulty_outcomes(_difficulty_samples),
 		"tie_rate": float(ties) / maxf(1.0, float(completed)),
 		"avg_duration": avg_duration,
 		"wins_by_slot": wins_by_slot,
@@ -411,6 +412,49 @@ func _difficulty_sample(cfg: MatchConfig, result: MatchResult) -> Dictionary:
 	if cfg.definition().is_boss:
 		sample["boss_outcome"] = _boss_outcome(result, cfg.minigame_id)
 	return sample
+
+
+static func difficulty_outcomes(samples: Array) -> Dictionary:
+	var out := {"samples": samples.size(), "expert_wins": 0, "easy_wins": 0,
+		"shared_first": 0, "incomplete": 0, "invalid": 0, "expert_outright_win_share": null}
+	for sample in samples:
+		if not sample is Dictionary or not sample.get("completed") is bool:
+			out.invalid += 1
+			continue
+		if not sample.completed:
+			out.incomplete += 1
+			continue
+		var places = sample.get("places")
+		var experts = sample.get("expert_slots")
+		if not places is Array or places.size() != 4 or not experts is Array or experts.size() != 2:
+			out.invalid += 1
+			continue
+		var valid := true
+		for value in places + experts:
+			if typeof(value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(value)) \
+					or float(value) < 0.0 or float(value) > 4.0 or float(value) != floorf(float(value)):
+				valid = false
+		if valid:
+			valid = places.all(func(value): return value >= 1) \
+				and experts.all(func(value): return value < 4) and experts[0] != experts[1]
+		var winners: Array[int] = []
+		if valid:
+			for slot in 4:
+				if places[slot] == 1:
+					winners.append(slot)
+		if winners.is_empty():
+			out.invalid += 1
+		elif winners.size() > 1:
+			# Team partners and cooperative results can share first without a draw.
+			out.shared_first += 1
+		elif winners[0] == int(experts[0]) or winners[0] == int(experts[1]):
+			out.expert_wins += 1
+		else:
+			out.easy_wins += 1
+	var outright: int = out.expert_wins + out.easy_wins
+	if outright > 0:
+		out.expert_outright_win_share = float(out.expert_wins) / float(outright)
+	return out
 
 
 func _boss_outcome(result: MatchResult, expected_game: String = "") -> String:
@@ -746,14 +790,17 @@ func _html() -> String:
 	var rows := ""
 	for r in _report:
 		var colour: String = ["#1d3", "#fd4", "#f55"][int(r["severity"])]
+		var outcomes := difficulty_outcomes(r.get("difficulty_samples", []))
+		var outcomes_text := "%d / %d (%d shared, %d incomplete, %d invalid)" % [
+			outcomes.expert_wins, outcomes.easy_wins, outcomes.shared_first, outcomes.incomplete, outcomes.invalid]
 		rows += """<tr>
 <td class="id">%s<div class="cat">%s</div></td>
-<td>%d</td><td>%.1fs</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%.1f</td>
+<td>%d</td><td>%.1fs</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%s</td><td>%.1f</td>
 <td><span class="dot" style="background:%s"></span>%s</td></tr>\n""" % [
 			r["name"], r["category"], int(r["runs"]), float(r["avg_duration"]),
 			float(r["tie_rate"]) * 100.0, float(r["slot_bias"]) * 100.0,
 			float(r["character_bias"]) * 100.0, float(r["expert_edge"]) * 100.0,
-			float(r["avg_score"]), colour,
+			outcomes_text, float(r["avg_score"]), colour,
 			", ".join(r["flags"]) if not r["flags"].is_empty() else "ok"]
 	var mutator_rows := ""
 	for r in _mutator_report:
@@ -776,13 +823,17 @@ border-bottom:1px solid #252c52;padding:8px 10px} td{padding:8px 10px;border-bot
 <h1>Kras Pass — balance report</h1>
 <div class="sub">%s · %d runs per game · %s rounds (per-game windows in JSON)</div>
 <table><tr><th>Mini-game</th><th>Runs</th><th>Length</th><th>Ties</th><th>Slot bias</th>
-<th>Character bias</th><th>Expert share</th><th>Avg score</th><th>Verdict</th></tr>
+<th>Character bias</th><th>Expert placement share</th><th>Expert / Easy outright wins</th><th>Avg score</th><th>Verdict</th></tr>
 %s</table>
 <p class="note"><b>Slot bias</b> and <b>character bias</b> are how far the most-favoured
 spawn slot or competitor sits above an even share; characters are rotated through slots
-between runs so the two cannot be confused. <b>Expert share</b> is the fraction of points
-an Expert pair takes from an Easy pair with identical characters, mirrored across slots —
-50%% means the difficulty tiers do nothing in this game.</p>
+between runs so the two cannot be confused. <b>Expert placement share</b> uses
+4-3-2-1 finishing-place points for the Expert slots versus Easy slots with identical
+characters, mirrored across slots. 50%% means equal aggregate placement points,
+not equal win rates. <b>Outright wins</b> count unique first-place results separately;
+shared first places (including team/cooperative wins), incomplete and invalid
+samples are not assigned to either difficulty. Neither metric proves fairness.
+Existing flags and acceptance thresholds are unchanged.</p>
 <h1 style="margin-top:32px">Mutator &amp; chaos smoke pass</h1>
 <div class="sub">one run under a deliberately over-stuffed mutator set, one run with chaos mode on</div>
 <table><tr><th>Mini-game</th><th>Mutated run</th><th>Chaos run</th><th>Verdict</th></tr>

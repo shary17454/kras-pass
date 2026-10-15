@@ -11,6 +11,7 @@ class InvalidTeamController extends Node:
 
 func run(t: TestHarness) -> void:
 	_evidence_policy(t)
+	_difficulty_outcomes(t)
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
 	_arguments(t, sim)
@@ -105,6 +106,9 @@ func run(t: TestHarness) -> void:
 	t.equal(sim._severity(flags), 2, "incomplete difficulty comparison blocks qualification")
 	row.difficulty_completed = 2
 	t.ok(sim._flags(def, row).is_empty(), "completed balanced sample has no synthetic warning")
+	row.expert_edge = 0.5
+	row.difficulty_outcomes = {"expert_wins": 100, "easy_wins": 0}
+	t.ok(sim._flags(def, row).has("expert bots no better than easy"), "outright wins cannot bypass the unchanged placement-share gate")
 	sim.only = "not_a_registered_game"
 	t.equal(sim._games().size(), 0, "unknown game selection is empty rather than all games")
 	_boss_outcomes(t, sim)
@@ -117,6 +121,60 @@ func run(t: TestHarness) -> void:
 	probe.ok(true, "completed fixture assertion")
 	probe.require_suite_assertions(before)
 	t.equal(probe.failed, 2, "a completed suite retains its original result")
+	sim.free()
+
+
+func _difficulty_outcomes(t: TestHarness) -> void:
+	t.suite("difficulty outright wins remain separate from placement points")
+	var script := load("res://tools/balance_sim.gd")
+	var samples := [
+		{"completed": true, "places": [1, 4, 2, 3], "expert_slots": [0, 1]},
+		{"completed": true, "places": [4, 1, 2, 3], "expert_slots": [2, 3]},
+		{"completed": true, "places": [1, 2, 1, 2], "expert_slots": [0, 1]},
+		{"completed": false},
+		{"completed": true, "places": [2, 2, 3, 4], "expert_slots": [0, 1]},
+	]
+	var copy := samples.duplicate(true)
+	var summary: Dictionary = script.difficulty_outcomes(samples)
+	t.equal(summary.expert_wins, 1, "unique Expert winner is counted")
+	t.equal(summary.easy_wins, 1, "mirrored Easy winner is counted")
+	t.equal(summary.shared_first, 1, "shared first is not falsely assigned to Expert or Easy")
+	t.equal(summary.incomplete, 1, "unfinished samples remain explicit")
+	t.equal(summary.invalid, 1, "missing winner cannot become a false success")
+	t.equal(summary.expert_outright_win_share, 0.5, "share denominator includes only outright outcomes")
+	t.equal(samples, copy, "aggregation leaves all evidence untouched")
+	for experts in [[0, 1], [2, 3]]:
+		for winner in 4:
+			var places := [2, 2, 2, 2]
+			places[winner] = 1
+			var outcome: Dictionary = script.difficulty_outcomes([{"completed": true, "places": places, "expert_slots": experts}])
+			t.equal(outcome.expert_wins, 1 if winner in experts else 0, "both mirrored allocations classify every slot")
+			var saved = JSON.parse_string(JSON.stringify({"completed": true, "places": places, "expert_slots": experts}))
+			t.equal(script.difficulty_outcomes([saved]).expert_wins, outcome.expert_wins, "JSON numeric conversion preserves all mirrored winners")
+	for sample in [null, {}, {"completed": 1}, {"completed": true},
+		{"completed": true, "places": [1, 2, 3], "expert_slots": [0, 1]},
+		{"completed": true, "places": [1, 2, 3, 4], "expert_slots": [0, 0]},
+		{"completed": true, "places": [1, 2, 3, 4], "expert_slots": [0, 4]},
+		{"completed": true, "places": [1, 2, 3, 4], "expert_slots": [0.5, 1]}]:
+		t.equal(script.difficulty_outcomes([sample]).invalid, 1, "malformed sample is retained as invalid")
+	for value in [NAN, INF, -INF, -1, 0, 5, 1.5, true, "1"]:
+		t.equal(script.difficulty_outcomes([{"completed": true, "places": [value, 2, 3, 4], "expert_slots": [0, 1]}]).invalid,
+			1, "invalid place never gets truncated into a winner")
+	var json_sample = JSON.parse_string('{"completed":true,"places":[1,4,2,3],"expert_slots":[0,1]}')
+	t.equal(script.difficulty_outcomes([json_sample]).expert_wins, 1, "saved JSON numeric evidence can be recounted")
+	t.equal(script.difficulty_outcomes([]).expert_outright_win_share, null, "empty evidence is unknown rather than 50 percent")
+	t.equal(script.difficulty_outcomes([{"completed": true, "places": [1, 1, 2, 2], "expert_slots": [0, 1]}]).expert_outright_win_share,
+		null, "shared Expert first places do not become an outright win")
+	var sim = script.new()
+	sim._report = [{"name": "fixture", "category": "combat", "severity": 2,
+		"runs": 1, "avg_duration": 20.0, "tie_rate": 0.0, "slot_bias": 0.0,
+		"character_bias": 0.0, "expert_edge": 0.5, "avg_score": 10.0,
+		"flags": ["expert bots no better than easy"], "difficulty_samples": samples}]
+	var html: String = sim._html()
+	t.ok(html.contains("Expert / Easy outright wins") and html.contains("1 / 1 (1 shared, 1 incomplete, 1 invalid)"),
+		"HTML displays outcomes including unsuccessful or ambiguous samples")
+	t.ok(html.contains("expert bots no better than easy"), "HTML preserves the failed placement verdict")
+	t.ok(html.contains("not equal win rates") and not html.contains("tiers do nothing"), "equal placement share is not falsely described as equal skill")
 	sim.free()
 
 
