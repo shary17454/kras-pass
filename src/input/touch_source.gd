@@ -319,7 +319,7 @@ func _handle_press(index: int, pos: Vector2, pressed: bool) -> void:
 		for i in 3:
 			if (rects[i] as Rect2).has_point(pos):
 				_owners[index] = {"kind": "steer", "id": i}
-				_apply_steer(i, true)
+				_refresh_steering()
 				queue_redraw()
 				return
 		return
@@ -384,9 +384,10 @@ func _release(index: int) -> void:
 		"button":
 			_press_button(int(owner["id"]), false)
 		"steer":
-			_apply_steer(int(owner["id"]), false)
+			_refresh_steering()
 		"screen":
-			_bits &= ~int(owner["bit"])
+			if not _owners_has("screen"):
+				_bits &= ~int(owner["bit"])
 	queue_redraw()
 
 
@@ -416,11 +417,19 @@ func _press_button(index: int, down: bool) -> void:
 	queue_redraw()
 
 
-func _apply_steer(which: int, down: bool) -> void:
-	match which:
-		0: _steer = -1.0 if down else 0.0
-		1: _steer = 1.0 if down else 0.0
-		2: _throttle = 1.0 if down else 0.0
+func _refresh_steering() -> void:
+	var left := false
+	var right := false
+	var throttle := false
+	for owner in _owners.values():
+		if String(owner["kind"]) != "steer":
+			continue
+		match int(owner["id"]):
+			0: left = true
+			1: right = true
+			2: throttle = true
+	_steer = float(int(right) - int(left))
+	_throttle = 1.0 if throttle else 0.0
 
 
 func _pulse() -> void:
