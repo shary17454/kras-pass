@@ -3,6 +3,13 @@ extends RefCounted
 
 func run(t: TestHarness) -> void:
 	t.suite("bundled bilingual UI fonts")
+	var presets := ConfigFile.new()
+	t.equal(presets.load("res://export_presets.cfg"), OK, "export presets load for font license checks")
+	for section in presets.get_sections():
+		if section.begins_with("preset.") and not section.ends_with(".options"):
+			t.ok("assets/fonts/*-OFL.txt" in str(presets.get_value(section, "include_filter", "")), "each application pack includes font licenses")
+	for family in ["NotoSans", "NotoSansArabic", "NotoSansSymbols", "NotoSansSymbols2", "NotoEmoji"]:
+		t.ok(FileAccess.file_exists("res://assets/fonts/%s-OFL.txt" % family), "original license accompanies %s" % family)
 	var characters := {}
 	for locale in ["ar", "en"]:
 		var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/loc/%s.json" % locale))
