@@ -26,6 +26,14 @@ export function validatePlan(plan) {
   const get = (graph, address) => graph.resources.find(r => r.address === address);
   const before = get(current, resources[0]);
   const after = get(desired, resources[0]);
+  const without = (node, omitted) => Object.fromEntries(Object.entries(node).filter(([key]) => !omitted.includes(key)));
+  require(isDeepStrictEqual(without(before, ["build", "deploy"]), without(after, ["build", "deploy"])),
+    "Unreviewed service fields changed, including networking, identity or tracing.");
+  require(isDeepStrictEqual(without(before.build ?? {}, ["builder", "dockerfilePath"]), without(after.build ?? {}, ["builder", "dockerfilePath"])),
+    "Unreviewed build settings changed.");
+  const deploymentKeys = ["startCommand", "healthcheckPath", "healthcheckTimeout", "restartPolicyType", "restartPolicyMaxRetries"];
+  require(isDeepStrictEqual(without(before.deploy ?? {}, deploymentKeys), without(after.deploy ?? {}, deploymentKeys)),
+    "Unreviewed runtime or deployment settings changed.");
   const source = { type: "github", repo: "shary17454/kras-pass", branch: "main", checkSuites: false };
   require(isDeepStrictEqual(before.source, source) && isDeepStrictEqual(after.source, source), "Repository source must remain unchanged.");
   for (const node of [before, after]) {
@@ -41,11 +49,12 @@ export function validatePlan(plan) {
     "Persistent storage configuration changed.");
   require(isDeepStrictEqual(before.deploy?.multiRegionConfig, after.deploy?.multiRegionConfig) &&
     isDeepStrictEqual(after.deploy.multiRegionConfig, { ams: { numReplicas: 1 } }), "Replica placement changed.");
-  require(isDeepStrictEqual(after.build, { builder: "DOCKERFILE", dockerfilePath: "/Dockerfile" }), "Missing Docker build configuration.");
+  require(isDeepStrictEqual(after.build, { builder: "DOCKERFILE", dockerfilePath: "/Dockerfile", buildEnvironment: "V3" }), "Missing Docker build configuration.");
   require(isDeepStrictEqual(after.deploy, {
     healthcheckPath: "/health", healthcheckTimeout: 100,
     multiRegionConfig: { ams: { numReplicas: 1 } },
     restartPolicyMaxRetries: 10, restartPolicyType: "ON_FAILURE", startCommand: "npm start",
+    runtime: "V2", ipv6EgressEnabled: false, useLegacyStacker: false,
   }), "Deployment settings differ from the reviewed migration.");
   require(Array.isArray(plan.changeSet?.changes), "Missing change set.");
   for (const change of plan.changeSet.changes) {
