@@ -49,6 +49,7 @@ func build() -> void:
 	_add_mode(modes, "library.title", "game_library")
 	_add_mode(modes, "menu.tournament", "tournament")
 	_add_mode(modes, "menu.local", "local_play")
+	_add_mode(modes, "online.title", "online")
 	_add_mode(modes, "menu.training", "training")
 	_add_mode(modes, "menu.daily", "daily")
 
