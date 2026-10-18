@@ -157,6 +157,24 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(game._accum, accum, "guest rendering never advances capture progress")
 	t.equal(scene.ctx.scores[0], 1, "guest rendering never awards score")
 	var driver = load("res://tests/zone_peer_driver.gd")
+	for count in range(1, 5):
+		t.equal(driver.minimum_match_seconds(count), float((count + 1) * 6), "fixture duration includes every capture turn and one travel margin")
+		for turn in count * 2:
+			t.equal(driver.capture_owner(turn * 6000, count), turn % count, "capture coverage rotates across every configured seat")
+			t.equal(driver.capture_owner(turn * 6000 + 5999, count), turn % count, "capture turn stays stable until its boundary")
+	t.equal(driver.capture_owner(0, 0), -1, "empty roster cannot have a capture owner")
+	t.equal(driver.capture_owner(-1, 4), 0, "pre-start time cannot select a negative slot")
+	for zone_angle in [0.0, TAU / 3.0, PI]:
+		var zone := arena.global_position + Vector3(cos(zone_angle), 0, sin(zone_angle)) * arena.def.radius * 0.72
+		var waiting: Array[Vector3] = []
+		for slot in 4:
+			var position: Vector3 = driver.standby_position(arena, zone, 3.4, slot)
+			t.ok(arena.is_inside(position), "waiting fixture stays on the physical ring")
+			t.ok(position.distance_to(zone) >= 4.8, "waiting peers leave room for uncontested capture")
+			t.ok(position.distance_to(zone) <= 6.5, "all peers stage within a short move of their capture turn")
+			for other in waiting:
+				t.ok(position.distance_to(other) > 1.3, "waiting fixtures do not pile up in the same spot")
+			waiting.append(position)
 	var me: Fighter = scene.ctx.fighter(0)
 	var rival: Fighter = scene.ctx.fighter(1)
 	me.global_position = capture_position
@@ -187,6 +205,21 @@ func run(t: TestHarness, host: Node) -> void:
 	rival.global_position = capture_position + Vector3.BACK * 1.5
 	control = driver.input(arena, scene.ctx.fighters, 0, capture_position - Vector3.BACK * 4.0, 3.4, 0)
 	t.equal(control.bits, 0, "peer routes into zone before contest combat")
+	for fighter in scene.ctx.fighters:
+		fighter.hide()
+	for slot in 4:
+		var body: Fighter = scene.ctx.fighter(slot)
+		body.show()
+		var radial: Vector3 = (capture_position - arena.global_position).normalized()
+		body.global_position = capture_position + radial
+		var before: Vector3 = body.global_position
+		var scores: Array = scene.ctx.scores.duplicate()
+		var toward := Vector2(capture_position.x - before.x, capture_position.z - before.z).normalized()
+		var turn_frame: InputFrame = driver.input(arena, scene.ctx.fighters, slot, capture_position, 3.4, slot * 6000 + 1000)
+		t.ok(turn_frame.move.dot(toward) > 0.99, "scheduled capture turn steers slot %d into the actual zone" % slot)
+		t.equal(body.global_position, before, "coverage driver does not teleport a player")
+		t.equal(scene.ctx.scores, scores, "coverage driver does not award points")
+		body.hide()
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

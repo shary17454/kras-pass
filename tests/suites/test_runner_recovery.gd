@@ -28,14 +28,18 @@ func run(t: TestHarness, host: Node) -> void:
 	brain.dash_chance = 0.0
 	t.near(brain._distance_to_obstacle(fighter), 0.4, 0.001, "physical ray sees close-contact hurdle")
 	brain.decide(0.1)
-	t.ok((brain.bits & InputFrame.Btn.JUMP) != 0, "contact cannot suppress recovery jump")
+	brain._publish_output(brain.move)
+	InputRouter._physics_process(0.0)
+	t.ok(InputRouter.frame(3).held(InputFrame.Btn.JUMP), "contact cannot suppress recovery jump")
 	obstacle.global_position.z = -20
 	await host.get_tree().physics_frame
 	await host.get_tree().physics_frame
 	brain.bits = 0
 	brain.decide(0.1)
 	t.ok(brain._distance_to_obstacle(fighter) < 0.0, "clear lane has no invented obstacle")
-	t.ok((brain.bits & InputFrame.Btn.JUMP) == 0, "clear lane does not trigger recovery jump")
+	brain._publish_output(brain.move)
+	InputRouter._physics_process(0.0)
+	t.ok(not InputRouter.frame(3).held(InputFrame.Btn.JUMP), "clear lane does not trigger recovery jump")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

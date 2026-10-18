@@ -1,0 +1,71 @@
+{
+  "commit": "4f990aa97c22ee3d4d98dbc5e830252a00159f2e",
+  "run": "37713199729",
+  "seedOffset": 1200000,
+  "complete": false,
+  "sourceFingerprint": "373ff382576009d42c54395613580fdf7acb0b017fa41c2afeead79e9ac9dd7e",
+  "engineVersion": "4.7.1-stable (official)",
+  "sourceConsistencyVerified": false,
+  "gamesCompleted": 5,
+  "gamesExpected": 39,
+  "matchesCompleted": 210,
+  "difficultyPairingVerified": false,
+  "missing": [
+    "goal_guard",
+    "magnet_court",
+    "storm_heart",
+    "sky_court",
+    "blast_ball",
+    "scrap_karts",
+    "turret_duel",
+    "gem_grab",
+    "star_rush",
+    "paint_grid",
+    "mnatiq",
+    "mukharrib",
+    "zone_hold",
+    "crate_smash",
+    "lab_crates",
+    "crate_relay",
+    "hurdle_dash",
+    "kart_sprint",
+    "color_stand",
+    "symbol_echo",
+    "quick_draw",
+    "rising_tide",
+    "sweeper_storm",
+    "duel_pit",
+    "boss_forge",
+    "boss_colossus",
+    "boss_dreadnought",
+    "boss_sovereign",
+    "sabaq_sawarikh",
+    "relic_hold",
+    "tag_hunt",
+    "base_siege",
+    "drift_floes",
+    "duo_clash"
+  ],
+  "reviews": [
+    {
+      "game": "crumble_court",
+      "flags": [
+        "spawn slot advantage"
+      ]
+    }
+  ],
+  "characterWins": {
+    "barq": 15,
+    "fanoos": 22,
+    "ghaim": 6,
+    "mowja": 14,
+    "nabta": 17,
+    "ramla": 10,
+    "sakhra": 14,
+    "turs": 22
+  },
+  "bossBaseline": [],
+  "bossComparisons": [],
+  "balanceReviewComplete": false,
+  "releaseReady": false
+}

@@ -10,19 +10,53 @@ extends RefCounted
 ##    the meaning of "back", so the Arabic build is genuinely right-to-left
 ##    rather than left-to-right text that happens to be Arabic.
 
-const BG := Color("#0d1020")
-const PANEL := Color("#1a1f3a")
-const PANEL_HI := Color("#252c52")
-const GLASS := Color(0.18, 0.23, 0.42, 0.58)
-const GLASS_HI := Color(0.26, 0.32, 0.58, 0.68)
-const GLASS_EDGE := Color(0.82, 0.92, 1.0, 0.34)
-const GLASS_SHADOW := Color(0.0, 0.0, 0.0, 0.28)
-const ACCENT := Color("#ffb347")
-const ACCENT_2 := Color("#57e0c0")
-const TEXT := Color("#f2f4ff")
-const TEXT_DIM := Color("#9aa2c8")
-const DANGER := Color("#ff5f6d")
-const OK := Color("#6bd67d")
+static var BG := Color("#0d1020")
+static var PANEL := Color("#1a1f3a")
+static var PANEL_HI := Color("#252c52")
+static var GLASS := Color(0.18, 0.23, 0.42, 0.58)
+static var GLASS_HI := Color(0.26, 0.32, 0.58, 0.68)
+static var GLASS_EDGE := Color(0.82, 0.92, 1.0, 0.34)
+static var GLASS_SHADOW := Color(0.0, 0.0, 0.0, 0.28)
+static var ACCENT := Color("#ffb347")
+static var ACCENT_2 := Color("#57e0c0")
+static var TEXT := Color("#f2f4ff")
+static var TEXT_DIM := Color("#9aa2c8")
+static var DANGER := Color("#ff5f6d")
+static var OK := Color("#6bd67d")
+static var dark_mode := true
+
+
+static func palette() -> Dictionary:
+	return {"bg": BG, "panel": PANEL, "panel_hi": PANEL_HI, "glass": GLASS,
+		"glass_hi": GLASS_HI, "glass_edge": GLASS_EDGE, "shadow": GLASS_SHADOW,
+		"accent": ACCENT, "accent_2": ACCENT_2, "text": text_color(), "dim": dim_color(),
+		"danger": DANGER, "ok": OK, "base_text": TEXT, "base_dim": TEXT_DIM}
+
+
+static func set_dark_mode(dark: bool) -> void:
+	dark_mode = dark
+	BG = Color("#0d1020") if dark else Color("#f3f6fa")
+	PANEL = Color("#1a1f3a") if dark else Color("#ffffff")
+	PANEL_HI = Color("#252c52") if dark else Color("#e3eaf3")
+	GLASS = Color(0.18, 0.23, 0.42, 0.58) if dark else Color(0.96, 0.98, 1.0, 0.96)
+	GLASS_HI = Color(0.26, 0.32, 0.58, 0.68) if dark else Color(0.87, 0.92, 0.97, 0.98)
+	GLASS_EDGE = Color(0.82, 0.92, 1.0, 0.34) if dark else Color(0.20, 0.30, 0.43, 0.30)
+	GLASS_SHADOW = Color(0, 0, 0, 0.28 if dark else 0.10)
+	ACCENT = Color("#ffb347") if dark else Color("#885000")
+	ACCENT_2 = Color("#57e0c0") if dark else Color("#006654")
+	TEXT = Color("#f2f4ff") if dark else Color("#172336")
+	TEXT_DIM = Color("#9aa2c8") if dark else Color("#495c72")
+	DANGER = Color("#ff5f6d") if dark else Color("#ab1935")
+	OK = Color("#6bd67d") if dark else Color("#176a30")
+
+
+static func color_role(color: Color) -> String:
+	var colors := palette()
+	for key in colors:
+		var candidate: Color = colors[key]
+		if Vector3(color.r, color.g, color.b).is_equal_approx(Vector3(candidate.r, candidate.g, candidate.b)):
+			return key
+	return ""
 
 const SIZE_TITLE := 86
 const SIZE_HEADING := 48
@@ -107,14 +141,16 @@ static func scale() -> float:
 
 
 static func text_color() -> Color:
-	return Color.WHITE if bool(UserSettings.get_value("high_contrast")) else TEXT
+	return (Color.WHITE if dark_mode else Color.BLACK) if bool(UserSettings.get_value("high_contrast")) else TEXT
 
 
 static func dim_color() -> Color:
-	return Color(0.85, 0.87, 0.95) if bool(UserSettings.get_value("high_contrast")) else TEXT_DIM
+	return (Color(0.85, 0.87, 0.95) if dark_mode else Color("#29394d")) if bool(UserSettings.get_value("high_contrast")) else TEXT_DIM
 
 
 static func liquid_glass_color(color: Color, lifted := false) -> Color:
+	if not dark_mode:
+		color = color.lerp(Color(1, 1, 1, color.a), 0.88)
 	if bool(UserSettings.get_value("high_contrast")):
 		return Color(color.r, color.g, color.b, maxf(color.a, 0.94))
 	var base := GLASS_HI if lifted else GLASS
@@ -161,8 +197,9 @@ static func label(text: String, size: int = SIZE_BODY, color: Color = Color.TRAN
 	l.add_theme_font_size_override("font_size", int(size * scale()))
 	l.text = text
 	l.add_theme_color_override("font_color", text_color() if color == Color.TRANSPARENT else color)
+	l.set_meta("appearance_label", true)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
-	l.add_theme_constant_override("outline_size", 6)
+	l.add_theme_constant_override("outline_size", 6 if dark_mode else 2 if color == Color.WHITE else 0)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if Loc.is_rtl() else HORIZONTAL_ALIGNMENT_LEFT
 	l.text_direction = Control.TEXT_DIRECTION_RTL if Loc.is_rtl() else Control.TEXT_DIRECTION_LTR
 	return l
@@ -185,9 +222,21 @@ static func centered(text: String, size: int = SIZE_BODY, color: Color = Color.T
 	return l
 
 
+static func back_label(label: Label) -> void:
+	var backing := liquid_glass_stylebox(PANEL, 8)
+	backing.content_margin_left = 8
+	backing.content_margin_right = 8
+	backing.content_margin_top = 0
+	backing.content_margin_bottom = 0
+	label.add_theme_stylebox_override("normal", backing)
+	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+
 static func stylebox(color: Color, radius: int = 14, border := 0, border_color := Color.TRANSPARENT) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = color
+	sb.set_meta("appearance_bg", color_role(color))
+	sb.set_meta("appearance_border", color_role(border_color))
 	sb.corner_radius_top_left = radius
 	sb.corner_radius_top_right = radius
 	sb.corner_radius_bottom_left = radius
@@ -209,12 +258,23 @@ static func stylebox(color: Color, radius: int = 14, border := 0, border_color :
 	return sb
 
 
-static func liquid_glass_stylebox(color: Color = PANEL, radius: int = 18, lifted := false) -> StyleBoxFlat:
+## A coloured surface, not a cosmetic swatch or gameplay identity colour.
+static func tinted_stylebox(color: Color, radius := 14, border := 0, border_color := Color.TRANSPARENT) -> StyleBoxFlat:
+	var sb := stylebox(color if dark_mode else color.lerp(Color(1, 1, 1, color.a), 0.88), radius, border, border_color)
+	sb.set_meta("appearance_tint", color)
+	return sb
+
+
+static func liquid_glass_stylebox(color: Color = Color.TRANSPARENT, radius: int = 18, lifted := false) -> StyleBoxFlat:
+	if color == Color.TRANSPARENT:
+		color = PANEL
 	var edge := GLASS_EDGE.lightened(0.14) if lifted else GLASS_EDGE
-	return stylebox(liquid_glass_color(color, lifted), radius, 1, edge)
+	var sb := stylebox(liquid_glass_color(color, lifted), radius, 1, edge)
+	sb.set_meta("appearance_glass", {"role": color_role(color), "color": color, "lifted": lifted})
+	return sb
 
 
-static func panel(color: Color = PANEL, radius: int = 18) -> PanelContainer:
+static func panel(color: Color = Color.TRANSPARENT, radius: int = 18) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", liquid_glass_stylebox(color, radius))
 	return p
@@ -226,14 +286,14 @@ static func button(text: String, size: int = SIZE_BODY) -> Button:
 	b.add_theme_font_size_override("font_size", int(size * scale()))
 	b.text = text
 	b.add_theme_color_override("font_color", text_color())
-	b.add_theme_color_override("font_hover_color", Color.WHITE)
-	b.add_theme_color_override("font_focus_color", BG)
-	b.add_theme_color_override("font_pressed_color", BG)
+	b.add_theme_color_override("font_hover_color", text_color())
+	b.add_theme_color_override("font_focus_color", text_color())
+	b.add_theme_color_override("font_pressed_color", text_color())
 	b.add_theme_stylebox_override("normal", liquid_glass_stylebox(PANEL, 18))
 	b.add_theme_stylebox_override("hover", liquid_glass_stylebox(PANEL_HI, 18, true))
-	b.add_theme_stylebox_override("focus", stylebox(ACCENT, 14, 2, Color.WHITE))
-	b.add_theme_stylebox_override("pressed", stylebox(ACCENT.darkened(0.15), 18))
-	b.add_theme_stylebox_override("disabled", liquid_glass_stylebox(PANEL.darkened(0.3), 18))
+	b.add_theme_stylebox_override("focus", stylebox(PANEL_HI, 14, 2, ACCENT))
+	b.add_theme_stylebox_override("pressed", stylebox(PANEL_HI, 18))
+	b.add_theme_stylebox_override("disabled", liquid_glass_stylebox(PANEL, 18))
 	b.custom_minimum_size = Vector2(0, 68 * scale())
 	b.focus_mode = Control.FOCUS_ALL
 	# Menu audio is wired here so no screen has to remember it.
@@ -320,7 +380,7 @@ static func stat_bar(value: float, color: Color, width: float = 220.0) -> Contro
 	back.show_percentage = false
 	back.max_value = 1.0
 	back.value = clampf(value, 0.0, 1.0)
-	for entry in [["background", Color(1, 1, 1, 0.10)], ["fill", adapt(color)]]:
+	for entry in [["background", PANEL_HI], ["fill", adapt(color)]]:
 		var style := stylebox(entry[1], 8)
 		style.content_margin_left = 0
 		style.content_margin_right = 0
@@ -345,6 +405,7 @@ static func screen_root() -> Control:
 	root.mouse_filter = Control.MOUSE_FILTER_PASS
 	var bg := ColorRect.new()
 	bg.color = BG
+	bg.set_meta("appearance_background", true)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bg)

@@ -28,7 +28,7 @@ func decide(delta: float) -> void:
 	if item == Race.Item.NONE:
 		return
 	if _should_use(item, me):
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 
 
 func _should_use(item: int, me: Fighter) -> bool:
@@ -42,9 +42,10 @@ func _should_use(item: int, me: Fighter) -> bool:
 		Race.Item.BOOST:  # Only worth it pointing down the road, not at a wall.
 			return _aimed_at_line(me) and me.speed_ratio() > 0.55
 		Race.Item.MISSILE:  # Needs somebody ahead on the road, not merely near.
-			var target: int = controller.call("rival_ahead", slot) \
+			# Filter before ranking so a hidden rival cannot mask a visible one.
+			var target: int = controller.call("rival_ahead", slot, Callable(self, "can_target")) \
 				if controller.has_method("rival_ahead") else -1
-			if target < 0 or not can_observe(ctx.fighter(target)):
+			if not can_target(target):
 				return false
 			return me.global_position.distance_to(predict(target, 0.4)) < MISSILE_RANGE
 		Race.Item.BOMB:  # A mine is worth nothing dropped on an empty road.
@@ -60,7 +61,7 @@ func _tailed() -> bool:
 		return false
 	var back := -me.facing.normalized()
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		var seen := perceive(i)
 		if seen == Vector3.ZERO:

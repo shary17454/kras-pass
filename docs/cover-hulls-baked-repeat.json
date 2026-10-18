@@ -1,0 +1,485 @@
+{
+	"arena": "tank_oasis",
+	"benchmark_cap": 60,
+	"bot_count": 0,
+	"built_arena": "tank_oasis",
+	"cap": 60,
+	"complete_duration": true,
+	"cover_hull_points": [
+		135,
+		158,
+		169,
+		193,
+		104,
+		169,
+		135,
+		158,
+		169,
+		193,
+		104,
+		169,
+		135,
+		158,
+		169,
+		193
+	],
+	"cover_hull_source_digests": [
+		"c756dc60a2876348d666b9f9ce3667379340b0e74da54587a9ed92cb824eb1e7",
+		"0534659bc152bf6fd951dcf7e5854080c2a7dafea7eaaf387b4242c6d39e636e",
+		"e07f017e3e8b19cf02c1d2385b61eff6e5fca8cc3b2c57b686eff38cfca8cdd8",
+		"2e391cfb55c27aecb2dccd6eadfd33266f71ac6b5f5f2d659789e749578130cc",
+		"319c21803ec559b1a3efbe98ee1c61c981ee67d854f18a7ed2e31c4e74af8462",
+		"50d1aee62e10398f33afa2b6f580c5fb439c6b4a725df87a19e7070a21373f81",
+		"c756dc60a2876348d666b9f9ce3667379340b0e74da54587a9ed92cb824eb1e7",
+		"0534659bc152bf6fd951dcf7e5854080c2a7dafea7eaaf387b4242c6d39e636e",
+		"e07f017e3e8b19cf02c1d2385b61eff6e5fca8cc3b2c57b686eff38cfca8cdd8",
+		"2e391cfb55c27aecb2dccd6eadfd33266f71ac6b5f5f2d659789e749578130cc",
+		"319c21803ec559b1a3efbe98ee1c61c981ee67d854f18a7ed2e31c4e74af8462",
+		"50d1aee62e10398f33afa2b6f580c5fb439c6b4a725df87a19e7070a21373f81",
+		"c756dc60a2876348d666b9f9ce3667379340b0e74da54587a9ed92cb824eb1e7",
+		"0534659bc152bf6fd951dcf7e5854080c2a7dafea7eaaf387b4242c6d39e636e",
+		"e07f017e3e8b19cf02c1d2385b61eff6e5fca8cc3b2c57b686eff38cfca8cdd8",
+		"2e391cfb55c27aecb2dccd6eadfd33266f71ac6b5f5f2d659789e749578130cc"
+	],
+	"display_refresh_hz": 60.0,
+	"distance_per_player_m": [
+		268.029902153648,
+		326.165482358541,
+		349.844492372125,
+		290.756844454561
+	],
+	"engine": "4.7.1-stable (official)",
+	"first_3_seconds": {
+		"fps": 28.627287867587,
+		"frames": 85,
+		"frames_above_100ms": 5,
+		"frames_above_25ms": 35,
+		"frames_above_33ms": 24,
+		"frames_above_50ms": 13,
+		"mean_ms": 34.931705882353,
+		"p95_ms": 97.809,
+		"p99_ms": 160.655,
+		"seconds": 2.969195,
+		"worst_ms": 183.421
+	},
+	"game": "tank_arena",
+	"human_slots": [
+		0,
+		1,
+		2,
+		3
+	],
+	"input_fixture": "scripted_touch_driving",
+	"live_pipeline_compilations": {
+		"canvas": 0,
+		"draw": 0,
+		"mesh": 0,
+		"specialization": 0,
+		"surface": 0
+	},
+	"live_seconds": 33.004939,
+	"live_texture_reported_sizes": [
+		"(854.0, 480.0)"
+	],
+	"live_window_sizes": [
+		"(1280, 720)"
+	],
+	"nodes_after": 51,
+	"nodes_before": 51,
+	"operation_trace_enabled": true,
+	"operations": {
+		"costs": {
+			"camera.update": {
+				"calls": 8820,
+				"max_usec": 417,
+				"total_usec": 295141
+			},
+			"fighter.contacts": {
+				"calls": 7896,
+				"max_usec": 161,
+				"total_usec": 11324
+			},
+			"fighter.ground_fx": {
+				"calls": 7896,
+				"max_usec": 188,
+				"total_usec": 8892
+			},
+			"fighter.impacts": {
+				"calls": 1974,
+				"max_usec": 15,
+				"total_usec": 8636
+			},
+			"fighter.integrate": {
+				"calls": 7896,
+				"max_usec": 97,
+				"total_usec": 98088
+			},
+			"fighter.physics": {
+				"calls": 7896,
+				"max_usec": 17255,
+				"total_usec": 7728770
+			},
+			"fighter.rig": {
+				"calls": 7896,
+				"max_usec": 44,
+				"total_usec": 27355
+			},
+			"fighter.state_fx": {
+				"calls": 7896,
+				"max_usec": 287,
+				"total_usec": 44907
+			},
+			"fighter.visual": {
+				"calls": 7896,
+				"max_usec": 389,
+				"total_usec": 253166
+			},
+			"hud.chip_value": {
+				"calls": 1424,
+				"max_usec": 62,
+				"total_usec": 19664
+			},
+			"hud.chips": {
+				"calls": 356,
+				"max_usec": 391,
+				"total_usec": 57324
+			},
+			"hud.effects": {
+				"calls": 1424,
+				"max_usec": 93,
+				"total_usec": 28351
+			},
+			"hud.layout": {
+				"calls": 356,
+				"max_usec": 281,
+				"total_usec": 21348
+			},
+			"hud.offscreen": {
+				"calls": 356,
+				"max_usec": 95,
+				"total_usec": 1071
+			},
+			"match.ai": {
+				"calls": 1974,
+				"max_usec": 39,
+				"total_usec": 5438
+			},
+			"match.arena": {
+				"calls": 1974,
+				"max_usec": 34,
+				"total_usec": 14569
+			},
+			"match.bounds_clock": {
+				"calls": 1974,
+				"max_usec": 170,
+				"total_usec": 97163
+			},
+			"match.fighters": {
+				"calls": 1974,
+				"max_usec": 26528,
+				"total_usec": 8284090
+			},
+			"match.hud": {
+				"calls": 1764,
+				"max_usec": 663,
+				"total_usec": 86871
+			},
+			"match.live_tick": {
+				"calls": 1974,
+				"max_usec": 26683,
+				"total_usec": 8586926
+			},
+			"match.replay": {
+				"calls": 1974,
+				"max_usec": 54,
+				"total_usec": 10371
+			},
+			"match.rules": {
+				"calls": 1974,
+				"max_usec": 437,
+				"total_usec": 117343
+			}
+		},
+		"physics_contacts": [
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					}
+				],
+				"elapsed_usec": 17255,
+				"physics_frame": 410,
+				"position": [
+					-28.8619785308838,
+					0.109935708343983,
+					4.63738107681274
+				],
+				"process_frame": 354,
+				"slot": 3
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					}
+				],
+				"elapsed_usec": 16927,
+				"physics_frame": 409,
+				"position": [
+					-28.8619785308838,
+					0.109935708343983,
+					4.63738107681274
+				],
+				"process_frame": 353,
+				"slot": 3
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "RockCover7"
+					},
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					}
+				],
+				"elapsed_usec": 16100,
+				"physics_frame": 1611,
+				"position": [
+					-6.5873007774353,
+					0.142397686839104,
+					29.652759552002
+				],
+				"process_frame": 1414,
+				"slot": 3
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					},
+					{
+						"class": "StaticBody3D",
+						"node": "RockCover15"
+					}
+				],
+				"elapsed_usec": 15818,
+				"physics_frame": 1774,
+				"position": [
+					32.6964492797852,
+					0.197395861148834,
+					29.9258670806885
+				],
+				"process_frame": 1571,
+				"slot": 2
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "RockCover7"
+					},
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					}
+				],
+				"elapsed_usec": 15715,
+				"physics_frame": 1612,
+				"position": [
+					-6.37665796279907,
+					0.148639157414436,
+					29.6060981750488
+				],
+				"process_frame": 1414,
+				"slot": 3
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					}
+				],
+				"elapsed_usec": 15007,
+				"physics_frame": 458,
+				"position": [
+					-28.8619785308838,
+					0.109935708343983,
+					4.63738107681274
+				],
+				"process_frame": 388,
+				"slot": 3
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					}
+				],
+				"elapsed_usec": 14301,
+				"physics_frame": 412,
+				"position": [
+					-28.8619785308838,
+					0.109935708343983,
+					4.63738107681274
+				],
+				"process_frame": 355,
+				"slot": 3
+			},
+			{
+				"contacts": [
+					{
+						"class": "StaticBody3D",
+						"node": "TerrainCollision"
+					},
+					{
+						"class": "StaticBody3D",
+						"node": "RockCover11"
+					}
+				],
+				"elapsed_usec": 13978,
+				"physics_frame": 1172,
+				"position": [
+					14.2712488174438,
+					0.267272263765335,
+					28.8252639770508
+				],
+				"process_frame": 999,
+				"slot": 2
+			}
+		],
+		"physics_slow_count": 780,
+		"retained": [
+			{
+				"elapsed_usec": 26683,
+				"ended_usec": 11112086,
+				"physics_frame": 475,
+				"process_frame": 396,
+				"started_usec": 11085403,
+				"tag": "match.live_tick"
+			},
+			{
+				"elapsed_usec": 26528,
+				"ended_usec": 11111942,
+				"physics_frame": 475,
+				"process_frame": 396,
+				"started_usec": 11085414,
+				"tag": "match.fighters"
+			},
+			{
+				"elapsed_usec": 25167,
+				"ended_usec": 10803747,
+				"physics_frame": 458,
+				"process_frame": 388,
+				"started_usec": 10778580,
+				"tag": "match.live_tick"
+			},
+			{
+				"elapsed_usec": 25160,
+				"ended_usec": 11468073,
+				"physics_frame": 494,
+				"process_frame": 400,
+				"started_usec": 11442913,
+				"tag": "match.live_tick"
+			},
+			{
+				"elapsed_usec": 24995,
+				"ended_usec": 10803585,
+				"physics_frame": 458,
+				"process_frame": 388,
+				"started_usec": 10778590,
+				"tag": "match.fighters"
+			},
+			{
+				"elapsed_usec": 24991,
+				"ended_usec": 11467915,
+				"physics_frame": 494,
+				"process_frame": 400,
+				"started_usec": 11442924,
+				"tag": "match.fighters"
+			},
+			{
+				"elapsed_usec": 24775,
+				"ended_usec": 11652107,
+				"physics_frame": 502,
+				"process_frame": 401,
+				"started_usec": 11627332,
+				"tag": "match.live_tick"
+			},
+			{
+				"elapsed_usec": 24677,
+				"ended_usec": 11652013,
+				"physics_frame": 502,
+				"process_frame": 401,
+				"started_usec": 11627336,
+				"tag": "match.fighters"
+			}
+		],
+		"scope": "inclusive-script-wall-intervals-not-GPU-or-exclusive-CPU",
+		"slow_count": 2267,
+		"threshold_usec": 4000
+	},
+	"os": "macOS",
+	"output_size": "(1280, 720)",
+	"peak_active_weapons": 0,
+	"peak_draw_calls": 1356.0,
+	"peak_primitives": 5832590.0,
+	"personal_view_count": 4,
+	"physics_mean_ms": 9.68920119047626,
+	"prepared_effect_labels_per_player": [
+		22,
+		22,
+		22,
+		22
+	],
+	"prepared_state_visuals": 4,
+	"process_mean_ms": 16.4297815476193,
+	"quality": 2,
+	"render_memory_peak_mb": 330.84375,
+	"render_scale": 1.0,
+	"renderer": "mobile",
+	"requested_seconds": 30.0,
+	"setup_ms": 713.628,
+	"simulation_seconds": 32.8999999999994,
+	"slow_frame_samples": [
+		{
+			"elapsed_seconds": 3.028774,
+			"focused": true,
+			"frame_ms": 59.579,
+			"physics_frame": 545,
+			"physics_monitor_ms": 26.91,
+			"pipeline_delta": {
+				"canvas": 0,
+				"draw": 0,
+				"mesh": 0,
+				"specialization": 0,
+				"surface": 0
+			},
+			"process_frame": 408,
+			"process_monitor_ms": 5.043
+		}
+	],
+	"startup_output_size": "(854.0, 480.0)",
+	"static_memory_after_mb": 130.126677513123,
+	"static_memory_before_mb": 50.0399761199951,
+	"static_memory_peak_mb": 164.030890464783,
+	"steady": {
+		"fps": 55.9333572692589,
+		"frames": 1680,
+		"frames_above_100ms": 0,
+		"frames_above_25ms": 38,
+		"frames_above_33ms": 9,
+		"frames_above_50ms": 1,
+		"mean_ms": 17.8784190476191,
+		"p95_ms": 22.112,
+		"p99_ms": 31.031,
+		"seconds": 30.035744,
+		"worst_ms": 59.579
+	}
+}

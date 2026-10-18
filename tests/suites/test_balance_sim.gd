@@ -1,9 +1,43 @@
 extends RefCounted
 
 
+class InvalidTeamController extends Node:
+	func team_of(slot: int) -> int:
+		return slot % 2
+
+	func team_score(_team: int):
+		return 1.5
+
+
 func run(t: TestHarness) -> void:
+	_evidence_policy(t)
+	_difficulty_outcomes(t)
 	t.suite("balance simulator policy")
 	var sim = load("res://tools/balance_sim.gd").new()
+	_arguments(t, sim)
+	_arena_arguments(t, sim)
+	_balanced_rosters(t, sim)
+	t.test("team draw diagnostics distinguish a shared team win from a competitive draw")
+	var duo = load("res://src/minigames/duo_clash.gd").new()
+	duo._team_score.assign([4, 2])
+	var team_outcome: Dictionary = sim._team_outcome(duo, 4)
+	t.equal(team_outcome.get("scores"), {0: 4, 1: 2}, "diagnostic retains authoritative shared totals")
+	t.equal(team_outcome.get("winners"), [0], "two winning partners represent one winning team")
+	t.equal(team_outcome.get("draw"), false, "partner co-winners do not imply opposing-team draw")
+	var shared := MatchResult.make("duo_clash", "sweeper_ring", [40, 20, 40, 20])
+	t.ok(shared.is_draw(), "individual co-first evidence is preserved independently")
+	duo._team_score.assign([2, 4])
+	t.equal(sim._team_outcome(duo, 4).get("winners"), [1], "either opposing side can win without a tie")
+	duo._team_score.assign([4, 4])
+	t.equal(sim._team_outcome(duo, 4).get("draw"), true, "equal opposing totals remain a real team draw")
+	t.equal(sim._team_outcome(duo, 1), {}, "missing opposing team cannot be certified")
+	var invalid_controller := InvalidTeamController.new()
+	t.equal(sim._team_outcome(invalid_controller, 4), {}, "invalid fractional score cannot masquerade as a verified outcome")
+	invalid_controller.free()
+	var unsupported := Node.new()
+	t.equal(sim._team_outcome(unsupported, 4), {}, "unsupported controller retains unknown rather than false success")
+	unsupported.free()
+	duo.free()
 	for unsafe in ["", ".", "relative-save", "user://", "user://simulation", "res://build/save", "/", "C:/"]:
 		t.ok(not sim._storage_is_isolated(unsafe), "simulator rejects a non-isolated save directory")
 	var player_directory := OS.get_user_data_dir()
@@ -72,6 +106,9 @@ func run(t: TestHarness) -> void:
 	t.equal(sim._severity(flags), 2, "incomplete difficulty comparison blocks qualification")
 	row.difficulty_completed = 2
 	t.ok(sim._flags(def, row).is_empty(), "completed balanced sample has no synthetic warning")
+	row.expert_edge = 0.5
+	row.difficulty_outcomes = {"expert_wins": 100, "easy_wins": 0}
+	t.ok(sim._flags(def, row).has("expert bots no better than easy"), "outright wins cannot bypass the unchanged placement-share gate")
 	sim.only = "not_a_registered_game"
 	t.equal(sim._games().size(), 0, "unknown game selection is empty rather than all games")
 	_boss_outcomes(t, sim)
@@ -85,6 +122,151 @@ func run(t: TestHarness) -> void:
 	probe.require_suite_assertions(before)
 	t.equal(probe.failed, 2, "a completed suite retains its original result")
 	sim.free()
+
+
+func _difficulty_outcomes(t: TestHarness) -> void:
+	t.suite("difficulty outright wins remain separate from placement points")
+	var script := load("res://tools/balance_sim.gd")
+	var samples := [
+		{"completed": true, "places": [1, 4, 2, 3], "expert_slots": [0, 1]},
+		{"completed": true, "places": [4, 1, 2, 3], "expert_slots": [2, 3]},
+		{"completed": true, "places": [1, 2, 1, 2], "expert_slots": [0, 1]},
+		{"completed": false},
+		{"completed": true, "places": [2, 2, 3, 4], "expert_slots": [0, 1]},
+	]
+	var copy := samples.duplicate(true)
+	var summary: Dictionary = script.difficulty_outcomes(samples)
+	t.equal(summary.expert_wins, 1, "unique Expert winner is counted")
+	t.equal(summary.easy_wins, 1, "mirrored Easy winner is counted")
+	t.equal(summary.shared_first, 1, "shared first is not falsely assigned to Expert or Easy")
+	t.equal(summary.incomplete, 1, "unfinished samples remain explicit")
+	t.equal(summary.invalid, 1, "missing winner cannot become a false success")
+	t.equal(summary.expert_outright_win_share, 0.5, "share denominator includes only outright outcomes")
+	t.equal(samples, copy, "aggregation leaves all evidence untouched")
+	for experts in [[0, 1], [2, 3]]:
+		for winner in 4:
+			var places := [2, 2, 2, 2]
+			places[winner] = 1
+			var outcome: Dictionary = script.difficulty_outcomes([{"completed": true, "places": places, "expert_slots": experts}])
+			t.equal(outcome.expert_wins, 1 if winner in experts else 0, "both mirrored allocations classify every slot")
+			var saved = JSON.parse_string(JSON.stringify({"completed": true, "places": places, "expert_slots": experts}))
+			t.equal(script.difficulty_outcomes([saved]).expert_wins, outcome.expert_wins, "JSON numeric conversion preserves all mirrored winners")
+	for sample in [null, {}, {"completed": 1}, {"completed": true},
+		{"completed": true, "places": [1, 2, 3], "expert_slots": [0, 1]},
+		{"completed": true, "places": [1, 2, 3, 4], "expert_slots": [0, 0]},
+		{"completed": true, "places": [1, 2, 3, 4], "expert_slots": [0, 4]},
+		{"completed": true, "places": [1, 2, 3, 4], "expert_slots": [0.5, 1]}]:
+		t.equal(script.difficulty_outcomes([sample]).invalid, 1, "malformed sample is retained as invalid")
+	for value in [NAN, INF, -INF, -1, 0, 5, 1.5, true, "1"]:
+		t.equal(script.difficulty_outcomes([{"completed": true, "places": [value, 2, 3, 4], "expert_slots": [0, 1]}]).invalid,
+			1, "invalid place never gets truncated into a winner")
+	var json_sample = JSON.parse_string('{"completed":true,"places":[1,4,2,3],"expert_slots":[0,1]}')
+	t.equal(script.difficulty_outcomes([json_sample]).expert_wins, 1, "saved JSON numeric evidence can be recounted")
+	t.equal(script.difficulty_outcomes([]).expert_outright_win_share, null, "empty evidence is unknown rather than 50 percent")
+	t.equal(script.difficulty_outcomes([{"completed": true, "places": [1, 1, 2, 2], "expert_slots": [0, 1]}]).expert_outright_win_share,
+		null, "shared Expert first places do not become an outright win")
+	var sim = script.new()
+	sim._report = [{"name": "fixture", "category": "combat", "severity": 2,
+		"runs": 1, "avg_duration": 20.0, "tie_rate": 0.0, "slot_bias": 0.0,
+		"character_bias": 0.0, "expert_edge": 0.5, "avg_score": 10.0,
+		"flags": ["expert bots no better than easy"], "difficulty_samples": samples}]
+	var html: String = sim._html()
+	t.ok(html.contains("Expert / Easy outright wins") and html.contains("1 / 1 (1 shared, 1 incomplete, 1 invalid)"),
+		"HTML displays outcomes including unsuccessful or ambiguous samples")
+	t.ok(html.contains("expert bots no better than easy"), "HTML preserves the failed placement verdict")
+	t.ok(html.contains("not equal win rates") and not html.contains("tiers do nothing"), "equal placement share is not falsely described as equal skill")
+	sim.free()
+
+
+func _balanced_rosters(t: TestHarness, sim: Node) -> void:
+	t.test("balanced roster experiments separate character strength from fixed partners")
+	t.ok(sim.has_method("_baseline_roster"), "baseline roster selection has a reproducible explicit policy")
+	if not sim.has_method("_baseline_roster"):
+		return
+	var roster := Registry.characters()
+	sim.balanced_rosters = false
+	for run in 16:
+		var expected: Array[String] = []
+		for slot in 4:
+			expected.append(roster[(slot + run) % roster.size()].id)
+		t.equal(sim._baseline_roster(run), expected, "default campaigns preserve their legacy roster policy")
+	sim.balanced_rosters = true
+	sim.seed_offset = 5800000
+	var counts := {}
+	var partners := {}
+	for character in roster:
+		counts[character.id] = [0, 0, 0, 0]
+		partners[character.id] = {}
+	for run in 1000:
+		var selected: Array = sim._baseline_roster(run)
+		t.equal(selected.size(), 4, "balanced match contains exactly four characters")
+		t.equal(sim._baseline_roster(run), selected, "roster selection is reproducible without mutable RNG state")
+		var unique := {}
+		for slot in 4:
+			var character: String = selected[slot]
+			t.ok(counts.has(character), "balanced match uses an original registered character")
+			unique[character] = true
+			counts[character][slot] += 1
+			partners[character][selected[(slot + 2) % 4]] = true
+		t.equal(unique.size(), 4, "one match does not duplicate its character")
+	for character in roster:
+		t.equal(counts[character.id], [125, 125, 125, 125], "all eight characters appear equally in every seat")
+		t.equal(partners[character.id].size(), 7, "all possible partners are exercised instead of a fixed adjacent subset")
+	var before: Array = sim._baseline_roster(0)
+	sim.seed_offset = 5900000
+	t.ok(sim._baseline_roster(0) != before, "independent campaign seeds vary actual roster composition")
+	t.ok(not sim._parse_args(PackedStringArray(["--balanced-rosters", "--runs=bad"])), "invalid arguments cannot partially change the experiment policy")
+	t.ok(sim.balanced_rosters, "rejected parsing preserves the previous policy")
+	sim.balanced_rosters = false
+	t.ok(sim._parse_args(PackedStringArray(["--balanced-rosters"])), "balanced roster experiments require an explicit supported option")
+	t.ok(sim.balanced_rosters, "the experiment option is applied")
+	sim.balanced_rosters = false
+	sim.seed_offset = 0
+
+
+func _arguments(t: TestHarness, sim: Node) -> void:
+	t.test("balance arguments reject ambiguous or malformed evidence requests")
+	t.equal(sim._parse_args.get_argument_count(), 1, "argument validation accepts an explicit argument vector")
+	if sim._parse_args.get_argument_count() != 1:
+		return
+	var before := [sim.runs, sim.only, sim.out_dir, sim.seed_offset, sim.natural_rounds]
+	for invalid in ["--out=/tmp/report", "--runs=abc", "--runs=1", "--runs=2.5", "--runs=10001", "--runs=999999999999999999999", "--only=", "--out-dir=", "--clipped-round", "--seed-offset=-1"]:
+		t.ok(not sim._parse_args(PackedStringArray(["--runs=24", "--seed-offset=4200000", invalid])), "invalid argument is rejected before any configuration changes")
+		t.equal([sim.runs, sim.only, sim.out_dir, sim.seed_offset, sim.natural_rounds], before, "failed parsing preserves the whole prior configuration")
+	t.ok(not sim._parse_args(PackedStringArray(["--runs=24", "--runs=8"])), "duplicate campaign settings are rejected")
+	t.ok(sim._parse_args(PackedStringArray(["--runs=24", "--only=blast_ball", "--seed-offset=4200000", "--out-dir=/tmp/report with spaces", "--test-data-dir=/tmp/isolated"])), "production workflow arguments and isolated storage remain supported")
+	t.equal([sim.runs, sim.only, sim.out_dir, sim.seed_offset], [24, "blast_ball", "/tmp/report with spaces", 4200000], "valid arguments retain exact campaign identity and output path")
+	t.ok(sim._parse_args(PackedStringArray(["--runs=1000", "--clipped-rounds"])), "large balance simulations and explicit smoke mode remain available")
+	t.equal(sim.runs, 1000, "requested simulation count is not silently clamped")
+	t.ok(not sim.natural_rounds, "smoke mode requires the exact explicit option")
+	sim.runs = before[0]
+	sim.only = before[1]
+	sim.out_dir = before[2]
+	sim.seed_offset = before[3]
+	sim.natural_rounds = before[4]
+
+
+func _arena_arguments(t: TestHarness, sim: Node) -> void:
+	t.test("targeted arena evidence validates membership and preserves rejected configuration")
+	for arguments in [
+		["--arena=tank_oasis"],
+		["--only=tank_arena", "--arena="],
+		["--only=tank_arena", "--arena=unknown"],
+		["--only=ring_rumble", "--arena=tank_oasis"],
+		["--only=tank_arena", "--arena=tank_oasis", "--arena=tank_frost"],
+	]:
+		t.ok(not sim._parse_args(PackedStringArray(arguments)), "invalid arena request is rejected")
+		t.equal(sim.arena_override, "", "rejected selection does not mutate arena")
+		t.equal(sim.only, "", "rejected selection does not mutate game")
+	var cfg := MatchConfig.build("tank_arena", ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 119)
+	cfg.arena_id = "tank_frost"
+	sim._apply_arena(cfg)
+	t.equal(cfg.arena_id, "tank_frost", "no override preserves caller arena")
+	t.ok(sim._parse_args(PackedStringArray(["--only=tank_arena", "--arena=tank_oasis"])), "registered alternative arena is accepted")
+	sim._apply_arena(cfg)
+	t.equal(cfg.arena_id, "tank_oasis", "selected arena reaches the actual match configuration")
+	sim.only = ""
+	sim.arena_override = ""
 
 
 func _boss_outcomes(t: TestHarness, sim: Node) -> void:
@@ -159,3 +341,37 @@ func _boss_outcomes(t: TestHarness, sim: Node) -> void:
 			[{"boss_outcome": "unknown"}, {"boss_outcome": "survived"}], [null, {"boss_outcome": "survived"}]]:
 		boss_row["difficulty_samples"] = bad_samples
 		t.ok(sim._flags(boss_def, boss_row).has("boss difficulty outcome evidence incomplete"), "incomplete difficulty outcome cannot appear qualified")
+
+
+func _evidence_policy(t: TestHarness) -> void:
+	t.suite("Balance evidence source policy")
+	var evidence = load("res://tools/balance_evidence.gd")
+	var a := "a".repeat(64)
+	var b := "b".repeat(64)
+	var fingerprint: String = evidence.fingerprint({"a.gd": a, "b.gd": b})
+	t.equal(fingerprint, evidence.fingerprint({"b.gd": b, "a.gd": a}), "file ordering does not change source identity")
+	t.ok(fingerprint != evidence.fingerprint({"a.gd": b, "b.gd": b}), "changed content changes identity")
+	t.ok(fingerprint != evidence.fingerprint({"a.gd": a}), "removed file changes identity")
+	t.ok(fingerprint != evidence.fingerprint({"renamed.gd": a, "b.gd": b}), "renamed file changes identity")
+	t.equal(evidence.fingerprint({"a.gd": "bad"}), "", "invalid file hash cannot form provenance")
+	var report := {"simulation_source_start": fingerprint, "simulation_source_end": fingerprint,
+		"engine_version": Engine.get_version_info().string, "sample_mode": "natural"}
+	var row := {"sample_mode": "natural", "attempted_runs": 24, "runs": 24,
+		"difficulty_attempted": 16, "difficulty_completed": 16,
+		"difficulty_pairing": "matched_seed_character", "flags": []}
+	t.ok(evidence.problems(report, row, fingerprint).is_empty(), "current completed natural evidence passes minimum source gate")
+	t.ok(not evidence.problems({}, {}, fingerprint).is_empty(), "missing evidence cannot look balanced")
+	t.ok(not evidence.problems(report, row, b).is_empty(), "old source report is rejected")
+	for field in ["simulation_source_start", "simulation_source_end", "engine_version", "sample_mode"]:
+		var changed := report.duplicate(true)
+		changed[field] = "invalid"
+		t.ok(not evidence.problems(changed, row, fingerprint).is_empty(), "reject invalid report " + field)
+	for field in ["attempted_runs", "runs", "difficulty_attempted", "difficulty_completed"]:
+		for value in [null, "24", true, 0, 15, 23.5, NAN, INF]:
+			var changed := row.duplicate(true)
+			changed[field] = value
+			t.ok(not evidence.problems(report, changed, fingerprint).is_empty(), "reject incomplete or malformed sample count")
+	for field in ["sample_mode", "difficulty_pairing", "flags"]:
+		var changed := row.duplicate(true)
+		changed[field] = "invalid"
+		t.ok(not evidence.problems(report, changed, fingerprint).is_empty(), "reject invalid sample " + field)

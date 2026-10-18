@@ -1,5 +1,7 @@
 extends "res://src/minigames/turret_duel.gd"
 
+signal armor_damaged(shooter: int, victim: int, damage: int, armor_left: int)
+
 const MAX_ARMOR := 100
 const SHELLS := ["standard", "rapid", "heavy", "homing", "ricochet", "triple", "sticky"]
 const SHELL_COLORS := [Color("ffd66b"), Color("63e6fc"), Color("ff7459"), Color("aaef71"), Color("bca4fa"), Color("ffffff"), Color("f19cb8")]
@@ -52,7 +54,7 @@ func build() -> void:
 
 
 func on_round_start() -> void:
-	cleanup()
+	super.on_round_start()
 	armor.fill(MAX_ARMOR)
 	_cooldowns.fill(0.0)
 	_shot_damage = 25.0
@@ -137,6 +139,16 @@ func wants_fire(frame: InputFrame) -> bool:
 	return frame.held(InputFrame.Btn.ATTACK)
 
 
+func projectile_speed_for(slot: int) -> float:
+	return SHELL_SPEED[_shell_kind_for(slot)]
+
+
+func _shell_kind_for(slot: int) -> int:
+	if String(ctx.config.rule("tank_variant", "normal")) == "ricochet":
+		return 4
+	return shell_types[slot] if ammo[slot] > 0 else 0
+
+
 func _fire(slot: int) -> void:
 	var fighter := ctx.fighter(slot)
 	var origin := fighter.global_position + Vector3.UP
@@ -145,9 +157,7 @@ func _fire(slot: int) -> void:
 	if not get_world_3d().direct_space_state.intersect_ray(query).is_empty():
 		_cooldowns[slot] = _cooldown
 		return
-	var kind := shell_types[slot] if ammo[slot] > 0 else 0
-	if String(ctx.config.rule("tank_variant", "normal")) == "ricochet":
-		kind = 4
+	var kind := _shell_kind_for(slot)
 	var dir := fighter.facing.normalized()
 	_spawn_shell(slot, kind, origin, dir)
 	if kind == 5:
@@ -203,6 +213,7 @@ func _on_hit(_projectile: Projectile, shooter: int, victim: int) -> void:
 	var damage := mini(armor[victim], int(_projectile.damage))
 	armor[victim] -= damage
 	ctx.bump_detail(shooter, "damage", damage)
+	armor_damaged.emit(shooter, victim, damage, armor[victim])
 	AudioManager.play_sfx("explode", ctx.fighter(victim).global_position)
 	InputRouter.haptic(victim, InputRouter.Haptic.HEAVY)
 	if armor[victim] <= 0:

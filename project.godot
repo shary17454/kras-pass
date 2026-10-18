@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Kras Pass"
 config/description="كراس باس — لعبة حفلات ومنافسات مصغّرة / An original party mini-game collection."
-config/version="1.1.9"
+config/version="1.1.11"
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://assets/app_store/icons/Icon-1024.png"
@@ -21,6 +21,7 @@ general/text_to_speech=true
 [autoload]
 
 
+UITheme="*res://src/ui/ui_theme_bootstrap.gd"
 Log="*res://src/core/logger.gd"
 Balance="*res://src/core/balance.gd"
 Loc="*res://src/localization/loc.gd"
@@ -67,7 +68,7 @@ window/size/resizable=true
 
 [gui]
 
-theme/custom="res://assets/fonts/ui_theme.tres"
+theme/custom="res://assets/fonts/startup_theme.tres"
 
 [input]
 

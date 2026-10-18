@@ -1,4 +1,9 @@
 extends RefCounted
+
+class HapticProbe extends "res://src/input/input_router.gd":
+	var pulses: Array = []
+	func _pulse_handheld(milliseconds: int, amplitude: float) -> void:
+		pulses.append({"ms": milliseconds, "amp": amplitude})
 ## The central promise of the input layer: a mini-game cannot tell where a
 ## player's intent came from.
 ##
@@ -11,11 +16,115 @@ extends RefCounted
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("input sources")
 	await _sources_are_indistinguishable(t, host)
+	await _gamepad_loss_neutralizes_input(t, host)
 	_touch_profiles(t)
 	_touch_layout_rules(t)
+	_steering_layout(t)
 	_tank_controls(t)
 	_haptics(t)
 	_haptic_events(t)
+	await _delayed_haptic_cancellation(t, host)
+
+
+func _gamepad_loss_neutralizes_input(t: TestHarness, host: Node) -> void:
+	t.test("gamepad loss clears both sticks and buttons before notifying the match")
+	var router := HapticProbe.new()
+	host.add_child(router)
+	router.set_physics_process(false)
+	var device := 54321
+	router.assign_pad(0, device)
+	router.assign_touch(1)
+	var other := router.frame(1)
+	other.move = Vector2.LEFT
+	other.aim = Vector2.UP
+	other.bits = InputFrame.Btn.DASH
+	var lost: Array[int] = []
+	var observed: Array[Dictionary] = []
+	var on_lost := func(slot: int):
+		lost.append(slot)
+		var frame := router.frame(slot)
+		observed.append({"move": frame.move, "aim": frame.aim, "bits": frame.bits})
+	EventBus.player_device_lost.connect(on_lost)
+	var frame := router.frame(0)
+	frame.move = Vector2.RIGHT
+	frame.aim = Vector2.DOWN
+	frame.bits = InputFrame.Btn.ATTACK
+	router._on_joy_changed(device, false)
+	t.equal(frame.move, Vector2.ZERO, "connection event clears movement immediately")
+	t.equal(frame.aim, Vector2.ZERO, "connection event clears stale aim immediately")
+	t.equal(frame.bits, 0, "connection event releases held buttons immediately")
+	t.ok(frame.disconnected, "device loss remains visible to the match")
+	t.equal(lost, [0], "only the owning player receives device loss")
+	t.equal(observed[0], {"move": Vector2.ZERO, "aim": Vector2.ZERO, "bits": 0}, "listeners cannot consume stale input")
+	t.equal(router.source_of(0), InputRouter.Source.PAD, "device assignment survives reconnect grace")
+	t.equal(router._device_ids[0], device, "the original device remains bound to its player")
+	router._poll_pad(0, frame)
+	t.equal(lost.size(), 1, "polling does not duplicate the connection event")
+	frame.disconnected = false
+	frame.move = Vector2.RIGHT
+	frame.aim = Vector2.DOWN
+	frame.bits = InputFrame.Btn.ATTACK
+	router._poll_pad(0, frame)
+	t.equal(frame.move, Vector2.ZERO, "poll fallback clears movement")
+	t.equal(frame.aim, Vector2.ZERO, "poll fallback clears aim")
+	t.equal(frame.bits, 0, "poll fallback releases held buttons")
+	t.equal(lost.size(), 2, "poll fallback reports a newly detected loss once")
+	router._poll_pad(0, frame)
+	t.equal(lost.size(), 2, "repeated absent-device polls do not repeat the notification")
+	t.equal(other.move, Vector2.LEFT, "another player's movement is untouched")
+	t.equal(other.aim, Vector2.UP, "another player's aim is untouched")
+	t.equal(other.bits, InputFrame.Btn.DASH, "another player's buttons are untouched")
+	EventBus.player_device_lost.disconnect(on_lost)
+	router.queue_free()
+	await host.get_tree().process_frame
+
+
+func _delayed_haptic_cancellation(t: TestHarness, host: Node) -> void:
+	t.test("delayed success haptics respect settings and background cancellation")
+	var vibration = UserSettings.get_value("vibration")
+	var backgrounded := Platform.is_backgrounded
+	UserSettings.set_value("vibration", true)
+	Platform.is_backgrounded = false
+	var probe := HapticProbe.new()
+	host.add_child(probe)
+	probe.set_physics_process(false)
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	t.equal(probe.pulses.size(), 1, "success emits its first beat immediately")
+	t.equal(probe._handheld_pending.size(), 2, "success retains only its two remaining beats")
+	UserSettings.set_value("vibration", false)
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 1, "turning vibration off cancels remaining beats")
+	t.ok(probe._handheld_pending.is_empty() and not probe.is_processing(), "cancelled pattern stops idle processing")
+	UserSettings.set_value("vibration", true)
+	probe.pulses.clear()
+	probe._handheld_until = 0.0
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	Platform.is_backgrounded = true
+	Platform.app_backgrounded.emit()
+	Platform.is_backgrounded = false
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 1, "returning to foreground does not replay cancelled beats")
+	probe.pulses.clear()
+	probe._handheld_until = 0.0
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 3, "uncancelled success retains the three-beat pattern")
+	t.ok(probe._handheld_pending.is_empty() and not probe.is_processing(), "completed pattern stops idle processing")
+	probe.pulses.clear()
+	probe._handheld_until = 0.0
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	probe.clear_all()
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(probe.pulses.size(), 1, "ending device routing cancels the old pattern")
+	probe.pulses.clear()
+	probe._handheld(InputRouter.Haptic.SUCCESS, InputRouter.HAPTIC_SPEC[InputRouter.Haptic.SUCCESS])
+	var captured_pulses: Array = probe.pulses
+	probe.queue_free()
+	await host.get_tree().process_frame
+	await host.get_tree().create_timer(0.35).timeout
+	t.equal(captured_pulses.size(), 1, "freed router cannot deliver deferred pulses")
+	UserSettings.set_value("vibration", vibration)
+	Platform.is_backgrounded = backgrounded
 
 
 ## Drive one fighter from a virtual (AI) slot and another from a touch slot with
@@ -80,6 +189,41 @@ func _touch_profiles(t: TestHarness) -> void:
 		if def.control_hints.has("drive"):
 			t.ok(def.control_profile in [ControlProfile.Kind.STEERING, ControlProfile.Kind.MOVEMENT_ACTION, ControlProfile.Kind.ATV],
 				"%s exposes turn and throttle axes" % def.id)
+
+
+func _steering_layout(t: TestHarness) -> void:
+	t.test("steering pads leave a separate boost target in both orientations")
+	var touch := TouchSource.new()
+	touch.profile = ControlProfile.Kind.STEERING
+	touch.buttons = ["dash"]
+	touch._haptics = false
+	for view in [Vector2(540, 960), Vector2(1280, 720), Vector2(270, 201), Vector2(320, 216)]:
+		for handed in [false, true]:
+			touch.size = view
+			touch.touch_count = 4 if view.x <= 320 else 1
+			touch._scale = minf(view.x / 700.0, view.y / 550.0) if touch.touch_count > 1 else 1.0
+			touch._left_handed = handed
+			var pads := touch._steer_rects()
+			var boost := touch._button_centre(0)
+			var radius := TouchSource.BUTTON_RADIUS * touch._scale
+			var boost_bounds := Rect2(boost - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+			for index in pads.size():
+				var pad: Rect2 = pads[index]
+				t.ok(not pad.intersects(boost_bounds), "boost never steals steering or throttle touches")
+				t.ok(pad.size.y <= view.y * 0.22, "driving controls do not consume a third of the screen")
+				t.ok(Rect2(Vector2.ZERO, view).encloses(pad), "pads stay inside the viewport")
+				touch._handle_press(index, pad.get_center(), true)
+				t.equal(touch._owners.get(index, {}).get("kind", ""), "steer", "each pad owns its own touch")
+				t.equal(touch._owners.get(index, {}).get("id", -1), index, "pad touch routes to the correct driving action")
+			touch._handle_press(3, boost, true)
+			t.equal(touch._throttle, 1.0, "throttle remains held alongside boost")
+			t.ok((touch._bits & InputFrame.Btn.DASH) != 0, "boost remains available during steering")
+			touch._owners.clear()
+			touch._pressed_buttons.clear()
+			touch._bits = 0
+			touch._steer = 0.0
+			touch._throttle = 0.0
+	touch.free()
 
 
 func _tank_controls(t: TestHarness) -> void:

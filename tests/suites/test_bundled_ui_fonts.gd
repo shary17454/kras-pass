@@ -3,6 +3,23 @@ extends RefCounted
 
 func run(t: TestHarness) -> void:
 	t.suite("bundled bilingual UI fonts")
+	var startup_path := str(ProjectSettings.get_setting("gui/theme/custom"))
+	t.ok(not FileAccess.get_file_as_string(startup_path).contains("ext_resource"), "fresh-import project theme has no imported dependencies")
+	var project_theme := ThemeDB.get_project_theme()
+	t.ok(project_theme != null and project_theme.default_font != null, "autoload installs the global font before runtime controls")
+	var plain_label := Label.new()
+	var global_font := plain_label.get_theme_font("font")
+	t.equal(global_font, project_theme.default_font, "controls without overrides inherit the bundled project font")
+	for codepoint in [0x0643, 0x004B, 0x2605, 0x1F3C6]:
+		t.ok(global_font.has_char(codepoint), "global font covers Arabic, Latin and game symbols")
+	plain_label.free()
+	var presets := ConfigFile.new()
+	t.equal(presets.load("res://export_presets.cfg"), OK, "export presets load for font license checks")
+	for section in presets.get_sections():
+		if section.begins_with("preset.") and not section.ends_with(".options"):
+			t.ok("assets/fonts/*-OFL.txt" in str(presets.get_value(section, "include_filter", "")), "each application pack includes font licenses")
+	for family in ["NotoSans", "NotoSansArabic", "NotoSansSymbols", "NotoSansSymbols2", "NotoEmoji"]:
+		t.ok(FileAccess.file_exists("res://assets/fonts/%s-OFL.txt" % family), "original license accompanies %s" % family)
 	var characters := {}
 	for locale in ["ar", "en"]:
 		var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/loc/%s.json" % locale))

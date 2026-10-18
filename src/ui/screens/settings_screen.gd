@@ -24,6 +24,20 @@ func build() -> void:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(v)
 
+	_section(v, "settings.appearance")
+	var appearance_values := ["system", "light", "dark"]
+	var appearance := UIKit.option([Loc.t("settings.appearance.system"),
+		Loc.t("settings.appearance.light"), Loc.t("settings.appearance.dark")],
+		maxi(0, appearance_values.find(String(UserSettings.get_value("appearance")))))
+	appearance.name = "AppearanceOptions"
+	appearance.item_selected.connect(func(i): UserSettings.set_value("appearance", appearance_values[i]))
+	var sync_appearance := func(key: String, _value):
+		if key in ["appearance", "*"]:
+			appearance.selected = maxi(0, appearance_values.find(String(UserSettings.get_value("appearance"))))
+	UserSettings.changed.connect(sync_appearance)
+	appearance.tree_exiting.connect(func(): UserSettings.changed.disconnect(sync_appearance))
+	v.add_child(UIKit.row(Loc.t("settings.appearance"), appearance))
+
 	_section(v, "settings.audio")
 	_volume(v, "settings.master", "volume_master")
 	_toggle(v, "settings.music_enabled", "music_enabled")

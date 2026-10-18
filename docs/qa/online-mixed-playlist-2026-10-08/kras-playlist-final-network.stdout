@@ -1,0 +1,81 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── Online tournament rotation menu ─────────────────────────────
+
+── Online mixed minigame playlist editor ───────────────────────
+
+── Network protocol compatibility ──────────────────────────────
+
+── Network incompatible version recovery ───────────────────────
+WARNING: [WRN][Net] online transport lost: protocol_mismatch
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _protocol_terminal_state (res://tests/suites/test_network.gd:127)
+         [4] run (res://tests/suites/test_network.gd:47)
+         [5] _mixed_playlist_menu (res://tests/suites/test_network.gd:265)
+
+── Active online match incompatible version recovery ───────────
+[DBG][Router] screen -> match
+WARNING: [WRN][Net] online transport lost: protocol_mismatch
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _active_protocol_recovery (res://tests/suites/test_network.gd:372)
+[DBG][Router] screen -> online
+[DBG][Router] screen -> local_play
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+[DBG][Router] screen -> online
+[DBG][Router] screen -> local_play
+[DBG][Router] screen -> main_menu
+
+── Network endpoint policy ─────────────────────────────────────
+
+── Network input edges ─────────────────────────────────────────
+TEST_START: Network input edges / a press and release received before a host tick remain distinct
+TEST_START: Network input edges / guest physics publishes a one-tick press between movement samples
+
+── Network bounded input buffering ─────────────────────────────
+TEST_START: Network bounded input buffering / every action retains its press and release exactly once
+TEST_START: Network bounded input buffering / held buttons do not repeat and movements remain latest-value
+TEST_START: Network bounded input buffering / queue and stale intent have strict bounds
+TEST_START: Network bounded input buffering / new round, disconnect and session reset cannot replay old actions
+WARNING: [WRN][Net] online transport lost: test_disconnect
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _input_buffer_limits (res://tests/suites/test_network.gd:630)
+         [4] run (res://tests/suites/test_network.gd:51)
+         [5] _active_protocol_recovery (res://tests/suites/test_network.gd:394)
+
+── Network movement sampling ───────────────────────────────────
+
+── Network snapshot boundary ───────────────────────────────────
+
+── Network player mapping ──────────────────────────────────────
+
+── Network result replay protection ────────────────────────────
+
+── Network host result delivery ────────────────────────────────
+
+── Network reaction gameplay ───────────────────────────────────
+TEST_START: Network reaction gameplay / coalesced short tap scores through the actual host physics pipeline
+
+finished in 6.3s
+
+════════════════════════════════════════════════════════════════
+ALL TESTS PASSED — 400 assertions
+════════════════════════════════════════════════════════════════

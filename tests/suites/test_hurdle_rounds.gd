@@ -62,3 +62,32 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+	await _equal_hurdle_counts(t, host)
+
+
+func _equal_hurdle_counts(t: TestHarness, host: Node) -> void:
+	for rows in range(1, 13):
+		var arena := Arena.new()
+		host.add_child(arena)
+		arena.build(ArenaDef.from_dict({"shape": "track", "radius": 13.0,
+			"hazards": [{"type": "hurdles", "rows": rows, "height": 0.85}]}))
+		var counts := [0, 0, 0, 0]
+		var positions := [[], [], [], []]
+		for body in arena.get_node("Static").get_children():
+			if not body is StaticBody3D:
+				continue
+			for child in body.get_children():
+				if not child is CollisionShape3D or not child.shape is BoxShape3D:
+					continue
+				var size: Vector3 = child.shape.size
+				if not is_equal_approx(size.y, 0.85) or not is_equal_approx(size.z, 0.35):
+					continue
+				for lane in arena.lane_count:
+					if is_equal_approx(body.position.x, arena.lane_x(lane)):
+						counts[lane] += 1
+						positions[lane].append(body.position.z)
+		for lane in arena.lane_count:
+			t.equal(counts[lane], rows - int(rows / arena.lane_count), "rows %d lane %d has the same physical hurdle burden" % [rows, lane])
+			t.equal(positions[lane], positions[0], "rows %d lane %d has equal hurdle spacing and recovery windows" % [rows, lane])
+		arena.queue_free()
+		await host.get_tree().process_frame

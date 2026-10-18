@@ -1,0 +1,52 @@
+extends Node
+
+func _ready() -> void:
+	await get_tree().process_frame
+	var samples := []
+	var failures := []
+	for count in [2, 4]:
+		for seed_value in [209, 502, 2003, 4011]:
+			var roster := MatchConfig.build("ring_rumble", ["nabta", "sakhra", "fanoos", "ramla"], 0, 2, seed_value).players
+			var session := TournamentSession.new()
+			session.setup(roster, ["ring_rumble"] as Array[String], seed_value)
+			var previous: Array[int] = []
+			previous.assign([0, 9, 0, 9] if count == 2 else [9, 9, 9, 9])
+			session.record(MatchResult.make("ring_rumble", "vortex_ring", previous))
+			var cfg := session.next_config()
+			var outcomes: Array[MatchResult] = []
+			var scene: Node = load("res://src/match/match_scene.gd").new()
+			add_child(scene)
+			scene.setup({"config": cfg, "on_finished": func(result: MatchResult): outcomes.append(result)})
+			var ticks := 0
+			while outcomes.is_empty() and ticks < 3000:
+				await get_tree().physics_frame
+				ticks += 1
+			if outcomes.size() != 1:
+				failures.append("missing result: %d contenders, seed %d" % [count, seed_value])
+			else:
+				var result := outcomes[0]
+				var sample := {"seed": seed_value, "contenders": count, "ticks": ticks,
+					"duration": result.duration, "winners": result.winners(),
+					"finished_naturally": result.finished_naturally,
+					"signal_sequence": scene.controller.signal_sequence,
+					"resolve_sequence": scene.controller.resolve_sequence,
+					"time_remaining": scene.ctx.time_left}
+				if not result.finished_naturally or scene.controller.resolve_sequence != 1 or scene.ctx.time_left <= 0.0:
+					failures.append("first response did not finish: %d contenders, seed %d" % [count, seed_value])
+				session.record(result)
+				sample["tournament_complete"] = session.is_complete()
+				sample["champion"] = session.champion()
+				samples.append(sample)
+				print("NATURAL_DECIDER ", JSON.stringify(sample))
+			scene.teardown()
+			scene.queue_free()
+			await get_tree().process_frame
+	var report := {"scope": "8 actual AI reaction deciders after a synthetic tied tournament result; not physical users or balance qualification", "samples": samples, "failures": failures}
+	var output := FileAccess.open("/tmp/kras-first-response-natural.json", FileAccess.WRITE)
+	output.store_string(JSON.stringify(report, "\t"))
+	output.close()
+	AudioManager.shutdown()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	OS.delay_msec(100)
+	get_tree().quit(0 if failures.is_empty() else 1)

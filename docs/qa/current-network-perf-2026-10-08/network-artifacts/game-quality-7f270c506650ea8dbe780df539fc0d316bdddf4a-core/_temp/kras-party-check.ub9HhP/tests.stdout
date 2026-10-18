@@ -1,0 +1,2552 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), Linux
+
+── release version consistency ─────────────────────────────────
+
+── local vehicle views ─────────────────────────────────────────
+VEHICLE_VIEW game=tank_arena humans=2 window=(540, 960) logical_view=(720.0, 1280.0) slot=0 panel=(358.0, 634.0) actor=[P: (123.3192, 275.4221), S: (111.3615, 141.3263)]
+VEHICLE_VIEW game=tank_arena humans=2 window=(540, 960) logical_view=(720.0, 1280.0) slot=1 panel=(358.0, 634.0) actor=[P: (123.3193, 275.4221), S: (111.3615, 141.3263)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 634.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 634.0)
+VEHICLE_VIEW game=tank_arena humans=2 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=0 panel=(958.0, 544.0) actor=[P: (394.3901, 208.8201), S: (169.2197, 214.7528)]
+VEHICLE_VIEW game=tank_arena humans=2 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=1 panel=(958.0, 544.0) actor=[P: (394.3901, 208.8201), S: (169.2197, 214.7528)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 544.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 544.0)
+VEHICLE_VIEW game=tank_arena humans=3 window=(540, 960) logical_view=(720.0, 1280.0) slot=0 panel=(358.0, 238.2) actor=[P: (141.9832, 91.35882), S: (74.03363, 93.95435)]
+VEHICLE_VIEW game=tank_arena humans=3 window=(540, 960) logical_view=(720.0, 1280.0) slot=1 panel=(358.0, 238.2) actor=[P: (141.9832, 91.35882), S: (74.03363, 93.95435)]
+VEHICLE_VIEW game=tank_arena humans=3 window=(540, 960) logical_view=(720.0, 1280.0) slot=2 panel=(720.0, 238.2) actor=[P: (322.9832, 91.35882), S: (74.03363, 93.95435)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 238.2)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 238.2)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (704.0, 43.0)] panel=(720.0, 238.2)
+VEHICLE_VIEW game=tank_arena humans=3 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=0 panel=(958.0, 270.0) actor=[P: (437.0061, 103.6424), S: (83.98776, 106.5869)]
+VEHICLE_VIEW game=tank_arena humans=3 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=1 panel=(958.0, 270.0) actor=[P: (437.0061, 103.6424), S: (83.9877, 106.5869)]
+VEHICLE_VIEW game=tank_arena humans=3 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=2 panel=(1920.0, 270.0) actor=[P: (918.0062, 103.6424), S: (83.98773, 106.5869)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 270.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 270.0)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (1904.0, 43.0)] panel=(1920.0, 270.0)
+VEHICLE_VIEW game=tank_arena humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=0 panel=(358.0, 238.2) actor=[P: (141.9831, 91.35882), S: (74.03387, 93.95435)]
+VEHICLE_VIEW game=tank_arena humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=1 panel=(358.0, 238.2) actor=[P: (141.9832, 91.35882), S: (74.0336, 93.95435)]
+VEHICLE_VIEW game=tank_arena humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=2 panel=(358.0, 238.2) actor=[P: (141.9832, 91.35882), S: (74.03365, 93.95435)]
+VEHICLE_VIEW game=tank_arena humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=3 panel=(358.0, 238.2) actor=[P: (141.9832, 91.35882), S: (74.0336, 93.95435)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 238.2)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 238.2)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 238.2)
+VEHICLE_LABEL slot=3 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 238.2)
+VEHICLE_VIEW game=tank_arena humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=0 panel=(958.0, 270.0) actor=[P: (437.006, 103.6424), S: (83.98804, 106.5869)]
+VEHICLE_VIEW game=tank_arena humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=1 panel=(958.0, 270.0) actor=[P: (437.0061, 103.6424), S: (83.9877, 106.5869)]
+VEHICLE_VIEW game=tank_arena humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=2 panel=(958.0, 270.0) actor=[P: (437.0061, 103.6424), S: (83.98776, 106.5869)]
+VEHICLE_VIEW game=tank_arena humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=3 panel=(958.0, 270.0) actor=[P: (437.0061, 103.6424), S: (83.9877, 106.5869)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 270.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 270.0)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 270.0)
+VEHICLE_LABEL slot=3 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 270.0)
+VEHICLE_VIEW game=sabaq_sawarikh humans=2 window=(540, 960) logical_view=(720.0, 1280.0) slot=0 panel=(358.0, 616.0) actor=[P: (141.3611, 268.252), S: (103.2753, 127.3607)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=2 window=(540, 960) logical_view=(720.0, 1280.0) slot=1 panel=(358.0, 616.0) actor=[P: (139.997, 267.6769), S: (103.6445, 130.7344)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 616.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 616.0)
+VEHICLE_VIEW game=sabaq_sawarikh humans=2 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=0 panel=(958.0, 568.0) actor=[P: (386.7612, 211.3219), S: (195.5126, 244.7099)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=2 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=1 panel=(958.0, 568.0) actor=[P: (385.2789, 211.2061), S: (196.348, 245.458)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 568.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 568.0)
+VEHICLE_VIEW game=sabaq_sawarikh humans=3 window=(540, 960) logical_view=(720.0, 1280.0) slot=0 panel=(358.0, 229.2) actor=[P: (154.9237, 89.07462), S: (66.06161, 81.46814)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=3 window=(540, 960) logical_view=(720.0, 1280.0) slot=1 panel=(358.0, 229.2) actor=[P: (154.0511, 88.70676), S: (66.29774, 83.62621)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=3 window=(540, 960) logical_view=(720.0, 1280.0) slot=2 panel=(720.0, 229.2) actor=[P: (335.812, 89.06851), S: (65.76981, 81.58786)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 229.2)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 229.2)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (704.0, 43.0)] panel=(720.0, 229.2)
+VEHICLE_VIEW game=sabaq_sawarikh humans=3 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=0 panel=(958.0, 282.0) actor=[P: (433.2054, 104.9169), S: (97.06787, 121.4933)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=3 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=1 panel=(958.0, 282.0) actor=[P: (432.4695, 104.8594), S: (97.48264, 121.8647)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=3 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=2 panel=(1920.0, 282.0) actor=[P: (914.0413, 104.9212), S: (97.10071, 121.4842)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 282.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 282.0)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (1904.0, 43.0)] panel=(1920.0, 282.0)
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=0 panel=(358.0, 229.2) actor=[P: (109.8768, 84.54317), S: (103.9165, 110.1307)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=1 panel=(358.0, 229.2) actor=[P: (131.3125, 89.25998), S: (71.36827, 70.9919)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=2 panel=(358.0, 229.2) actor=[P: (120.6515, 88.53149), S: (82.82533, 81.83723)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(540, 960) logical_view=(720.0, 1280.0) slot=3 panel=(358.0, 229.2) actor=[P: (97.96107, 71.46526), S: (84.27979, 82.67426)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 229.2)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 229.2)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 229.2)
+VEHICLE_LABEL slot=3 rect=[P: (8.0, 4.0), S: (342.0, 43.0)] panel=(358.0, 229.2)
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=0 panel=(958.0, 282.0) actor=[P: (407.8594, 102.2088), S: (136.0986, 140.5658)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=1 panel=(958.0, 282.0) actor=[P: (411.7247, 102.4547), S: (125.8312, 129.8294)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=2 panel=(958.0, 282.0) actor=[P: (406.831, 103.7619), S: (135.0222, 136.1885)]
+VEHICLE_VIEW game=sabaq_sawarikh humans=4 window=(1280, 720) logical_view=(1920.0, 1080.0) slot=3 panel=(958.0, 282.0) actor=[P: (387.4409, 96.48799), S: (157.5742, 167.6595)]
+VEHICLE_LABEL slot=0 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 282.0)
+VEHICLE_LABEL slot=1 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 282.0)
+VEHICLE_LABEL slot=2 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 282.0)
+VEHICLE_LABEL slot=3 rect=[P: (8.0, 4.0), S: (942.0, 43.0)] panel=(958.0, 282.0)
+
+── shared pickup first observation delay ───────────────────────
+
+── courier public cargo reaction ───────────────────────────────
+
+── tank weapon crate reaction and visible positions ────────────
+
+── driver backoff engagement memory ────────────────────────────
+
+── AI dash safety uses actual vehicle heading ──────────────────
+
+── survival winner contract ────────────────────────────────────
+
+── meaningful AI leader targeting ──────────────────────────────
+
+── AI one-shot action requests ─────────────────────────────────
+
+── tide ordinary jump access ───────────────────────────────────
+
+── climber delayed ground knowledge ────────────────────────────
+
+── Round announcement fit ──────────────────────────────────────
+
+── HUD complete player names ───────────────────────────────────
+
+── Siege HUD text fit ──────────────────────────────────────────
+
+── siege rendered base perception ──────────────────────────────
+TEST_START: siege rendered base perception / tier 0 visible crystal and delayed HUD health
+TEST_START: siege rendered base perception / tier 1 visible crystal and delayed HUD health
+TEST_START: siege rendered base perception / tier 2 visible crystal and delayed HUD health
+TEST_START: siege rendered base perception / tier 3 visible crystal and delayed HUD health
+
+── rendered hover machine perception ───────────────────────────
+TEST_START: rendered hover machine perception / tier 0 rendered warning, drop and mark
+TEST_START: rendered hover machine perception / tier 1 rendered warning, drop and mark
+TEST_START: rendered hover machine perception / tier 2 rendered warning, drop and mark
+TEST_START: rendered hover machine perception / tier 3 rendered warning, drop and mark
+
+── first rival observation delay ───────────────────────────────
+TEST_START: first rival observation delay / tier 0 first acquisition and restart
+TEST_START: first rival observation delay / tier 1 first acquisition and restart
+TEST_START: first rival observation delay / tier 2 first acquisition and restart
+TEST_START: first rival observation delay / tier 3 first acquisition and restart
+
+── zone visible delayed movement ───────────────────────────────
+
+── scrub warning observation and reaction ──────────────────────
+
+── AI rendered tile targets ────────────────────────────────────
+
+── HUD value text fit ──────────────────────────────────────────
+
+── tank radar HUD clearance ────────────────────────────────────
+
+── crater route progress ───────────────────────────────────────
+
+── effective character movement and combat budget ──────────────
+
+── dodger own jump timing ──────────────────────────────────────
+
+── platform visible ground routing ─────────────────────────────
+
+── sweeper visible physical bounds ─────────────────────────────
+
+── dodger actual arm visibility ────────────────────────────────
+
+── storm public warning reaction ───────────────────────────────
+TEST_START: storm public warning reaction / difficulty 0 public cue lifecycle
+TEST_START: storm public warning reaction / difficulty 1 public cue lifecycle
+TEST_START: storm public warning reaction / difficulty 2 public cue lifecycle
+TEST_START: storm public warning reaction / difficulty 3 public cue lifecycle
+
+── storm incoming defense ──────────────────────────────────────
+
+── bounded debug operation tracing ─────────────────────────────
+
+── shared immutable sphere geometry ────────────────────────────
+
+── offscreen player cues ───────────────────────────────────────
+TEST_START: offscreen player cues / projection 0 visible and behind points
+TEST_START: offscreen player cues / projection 1 visible and behind points
+
+── keeper contact plane ────────────────────────────────────────
+TEST_START: keeper contact plane / oblique shot uses the actual contact plane on side 0
+TEST_START: keeper contact plane / oblique shot uses the actual contact plane on side 1
+TEST_START: keeper contact plane / oblique shot uses the actual contact plane on side 2
+TEST_START: keeper contact plane / oblique shot uses the actual contact plane on side 3
+TEST_START: keeper contact plane / keeper prioritizes observed arrival on side 0
+TEST_START: keeper contact plane / keeper prioritizes observed arrival on side 1
+TEST_START: keeper contact plane / keeper prioritizes observed arrival on side 2
+TEST_START: keeper contact plane / keeper prioritizes observed arrival on side 3
+
+── collectible arbitration ─────────────────────────────────────
+TEST_START: collectible arbitration / closest collector does not depend on overlap insertion order
+TEST_START: collectible arbitration / game eligibility is evaluated before overlap arbitration
+TEST_START: collectible arbitration / dead bodies and dropped-loot grace remain excluded
+TEST_START: collectible arbitration / seeded exact ties are reproducible independent of body order
+TEST_START: collectible arbitration / real relay overlap does not emit rejected pickups every tick
+TEST_START: collectible arbitration / crate_smash simultaneous crate swings
+TEST_START: collectible arbitration / lab_crates simultaneous crate swings
+
+── world camera boundary ───────────────────────────────────────
+TEST_START: world camera boundary / valid square corner remains the follow subject
+TEST_START: world camera boundary / falling driver does not take the view away from survivors
+TEST_START: world camera boundary / all falling subjects remain bounded by the authored square
+TEST_START: world camera boundary / colossus rear spawn remains visible
+TEST_START: world camera boundary / portrait arena uses vertical play space without cropping the rim
+
+── Balance evidence source policy ──────────────────────────────
+
+── balance simulator policy ────────────────────────────────────
+TEST_START: balance simulator policy / boss completion is not inferred from score or duration
+  ✗  / : suite returned without executing assertions
+  ✗  / : suite returned without executing assertions
+
+── Network protocol compatibility ──────────────────────────────
+
+── Network incompatible version recovery ───────────────────────
+WARNING: [WRN][Net] online transport lost: protocol_mismatch
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _protocol_terminal_state (res://tests/suites/test_network.gd:125)
+         [4] run (res://tests/suites/test_network.gd:45)
+         [5] _ready (res://tests/test_runner.gd:202)
+         [6] run (res://tests/suites/test_world_camera.gd:47)
+         [7] _portrait_readability (res://tests/suites/test_world_camera.gd:85)
+
+── Active online match incompatible version recovery ───────────
+[DBG][Router] screen -> match
+WARNING: [WRN][Net] online transport lost: protocol_mismatch
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _active_protocol_recovery (res://tests/suites/test_network.gd:268)
+[DBG][Router] screen -> online
+[DBG][Router] screen -> local_play
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+[DBG][Router] screen -> online
+[DBG][Router] screen -> local_play
+[DBG][Router] screen -> main_menu
+
+── Network endpoint policy ─────────────────────────────────────
+
+── Network input edges ─────────────────────────────────────────
+TEST_START: Network input edges / a press and release received before a host tick remain distinct
+TEST_START: Network input edges / guest physics publishes a one-tick press between movement samples
+
+── Network bounded input buffering ─────────────────────────────
+TEST_START: Network bounded input buffering / every action retains its press and release exactly once
+TEST_START: Network bounded input buffering / held buttons do not repeat and movements remain latest-value
+TEST_START: Network bounded input buffering / queue and stale intent have strict bounds
+TEST_START: Network bounded input buffering / new round, disconnect and session reset cannot replay old actions
+WARNING: [WRN][Net] online transport lost: test_disconnect
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _input_buffer_limits (res://tests/suites/test_network.gd:526)
+         [4] run (res://tests/suites/test_network.gd:49)
+         [5] _active_protocol_recovery (res://tests/suites/test_network.gd:290)
+
+── Network movement sampling ───────────────────────────────────
+
+── Network snapshot boundary ───────────────────────────────────
+
+── Network player mapping ──────────────────────────────────────
+
+── Network result replay protection ────────────────────────────
+
+── Network host result delivery ────────────────────────────────
+
+── Network reaction gameplay ───────────────────────────────────
+TEST_START: Network reaction gameplay / coalesced short tap scores through the actual host physics pipeline
+
+── Apple account access isolation ──────────────────────────────
+
+── scoring ─────────────────────────────────────────────────────
+TEST_START: scoring / standard competition ranking
+TEST_START: scoring / ties share a place and skip the next
+TEST_START: scoring / four-way draw
+TEST_START: scoring / race scoring inverts the comparison
+TEST_START: scoring / multi-round totals decide the match
+TEST_START: scoring / aggregate merges per-round details
+TEST_START: scoring / survival ranks by elimination order
+TEST_START: scoring / tournament awards 5/3/2/1
+TEST_START: scoring / tied places share the combined award
+TEST_START: scoring / session advances and crowns a champion
+TEST_START: scoring / random schedules do not repeat until the pool is exhausted
+
+── content ─────────────────────────────────────────────────────
+TEST_START: content / registry validates cleanly
+TEST_START: content / shipping content meets the target
+TEST_START: content / every mini-game category is represented
+TEST_START: content / adventure stage count
+TEST_START: content / no character has a larger stat budget than another
+TEST_START: content / starter characters exist and are unlockable from a fresh profile
+TEST_START: content / Arabic and English have identical key sets
+TEST_START: content / every content string resolves in both locales
+TEST_START: content / Arabic is treated as right-to-left
+TEST_START: content / every achievement condition type is implemented
+TEST_START: content / match phase transitions are constrained
+TEST_START: content / literal gameplay sound references resolve to an audio stream
+
+── save & progression ──────────────────────────────────────────
+TEST_START: save & progression / write then read returns identical data
+TEST_START: save & progression / a truncated save falls back to the backup
+WARNING: [WRN][Save] checksum mismatch in /home/runner/work/_temp/kras-party-check.ub9HhP/saves-tests/test_profile.json
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _read (res://src/save/save_system.gd:358)
+         [3] load_slot (res://src/save/save_system.gd:275)
+         [4] _corruption (res://tests/suites/test_save.gd:51)
+         [5] run (res://tests/suites/test_save.gd:12)
+         [6] _ready (res://tests/test_runner.gd:204)
+         [7] run (res://tests/suites/test_network.gd:103)
+         [8] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _corruption (res://tests/suites/test_save.gd:51)
+         [4] run (res://tests/suites/test_save.gd:12)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] checksum mismatch in /home/runner/work/_temp/kras-party-check.ub9HhP/saves-tests/test_profile.json
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _read (res://src/save/save_system.gd:358)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:374)
+         [4] _write_slot (res://src/save/save_system.gd:310)
+         [5] flush (res://src/save/save_system.gd:245)
+         [6] _corruption (res://tests/suites/test_save.gd:56)
+         [7] run (res://tests/suites/test_save.gd:12)
+         [8] _ready (res://tests/test_runner.gd:204)
+         [9] run (res://tests/suites/test_network.gd:103)
+         [10] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] checksum mismatch in /home/runner/work/_temp/kras-party-check.ub9HhP/saves-tests/test_profile.json
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _read (res://src/save/save_system.gd:358)
+         [3] _write_slot (res://src/save/save_system.gd:327)
+         [4] flush (res://src/save/save_system.gd:245)
+         [5] _corruption (res://tests/suites/test_save.gd:56)
+         [6] run (res://tests/suites/test_save.gd:12)
+         [7] _ready (res://tests/test_runner.gd:204)
+         [8] run (res://tests/suites/test_network.gd:103)
+         [9] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / a save with no backup degrades to an empty profile, not a crash
+TEST_START: save & progression / failed write stays dirty and can be retried
+ERROR: [ERR][Save] cannot open /home/runner/work/_temp/kras-party-check.ub9HhP/saves-tests/test_profile.json.tmp for write
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:73)
+       [1] e (res://src/core/logger.gd:38)
+       [2] _write_slot (res://src/save/save_system.gd:318)
+       [3] flush (res://src/save/save_system.gd:245)
+       [4] _failed_write (res://tests/suites/test_save.gd:83)
+       [5] run (res://tests/suites/test_save.gd:13)
+       [6] _ready (res://tests/test_runner.gd:204)
+       [7] run (res://tests/suites/test_network.gd:103)
+       [8] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / wrong envelope types recover without a runtime error
+TEST_START: save & progression / a schema-1 save migrates into a named profile
+[INF][Save] migrated save from schema 1 to 2
+TEST_START: save & progression / device-wide branches stay device-wide
+TEST_START: save & progression / migration is idempotent
+TEST_START: save & progression / a downgraded app never overwrites a newer save or its backup
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] load_slot (res://src/save/save_system.gd:278)
+         [4] _future_schema (res://tests/suites/test_save.gd:145)
+         [5] run (res://tests/suites/test_save.gd:15)
+         [6] _ready (res://tests/test_runner.gd:204)
+         [7] run (res://tests/suites/test_network.gd:103)
+         [8] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / future backups are protected, even with a supported main file
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] load_slot (res://src/save/save_system.gd:278)
+         [4] _schema_edge_cases (res://tests/suites/test_save.gd:181)
+         [5] run (res://tests/suites/test_save.gd:16)
+         [6] _ready (res://tests/test_runner.gd:204)
+         [7] run (res://tests/suites/test_network.gd:103)
+         [8] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] load_slot (res://src/save/save_system.gd:278)
+         [4] _schema_edge_cases (res://tests/suites/test_save.gd:181)
+         [5] run (res://tests/suites/test_save.gd:16)
+         [6] _ready (res://tests/test_runner.gd:204)
+         [7] run (res://tests/suites/test_network.gd:103)
+         [8] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] load_slot (res://src/save/save_system.gd:278)
+         [4] _schema_edge_cases (res://tests/suites/test_save.gd:181)
+         [5] run (res://tests/suites/test_save.gd:16)
+         [6] _ready (res://tests/test_runner.gd:204)
+         [7] run (res://tests/suites/test_network.gd:103)
+         [8] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / invalid schema fields recover from a supported backup
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _schema_edge_cases (res://tests/suites/test_save.gd:195)
+         [4] run (res://tests/suites/test_save.gd:16)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _schema_edge_cases (res://tests/suites/test_save.gd:195)
+         [4] run (res://tests/suites/test_save.gd:16)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _schema_edge_cases (res://tests/suites/test_save.gd:195)
+         [4] run (res://tests/suites/test_save.gd:16)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _schema_edge_cases (res://tests/suites/test_save.gd:195)
+         [4] run (res://tests/suites/test_save.gd:16)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _schema_edge_cases (res://tests/suites/test_save.gd:195)
+         [4] run (res://tests/suites/test_save.gd:16)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' corrupt — recovered from backup
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_slot (res://src/save/save_system.gd:283)
+         [3] _schema_edge_cases (res://tests/suites/test_save.gd:195)
+         [4] run (res://tests/suites/test_save.gd:16)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / writes and resets detect future files even without loading first
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] _write_slot (res://src/save/save_system.gd:310)
+         [5] _schema_edge_cases (res://tests/suites/test_save.gd:203)
+         [6] run (res://tests/suites/test_save.gd:16)
+         [7] _ready (res://tests/test_runner.gd:204)
+         [8] run (res://tests/suites/test_network.gd:103)
+         [9] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] erase (res://src/save/save_system.gd:291)
+         [5] _schema_edge_cases (res://tests/suites/test_save.gd:208)
+         [6] run (res://tests/suites/test_save.gd:16)
+         [7] _ready (res://tests/test_runner.gd:204)
+         [8] run (res://tests/suites/test_network.gd:103)
+         [9] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] _write_slot (res://src/save/save_system.gd:310)
+         [5] _schema_edge_cases (res://tests/suites/test_save.gd:203)
+         [6] run (res://tests/suites/test_save.gd:16)
+         [7] _ready (res://tests/test_runner.gd:204)
+         [8] run (res://tests/suites/test_network.gd:103)
+         [9] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+WARNING: [WRN][Save] slot 'test_profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] erase (res://src/save/save_system.gd:291)
+         [5] _schema_edge_cases (res://tests/suites/test_save.gd:208)
+         [6] run (res://tests/suites/test_save.gd:16)
+         [7] _ready (res://tests/test_runner.gd:204)
+         [8] run (res://tests/suites/test_network.gd:103)
+         [9] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / migration from schema zero is idempotent and keeps progress
+[INF][Save] migrated save from schema 1 to 2
+TEST_START: save & progression / profiles isolate progress from each other
+TEST_START: save & progression / deleting a profile cannot leave the device with none
+TEST_START: save & progression / starter characters are available on a fresh profile
+TEST_START: save & progression / trophy thresholds unlock the right characters
+TEST_START: save & progression / mini-games unlock and are never re-announced
+TEST_START: save & progression / adventure records clear state and pay a trophy once
+TEST_START: save & progression / stars follow placement
+TEST_START: save & progression / completion percentage is bounded and monotonic
+TEST_START: save & progression / settings persist and clamp to known keys
+WARNING: [WRN][Settings] unknown setting 'not_a_real_setting'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] set_value (res://src/settings/settings_service.gd:84)
+         [3] _settings (res://tests/suites/test_save.gd:318)
+         [4] run (res://tests/suites/test_save.gd:20)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_network.gd:103)
+         [7] _quick_draw_edges (res://tests/suites/test_network.gd:611)
+TEST_START: save & progression / tutorial flags are one-shot
+
+── systems ─────────────────────────────────────────────────────
+TEST_START: systems / input frame edge detection
+TEST_START: systems / input frames encode and decode losslessly enough for replay
+TEST_START: systems / virtual slots accept AI input
+TEST_START: systems / music switch mutes only music and restores the chosen level
+TEST_START: systems / baked original music preserves synthesis and looping
+TEST_START: systems / baked original sounds retain PCM and cached playback
+TEST_START: systems / audio shutdown releases streams and cancels pending fades
+TEST_START: systems / safe-area insets are sane
+TEST_START: systems / backgrounding suspends audio and flushing, resuming restores it
+TEST_START: systems / a memory warning trims idle pools without disabling allocation
+WARNING: [WRN][Platform] OS memory warning — draining caches
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _on_memory_warning (res://src/core/platform_service.gd:163)
+         [3] _platform (res://tests/suites/test_systems.gd:201)
+         [4] run (res://tests/suites/test_systems.gd:13)
+         [5] _audio_shutdown (res://tests/suites/test_systems.gd:120)
+TEST_START: systems / four difficulty profiles exist and are ordered
+TEST_START: systems / every mini-game's AI script loads
+TEST_START: systems / object pool reuses instances instead of allocating
+TEST_START: systems / pooled projectile retains visual instances across color changes
+TEST_START: systems / rounded boxes are closed solids wound consistently outward
+TEST_START: systems / clearing the cache releases meshes as well as materials
+TEST_START: systems / power-up effects stack, refresh and expire cleanly
+TEST_START: systems / freeze releases on its own timer
+TEST_START: systems / clearing effects between rounds leaves no residue
+TEST_START: systems / every screen builds and offers a way back
+TEST_START: systems / the router's screen holder is live before the first navigation
+[DBG][Router] screen -> main_menu
+TEST_START: systems / app entry opens the playable main menu without a gated boot screen
+[INF][Main] Kras Pass 1.1.11 starting (Linux)
+[DBG][Router] screen -> main_menu
+TEST_START: systems / the access phrase is stored as a digest, not as text
+TEST_START: systems / access opens every gate, and revoking closes them again
+
+── live match memory pressure ──────────────────────────────────
+TEST_START: live match memory pressure / turret_duel keeps live pool factories after memory warning
+WARNING: [WRN][Platform] OS memory warning — draining caches
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _on_memory_warning (res://src/core/platform_service.gd:163)
+         [3] run (res://tests/suites/test_memory_pressure.gd:22)
+         [4] _ready (res://tests/test_runner.gd:202)
+         [5] run (res://tests/suites/test_systems.gd:19)
+         [6] _navigation (res://tests/suites/test_systems.gd:464)
+WARNING: [WRN][Platform] OS memory warning — draining caches
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _on_memory_warning (res://src/core/platform_service.gd:163)
+         [3] run (res://tests/suites/test_memory_pressure.gd:38)
+MEMORY_PRESSURE game=turret_duel before=178480313 after=181537837
+TEST_START: live match memory pressure / gem_grab keeps live pool factories after memory warning
+WARNING: [WRN][Platform] OS memory warning — draining caches
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _on_memory_warning (res://src/core/platform_service.gd:163)
+         [3] run (res://tests/suites/test_memory_pressure.gd:22)
+WARNING: [WRN][Platform] OS memory warning — draining caches
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _on_memory_warning (res://src/core/platform_service.gd:163)
+         [3] run (res://tests/suites/test_memory_pressure.gd:38)
+MEMORY_PRESSURE game=gem_grab before=174428463 after=181391075
+
+── input sources ───────────────────────────────────────────────
+TEST_START: input sources / a fighter moves identically regardless of input source
+TEST_START: input sources / every mini-game declares a usable control profile
+TEST_START: input sources / driving games offer steering buttons or a two-axis stick
+TEST_START: input sources / portrait action buttons stay on screen in either handedness
+TEST_START: input sources / touch buttons are derived from declared controls, never duplicated
+TEST_START: input sources / reaction and memory layouts show no action buttons
+TEST_START: input sources / the touch overlay is off by default on a desktop
+TEST_START: input sources / steering pads leave a separate boost target in both orientations
+TEST_START: input sources / tank touch supports steering, reverse and sustained cannon fire together
+TEST_START: input sources / haptics are graded and rate-limited
+TEST_START: input sources / only a device a human is holding is asked to buzz
+TEST_START: input sources / the vibration setting is honoured
+TEST_START: input sources / the haptic director is subscribed to the moments that matter
+TEST_START: input sources / delayed success haptics respect settings and background cancellation
+
+── visual roster policy ────────────────────────────────────────
+TEST_START: visual roster policy / visual roster accepts all supported local human counts
+TEST_START: visual roster policy / invalid roster input cannot silently fall back to one human
+
+── replay ──────────────────────────────────────────────────────
+TEST_START: replay / replay serialises and round-trips
+TEST_START: replay / a replay from a newer build is refused rather than misread
+WARNING: [WRN][Replay] replay is from a newer build (v10 > v5)
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:298)
+         [3] _format (res://tests/suites/test_replay.gd:120)
+         [4] run (res://tests/suites/test_replay.gd:12)
+         [5] _ready (res://tests/test_runner.gd:202)
+         [6] run (res://tests/suites/test_input_sources.gd:25)
+         [7] _delayed_haptic_cancellation (res://tests/suites/test_input_sources.gd:73)
+TEST_START: replay / recordings without keyframes are marked uncorrectable
+TEST_START: replay / version 1 recordings still load, marked unverifiable
+TEST_START: replay / version 4 retains its frames without invented modifiers
+TEST_START: replay / recordings retain match modifiers and teams
+TEST_START: replay / saving a recording twice keeps one library entry
+[INF][Replay] saved replay 1791436146_008d5e4c5c6142068250eed4cf3b2b21 (0.0s, 1.0 KB)
+[INF][Replay] saved replay 1791436146_008d5e4c5c6142068250eed4cf3b2b21 (0.0s, 1.0 KB)
+TEST_START: replay / replay file access never accepts a path as its id
+TEST_START: replay / capture limit drops all channels instead of saving a partial match
+WARNING: [WRN][Replay] capture budget exceeded; this match will not be saved as a partial replay
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _discard_replay (res://src/match/match_scene.gd:1372)
+         [3] _record_replay_tick (res://src/match/match_scene.gd:1354)
+         [4] _capture_contract (res://tests/suites/test_replay.gd:70)
+         [5] run (res://tests/suites/test_replay.gd:13)
+         [6] _ready (res://tests/test_runner.gd:202)
+         [7] run (res://tests/suites/test_input_sources.gd:25)
+         [8] _delayed_haptic_cancellation (res://tests/suites/test_input_sources.gd:73)
+TEST_START: replay / a recorded match replays to the same result
+[INF][Replay] saved replay 1791436147_f89fa1a003ad9e30c342916680a0e22e (6.0s, 23.2 KB)
+TEST_START: replay / a chaotic match still replays end to end without desync
+[INF][Replay] saved replay 1791436151_e2ecc9578602f5d2f1c2b0d3a8c4b83f (15.6s, 58.5 KB)
+TEST_START: replay / highlight detection finds the interesting moments
+TEST_START: replay / a dull match produces no highlights
+
+── bounded replay input chunks ─────────────────────────────────
+WARNING: [WRN][Replay] world-event capture budget exceeded; this match will not be saved as a partial replay
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _discard_replay (res://src/match/match_scene.gd:1372)
+         [3] _record_world_event (res://src/match/match_scene.gd:742)
+         [4] _event_budget (res://tests/suites/test_replay_input_chunks.gd:49)
+         [5] run (res://tests/suites/test_replay_input_chunks.gd:35)
+         [6] _ready (res://tests/test_runner.gd:202)
+         [7] run (res://tests/suites/test_replay.gd:15)
+         [8] _record_and_replay (res://tests/suites/test_replay.gd:204)
+         [9] _record_and_replay_chaotic (res://tests/suites/test_replay.gd:231)
+         [10] _play (res://tests/suites/test_replay.gd:260)
+WARNING: [WRN][Replay] world-event capture budget exceeded; this match will not be saved as a partial replay
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _discard_replay (res://src/match/match_scene.gd:1372)
+         [3] _record_world_event (res://src/match/match_scene.gd:742)
+         [4] _event_budget (res://tests/suites/test_replay_input_chunks.gd:55)
+         [5] run (res://tests/suites/test_replay_input_chunks.gd:35)
+         [6] _ready (res://tests/test_runner.gd:202)
+         [7] run (res://tests/suites/test_replay.gd:15)
+         [8] _record_and_replay (res://tests/suites/test_replay.gd:204)
+         [9] _record_and_replay_chaotic (res://tests/suites/test_replay.gd:231)
+         [10] _play (res://tests/suites/test_replay.gd:260)
+[INF][Replay] saved replay 1791436164_9436677ffe47a44f5916c0ae804bab2d (250.0s, 925.8 KB)
+
+── replay committed-file index recovery ────────────────────────
+WARNING: [WRN][Save] slot 'profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] can_write (res://src/save/save_system.gd:233)
+         [5] _can_mutate (res://src/replay/replay_store.gd:338)
+         [6] recover_library (res://src/replay/replay_store.gd:123)
+
+── replay recovery persisted resume ────────────────────────────
+
+── replay schema validation ────────────────────────────────────
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:34)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:37)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:41)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:41)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:41)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:41)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:41)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:45)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:45)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:45)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:48)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:56)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:56)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:56)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:56)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:61)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:61)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:61)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] run (res://tests/suites/test_replay_schema.gd:61)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] load_replay (res://src/replay/replay_store.gd:299)
+         [4] run (res://tests/suites/test_replay_schema.gd:72)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] load_replay (res://src/replay/replay_store.gd:299)
+         [4] run (res://tests/suites/test_replay_schema.gd:72)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] load_replay (res://src/replay/replay_store.gd:299)
+         [4] run (res://tests/suites/test_replay_schema.gd:72)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] load_replay (res://src/replay/replay_store.gd:299)
+         [4] run (res://tests/suites/test_replay_schema.gd:72)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] load_replay (res://src/replay/replay_store.gd:299)
+         [4] run (res://tests/suites/test_replay_schema.gd:72)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay metadata has an invalid schema
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:294)
+         [3] load_replay (res://src/replay/replay_store.gd:299)
+         [4] run (res://tests/suites/test_replay_schema.gd:72)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+
+── replay payload integrity ────────────────────────────────────
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:24)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:24)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:28)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:32)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:35)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay binary channels are incomplete or invalid
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_dict (res://src/replay/replay_data.gd:302)
+         [3] run (res://tests/suites/test_replay_payload.gd:52)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+
+── replay atomic storage and budgets ───────────────────────────
+[INF][Replay] saved replay storage_test (0.0s, 0.4 KB)
+WARNING: [WRN][Replay] cannot prepare replay storage_test for write
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _write_atomic (res://src/replay/replay_store.gd:228)
+         [3] save (res://src/replay/replay_store.gd:202)
+         [4] run (res://tests/suites/test_replay_storage.gd:22)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [7] recover_library (res://src/replay/replay_store.gd:180)
+[INF][Replay] saved replay storage_test (0.0s, 0.4 KB)
+WARNING: [WRN][Replay] cannot commit replay storage_blocked_destination; previous recording retained
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _write_atomic (res://src/replay/replay_store.gd:239)
+         [3] run (res://tests/suites/test_replay_storage.gd:41)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+WARNING: [WRN][Replay] replay storage_oversized exceeds the file read budget
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_replay (res://src/replay/replay_store.gd:288)
+         [3] run (res://tests/suites/test_replay_storage.gd:54)
+         [4] _ready (res://tests/test_runner.gd:204)
+         [5] run (res://tests/suites/test_replay_recovery_resume.gd:67)
+         [6] recover_library (res://src/replay/replay_store.gd:180)
+[INF][Replay] saved replay storage_budget_0 (0.0s, 0.4 KB)
+[INF][Replay] saved replay storage_budget_1 (0.0s, 0.4 KB)
+[INF][Replay] saved replay storage_budget_2 (0.0s, 0.4 KB)
+
+── replay newest recording retention ───────────────────────────
+[INF][Replay] saved replay retained_highlight_00 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_01 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_02 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_03 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_04 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_05 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_06 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_07 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_08 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_09 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_10 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_11 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_12 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_13 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_14 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_15 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_16 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_17 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_18 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_19 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_20 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_21 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_22 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_23 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_24 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_25 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_26 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_27 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_28 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_29 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_30 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_31 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_32 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_33 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_34 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_35 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_36 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_37 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_38 (0.0s, 1.0 KB)
+[INF][Replay] saved replay retained_highlight_39 (0.0s, 1.0 KB)
+[INF][Replay] saved replay newest_plain_recording (0.0s, 1.0 KB)
+
+── replay future-save protection ───────────────────────────────
+[INF][Replay] saved replay protected_recording (0.0s, 0.4 KB)
+WARNING: [WRN][Save] slot 'profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] load_slot (res://src/save/save_system.gd:278)
+         [4] run (res://tests/suites/test_replay_future_save.gd:33)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_retention.gd:73)
+[INF][Replay] saved replay protected_recording (0.0s, 0.4 KB)
+WARNING: [WRN][Save] slot 'profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] can_write (res://src/save/save_system.gd:233)
+         [5] _can_mutate (res://src/replay/replay_store.gd:338)
+         [6] save (res://src/replay/replay_store.gd:198)
+         [7] run (res://tests/suites/test_replay_future_save.gd:40)
+         [8] _ready (res://tests/test_runner.gd:204)
+         [9] run (res://tests/suites/test_replay_retention.gd:73)
+[INF][Replay] saved replay protected_recording (0.0s, 0.4 KB)
+WARNING: [WRN][Save] slot 'profile' uses a newer schema; keeping its files read-only
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _protect_newer (res://src/save/save_system.gd:384)
+         [3] _protect_newer_on_disk (res://src/save/save_system.gd:375)
+         [4] can_write (res://src/save/save_system.gd:233)
+         [5] _can_mutate (res://src/replay/replay_store.gd:338)
+         [6] save (res://src/replay/replay_store.gd:198)
+         [7] run (res://tests/suites/test_replay_future_save.gd:40)
+         [8] _ready (res://tests/test_runner.gd:204)
+         [9] run (res://tests/suites/test_replay_retention.gd:73)
+
+── playlist & party presets ────────────────────────────────────
+TEST_START: playlist & party presets / generate() honours the requested count and is seed-stable
+TEST_START: playlist & party presets / a different seed can produce a different schedule
+TEST_START: playlist & party presets / an empty pool produces an empty schedule, not a crash
+TEST_START: playlist & party presets / no two consecutive entries share a category when the pool allows it
+TEST_START: playlist & party presets / a single-category pool does not deadlock — it just repeats
+TEST_START: playlist & party presets / a game with several arenas avoids repeating the immediately previous one
+TEST_START: playlist & party presets / preset ids come from data, not code
+TEST_START: playlist & party presets / from_preset() honours each preset's own shape
+TEST_START: playlist & party presets / a category-filtered preset only draws from its categories
+TEST_START: playlist & party presets / an unknown preset id degrades to a sane default instead of an empty schedule
+WARNING: [WRN][Playlist] unknown party preset 'does_not_exist'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] from_preset (res://src/match/playlist_generator.gd:32)
+         [3] _presets_match_data (res://tests/suites/test_playlist.gd:113)
+         [4] run (res://tests/suites/test_playlist.gd:14)
+         [5] _ready (res://tests/test_runner.gd:204)
+         [6] run (res://tests/suites/test_replay_retention.gd:73)
+TEST_START: playlist & party presets / TournamentSession.from_preset() wires games, arenas and modifiers into real configs
+TEST_START: playlist & party presets / a session built the old way (no preset) still works — arena falls back to random
+
+── local party core ────────────────────────────────────────────
+TEST_START: local party core / unconfigured online endpoint cannot masquerade as a room
+WARNING: [WRN][Net] online endpoint is not configured
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] host_online (res://src/net/net_service.gd:123)
+         [3] _network_boundary (res://tests/suites/test_party.gd:41)
+         [4] run (res://tests/suites/test_party.gd:6)
+         [5] _ready (res://tests/test_runner.gd:202)
+         [6] run (res://tests/suites/test_replay_retention.gd:73)
+WARNING: [WRN][Net] online endpoint is not configured
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] join_online (res://src/net/net_service.gd:133)
+         [3] _network_boundary (res://tests/suites/test_party.gd:42)
+         [4] run (res://tests/suites/test_party.gd:6)
+         [5] _ready (res://tests/test_runner.gd:202)
+         [6] run (res://tests/suites/test_replay_retention.gd:73)
+TEST_START: local party core / local lobby enforces capacity, readiness and match roster
+TEST_START: local party core / one short cup, one optional double final, no duplicate rewards
+TEST_START: local party core / tied leaders play a separate remapped reaction round
+TEST_START: local party core / repeated true draws terminate fairly
+TEST_START: local party core / aborted and malformed results never advance the cup
+TEST_START: local party core / short party races explicitly opt in without changing ordinary races
+TEST_START: local party core / first-to-cups ends early and ranks by cups, not points
+TEST_START: local party core / simultaneous cup target launches a deciding round
+TEST_START: local party core / legacy tournament save restores as fixed-points mode
+TEST_START: local party core / JSON round trip resumes the exact next game and rules
+TEST_START: local party core / favorites are unique, local, and exclude bosses
+TEST_START: local party core / battery saver is a reversible effective override
+TEST_START: local party core / every named human earns their own stats; guests earn no host stats
+TEST_START: local party core / eight recognizable archetypes with bounded perks and equal budgets
+TEST_START: local party core / all game controls fit separate local regions in both orientations
+TEST_START: local party core / four touch sources keep fingers and input frames independent
+TEST_START: local party core / pooled shells reset variant state
+TEST_START: local party core / tank ammo variants use the same match and bounded projectile pool
+TEST_START: local party core / background pause releases every finger and settings preserve the match
+TEST_START: local party core / wide local arenas frame every competitor outside touch and score strips
+TEST_START: local party core / collector skill chooses less-contested visible loot without hidden buffs
+TEST_START: local party core / base default methods do not count as a game's scoring implementation
+
+── tournament checkpoint integrity ─────────────────────────────
+
+── screen transition recovery ──────────────────────────────────
+ERROR: [ERR][Router] failed to load screen script for 'main_menu'
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:73)
+       [1] e (res://src/core/logger.gd:38)
+       [2] _swap (res://src/core/scene_router.gd:263)
+       [3] go_to (res://src/core/scene_router.gd:138)
+       [4] run (res://tests/suites/test_router_recovery.gd:17)
+       [5] _ready (res://tests/test_runner.gd:202)
+       [6] run (res://tests/suites/test_party.gd:19)
+       [7] _collector_decisions (res://tests/suites/test_party.gd:492)
+ERROR: [ERR][Router] failed to load screen script for 'main_menu'
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:73)
+       [1] e (res://src/core/logger.gd:38)
+       [2] _swap (res://src/core/scene_router.gd:263)
+       [3] go_to (res://src/core/scene_router.gd:138)
+       [4] back (res://src/core/scene_router.gd:239)
+       [5] run (res://tests/suites/test_router_recovery.gd:25)
+       [6] _ready (res://tests/test_runner.gd:202)
+       [7] run (res://tests/suites/test_party.gd:19)
+       [8] _collector_decisions (res://tests/suites/test_party.gd:492)
+[DBG][Router] screen -> main_menu
+ERROR: [ERR][Router] failed to load screen script for 'main_menu'
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:73)
+       [1] e (res://src/core/logger.gd:38)
+       [2] _swap (res://src/core/scene_router.gd:263)
+       [3] go_to (res://src/core/scene_router.gd:138)
+       [4] back (res://src/core/scene_router.gd:239)
+       [5] run (res://tests/suites/test_router_recovery.gd:36)
+       [6] _ready (res://tests/test_runner.gd:202)
+       [7] run (res://tests/suites/test_party.gd:19)
+       [8] _collector_decisions (res://tests/suites/test_party.gd:492)
+
+── rendered performance sampling budget ────────────────────────
+
+── burst node reuse ────────────────────────────────────────────
+
+── boss health HUD ─────────────────────────────────────────────
+
+── HUD numeric direction ───────────────────────────────────────
+TEST_START: HUD numeric direction / fractions and localized player names
+
+── live status toast HUD ───────────────────────────────────────
+
+── bundled bilingual UI fonts ──────────────────────────────────
+
+── terrain road distance equivalence ───────────────────────────
+ROAD_QUERY_BENCH reference_usec=16420370 production_usec=5140565
+
+── road query conservative bounds ──────────────────────────────
+
+── live arena shadow quality ───────────────────────────────────
+
+── match resource preparation ──────────────────────────────────
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+[DBG][Router] screen -> main_menu
+
+── one-round tournament resource prefetch ──────────────────────
+[DBG][Router] screen -> main_menu
+[DBG][Router] screen -> match
+[DBG][Router] screen -> standings
+[DBG][Router] screen -> match
+[DBG][Router] screen -> main_menu
+
+── online session integrity during resource preparation ────────
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] run (res://tests/suites/test_match_preparation_session.gd:50)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+WARNING: [WRN][Router] online match changed or could not be prepared
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] go_to (res://src/core/scene_router.gd:132)
+         [3] _prepare_match (res://tests/suites/test_match_preparation_session.gd:25)
+
+── network failure drains pending resource preparation ─────────
+
+── online start handoff after loading ──────────────────────────
+
+── main menu exit confirmation ─────────────────────────────────
+[DBG][Platform] app backgrounded
+[DBG][Platform] app foregrounded
+[DBG][Platform] app backgrounded
+[DBG][Platform] app foregrounded
+
+── party profiles, podium and announcer ────────────────────────
+TEST_START: party profiles, podium and announcer / every named participant owns their reward; guests do not
+TEST_START: party profiles, podium and announcer / cup awards survive checkpoints and are not a scoring bonus
+TEST_START: party profiles, podium and announcer / shared cups recognize all tied profiles once
+TEST_START: party profiles, podium and announcer / favorite character and palette are profile-local and serialized
+TEST_START: party profiles, podium and announcer / announcer volume is independent and missing voices are harmless
+TEST_START: party profiles, podium and announcer / music ducking cannot restore stale volume settings
+TEST_START: party profiles, podium and announcer / portable tournament plans contain no local identities
+TEST_START: party profiles, podium and announcer / aborted aggregates cannot earn statistics, gems or achievements
+TEST_START: party profiles, podium and announcer / flawless means an outright win in every round, not a shared draw
+TEST_START: party profiles, podium and announcer / adventure rewards require a completed valid outcome
+TEST_START: party profiles, podium and announcer / adventure boss progression requires actual defeat in every round
+
+── mutators ────────────────────────────────────────────────────
+TEST_START: mutators / mutually exclusive mutators do not both activate
+TEST_START: mutators / a mutator outside its declared categories is rejected
+TEST_START: mutators / category-less mutators (e.g. hyper_speed) work in any game
+TEST_START: mutators / gravity, speed and size mutators reach the fighter, and reset cleanly
+TEST_START: mutators / no_powerups actually disables the power-up spawner
+TEST_START: mutators / re-applying with an empty list resets every fighter to baseline
+TEST_START: mutators / chaos mode's mid-round schedule is drawn from the match seed, not wall-clock randomness
+TEST_START: mutators / chaos swaps the active mutator rather than stacking it
+
+── matches (integration) ───────────────────────────────────────
+TEST_START: matches (integration) / high refresh presentation does not accelerate physics
+TEST_START: matches (integration) / play tank_arena to completion
+[INF][Replay] saved replay 1791436219_ef1072f2aab3c922ff203f8d3f56679d (35.0s, 130.3 KB)
+TEST_START: matches (integration) / play ring_rumble to completion
+[INF][Replay] saved replay 1791436220_753ac5004ef52763700b4cb68ed261fb (18.3s, 69.0 KB)
+TEST_START: matches (integration) / play crumble_court to completion
+[INF][Replay] saved replay 1791436221_c7f99a1ddfe2388d29b3a5a9c7eca407 (8.6s, 33.1 KB)
+TEST_START: matches (integration) / play bumper_bowl to completion
+[INF][Replay] saved replay 1791436223_47ea2169a6781d1acb6f18b85904f88c (35.0s, 131.4 KB)
+TEST_START: matches (integration) / play fawda to completion
+[INF][Replay] saved replay 1791436224_706e8a555c83cf4a9488eb7f2a80f0d8 (16.1s, 60.5 KB)
+TEST_START: matches (integration) / play goal_guard to completion
+[INF][Replay] saved replay 1791436225_d0dcb094bcb1f5e02933067d9a5694a0 (34.1s, 126.9 KB)
+TEST_START: matches (integration) / play magnet_court to completion
+[INF][Replay] saved replay 1791436226_f1359b21433ecd87c0d9834f1dfd2d9d (33.7s, 125.3 KB)
+TEST_START: matches (integration) / play storm_heart to completion
+[INF][Replay] saved replay 1791436227_b445bb98606114530aa9b67d34a1f2a5 (23.1s, 86.0 KB)
+TEST_START: matches (integration) / play sky_court to completion
+[INF][Replay] saved replay 1791436228_27434c48a15f7896c54c54b721446fef (27.7s, 103.1 KB)
+TEST_START: matches (integration) / play blast_ball to completion
+[INF][Replay] saved replay 1791436230_43f8e17bfe3ba9f2c00d1bd9ceb2c524 (16.1s, 60.4 KB)
+TEST_START: matches (integration) / play scrap_karts to completion
+[INF][Replay] saved replay 1791436231_aa995ad1933274e9645207d2aa26a8da (28.8s, 107.3 KB)
+TEST_START: matches (integration) / play turret_duel to completion
+[INF][Replay] saved replay 1791436232_0d2f9ced5c51eeab72c8cddbd180e2ed (35.0s, 130.3 KB)
+TEST_START: matches (integration) / play gem_grab to completion
+[INF][Replay] saved replay 1791436233_2dd78b03442a60e3c4e816f950fe41b8 (5.0s, 19.4 KB)
+TEST_START: matches (integration) / play star_rush to completion
+[INF][Replay] saved replay 1791436235_94845734d2104958e728e132ec7c7397 (35.0s, 130.3 KB)
+TEST_START: matches (integration) / play paint_grid to completion
+[INF][Replay] saved replay 1791436235_75909aafb1259a4f1272a554ebffbac8 (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play mnatiq to completion
+[INF][Replay] saved replay 1791436236_c000d1377759503aa245a4336ccf3896 (5.0s, 19.6 KB)
+TEST_START: matches (integration) / play mukharrib to completion
+[INF][Replay] saved replay 1791436237_eb9afc0c9c9d861960c73a9888960c3f (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play zone_hold to completion
+[INF][Replay] saved replay 1791436239_150f79adac178deafa29aebcfbc68ffa (35.0s, 130.4 KB)
+TEST_START: matches (integration) / play crate_smash to completion
+[INF][Replay] saved replay 1791436239_b1d7d7db885d46f15137f90a22ab4a98 (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play lab_crates to completion
+[INF][Replay] saved replay 1791436241_37d0641b1f40be6ad814833a9e7e0dec (35.0s, 130.4 KB)
+TEST_START: matches (integration) / play crate_relay to completion
+[INF][Replay] saved replay 1791436242_1d5e4a9e64565ed77cc6add243600d47 (5.0s, 19.4 KB)
+TEST_START: matches (integration) / play hurdle_dash to completion
+[INF][Replay] saved replay 1791436242_4016d812826dde6f6a7f8edce4b23644 (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play kart_sprint to completion
+[INF][Replay] saved replay 1791436244_ed0f6e801490c3bba8f1c0c1b93efcc5 (33.4s, 124.2 KB)
+TEST_START: matches (integration) / play color_stand to completion
+[INF][Replay] saved replay 1791436244_af0118f62e740a94bdcc3b137a9dad78 (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play symbol_echo to completion
+[INF][Replay] saved replay 1791436245_13bb213402b7f6ffb29510a9fc9a2316 (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play quick_draw to completion
+[INF][Replay] saved replay 1791436245_8775daa6af11f270c053094d25b21f0d (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play rising_tide to completion
+[INF][Replay] saved replay 1791436246_fb8f9411a48142b610237f72c777b1a0 (8.5s, 32.2 KB)
+TEST_START: matches (integration) / play sweeper_storm to completion
+[INF][Replay] saved replay 1791436247_821b985fa6d4547ab370dbe8ee3b133c (12.1s, 45.7 KB)
+TEST_START: matches (integration) / play duel_pit to completion
+[INF][Replay] saved replay 1791436249_bbb83eefbb8e040660dbe7fa58a979e8 (35.0s, 130.3 KB)
+TEST_START: matches (integration) / play boss_forge to completion
+[INF][Replay] saved replay 1791436249_076e7ddcceb7015c154865c3646a52a6 (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play boss_colossus to completion
+[INF][Replay] saved replay 1791436250_4d1eddc20815578cca66cd8a19e7aebf (5.0s, 19.5 KB)
+TEST_START: matches (integration) / play boss_dreadnought to completion
+[INF][Replay] saved replay 1791436250_7a38036f12d0fa7006e864dd497956d6 (5.0s, 19.6 KB)
+TEST_START: matches (integration) / play boss_sovereign to completion
+[INF][Replay] saved replay 1791436250_6afc4fb9059e65018dffb4d270cba100 (5.0s, 19.6 KB)
+TEST_START: matches (integration) / play sabaq_sawarikh to completion
+[INF][Replay] saved replay 1791436263_a9290041ea8063204e68abb993ed7371 (130.4s, 482.8 KB)
+TEST_START: matches (integration) / play relic_hold to completion
+[INF][Replay] saved replay 1791436264_e643b2326d9f2a0453f12c4daf728229 (5.0s, 19.4 KB)
+TEST_START: matches (integration) / play tag_hunt to completion
+[INF][Replay] saved replay 1791436265_464c8965df3b7845e09e2835fe6ea40c (35.0s, 130.3 KB)
+TEST_START: matches (integration) / play base_siege to completion
+[INF][Replay] saved replay 1791436266_352cc349759f9d0a71237d16ae750aa3 (5.0s, 19.6 KB)
+TEST_START: matches (integration) / play drift_floes to completion
+[INF][Replay] saved replay 1791436267_46c490a83d624fb55b6febcd622b9beb (11.2s, 42.5 KB)
+TEST_START: matches (integration) / play duo_clash to completion
+[INF][Replay] saved replay 1791436268_1eaaee48405d985e67d04386a8469247 (35.0s, 130.4 KB)
+TEST_START: matches (integration) / three-round match aggregates correctly
+[INF][Replay] saved replay 1791436271_4b70a5bc5237ad3022770439a7b7eaf2 (45.1s, 168.8 KB)
+TEST_START: matches (integration) / pause halts the clock, restart replays the round, quit is clean
+TEST_START: matches (integration) / losing a controller pauses instead of stranding the player
+TEST_START: matches (integration) / expert AI out-scores easy AI in gem_grab
+[INF][Replay] saved replay 1791436273_9a57f1589223909eb75088ccbeb6d8fe (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=100 expert_first=true expert=16 easy=4
+[INF][Replay] saved replay 1791436275_2ae0510f5e36e7c8e1b882c157410e0f (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=100 expert_first=false expert=11 easy=5
+[INF][Replay] saved replay 1791436276_a37457869c1d01be39e069ffb275403a (30.0s, 111.9 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=137 expert_first=true expert=19 easy=4
+[INF][Replay] saved replay 1791436278_ef7eab645c7bd695d38e7d1bf873cc21 (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=137 expert_first=false expert=14 easy=8
+[INF][Replay] saved replay 1791436280_b9a811434b0c9052293fc12b50d759ae (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=174 expert_first=true expert=14 easy=6
+[INF][Replay] saved replay 1791436281_464da7e93653f31614825e79cde36bda (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=174 expert_first=false expert=19 easy=2
+[INF][Replay] saved replay 1791436283_b0fbfc2073233891886c1500f461c597 (30.0s, 111.9 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=211 expert_first=true expert=21 easy=4
+[INF][Replay] saved replay 1791436287_bb0e3ec7ebb77baf39c1de170db3bda9 (60.0s, 222.7 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=211 expert_first=false expert=10 easy=5
+[INF][Replay] saved replay 1791436289_31577c7ffae274cd36600c00c5ce39b6 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=248 expert_first=true expert=10 easy=7
+[INF][Replay] saved replay 1791436291_02194f2a9155b08c5c2f312fce168ca1 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=248 expert_first=false expert=12 easy=8
+[INF][Replay] saved replay 1791436293_99ac0325cb3f56af9e0892980dc9d7e4 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=285 expert_first=true expert=14 easy=5
+[INF][Replay] saved replay 1791436294_c122946d908478003fe9dec806fe5fdc (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=285 expert_first=false expert=15 easy=7
+[INF][Replay] saved replay 1791436296_ef02687783d773efbd5cf9c9aa3a5cfa (30.0s, 111.9 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=322 expert_first=true expert=15 easy=4
+[INF][Replay] saved replay 1791436298_bbb55dfc06fb7687471a930e194414ce (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=322 expert_first=false expert=15 easy=5
+[INF][Replay] saved replay 1791436299_f0638d32039764af3ce6cf7ee1784bc8 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=359 expert_first=true expert=14 easy=5
+[INF][Replay] saved replay 1791436301_628af920cdb90a0ec6c4e365fe373813 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=gem_grab seed=359 expert_first=false expert=16 easy=6
+TEST_START: matches (integration) / expert AI out-scores easy AI in crate_smash
+[INF][Replay] saved replay 1791436303_3311815aa1c9aa206f06581ea224897b (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=100 expert_first=true expert=52 easy=8
+[INF][Replay] saved replay 1791436304_2a8b48959cc6065a6886eb943760338b (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=100 expert_first=false expert=52 easy=5
+[INF][Replay] saved replay 1791436306_9ef4f0fdd40643685eedad568e92db22 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=137 expert_first=true expert=42 easy=0
+[INF][Replay] saved replay 1791436307_c2405986be11126e22539e8c95dc9b1e (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=137 expert_first=false expert=47 easy=0
+[INF][Replay] saved replay 1791436309_a55f997cb8dc6c7d3912f524430c0917 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=174 expert_first=true expert=55 easy=8
+[INF][Replay] saved replay 1791436311_e0b268cd782c7e1009d58436c5524de4 (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=174 expert_first=false expert=62 easy=0
+[INF][Replay] saved replay 1791436312_1f7681be1e574555c28969dc492e9b7c (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=211 expert_first=true expert=38 easy=0
+[INF][Replay] saved replay 1791436314_70867b3109eaab34d570ae22f20e90dc (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=211 expert_first=false expert=51 easy=4
+[INF][Replay] saved replay 1791436317_568839b84249fa441669ff8f639eb3aa (60.0s, 222.7 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=248 expert_first=true expert=98 easy=2
+[INF][Replay] saved replay 1791436318_6b193f7a2c51d583236d1f504f21b923 (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=248 expert_first=false expert=59 easy=2
+[INF][Replay] saved replay 1791436321_0561f4b91c1c696315f93ce2825b7b3d (60.0s, 222.7 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=285 expert_first=true expert=91 easy=1
+[INF][Replay] saved replay 1791436323_28d0c8e09bbd7f1f27235f179f690239 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=285 expert_first=false expert=40 easy=11
+[INF][Replay] saved replay 1791436324_f52928b56121d2c5128d21fa3699c56f (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=322 expert_first=true expert=56 easy=2
+[INF][Replay] saved replay 1791436326_0bdf197058297df13a079fc95ca03def (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=322 expert_first=false expert=60 easy=3
+[INF][Replay] saved replay 1791436328_9e17c4a88df49866b38a379cbbb11c36 (30.0s, 111.8 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=359 expert_first=true expert=45 easy=12
+[INF][Replay] saved replay 1791436329_21ebe942e1a86482517a85f9ecfbd346 (30.0s, 111.7 KB)
+DIFFICULTY_SAMPLE game=crate_smash seed=359 expert_first=false expert=53 easy=6
+TEST_START: matches (integration) / Rocket Rally: crossing the line ends your involvement
+TEST_START: matches (integration) / Ring Rumble: arctic bombs dismount before the next hit lands
+TEST_START: matches (integration) / tank battle armor, elimination, cover and round reset on all maps
+TEST_START: matches (integration) / fantasy circuits have continuous elevated driveable roads
+TEST_START: matches (integration) / races end at the selected finish line, never on a countdown
+TEST_START: matches (integration) / race rescue costs time without granting checkpoint progress
+TEST_START: matches (integration) / three real AI laps finish on dune_circuit without a countdown
+[INF][Replay] saved replay 1791436360_e2206968c98f1696e4c3c9977030042e (130.4s, 482.8 KB)
+TEST_START: matches (integration) / three real AI laps finish on neon_spiral without a countdown
+[INF][Replay] saved replay 1791436374_7f3c2c22671cf9badd89a8edde4bd1cc (145.3s, 537.9 KB)
+TEST_START: matches (integration) / three real AI laps finish on frost_hairpin without a countdown
+[INF][Replay] saved replay 1791436387_8a141533118a201d2feeb854e345dd3c (128.0s, 473.7 KB)
+TEST_START: matches (integration) / three real AI laps finish on magma_ring without a countdown
+[INF][Replay] saved replay 1791436400_938276915f0b79d7bbc29184384da441 (143.6s, 531.5 KB)
+TEST_START: matches (integration) / three real AI laps finish on sky_causeway without a countdown
+[INF][Replay] saved replay 1791436416_ef4ca1af3d4cbfd64a4a7058d6de3ccc (156.3s, 578.5 KB)
+TEST_START: matches (integration) / three real AI laps finish on alula_rain without a countdown
+[INF][Replay] saved replay 1791436432_b81ad1b7a5a19595110d678e6cd7565a (153.4s, 567.6 KB)
+TEST_START: matches (integration) / three real AI laps finish on sinbad_coast without a countdown
+[INF][Replay] saved replay 1791436448_3867885cece05f34bc86db2975687808 (164.8s, 610.0 KB)
+TEST_START: matches (integration) / three real AI laps finish on pharaoh_valley without a countdown
+[INF][Replay] saved replay 1791436464_d263f642797be281e0a266c4a7d42fe3 (170.3s, 630.5 KB)
+
+── boss round reset ────────────────────────────────────────────
+TEST_START: boss round reset / boss_forge restores defeated and interrupted rounds
+TEST_START: boss round reset / boss_forge credits applied damage and rejects invalid hits
+TEST_START: boss round reset / boss_forge delivers objective outcome through real completion
+TEST_START: boss round reset / boss_colossus restores defeated and interrupted rounds
+TEST_START: boss round reset / boss_colossus credits applied damage and rejects invalid hits
+TEST_START: boss round reset / boss_colossus delivers objective outcome through real completion
+TEST_START: boss round reset / boss_dreadnought restores defeated and interrupted rounds
+TEST_START: boss round reset / boss_dreadnought credits applied damage and rejects invalid hits
+TEST_START: boss round reset / boss_dreadnought delivers objective outcome through real completion
+TEST_START: boss round reset / boss_sovereign restores defeated and interrupted rounds
+TEST_START: boss round reset / boss_sovereign credits applied damage and rejects invalid hits
+TEST_START: boss round reset / boss_sovereign delivers objective outcome through real completion
+
+── cooperative bosses retain individual contribution scoring ────
+
+── sovereign final phase remains winnable ──────────────────────
+
+── sovereign targets active fighters on reachable ground ───────
+
+── forge network presentation ──────────────────────────────────
+
+── dreadnought network presentation ────────────────────────────
+
+── sovereign network presentation ──────────────────────────────
+
+── colossus network carved presentation ────────────────────────
+
+── colossus targets playable ground rather than airborne height ────
+
+── shrinking arena ejection ────────────────────────────────────
+
+── body contacts expire after their physics tick ───────────────
+
+── colossus respawns do not overlap active bodies ──────────────
+
+── forge visible feeding geometry ──────────────────────────────
+
+── forge feeding perception ────────────────────────────────────
+
+── color call reaction clock ───────────────────────────────────
+
+── quick draw lifecycle ────────────────────────────────────────
+
+── symbol echo lifecycle ───────────────────────────────────────
+
+── crate round lifecycle ───────────────────────────────────────
+
+── relay pickup and round lifecycle ────────────────────────────
+
+── relay physical floor and cargo recovery ─────────────────────
+
+── crater physical floor ───────────────────────────────────────
+
+── conservative crater clipping bounds ─────────────────────────
+CRATER BOUNDS: considered=128 retained=52
+CRATER REBUILD: filtered=false median_usec=11707
+CRATER REBUILD: filtered=true median_usec=5181
+
+── colossus visible safe attack approach ───────────────────────
+TEST_START: colossus visible safe attack approach / published dash input respects the entire carved-ground segment
+
+── boss visible warning reaction delay ─────────────────────────
+
+── boss weak point perception ──────────────────────────────────
+
+── colossus network input simulation clock ─────────────────────
+
+── hurdle boundaries and finish lifecycle ──────────────────────
+
+── runner contact jump recovery ────────────────────────────────
+
+── hurdle network presentation ─────────────────────────────────
+
+── survival hazard round reset ─────────────────────────────────
+
+── tide network presentation ───────────────────────────────────
+
+── tide simultaneous elimination ───────────────────────────────
+
+── sweeper network presentation ────────────────────────────────
+
+── sweeper physical impact direction ───────────────────────────
+
+── dodger delayed visible arm motion ───────────────────────────
+TEST_START: dodger delayed visible arm motion / arrival relative to own observable movement
+
+── arena respawn scoring ───────────────────────────────────────
+
+── duel network presentation ───────────────────────────────────
+
+── duo network presentation ────────────────────────────────────
+
+── moving floe lifecycle ───────────────────────────────────────
+
+── moving floe network presentation ────────────────────────────
+
+── turret rounds and protected projectile hits ─────────────────
+
+── turret network presentation ─────────────────────────────────
+
+── tank network presentation ───────────────────────────────────
+
+── tank terrain collision ownership ────────────────────────────
+
+── scrap network presentation ──────────────────────────────────
+
+── siege network presentation ──────────────────────────────────
+
+── siege final evidence ────────────────────────────────────────
+
+── AI visible targets ──────────────────────────────────────────
+TEST_START: AI visible targets / equal visible leaders do not always target the lowest player ID
+TEST_START: AI visible targets / equal nearby rivals do not always select the lowest player ID
+
+── AI compound visual cues ─────────────────────────────────────
+
+── AI world occlusion ──────────────────────────────────────────
+
+── collector delayed competition cues ──────────────────────────
+
+── race smoke budget ───────────────────────────────────────────
+
+── natural lab network qualification ───────────────────────────
+
+── fawda bomb presentation ─────────────────────────────────────
+
+── read-only fawda round evidence ──────────────────────────────
+
+── natural fawda final evidence ────────────────────────────────
+
+── race round reset ────────────────────────────────────────────
+
+── kart network presentation ───────────────────────────────────
+
+── armed race network presentation ─────────────────────────────
+
+── bumper network presentation ─────────────────────────────────
+
+── crate network presentation ──────────────────────────────────
+
+── echo observed memory ────────────────────────────────────────
+
+── echo network presentation ───────────────────────────────────
+
+── draw network presentation ───────────────────────────────────
+
+── goal guard ──────────────────────────────────────────────────
+TEST_START: goal guard / shield control, fast interception, scoring and restart
+TEST_START: goal guard / keepers predict crossing from observed trajectory on all four sides
+TEST_START: goal guard / host ball snapshots render without guest scoring or simulation
+
+── magnet network ──────────────────────────────────────────────
+
+── storm network ───────────────────────────────────────────────
+
+── sky court ───────────────────────────────────────────────────
+
+── sky network ─────────────────────────────────────────────────
+
+── arena tiles ─────────────────────────────────────────────────
+
+── crumble network ─────────────────────────────────────────────
+
+── color network presentation ──────────────────────────────────
+
+── blast ball lifecycle ────────────────────────────────────────
+
+── collection network ──────────────────────────────────────────
+TEST_START: collection network / gem_hollow gems remain above actual island surfaces
+TEST_START: collection network / glass_terrace gems remain above actual island surfaces
+TEST_START: collection network / gem_hollow fanoos island 0 walking out
+TEST_START: collection network / gem_hollow fanoos island 0 walking back
+TEST_START: collection network / gem_hollow fanoos island 1 walking out
+TEST_START: collection network / gem_hollow fanoos island 1 walking back
+TEST_START: collection network / gem_hollow fanoos island 2 walking out
+TEST_START: collection network / gem_hollow fanoos island 2 walking back
+TEST_START: collection network / gem_hollow fanoos island 3 walking out
+TEST_START: collection network / gem_hollow fanoos island 3 walking back
+TEST_START: collection network / gem_hollow fanoos island 4 walking out
+TEST_START: collection network / gem_hollow fanoos island 4 walking back
+TEST_START: collection network / gem_hollow nabta island 0 walking out
+TEST_START: collection network / gem_hollow nabta island 0 walking back
+TEST_START: collection network / gem_hollow nabta island 1 walking out
+TEST_START: collection network / gem_hollow nabta island 1 walking back
+TEST_START: collection network / gem_hollow nabta island 2 walking out
+TEST_START: collection network / gem_hollow nabta island 2 walking back
+TEST_START: collection network / gem_hollow nabta island 3 walking out
+TEST_START: collection network / gem_hollow nabta island 3 walking back
+TEST_START: collection network / gem_hollow nabta island 4 walking out
+TEST_START: collection network / gem_hollow nabta island 4 walking back
+TEST_START: collection network / gem_hollow ramla island 0 walking out
+TEST_START: collection network / gem_hollow ramla island 0 walking back
+TEST_START: collection network / gem_hollow ramla island 1 walking out
+TEST_START: collection network / gem_hollow ramla island 1 walking back
+TEST_START: collection network / gem_hollow ramla island 2 walking out
+TEST_START: collection network / gem_hollow ramla island 2 walking back
+TEST_START: collection network / gem_hollow ramla island 3 walking out
+TEST_START: collection network / gem_hollow ramla island 3 walking back
+TEST_START: collection network / gem_hollow ramla island 4 walking out
+TEST_START: collection network / gem_hollow ramla island 4 walking back
+TEST_START: collection network / gem_hollow sakhra island 0 walking out
+TEST_START: collection network / gem_hollow sakhra island 0 walking back
+TEST_START: collection network / gem_hollow sakhra island 1 walking out
+TEST_START: collection network / gem_hollow sakhra island 1 walking back
+TEST_START: collection network / gem_hollow sakhra island 2 walking out
+TEST_START: collection network / gem_hollow sakhra island 2 walking back
+TEST_START: collection network / gem_hollow sakhra island 3 walking out
+TEST_START: collection network / gem_hollow sakhra island 3 walking back
+TEST_START: collection network / gem_hollow sakhra island 4 walking out
+TEST_START: collection network / gem_hollow sakhra island 4 walking back
+TEST_START: collection network / gem_hollow barq island 0 walking out
+TEST_START: collection network / gem_hollow barq island 0 walking back
+TEST_START: collection network / gem_hollow barq island 1 walking out
+TEST_START: collection network / gem_hollow barq island 1 walking back
+TEST_START: collection network / gem_hollow barq island 2 walking out
+TEST_START: collection network / gem_hollow barq island 2 walking back
+TEST_START: collection network / gem_hollow barq island 3 walking out
+TEST_START: collection network / gem_hollow barq island 3 walking back
+TEST_START: collection network / gem_hollow barq island 4 walking out
+TEST_START: collection network / gem_hollow barq island 4 walking back
+TEST_START: collection network / gem_hollow mowja island 0 walking out
+TEST_START: collection network / gem_hollow mowja island 0 walking back
+TEST_START: collection network / gem_hollow mowja island 1 walking out
+TEST_START: collection network / gem_hollow mowja island 1 walking back
+TEST_START: collection network / gem_hollow mowja island 2 walking out
+TEST_START: collection network / gem_hollow mowja island 2 walking back
+TEST_START: collection network / gem_hollow mowja island 3 walking out
+TEST_START: collection network / gem_hollow mowja island 3 walking back
+TEST_START: collection network / gem_hollow mowja island 4 walking out
+TEST_START: collection network / gem_hollow mowja island 4 walking back
+TEST_START: collection network / gem_hollow ghaim island 0 walking out
+TEST_START: collection network / gem_hollow ghaim island 0 walking back
+TEST_START: collection network / gem_hollow ghaim island 1 walking out
+TEST_START: collection network / gem_hollow ghaim island 1 walking back
+TEST_START: collection network / gem_hollow ghaim island 2 walking out
+TEST_START: collection network / gem_hollow ghaim island 2 walking back
+TEST_START: collection network / gem_hollow ghaim island 3 walking out
+TEST_START: collection network / gem_hollow ghaim island 3 walking back
+TEST_START: collection network / gem_hollow ghaim island 4 walking out
+TEST_START: collection network / gem_hollow ghaim island 4 walking back
+TEST_START: collection network / gem_hollow turs island 0 walking out
+TEST_START: collection network / gem_hollow turs island 0 walking back
+TEST_START: collection network / gem_hollow turs island 1 walking out
+TEST_START: collection network / gem_hollow turs island 1 walking back
+TEST_START: collection network / gem_hollow turs island 2 walking out
+TEST_START: collection network / gem_hollow turs island 2 walking back
+TEST_START: collection network / gem_hollow turs island 3 walking out
+TEST_START: collection network / gem_hollow turs island 3 walking back
+TEST_START: collection network / gem_hollow turs island 4 walking out
+TEST_START: collection network / gem_hollow turs island 4 walking back
+TEST_START: collection network / glass_terrace fanoos island 0 walking out
+TEST_START: collection network / glass_terrace fanoos island 0 walking back
+TEST_START: collection network / glass_terrace fanoos island 1 walking out
+TEST_START: collection network / glass_terrace fanoos island 1 walking back
+TEST_START: collection network / glass_terrace fanoos island 2 walking out
+TEST_START: collection network / glass_terrace fanoos island 2 walking back
+TEST_START: collection network / glass_terrace fanoos island 3 walking out
+TEST_START: collection network / glass_terrace fanoos island 3 walking back
+TEST_START: collection network / glass_terrace fanoos island 4 walking out
+TEST_START: collection network / glass_terrace fanoos island 4 walking back
+TEST_START: collection network / glass_terrace nabta island 0 walking out
+TEST_START: collection network / glass_terrace nabta island 0 walking back
+TEST_START: collection network / glass_terrace nabta island 1 walking out
+TEST_START: collection network / glass_terrace nabta island 1 walking back
+TEST_START: collection network / glass_terrace nabta island 2 walking out
+TEST_START: collection network / glass_terrace nabta island 2 walking back
+TEST_START: collection network / glass_terrace nabta island 3 walking out
+TEST_START: collection network / glass_terrace nabta island 3 walking back
+TEST_START: collection network / glass_terrace nabta island 4 walking out
+TEST_START: collection network / glass_terrace nabta island 4 walking back
+TEST_START: collection network / glass_terrace ramla island 0 walking out
+TEST_START: collection network / glass_terrace ramla island 0 walking back
+TEST_START: collection network / glass_terrace ramla island 1 walking out
+TEST_START: collection network / glass_terrace ramla island 1 walking back
+TEST_START: collection network / glass_terrace ramla island 2 walking out
+TEST_START: collection network / glass_terrace ramla island 2 walking back
+TEST_START: collection network / glass_terrace ramla island 3 walking out
+TEST_START: collection network / glass_terrace ramla island 3 walking back
+TEST_START: collection network / glass_terrace ramla island 4 walking out
+TEST_START: collection network / glass_terrace ramla island 4 walking back
+TEST_START: collection network / glass_terrace sakhra island 0 walking out
+TEST_START: collection network / glass_terrace sakhra island 0 walking back
+TEST_START: collection network / glass_terrace sakhra island 1 walking out
+TEST_START: collection network / glass_terrace sakhra island 1 walking back
+TEST_START: collection network / glass_terrace sakhra island 2 walking out
+TEST_START: collection network / glass_terrace sakhra island 2 walking back
+TEST_START: collection network / glass_terrace sakhra island 3 walking out
+TEST_START: collection network / glass_terrace sakhra island 3 walking back
+TEST_START: collection network / glass_terrace sakhra island 4 walking out
+TEST_START: collection network / glass_terrace sakhra island 4 walking back
+TEST_START: collection network / glass_terrace barq island 0 walking out
+TEST_START: collection network / glass_terrace barq island 0 walking back
+TEST_START: collection network / glass_terrace barq island 1 walking out
+TEST_START: collection network / glass_terrace barq island 1 walking back
+TEST_START: collection network / glass_terrace barq island 2 walking out
+TEST_START: collection network / glass_terrace barq island 2 walking back
+TEST_START: collection network / glass_terrace barq island 3 walking out
+TEST_START: collection network / glass_terrace barq island 3 walking back
+TEST_START: collection network / glass_terrace barq island 4 walking out
+TEST_START: collection network / glass_terrace barq island 4 walking back
+TEST_START: collection network / glass_terrace mowja island 0 walking out
+TEST_START: collection network / glass_terrace mowja island 0 walking back
+TEST_START: collection network / glass_terrace mowja island 1 walking out
+TEST_START: collection network / glass_terrace mowja island 1 walking back
+TEST_START: collection network / glass_terrace mowja island 2 walking out
+TEST_START: collection network / glass_terrace mowja island 2 walking back
+TEST_START: collection network / glass_terrace mowja island 3 walking out
+TEST_START: collection network / glass_terrace mowja island 3 walking back
+TEST_START: collection network / glass_terrace mowja island 4 walking out
+TEST_START: collection network / glass_terrace mowja island 4 walking back
+TEST_START: collection network / glass_terrace ghaim island 0 walking out
+TEST_START: collection network / glass_terrace ghaim island 0 walking back
+TEST_START: collection network / glass_terrace ghaim island 1 walking out
+TEST_START: collection network / glass_terrace ghaim island 1 walking back
+TEST_START: collection network / glass_terrace ghaim island 2 walking out
+TEST_START: collection network / glass_terrace ghaim island 2 walking back
+TEST_START: collection network / glass_terrace ghaim island 3 walking out
+TEST_START: collection network / glass_terrace ghaim island 3 walking back
+TEST_START: collection network / glass_terrace ghaim island 4 walking out
+TEST_START: collection network / glass_terrace ghaim island 4 walking back
+TEST_START: collection network / glass_terrace turs island 0 walking out
+TEST_START: collection network / glass_terrace turs island 0 walking back
+TEST_START: collection network / glass_terrace turs island 1 walking out
+TEST_START: collection network / glass_terrace turs island 1 walking back
+TEST_START: collection network / glass_terrace turs island 2 walking out
+TEST_START: collection network / glass_terrace turs island 2 walking back
+TEST_START: collection network / glass_terrace turs island 3 walking out
+TEST_START: collection network / glass_terrace turs island 3 walking back
+TEST_START: collection network / glass_terrace turs island 4 walking out
+TEST_START: collection network / glass_terrace turs island 4 walking back
+TEST_START: collection network / gem_hollow fanoos routing island 0
+TEST_START: collection network / gem_hollow fanoos routing island 1
+TEST_START: collection network / gem_hollow fanoos routing island 2
+TEST_START: collection network / gem_hollow fanoos routing island 3
+TEST_START: collection network / gem_hollow fanoos routing island 4
+TEST_START: collection network / gem_hollow nabta routing island 0
+TEST_START: collection network / gem_hollow nabta routing island 1
+TEST_START: collection network / gem_hollow nabta routing island 2
+TEST_START: collection network / gem_hollow nabta routing island 3
+TEST_START: collection network / gem_hollow nabta routing island 4
+TEST_START: collection network / gem_hollow ramla routing island 0
+TEST_START: collection network / gem_hollow ramla routing island 1
+TEST_START: collection network / gem_hollow ramla routing island 2
+TEST_START: collection network / gem_hollow ramla routing island 3
+TEST_START: collection network / gem_hollow ramla routing island 4
+TEST_START: collection network / gem_hollow sakhra routing island 0
+TEST_START: collection network / gem_hollow sakhra routing island 1
+TEST_START: collection network / gem_hollow sakhra routing island 2
+TEST_START: collection network / gem_hollow sakhra routing island 3
+TEST_START: collection network / gem_hollow sakhra routing island 4
+TEST_START: collection network / gem_hollow barq routing island 0
+TEST_START: collection network / gem_hollow barq routing island 1
+TEST_START: collection network / gem_hollow barq routing island 2
+TEST_START: collection network / gem_hollow barq routing island 3
+TEST_START: collection network / gem_hollow barq routing island 4
+TEST_START: collection network / gem_hollow mowja routing island 0
+TEST_START: collection network / gem_hollow mowja routing island 1
+TEST_START: collection network / gem_hollow mowja routing island 2
+TEST_START: collection network / gem_hollow mowja routing island 3
+TEST_START: collection network / gem_hollow mowja routing island 4
+TEST_START: collection network / gem_hollow ghaim routing island 0
+TEST_START: collection network / gem_hollow ghaim routing island 1
+TEST_START: collection network / gem_hollow ghaim routing island 2
+TEST_START: collection network / gem_hollow ghaim routing island 3
+TEST_START: collection network / gem_hollow ghaim routing island 4
+TEST_START: collection network / gem_hollow turs routing island 0
+TEST_START: collection network / gem_hollow turs routing island 1
+TEST_START: collection network / gem_hollow turs routing island 2
+TEST_START: collection network / gem_hollow turs routing island 3
+TEST_START: collection network / gem_hollow turs routing island 4
+TEST_START: collection network / glass_terrace fanoos routing island 0
+TEST_START: collection network / glass_terrace fanoos routing island 1
+TEST_START: collection network / glass_terrace fanoos routing island 2
+TEST_START: collection network / glass_terrace fanoos routing island 3
+TEST_START: collection network / glass_terrace fanoos routing island 4
+TEST_START: collection network / glass_terrace nabta routing island 0
+TEST_START: collection network / glass_terrace nabta routing island 1
+TEST_START: collection network / glass_terrace nabta routing island 2
+TEST_START: collection network / glass_terrace nabta routing island 3
+TEST_START: collection network / glass_terrace nabta routing island 4
+TEST_START: collection network / glass_terrace ramla routing island 0
+TEST_START: collection network / glass_terrace ramla routing island 1
+TEST_START: collection network / glass_terrace ramla routing island 2
+TEST_START: collection network / glass_terrace ramla routing island 3
+TEST_START: collection network / glass_terrace ramla routing island 4
+TEST_START: collection network / glass_terrace sakhra routing island 0
+TEST_START: collection network / glass_terrace sakhra routing island 1
+TEST_START: collection network / glass_terrace sakhra routing island 2
+TEST_START: collection network / glass_terrace sakhra routing island 3
+TEST_START: collection network / glass_terrace sakhra routing island 4
+TEST_START: collection network / glass_terrace barq routing island 0
+TEST_START: collection network / glass_terrace barq routing island 1
+TEST_START: collection network / glass_terrace barq routing island 2
+TEST_START: collection network / glass_terrace barq routing island 3
+TEST_START: collection network / glass_terrace barq routing island 4
+TEST_START: collection network / glass_terrace mowja routing island 0
+TEST_START: collection network / glass_terrace mowja routing island 1
+TEST_START: collection network / glass_terrace mowja routing island 2
+TEST_START: collection network / glass_terrace mowja routing island 3
+TEST_START: collection network / glass_terrace mowja routing island 4
+TEST_START: collection network / glass_terrace ghaim routing island 0
+TEST_START: collection network / glass_terrace ghaim routing island 1
+TEST_START: collection network / glass_terrace ghaim routing island 2
+TEST_START: collection network / glass_terrace ghaim routing island 3
+TEST_START: collection network / glass_terrace ghaim routing island 4
+TEST_START: collection network / glass_terrace turs routing island 0
+TEST_START: collection network / glass_terrace turs routing island 1
+TEST_START: collection network / glass_terrace turs routing island 2
+TEST_START: collection network / glass_terrace turs routing island 3
+TEST_START: collection network / glass_terrace turs routing island 4
+TEST_START: collection network / gem_grab host-owned pickups and carrying
+TEST_START: collection network / star_rush host-owned pickups and carrying
+TEST_START: collection network / crate_relay host-owned pickups and carrying
+TEST_START: collection network / bounded collection payload
+
+── zone hold ───────────────────────────────────────────────────
+
+── relic hold ──────────────────────────────────────────────────
+
+── tag network ─────────────────────────────────────────────────
+
+── paint reset ─────────────────────────────────────────────────
+
+── paint network ───────────────────────────────────────────────
+
+── saboteur network ────────────────────────────────────────────
+
+── race conditions ─────────────────────────────────────────────
+TEST_START: race conditions / timer hitting zero and a KO landing on the same tick end the match exactly once
+TEST_START: race conditions / a controller disconnecting the instant the round ends does not force a pause into a dead phase
+TEST_START: race conditions / a device lost during sudden death pauses just like it does during regular play
+TEST_START: race conditions / a manual pause and a device loss landing on the same tick do not leave two pause menus
+
+── lifecycle ───────────────────────────────────────────────────
+TEST_START: lifecycle / backgrounding flushes the save exactly once and toggles is_backgrounded
+[DBG][Platform] app backgrounded
+[DBG][Platform] app foregrounded
+TEST_START: lifecycle / a live match pauses itself on Platform's real background signal, and does not silently resume on foreground
+[DBG][Platform] app backgrounded
+[DBG][Platform] app foregrounded
+TEST_START: lifecycle / match completion preserves interrupted round eligibility
+TEST_START: lifecycle / teardown stops live callbacks before draining pools and is idempotent
+
+── AI jump requests on actual floor ────────────────────────────
+JUMP_CONTRACT tier=0 edges=57 jumps=7 landings=7 position=(1000.0, 1.330461, 999.0209)
+JUMP_CONTRACT tier=1 edges=57 jumps=7 landings=7 position=(1000.0, 1.330461, 999.0209)
+JUMP_CONTRACT tier=2 edges=57 jumps=7 landings=7 position=(1000.0, 1.330461, 999.0209)
+JUMP_CONTRACT tier=3 edges=57 jumps=7 landings=7 position=(1000.0, 1.330461, 999.0209)
+
+finished in 428.6s
+
+════════════════════════════════════════════════════════════════
+ALL TESTS PASSED — 391990 assertions
+════════════════════════════════════════════════════════════════

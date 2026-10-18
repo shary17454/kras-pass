@@ -31,7 +31,9 @@ const NULL_TRIALS := 4000
 
 var runs := 6
 var only := ""
+var arena_override := ""
 var natural_rounds := true
+var balanced_rosters := false
 var seed_offset := 0
 var _difficulty_attempted := 0
 var _difficulty_completed := 0
@@ -43,6 +45,9 @@ var _started := 0
 ## Progress goes to a file as well as stdout: Godot buffers stdout when it is
 ## piped, which makes a long simulation look hung when it is merely quiet.
 var _log: FileAccess
+const Evidence = preload("res://tools/balance_evidence.gd")
+var _source_start := ""
+var _source_end := ""
 
 
 func _ready() -> void:
@@ -50,8 +55,8 @@ func _ready() -> void:
 		push_error("Balance simulation requires --test-data-dir with an absolute directory outside player saves")
 		get_tree().quit(2)
 		return
-	if not _parse_args():
-		push_error("Invalid --seed-offset: expected an integer from 0 to 1000000000")
+	if not _parse_args(OS.get_cmdline_user_args()):
+		push_error("Invalid balance arguments: use --runs=2..10000, --only=ID, optional --arena=ID belonging to --only, --out-dir=PATH, --seed-offset=0..1000000000 and optional --clipped-rounds or --balanced-rosters")
 		get_tree().quit(2)
 		return
 	if _games().is_empty():
@@ -65,6 +70,11 @@ func _ready() -> void:
 		return
 	_say("start runs=%d only=%s seed_offset=%d" % [runs, only, seed_offset])
 	_started = Time.get_ticks_msec()
+	_source_start = Evidence.capture()
+	if _source_start.is_empty():
+		push_error("Cannot fingerprint balance simulation source")
+		get_tree().quit(2)
+		return
 	# Shorter pre-round cards: this is a simulation, not a demo.
 	UserSettings.set_value("show_control_hints", false)
 	UserSettings.set_value("replay_capture", false)
@@ -89,7 +99,9 @@ func _ready() -> void:
 			"   ⚠ " + ", ".join(mrow["flags"]) if not mrow["flags"].is_empty() else ""])
 	_write_reports()
 	print("\nfinished in %.1fs — %s/report.html" % [(Time.get_ticks_msec() - _started) / 1000.0, out_dir])
-	get_tree().quit(0 if _worst_severity() < 2 else 1)
+	if _source_end != _source_start:
+		push_error("Simulation source changed during balance run; report is unqualified")
+	get_tree().quit(0 if _worst_severity() < 2 and _source_end == _source_start else 1)
 
 
 func _storage_is_isolated(root: String) -> bool:
@@ -107,30 +119,78 @@ func _say(line: String) -> void:
 		_log.flush()
 
 
-func _parse_args() -> bool:
-	for arg in OS.get_cmdline_user_args():
+func _parse_args(arguments: PackedStringArray) -> bool:
+	var next_runs := runs
+	var next_only := only
+	var next_output := out_dir
+	var next_seed := seed_offset
+	var next_arena := arena_override
+	var next_natural := natural_rounds
+	var next_balanced := balanced_rosters
+	var seen := {}
+	for arg in arguments:
+		var key := arg.get_slice("=", 0)
+		if seen.has(key):
+			return false
+		seen[key] = true
 		if arg.begins_with("--runs="):
-			runs = maxi(2, int(arg.split("=")[1]))
-		elif arg.begins_with("--only="):
-			only = arg.split("=")[1]
-		elif arg.begins_with("--out-dir="):
-			out_dir = arg.trim_prefix("--out-dir=")
-		elif arg == "--clipped-rounds":
-			natural_rounds = false
-		elif arg.begins_with("--seed-offset="):
-			if not _set_seed_offset(arg.trim_prefix("--seed-offset=")):
+			next_runs = _bounded_integer(arg.trim_prefix("--runs="), 2, 10000)
+			if next_runs < 0:
 				return false
+		elif arg.begins_with("--only="):
+			next_only = arg.trim_prefix("--only=")
+			if next_only.strip_edges().is_empty():
+				return false
+		elif arg.begins_with("--arena="):
+			next_arena = arg.trim_prefix("--arena=")
+			if next_arena.strip_edges().is_empty():
+				return false
+		elif arg.begins_with("--out-dir="):
+			next_output = arg.trim_prefix("--out-dir=")
+			if next_output.strip_edges().is_empty():
+				return false
+		elif arg == "--clipped-rounds":
+			next_natural = false
+		elif arg == "--balanced-rosters":
+			next_balanced = true
+		elif arg.begins_with("--seed-offset="):
+			next_seed = _bounded_integer(arg.trim_prefix("--seed-offset="), 0, 1000000000)
+			if next_seed < 0:
+				return false
+		elif arg.begins_with("--test-data-dir="):
+			# SaveSystem validates the isolated storage path before this parser runs.
+			continue
+		else:
+			return false
+	if next_balanced and (Registry.characters().size() < 4 or Registry.characters().size() % 4 != 0):
+		return false
+	if not next_arena.is_empty():
+		var definition := Registry.minigame(next_only)
+		if definition == null or Registry.arena(next_arena) == null or not definition.arena_ids.has(next_arena):
+			return false
+	runs = next_runs
+	arena_override = next_arena
+	only = next_only
+	out_dir = next_output
+	seed_offset = next_seed
+	natural_rounds = next_natural
+	balanced_rosters = next_balanced
 	return true
 
 
-func _set_seed_offset(value: String) -> bool:
+static func _bounded_integer(value: String, minimum: int, maximum: int) -> int:
 	if not value.is_valid_int():
-		return false
+		return -1
 	# Bound the significant digits before conversion can overflow int64.
-	if value.trim_prefix("+").trim_prefix("-").lstrip("0").length() > 10:
-		return false
+	if value.trim_prefix("+").trim_prefix("-").lstrip("0").length() > str(maximum).length():
+		return -1
 	var parsed := int(value)
-	if parsed < 0 or parsed > 1000000000:
+	return parsed if parsed >= minimum and parsed <= maximum else -1
+
+
+func _set_seed_offset(value: String) -> bool:
+	var parsed := _bounded_integer(value, 0, 1000000000)
+	if parsed < 0:
 		return false
 	seed_offset = parsed
 	return true
@@ -138,6 +198,30 @@ func _set_seed_offset(value: String) -> bool:
 
 func _baseline_seed(run: int) -> int:
 	return seed_offset + 9001 + run * 613
+
+
+func _baseline_roster(run: int) -> Array[String]:
+	var roster: Array[String] = []
+	for character in Registry.characters():
+		roster.append(character.id)
+	var selected: Array[String] = []
+	if not balanced_rosters:
+		for slot in 4:
+			selected.append(roster[(slot + run) % roster.size()])
+		return selected
+	# Each batch partitions a seeded shuffle into quartets, then seats each
+	# quartet four times. All characters appear once per seat in every batch.
+	var random := RandomNumberGenerator.new()
+	random.seed = _baseline_seed(int(run / roster.size()))
+	for i in range(roster.size() - 1, 0, -1):
+		var other := random.randi_range(0, i)
+		var previous := roster[i]
+		roster[i] = roster[other]
+		roster[other] = previous
+	var group := int((run % roster.size()) / 4)
+	for slot in 4:
+		selected.append(roster[group * 4 + (slot + run) % 4])
+	return selected
 
 
 func _games() -> Array[MiniGameDef]:
@@ -151,7 +235,6 @@ func _games() -> Array[MiniGameDef]:
 
 
 func _simulate(def: MiniGameDef) -> Dictionary:
-	var roster := Registry.characters()
 	var wins_by_slot := [0, 0, 0, 0]
 	var wins_by_character := {}
 	# Every character that actually took the field, win or lose. Without this a
@@ -166,18 +249,16 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 	var completed := 0
 	var scores_seen: Array[int] = []
 	var baseline_seeds: Array[int] = []
+	var baseline_rosters: Array = []
 	var boss_outcomes: Array[Dictionary] = []
+	var team_outcomes: Array[Dictionary] = []
 
 	for run in runs:
 		_say("  %s run %d/%d" % [def.id, run + 1, runs])
-		# Rotate the roster through the slots so slot bias and character bias
-		# are separable rather than confounded.
-		var chars: Array = []
-		for slot in 4:
-			var cid_played := roster[(slot + run) % roster.size()].id
-			chars.append(cid_played)
+		var chars := _baseline_roster(run)
 		var cfg := MatchConfig.build(def.id, chars, 0, PlayerConfig.Difficulty.MEDIUM, _baseline_seed(run))
 		baseline_seeds.append(cfg.seed)
+		baseline_rosters.append(chars.duplicate())
 		cfg.duration_override = _window_for(def)
 		cfg.rounds = 1
 		var result := await _play(cfg)
@@ -186,6 +267,9 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		if result == null:
 			continue
 		completed += 1
+		if def.supports_teams:
+			var outcome: Dictionary = result.get_meta("balance_team_outcome", {})
+			team_outcomes.append({"seed": cfg.seed, "outcome": outcome.duplicate(true)})
 		for cid_played in chars:
 			appearances[cid_played] = int(appearances.get(cid_played, 0)) + 1
 		durations.append(result.duration)
@@ -212,6 +296,7 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 
 	var row := {
 		"id": def.id,
+		"arena_id": arena_override if not arena_override.is_empty() else def.arena_ids[0],
 		"name": def.display_name(),
 		"category": def.category_name(),
 		"runs": completed,
@@ -219,11 +304,14 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		"sample_mode": "natural" if natural_rounds else "clipped",
 		"seed_offset": seed_offset,
 		"baseline_seeds": baseline_seeds,
+		"roster_policy": "seeded_partition_seat_rotation" if balanced_rosters else "adjacent_rotation",
+		"baseline_rosters": baseline_rosters,
 		"round_window": _window_for(def),
 		"difficulty_attempted": _difficulty_attempted,
 		"difficulty_completed": _difficulty_completed,
 		"difficulty_pairing": "matched_seed_character",
 		"difficulty_samples": _difficulty_samples.duplicate(true),
+		"difficulty_outcomes": difficulty_outcomes(_difficulty_samples),
 		"tie_rate": float(ties) / maxf(1.0, float(completed)),
 		"avg_duration": avg_duration,
 		"wins_by_slot": wins_by_slot,
@@ -240,6 +328,10 @@ func _simulate(def: MiniGameDef) -> Dictionary:
 		row["boss_defeated_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "defeated").size()
 		row["boss_survived_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "survived").size()
 		row["boss_unknown_runs"] = boss_outcomes.filter(func(sample): return sample["outcome"] == "unknown").size()
+	if def.supports_teams:
+		row["team_outcomes"] = team_outcomes
+		row["team_draw_runs"] = team_outcomes.filter(func(sample): return sample["outcome"].get("draw", false)).size()
+		row["team_unknown_runs"] = team_outcomes.filter(func(sample): return sample["outcome"].is_empty()).size()
 	row["flags"] = _flags(def, row)
 	row["severity"] = _severity(row["flags"])
 	return row
@@ -320,6 +412,49 @@ func _difficulty_sample(cfg: MatchConfig, result: MatchResult) -> Dictionary:
 	if cfg.definition().is_boss:
 		sample["boss_outcome"] = _boss_outcome(result, cfg.minigame_id)
 	return sample
+
+
+static func difficulty_outcomes(samples: Array) -> Dictionary:
+	var out := {"samples": samples.size(), "expert_wins": 0, "easy_wins": 0,
+		"shared_first": 0, "incomplete": 0, "invalid": 0, "expert_outright_win_share": null}
+	for sample in samples:
+		if not sample is Dictionary or not sample.get("completed") is bool:
+			out.invalid += 1
+			continue
+		if not sample.completed:
+			out.incomplete += 1
+			continue
+		var places = sample.get("places")
+		var experts = sample.get("expert_slots")
+		if not places is Array or places.size() != 4 or not experts is Array or experts.size() != 2:
+			out.invalid += 1
+			continue
+		var valid := true
+		for value in places + experts:
+			if typeof(value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(value)) \
+					or float(value) < 0.0 or float(value) > 4.0 or float(value) != floorf(float(value)):
+				valid = false
+		if valid:
+			valid = places.all(func(value): return value >= 1) \
+				and experts.all(func(value): return value < 4) and experts[0] != experts[1]
+		var winners: Array[int] = []
+		if valid:
+			for slot in 4:
+				if places[slot] == 1:
+					winners.append(slot)
+		if winners.is_empty():
+			out.invalid += 1
+		elif winners.size() > 1:
+			# Team partners and cooperative results can share first without a draw.
+			out.shared_first += 1
+		elif winners[0] == int(experts[0]) or winners[0] == int(experts[1]):
+			out.expert_wins += 1
+		else:
+			out.easy_wins += 1
+	var outright: int = out.expert_wins + out.easy_wins
+	if outright > 0:
+		out.expert_outright_win_share = float(out.expert_wins) / float(outright)
+	return out
 
 
 func _boss_outcome(result: MatchResult, expected_game: String = "") -> String:
@@ -431,7 +566,13 @@ func _mutator_smoke(def: MiniGameDef) -> Dictionary:
 	return row
 
 
+func _apply_arena(cfg: MatchConfig) -> void:
+	if not arena_override.is_empty():
+		cfg.arena_id = arena_override
+
+
 func _play(cfg: MatchConfig) -> MatchResult:
+	_apply_arena(cfg)
 	var script: Script = load("res://src/match/match_scene.gd")
 	var scene: Node = script.new()
 	add_child(scene)
@@ -445,10 +586,40 @@ func _play(cfg: MatchConfig) -> MatchResult:
 	while captured.is_empty() and guard < max_ticks:
 		await tree.physics_frame
 		guard += 1
+	if not captured.is_empty() and cfg.definition().supports_teams:
+		captured[0].set_meta("balance_team_outcome", _team_outcome(scene.controller, cfg.players.size()))
 	scene.teardown()
 	scene.queue_free()
 	await tree.process_frame
+	if not captured.is_empty() and captured[0].arena_id != cfg.arena_id:
+		push_error("Balance match returned an unexpected arena; result is unqualified")
+		return null
 	return captured[0] if captured.size() > 0 else null
+
+
+static func _team_outcome(controller: Node, player_count: int) -> Dictionary:
+	if not is_instance_valid(controller) or not controller.has_method("team_of") or not controller.has_method("team_score"):
+		return {}
+	var scores := {}
+	for slot in player_count:
+		var team = controller.call("team_of", slot)
+		if not team is int or team < 0:
+			return {}
+		var score = controller.call("team_score", team)
+		if not score is int or score < 0 or scores.has(team) and scores[team] != score:
+			return {}
+		scores[team] = score
+	if scores.size() < 2:
+		return {}
+	var best := -1
+	var winners: Array[int] = []
+	for team in scores:
+		if int(scores[team]) > best:
+			best = int(scores[team])
+			winners.assign([int(team)])
+		elif int(scores[team]) == best:
+			winners.append(int(team))
+	return {"scores": scores, "winners": winners, "draw": winners.size() > 1}
 
 
 func _tick_budget(cfg: MatchConfig) -> int:
@@ -591,10 +762,15 @@ func _worst_severity() -> int:
 # --- output ----------------------------------------------------------------
 
 func _write_reports() -> void:
+	_source_end = Evidence.capture()
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var json := FileAccess.open("%s/report.json" % out_dir, FileAccess.WRITE)
 	if json != null:
 		json.store_string(JSON.stringify({
+			"arena_override": arena_override,
+			"simulation_source_start": _source_start,
+			"simulation_source_end": _source_end,
+			"engine_version": Engine.get_version_info().string,
 			"generated": Time.get_datetime_string_from_system(),
 			"seed_offset": seed_offset,
 			"runs_per_game": runs,
@@ -614,14 +790,17 @@ func _html() -> String:
 	var rows := ""
 	for r in _report:
 		var colour: String = ["#1d3", "#fd4", "#f55"][int(r["severity"])]
+		var outcomes := difficulty_outcomes(r.get("difficulty_samples", []))
+		var outcomes_text := "%d / %d (%d shared, %d incomplete, %d invalid)" % [
+			outcomes.expert_wins, outcomes.easy_wins, outcomes.shared_first, outcomes.incomplete, outcomes.invalid]
 		rows += """<tr>
 <td class="id">%s<div class="cat">%s</div></td>
-<td>%d</td><td>%.1fs</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%.1f</td>
+<td>%d</td><td>%.1fs</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%.0f%%</td><td>%s</td><td>%.1f</td>
 <td><span class="dot" style="background:%s"></span>%s</td></tr>\n""" % [
 			r["name"], r["category"], int(r["runs"]), float(r["avg_duration"]),
 			float(r["tie_rate"]) * 100.0, float(r["slot_bias"]) * 100.0,
 			float(r["character_bias"]) * 100.0, float(r["expert_edge"]) * 100.0,
-			float(r["avg_score"]), colour,
+			outcomes_text, float(r["avg_score"]), colour,
 			", ".join(r["flags"]) if not r["flags"].is_empty() else "ok"]
 	var mutator_rows := ""
 	for r in _mutator_report:
@@ -644,13 +823,17 @@ border-bottom:1px solid #252c52;padding:8px 10px} td{padding:8px 10px;border-bot
 <h1>Kras Pass — balance report</h1>
 <div class="sub">%s · %d runs per game · %s rounds (per-game windows in JSON)</div>
 <table><tr><th>Mini-game</th><th>Runs</th><th>Length</th><th>Ties</th><th>Slot bias</th>
-<th>Character bias</th><th>Expert share</th><th>Avg score</th><th>Verdict</th></tr>
+<th>Character bias</th><th>Expert placement share</th><th>Expert / Easy outright wins</th><th>Avg score</th><th>Verdict</th></tr>
 %s</table>
 <p class="note"><b>Slot bias</b> and <b>character bias</b> are how far the most-favoured
 spawn slot or competitor sits above an even share; characters are rotated through slots
-between runs so the two cannot be confused. <b>Expert share</b> is the fraction of points
-an Expert pair takes from an Easy pair with identical characters, mirrored across slots —
-50%% means the difficulty tiers do nothing in this game.</p>
+between runs so the two cannot be confused. <b>Expert placement share</b> uses
+4-3-2-1 finishing-place points for the Expert slots versus Easy slots with identical
+characters, mirrored across slots. 50%% means equal aggregate placement points,
+not equal win rates. <b>Outright wins</b> count unique first-place results separately;
+shared first places (including team/cooperative wins), incomplete and invalid
+samples are not assigned to either difficulty. Neither metric proves fairness.
+Existing flags and acceptance thresholds are unchanged.</p>
 <h1 style="margin-top:32px">Mutator &amp; chaos smoke pass</h1>
 <div class="sub">one run under a deliberately over-stuffed mutator set, one run with chaos mode on</div>
 <table><tr><th>Mini-game</th><th>Mutated run</th><th>Chaos run</th><th>Verdict</th></tr>

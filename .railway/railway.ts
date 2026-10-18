@@ -9,8 +9,9 @@ export default defineRailway((ctx) => {
   const krasPassVolume = volume("kras-pass-volume", { alerts: { usage: { "100": {}, "80": {}, "95": {} } }, allowOnlineResize: true, region: "ams", sizeMB: 5000 });
   const krasPass = service("kras-pass", {
     source: github("shary17454/kras-pass", { branch: "main", checkSuites: false }),
-    build: { builder: "DOCKERFILE", dockerfilePath: "/Dockerfile" },
-    deploy: { restartPolicyType: "ON_FAILURE", restartPolicyMaxRetries: 10 },
+    build: { builder: "DOCKERFILE", dockerfilePath: "/Dockerfile", buildEnvironment: "V3" },
+    deploy: { restartPolicyType: "ON_FAILURE", restartPolicyMaxRetries: 10, runtime: "V2", ipv6EgressEnabled: false, useLegacyStacker: false },
+    networking: { serviceDomains: { "kras-pass-production.up.railway.app": { port: 8080 } } },
     start: "npm start",
     healthcheck: "/health",
     healthcheckTimeout: 100,

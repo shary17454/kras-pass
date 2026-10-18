@@ -216,6 +216,9 @@ func _default_button_centre(index: int) -> Vector2:
 			x += (index % 2) * r * 2.2 * (1.0 if _move_on_right() else -1.0)
 			return Vector2(x, _bottom_edge() - r - int(index / 2) * r * 2.2)
 		return Vector2(x, _bottom_edge() - r - index * r * 2.2)
+	if ControlProfile.shows_steering(profile):
+		var throttle: Rect2 = _steer_rects()[2]
+		return Vector2(throttle.get_center().x, throttle.position.y - r - 18.0 - index * r * 2.2)
 	if profile == ControlProfile.Kind.ATV:
 		var x := _left_edge() + r if _move_on_right() else _right_edge() - r
 		return Vector2(x, _bottom_edge() - r - index * r * 2.3)
@@ -252,8 +255,8 @@ func _default_button_centre(index: int) -> Vector2:
 
 
 func _steer_rects() -> Array:
-	var w := size.x * 0.22
-	var h := size.y * 0.34
+	var w := minf(size.x * 0.22, BUTTON_RADIUS * 2.0 * _scale)
+	var h := minf(w, size.y * 0.20)
 	var y := _bottom_edge() - h
 	var left := Rect2(_left_edge(), y, w, h)
 	var right := Rect2(_left_edge() + w + 18.0, y, w, h)
@@ -316,7 +319,7 @@ func _handle_press(index: int, pos: Vector2, pressed: bool) -> void:
 		for i in 3:
 			if (rects[i] as Rect2).has_point(pos):
 				_owners[index] = {"kind": "steer", "id": i}
-				_apply_steer(i, true)
+				_refresh_steering()
 				queue_redraw()
 				return
 		return
@@ -381,9 +384,10 @@ func _release(index: int) -> void:
 		"button":
 			_press_button(int(owner["id"]), false)
 		"steer":
-			_apply_steer(int(owner["id"]), false)
+			_refresh_steering()
 		"screen":
-			_bits &= ~int(owner["bit"])
+			if not _owners_has("screen"):
+				_bits &= ~int(owner["bit"])
 	queue_redraw()
 
 
@@ -413,11 +417,19 @@ func _press_button(index: int, down: bool) -> void:
 	queue_redraw()
 
 
-func _apply_steer(which: int, down: bool) -> void:
-	match which:
-		0: _steer = -1.0 if down else 0.0
-		1: _steer = 1.0 if down else 0.0
-		2: _throttle = 1.0 if down else 0.0
+func _refresh_steering() -> void:
+	var left := false
+	var right := false
+	var throttle := false
+	for owner in _owners.values():
+		if String(owner["kind"]) != "steer":
+			continue
+		match int(owner["id"]):
+			0: left = true
+			1: right = true
+			2: throttle = true
+	_steer = float(int(right) - int(left))
+	_throttle = 1.0 if throttle else 0.0
 
 
 func _pulse() -> void:
@@ -527,15 +539,15 @@ func _draw() -> void:
 	if size.x <= 0.0:
 		return
 	var a := clampf(_opacity, 0.05, 1.0)
-	var ink := Color(1, 1, 1, a)
-	var fill := Color(1, 1, 1, a * 0.14)
+	var ink := Color(UIKit.TEXT, a)
+	var fill := Color(UIKit.PANEL, maxf(0.65, a * 0.85))
 	if touch_count > 1:
 		draw_line(Vector2.ZERO, Vector2(size.x, 0), ink, 2.0)
-		_label("P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[slot]], Vector2(size.x * 0.5, 24), Color.WHITE, 24)
+		_label("P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[slot]], Vector2(size.x * 0.5, 24), ink, 24)
 
 	if ControlProfile.full_screen_tap(profile) != 0:
 		var active := _bits != 0
-		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, a * (0.16 if active else 0.05)))
+		draw_rect(Rect2(Vector2.ZERO, size), Color(UIKit.PANEL, a * (0.32 if active else 0.15)))
 		_label(Loc.t("touch.tap_anywhere"), size * 0.5, ink, 42, size.x - 24)
 		return
 
@@ -545,7 +557,7 @@ func _draw() -> void:
 		var states := [_steer < -0.5, _steer > 0.5, _throttle > 0.5]
 		for i in 3:
 			var r: Rect2 = rects[i]
-			draw_rect(r, Color(1, 1, 1, a * (0.22 if states[i] else 0.10)), true)
+			draw_rect(r, Color(UIKit.PANEL_HI if states[i] else UIKit.PANEL, maxf(0.65, a)), true)
 			draw_rect(r, ink, false, 3.0)
 			_label(glyphs[i], r.get_center(), ink, mini(52, int(r.size.y * 0.65)), r.size.x - 12)
 	elif ControlProfile.shows_move_stick(profile):
@@ -557,11 +569,11 @@ func _draw() -> void:
 			var radius := STICK_RADIUS * _scale
 			for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
 				var glyph := "▲" if direction == Vector2.UP else "▼" if direction == Vector2.DOWN else "◀" if direction == Vector2.LEFT else "▶"
-				_label(glyph, origin + direction * radius * 0.77, Color.WHITE, 25)
+				_label(glyph, origin + direction * radius * 0.77, ink, 25)
 		if profile == ControlProfile.Kind.KEEPER:
 			var origin := _move_origin if _owners_has("move") else _stick_centre()
 			for direction in [-1.0, 1.0]:
-				_label("◀" if direction < 0 else "▶", origin + Vector2(direction * STICK_RADIUS * _scale * 0.77, 0), Color.WHITE, 25)
+				_label("◀" if direction < 0 else "▶", origin + Vector2(direction * STICK_RADIUS * _scale * 0.77, 0), ink, 25)
 
 	if ControlProfile.shows_aim_stick(profile):
 		_draw_stick(_aim_centre() if not _owners_has("aim") else _aim_origin,

@@ -9,8 +9,10 @@ extends CanvasLayer
 
 var ctx: MatchContext
 signal ready_requested()
+signal auxiliary_overlay_layout_changed()
 var controller: MiniGameController
 var touch_sources: Array = []
+var local_vehicle_views := false
 
 var _chips: Array = []
 var _timer_label: Label
@@ -19,13 +21,17 @@ var _boss_meter: ProgressBar
 var _fit_top_rows: Callable
 var _round_label: Label
 var _centre_label: Label
+var _announcement_tween: Tween
 var _rules_card: Control
 var _hint_label: Label
 var _toast_box: VBoxContainer
 var _status_toasts: Dictionary = {}
+var _auxiliary_overlay_height := 0.0
 var _offscreen_cues: Array[OffscreenPlayerCue] = []
 ## Width of the per-player charge meter, in unscaled pixels.
 const METER_WIDTH := 118.0
+const ANNOUNCEMENT_SIZE := 36
+const COUNTDOWN_SIZE := 64
 
 var _accum := 0.0
 var _period := 1.0 / 12.0
@@ -70,6 +76,10 @@ func _build() -> void:
 	top.add_child(_round_label)
 	_banner_label = UIKit.centered("", UIKit.SIZE_BODY, UIKit.ACCENT_2, true)
 	top.add_child(_banner_label)
+	for label in [_timer_label, _round_label, _banner_label]:
+		UIKit.back_label(label)
+	# Wrapped captions need the header width, not the backing's minimum width.
+	_banner_label.size_flags_horizontal = Control.SIZE_FILL
 	_boss_meter = ProgressBar.new()
 	_boss_meter.custom_minimum_size = Vector2(240, 10)
 	_boss_meter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -94,6 +104,7 @@ func _build() -> void:
 	# One container with an expanding gap in the middle means the clock can
 	# never overlap a chip at any window width.
 	var chips := GridContainer.new()
+	chips.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	chips.columns = 5
 	chips.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	chips.offset_top = 14
@@ -111,7 +122,7 @@ func _build() -> void:
 		if i == half:
 			var gap := Control.new()
 			clock_gap = gap
-			gap.custom_minimum_size = Vector2(380, 0)
+			gap.custom_minimum_size = Vector2(180, 0)
 			gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			chips.add_child(gap)
@@ -124,10 +135,14 @@ func _build() -> void:
 	var fit_chips := func():
 		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
 		var inset := Platform.safe_insets()
-		chips.columns = (4 if _compact_players() else 2) if portrait else 5
-		chips.offset_top = ((120 if _compact_players() else 180) if portrait else 14) + inset.y
-		if portrait and _boss_meter.visible:
-			chips.offset_top = maxf(chips.offset_top, 18 + inset.y + top.get_combined_minimum_size().y + 12)
+		var text_scale := UIKit.scale()
+		chips.columns = 4 if portrait else 5
+		_timer_label.add_theme_font_size_override("font_size", int((40 if portrait else 48) * text_scale))
+		_round_label.add_theme_font_size_override("font_size", int((16 if portrait else 20) * text_scale))
+		_banner_label.add_theme_font_size_override("font_size", int((18 if portrait else 22) * text_scale))
+		_round_label.visible = not _round_label.text.is_empty()
+		_banner_label.visible = not _banner_label.text.is_empty()
+		chips.offset_top = 18 + inset.y + top.get_combined_minimum_size().y + 12 if portrait else 14 + inset.y
 		chips.offset_left = 26 + inset.x
 		chips.offset_right = -26 - inset.z
 		top.offset_top = 18 + inset.y
@@ -135,17 +150,33 @@ func _build() -> void:
 			clock_gap.visible = not portrait
 		for chip in _chips:
 			chip["root"].size_flags_horizontal = Control.SIZE_EXPAND_FILL if portrait else Control.SIZE_SHRINK_CENTER
+			chip["root"].custom_minimum_size.x = 0 if portrait else (150 if _compact_players() else 224) * text_scale
+			chip["portrait"].visible = not portrait and not _compact_players()
+			chip["name"].custom_minimum_size.x = 0 if portrait or _compact_players() else 100
+			chip["name"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
+			chip["value"].add_theme_font_size_override("font_size", int((24 if portrait else 32) * text_scale))
+			chip["detail"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
+			chip["crown"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
+			chip["meter"].custom_minimum_size = Vector2(60 if portrait else METER_WIDTH, 6 if portrait else 16)
+			for effect in chip["effects"].get_children():
+				effect.add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 	get_viewport().size_changed.connect(fit_chips)
+	top.minimum_size_changed.connect(fit_chips)
 	_fit_top_rows = fit_chips
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_chips))
 	fit_chips.call()
 
 	# --- centre announcements ---------------------------------------------
-	_centre_label = UIKit.centered("", 120, UIKit.ACCENT, true)
-	_centre_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_centre_label = UIKit.centered("", ANNOUNCEMENT_SIZE, UIKit.ACCENT, true)
+	UIKit.back_label(_centre_label)
+	_centre_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_centre_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_centre_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_centre_label.modulate.a = 0.0
 	root.add_child(_centre_label)
+	get_viewport().size_changed.connect(_fit_announcement)
+	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(_fit_announcement))
+	_fit_announcement()
 
 	# --- rules card --------------------------------------------------------
 	_rules_card = _make_rules_card()
@@ -171,9 +202,9 @@ func _build() -> void:
 		_hint_label.anchor_right = 0.92 if portrait else 0.75
 		_hint_label.anchor_top = 0.0 if portrait else 1.0
 		_hint_label.anchor_bottom = _hint_label.anchor_top
-		var hint_y := 230 if ctx.definition.id == "goal_guard" else 460
-		_hint_label.offset_top = hint_y + Platform.safe_insets().y if portrait else -120
-		_hint_label.offset_bottom = hint_y + 100 + Platform.safe_insets().y if portrait else -22
+		var hint_y := occupied_top() + 12.0
+		_hint_label.offset_top = hint_y if portrait else -120
+		_hint_label.offset_bottom = hint_y + 100.0 if portrait else -22
 		var touch_count := 0
 		for p in ctx.config.players:
 			if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
@@ -214,7 +245,8 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# be studied rather than glanced at, which is the opposite of what a chip is
 	# for.
 	var card := UIKit.panel(Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16)
-	card.add_theme_stylebox_override("panel", UIKit.stylebox(
+	card.layout_direction = Control.LAYOUT_DIRECTION_RTL if Loc.is_rtl() else Control.LAYOUT_DIRECTION_LTR
+	card.add_theme_stylebox_override("panel", UIKit.tinted_stylebox(
 		Color(col.r * 0.42 + 0.06, col.g * 0.42 + 0.06, col.b * 0.42 + 0.06, 0.93), 16, 3, col))
 	# Menu padding is generous on purpose; a match chip cannot afford it. Four
 	# chips at menu padding measured 356 px each, which put the outermost one
@@ -226,9 +258,12 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# Shrink, don't fill: a filling chip eats the gap the clock sits in.
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var contents := VBoxContainer.new()
+	contents.add_theme_constant_override("separation", 1)
+	card.add_child(contents)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	card.add_child(row)
+	contents.add_child(row)
 
 	var portrait := _make_portrait(p, col)
 	portrait.custom_minimum_size = Vector2(74, 74)
@@ -246,33 +281,51 @@ func _make_chip(p: PlayerConfig) -> Control:
 	# it in here is what pushed the name into being clipped.
 	var character := p.character()
 	var shown: String = character.display_name() if character != null else p.display_name()
+	var custom_name := false
 	if p.is_human and ctx.config.human_slots().size() == 1:
 		shown = Loc.t("hud.you", {"name": shown})
 	elif p.is_human and not p.display_name_override.is_empty():
 		shown = p.display_name_override
+		custom_name = true
 	shown = p.symbol() + " " + shown
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 4)
-	box.add_child(name_row)
+	contents.add_child(name_row)
+	contents.move_child(name_row, 0)
 	var crown := UIKit.label("👑", UIKit.SIZE_SMALL)
 	crown.name = "Crown"
 	crown.visible = false
 	name_row.add_child(crown)
 	var name_label := UIKit.label(shown, UIKit.SIZE_SMALL, UIKit.text_color(), true)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_label.clip_text = true
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.max_lines_visible = 1 if custom_name else 3
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.tooltip_text = shown
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	name_label.custom_minimum_size = Vector2(120, 0)
 	if _compact_players():
 		name_label.custom_minimum_size.x = 0
 		name_label.add_theme_font_size_override("font_size", 22)
 	name_row.add_child(name_label)
 
-	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, Color.WHITE, true)
+	var value := UIKit.label("0", 28 if ctx.definition.id == "tank_arena" else 40, UIKit.text_color(), true)
+	value.text_direction = Control.TEXT_DIRECTION_LTR
 	value.name = "Value"
 	if _compact_players():
 		value.add_theme_font_size_override("font_size", 28)
 	value.clip_text = true
-	box.add_child(value)
+	var score_row := HBoxContainer.new()
+	score_row.add_theme_constant_override("separation", 6)
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	score_row.add_child(value)
+	box.add_child(score_row)
+	var detail := UIKit.label("", UIKit.SIZE_SMALL, UIKit.text_color())
+	detail.name = "Detail"
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.visible = false
+	contents.add_child(detail)
 
 	# The per-player meter the spec asks for. Where a game has no dash the bar
 	# would be a permanently full decoration, so it is hidden instead.
@@ -284,11 +337,19 @@ func _make_chip(p: PlayerConfig) -> Control:
 	var effects := HBoxContainer.new()
 	effects.name = "Effects"
 	effects.add_theme_constant_override("separation", 6)
-	box.add_child(effects)
+	score_row.add_child(effects)
+	var effect_labels := {}
+	for definition in Registry.powerups():
+		var label := UIKit.label(definition.glyph, 22, UIKit.adapt(definition.color), true)
+		label.visible = false
+		effects.add_child(label)
+		effect_labels[definition.id] = label
 
-	_chips.append({"root": card, "value": value, "effects": effects, "slot": p.slot,
+	_chips.append({"root": card, "value": value, "detail": detail, "effects": effects, "slot": p.slot,
+		"effect_labels": effect_labels,
 		"color": col, "meter": meter, "charge": -1.0,
-		"crown": crown})
+		"crown": crown, "name": name_label, "portrait": portrait})
+	card.resized.connect(_fit_announcement)
 	return card
 
 
@@ -317,10 +378,22 @@ func _fit_toasts() -> void:
 	_toast_box.offset_top = occupied_top() + 12.0
 	_toast_box.offset_bottom = _toast_box.offset_top
 	if _hint_label != null and _hint_label.anchor_top == 0.0:
-		var hint_y := (230 if ctx.definition.id == "goal_guard" else 460) + inset.y
-		var messages_bottom := _toast_box.offset_top + _toast_box.get_combined_minimum_size().y
-		_hint_label.offset_top = maxf(hint_y, messages_bottom + 12.0)
+		var hint_y := occupied_top() + 12.0
+		var overlay_bottom := auxiliary_overlay_top() + _auxiliary_overlay_height
+		_hint_label.offset_top = maxf(hint_y, overlay_bottom + (12.0 if _auxiliary_overlay_height > 0.0 else 0.0))
 		_hint_label.offset_bottom = _hint_label.offset_top + 100.0
+	auxiliary_overlay_layout_changed.emit()
+
+
+func reserve_auxiliary_overlay(height: float) -> void:
+	_auxiliary_overlay_height = maxf(0.0, height)
+	_fit_toasts()
+
+
+func auxiliary_overlay_top() -> float:
+	if _toast_box == null:
+		return occupied_top() + 12.0
+	return _toast_box.offset_top + _toast_box.get_combined_minimum_size().y + 12.0
 
 
 ## Replace a UIKit panel's padding with something a HUD can live with, reusing
@@ -400,7 +473,7 @@ func _make_rules_card() -> Control:
 	var controls := UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(controls)
-	v.add_child(UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, Color.WHITE))
+	v.add_child(UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, UIKit.text_color()))
 	var start := UIKit.button(Loc.t("common.start"), UIKit.SIZE_HEADING)
 	start.custom_minimum_size.y = 80
 	start.pressed.connect(func(): ready_requested.emit())
@@ -443,6 +516,8 @@ func set_time(remaining: float, hurry_threshold: float) -> void:
 
 func set_round(index: int, total: int) -> void:
 	_round_label.text = Loc.t("hud.round_of", {"n": index + 1, "total": total}) if total > 1 else ""
+	if _fit_top_rows.is_valid():
+		_fit_top_rows.call()
 
 
 func set_race_progress(value: String) -> void:
@@ -455,6 +530,8 @@ func set_race_progress(value: String) -> void:
 
 func set_banner(text: String) -> void:
 	_banner_label.text = text
+	if _fit_top_rows.is_valid():
+		_fit_top_rows.call()
 
 
 func show_rules(visible_: bool) -> void:
@@ -464,18 +541,50 @@ func show_rules(visible_: bool) -> void:
 
 
 func show_hints(visible_: bool) -> void:
-	_hint_label.visible = visible_
+	_hint_label.visible = visible_ and not local_vehicle_views
 
 
-func announce(text: String, color: Color = UIKit.ACCENT, hold := 0.75) -> void:
+func _fit_announcement() -> void:
+	if _centre_label == null:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var inset := Platform.safe_insets()
+	var upper := occupied_top() + 24.0
+	var lower := viewport_size.y * 0.76 - inset.w
+	var touch_count := 0
+	for player in ctx.config.players:
+		if player.is_human and (player.device_type == 2 or (player.device_type == 0 and TouchSource.should_show())):
+			touch_count += 1
+	if touch_count > 1:
+		lower = TouchSource.party_region(viewport_size, 0, touch_count).position.y - 24.0
+	var height := maxf(1.0, lower - upper)
+	var left := maxf(24.0 + inset.x, viewport_size.x * 0.12)
+	var right := viewport_size.x - maxf(24.0 + inset.z, viewport_size.x * 0.12)
+	# Reserve room for the pop animation as well as the settled text.
+	_centre_label.position = Vector2(left, upper + height * 0.08)
+	_centre_label.size = Vector2(maxf(1.0, right - left), height * 0.84)
+	_centre_label.pivot_offset = _centre_label.size * 0.5
+
+
+func announce(text: String, color: Color = Color.TRANSPARENT, hold := 0.75, countdown := false) -> void:
+	if color == Color.TRANSPARENT:
+		color = UIKit.ACCENT
+	if _announcement_tween != null and _announcement_tween.is_valid():
+		_announcement_tween.kill()
+	_announcement_tween = null
 	_centre_label.text = text
+	_centre_label.add_theme_font_override("font", UIKit.font_for_text(text, true))
+	_centre_label.add_theme_font_size_override("font_size", int((COUNTDOWN_SIZE if countdown else ANNOUNCEMENT_SIZE) * UIKit.scale()))
 	_centre_label.add_theme_color_override("font_color", color)
+	_centre_label.scale = Vector2.ONE
+	_fit_announcement()
 	if DisplayServer.get_name() == "headless":
 		return
 	_centre_label.modulate.a = 1.0
-	_centre_label.scale = Vector2(1.5, 1.5)
+	_centre_label.scale = Vector2(1.08, 1.08)
 	_centre_label.pivot_offset = _centre_label.size * 0.5
 	var tw := create_tween()
+	_announcement_tween = tw
 	tw.tween_property(_centre_label, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_interval(hold)
 	tw.tween_property(_centre_label, "modulate:a", 0.0, 0.25)
@@ -530,12 +639,17 @@ func tick(delta: float) -> void:
 	if _accum < _period:
 		return
 	_accum = 0.0
+	var operation_started := DevTools.operations.begin()
 	_refresh_chips()
+	DevTools.operations.finish("hud.chips", operation_started)
+	operation_started = DevTools.operations.begin()
 	_refresh_offscreen_cues()
+	DevTools.operations.finish("hud.offscreen", operation_started)
+	operation_started = DevTools.operations.begin()
 	var banner := controller.hud_banner() if controller != null else ""
 	var progress := controller.hud_progress() if controller != null else -1.0
 	var meter_visible := is_finite(progress) and progress >= 0.0
-	var layout_changed: bool = _boss_meter.visible != meter_visible or (meter_visible and banner != _banner_label.text)
+	var layout_changed: bool = _boss_meter.visible != meter_visible or banner != _banner_label.text
 	_boss_meter.visible = meter_visible
 	if meter_visible:
 		_boss_meter.value = clampf(progress, 0.0, 1.0)
@@ -545,9 +659,15 @@ func tick(delta: float) -> void:
 	if layout_changed and _fit_top_rows.is_valid():
 		_fit_top_rows.call()
 	_fit_toasts()
+	_fit_announcement()
+	DevTools.operations.finish("hud.layout", operation_started)
 
 
 func _refresh_offscreen_cues() -> void:
+	if local_vehicle_views:
+		for cue in _offscreen_cues:
+			cue.hide()
+		return
 	var viewport_size := get_viewport().get_visible_rect().size
 	var inset := Platform.safe_insets()
 	var top := maxf(occupied_top() + 40.0, inset.y + 40.0)
@@ -570,12 +690,21 @@ func _refresh_offscreen_cues() -> void:
 
 func _refresh_chips() -> void:
 	for chip in _chips:
+		var operation_started := DevTools.operations.begin()
 		var slot: int = chip["slot"]
-		chip["value"].text = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
+		var text: String = controller.hud_value(slot) if controller != null else str(ctx.scores[slot])
+		# Keep numbers prominent while allowing localized secondary status to wrap.
+		var parts := text.split("\n", true, 1)
+		chip["value"].text = parts[0]
+		chip["detail"].text = parts[1] if parts.size() > 1 else ""
+		chip["detail"].visible = not chip["detail"].text.is_empty()
 		var alive: bool = ctx.is_alive(slot)
 		chip["root"].modulate = Color(1, 1, 1, 1.0 if alive else 0.4)
 		_refresh_meter(chip, slot)
+		DevTools.operations.finish("hud.chip_value", operation_started)
+		operation_started = DevTools.operations.begin()
 		_refresh_effects(chip, slot)
+		DevTools.operations.finish("hud.effects", operation_started)
 
 
 func _refresh_meter(chip: Dictionary, slot: int) -> void:
@@ -600,18 +729,22 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 func _refresh_effects(chip: Dictionary, slot: int) -> void:
 	var box: HBoxContainer = chip["effects"]
 	var effects: Array = ctx.powerups.active_effects_for(slot) if ctx.powerups != null else []
-	if box.get_child_count() == effects.size():
-		var i := 0
-		for e in effects:
-			var lbl := box.get_child(i) as Label
-			if lbl != null:
-				lbl.text = e["glyph"]
-			i += 1
-		return
-	for c in box.get_children():
-		c.queue_free()
+	var active := {}
+	var index := 0
 	for e in effects:
-		box.add_child(UIKit.label(String(e["glyph"]), UIKit.SIZE_SMALL, UIKit.adapt(e["color"]), true))
+		var label: Label = chip["effect_labels"].get(String(e["id"]))
+		if label == null:
+			continue
+		active[String(e["id"])] = true
+		label.text = String(e["glyph"])
+		label.add_theme_color_override("font_color", UIKit.adapt(e["color"]))
+		label.visible = true
+		if label.get_index() != index:
+			box.move_child(label, index)
+		index += 1
+	for id in chip["effect_labels"]:
+		if not active.has(id):
+			chip["effect_labels"][id].visible = false
 
 
 func _on_score_changed(slot: int, _value: int) -> void:

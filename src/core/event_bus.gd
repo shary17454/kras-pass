@@ -28,6 +28,7 @@ signal lead_changed(player_slot: int)
 # --- gameplay feedback -----------------------------------------------------
 signal player_hit(attacker_slot: int, victim_slot: int, strength: float)
 signal player_respawned(player_slot: int)
+signal player_jumped(player_slot: int)
 signal powerup_collected(player_slot: int, powerup_id: String)
 signal powerup_expired(player_slot: int, powerup_id: String)
 signal pickup_collected(player_slot: int, kind: String, amount: int)

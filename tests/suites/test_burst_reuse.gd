@@ -81,3 +81,38 @@ func run(t: TestHarness, host: Node) -> void:
 	world.queue_free()
 	Pool.drain("fx_burst")
 	await host.get_tree().process_frame
+	MeshFactory.prepare_bursts([Color.RED, Color.BLUE] as Array[Color])
+	t.equal(Pool.stats().fx_burst.free, 8, "preparation retains exactly the existing idle budget")
+	MeshFactory.prepare_bursts([Color.GREEN] as Array[Color])
+	t.equal(Pool.stats().fx_burst.free, 8, "repeated preparation cannot duplicate roots")
+	var prepared: Array[Node3D] = []
+	var shared_mesh: Mesh
+	for index in 8:
+		var effect := MeshFactory.burst(Color.RED, 7)
+		world = Node3D.new()
+		host.add_child(world)
+		world.add_child(effect)
+		prepared.append(world)
+		t.equal(effect._shards.size(), 32, "first concurrent hits already own the bounded shard bank")
+		for shard in effect._shards:
+			if shared_mesh == null:
+				shared_mesh = shard.mesh
+			t.equal(shard.mesh, shared_mesh, "all burst shards reuse immutable geometry")
+		t.equal(effect._active_count, 7, "preparation does not change authored hit count")
+		t.equal(effect._shards[0].material_override.albedo_color, Color.RED, "prepared shards use actual effect color")
+	t.equal(Pool.stats().fx_burst.live, 8, "prepared roots retain normal live bookkeeping")
+	var overflow := MeshFactory.burst(Color.BLUE, 2)
+	prepared[0].add_child(overflow)
+	overflow.set_process(false)
+	t.equal(overflow._shards.size(), 2, "concurrent overflow allocates only its authored count, not the entire prepared bank")
+	overflow._process(1.0)
+	var reference := MeshFactory.box(Vector3.ONE * 0.16, Color.RED, 0.8)
+	t.equal(shared_mesh.get_aabb(), reference.mesh.get_aabb(), "shared geometry preserves original shard bounds")
+	t.equal(shared_mesh.surface_get_arrays(0), reference.mesh.surface_get_arrays(0), "shared geometry preserves original vertices and normals")
+	reference.free()
+	for parent in prepared:
+		parent.get_child(0)._process(1.0)
+	Pool.drain("fx_burst")
+	for parent in prepared:
+		parent.queue_free()
+	await host.get_tree().process_frame

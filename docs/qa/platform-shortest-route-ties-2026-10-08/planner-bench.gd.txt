@@ -1,0 +1,42 @@
+extends SceneTree
+
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	var config_script: Script = load("res://src/match/match_config.gd")
+	var methods := config_script.get_script_method_list().map(func(method): return method.name)
+	if "build" not in methods:
+		push_error("External probe did not resolve the project MatchConfig: %s %s" % [config_script.resource_path, methods])
+		quit(2)
+		return
+	var cfg: Resource = config_script.build("crumble_court", ["fanoos", "mowja", "ramla", "nabta"], 0, 3, 1209001)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	root.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_result): pass})
+	for tick in 600:
+		if scene._brains.size() == 4:
+			break
+		await process_frame
+	if scene._brains.size() != 4:
+		push_error("Planner fixture did not prepare four actual AI brains")
+		quit(2)
+		return
+	var samples: Array[float] = []
+	var observed_picks := 0
+	for batch in 6:
+		var started := Time.get_ticks_usec()
+		for repeat in 100:
+			for slot in 4:
+				if scene._brains[slot]._pick_tile(scene.arena, scene._fighters[slot].global_position) != null:
+					observed_picks += 1
+		var per_call := float(Time.get_ticks_usec() - started) / 400.0
+		if batch > 0:
+			samples.append(per_call)
+	print("PLANNER_BENCH ", JSON.stringify({"tile_count": scene.arena.tiles.size(), "calls": 2400, "successful_picks": observed_picks, "microseconds_per_call": samples}))
+	scene.teardown()
+	scene.queue_free()
+	await process_frame
+	quit(0 if observed_picks == 2400 else 1)

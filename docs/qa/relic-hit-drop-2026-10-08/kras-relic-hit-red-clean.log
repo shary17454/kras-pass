@@ -1,0 +1,28 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+TEST_STORAGE_ROOT=/tmp/kras-relic-hit-red-clean-save/
+
+── relic hold ──────────────────────────────────────────────────
+  ✗ relic hold / : normal hit drops held relic (got 0, expected -1)
+  ✗ relic hold / : normal hit clears carrier cargo (got 1, expected 0)
+  ✗ relic hold / : normal hit restores attack permission
+  ✗ relic hold / : normal hit puts relic back in play
+  ✗ relic hold / : landed rival hit credits exactly one steal (got 0, expected 1)
+  ✗ relic hold / : repeat hit cannot double credit steal (got 0, expected 1)
+
+finished in 1.5s
+
+════════════════════════════════════════════════════════════════
+FAILED — 55 passed, 6 failed
+   ✗ relic hold / : normal hit drops held relic (got 0, expected -1)
+   ✗ relic hold / : normal hit clears carrier cargo (got 1, expected 0)
+   ✗ relic hold / : normal hit restores attack permission
+   ✗ relic hold / : normal hit puts relic back in play
+   ✗ relic hold / : landed rival hit credits exactly one steal (got 0, expected 1)
+   ✗ relic hold / : repeat hit cannot double credit steal (got 0, expected 1)
+════════════════════════════════════════════════════════════════

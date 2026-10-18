@@ -1,0 +1,2 @@
+c021bac0644f74210b9de5f26dc1f7a13eb07e4c6c0b653f11e6abaa63a9d195  /tmp/kras-current-f3b3-ios-export/KrasPass.pck
+c021bac0644f74210b9de5f26dc1f7a13eb07e4c6c0b653f11e6abaa63a9d195  /var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/tmp.YaaQtzvlN4/Build/Products/Release-iphoneos/KrasPass.app/KrasPass.pck
