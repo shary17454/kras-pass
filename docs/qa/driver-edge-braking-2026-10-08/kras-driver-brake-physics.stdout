@@ -1,0 +1,15 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── driver backoff engagement memory ────────────────────────────
+
+finished in 1.2s
+
+════════════════════════════════════════════════════════════════
+ALL TESTS PASSED — 37 assertions
+════════════════════════════════════════════════════════════════

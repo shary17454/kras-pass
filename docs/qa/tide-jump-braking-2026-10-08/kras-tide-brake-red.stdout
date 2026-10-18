@@ -1,0 +1,23 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── tide ordinary jump access ───────────────────────────────────
+  ✗ tide ordinary jump access / : tier 0 jump preparation publishes an actual stop despite input noise (got (-0.08839, -0.061776), expected (0.0, 0.0))
+  ✗ tide ordinary jump access / : tier 1 jump preparation publishes an actual stop despite input noise (got (-0.051561, -0.036036), expected (0.0, 0.0))
+  ✗ tide ordinary jump access / : tier 2 jump preparation publishes an actual stop despite input noise (got (-0.029463, -0.020592), expected (0.0, 0.0))
+  ✗ tide ordinary jump access / : tier 3 jump preparation publishes an actual stop despite input noise (got (-0.014732, -0.010296), expected (0.0, 0.0))
+
+finished in 3.9s
+
+════════════════════════════════════════════════════════════════
+FAILED — 136 passed, 4 failed
+   ✗ tide ordinary jump access / : tier 0 jump preparation publishes an actual stop despite input noise (got (-0.08839, -0.061776), expected (0.0, 0.0))
+   ✗ tide ordinary jump access / : tier 1 jump preparation publishes an actual stop despite input noise (got (-0.051561, -0.036036), expected (0.0, 0.0))
+   ✗ tide ordinary jump access / : tier 2 jump preparation publishes an actual stop despite input noise (got (-0.029463, -0.020592), expected (0.0, 0.0))
+   ✗ tide ordinary jump access / : tier 3 jump preparation publishes an actual stop despite input noise (got (-0.014732, -0.010296), expected (0.0, 0.0))
+════════════════════════════════════════════════════════════════

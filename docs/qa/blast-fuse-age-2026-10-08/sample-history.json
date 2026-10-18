@@ -1,0 +1,351 @@
+{
+  "sourceFingerprint": "160a0600b0616ed7e26dc2706782afdec832130ea902dd46caf3fb20ab7af1c1",
+  "campaignAttestationVerified": false,
+  "releaseReady": false,
+  "games": [
+    {
+      "id": "tank_arena",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "ring_rumble",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "crumble_court",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "bumper_bowl",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "fawda",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "goal_guard",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "magnet_court",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "storm_heart",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "sky_court",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "blast_ball",
+      "flags": [],
+      "samples": [
+        {
+          "label": "/private/tmp/kras-crate-swing-arbitration/docs/qa/blast-fuse-age-2026-10-08/parent-report.json",
+          "current": false,
+          "eligible": false,
+          "issues": [
+            "missing, changed or stale simulation source"
+          ],
+          "flags": [
+            "expert bots no better than easy"
+          ],
+          "runs": 96,
+          "paired": 48,
+          "seedOffset": 1800000,
+          "severity": 1
+        },
+        {
+          "label": "/private/tmp/kras-crate-swing-arbitration/docs/qa/blast-fuse-age-2026-10-08/candidate-report.json",
+          "current": true,
+          "eligible": true,
+          "issues": [],
+          "flags": [],
+          "runs": 96,
+          "paired": 48,
+          "seedOffset": 1800000,
+          "severity": 0
+        }
+      ],
+      "hasEligibleSample": true,
+      "requiresBalanceReview": false,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "scrap_karts",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "turret_duel",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "gem_grab",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "star_rush",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "paint_grid",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "mnatiq",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "mukharrib",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "zone_hold",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "crate_smash",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "lab_crates",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "crate_relay",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "hurdle_dash",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "kart_sprint",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "color_stand",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "symbol_echo",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "quick_draw",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "rising_tide",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "sweeper_storm",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "duel_pit",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "boss_forge",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "boss_colossus",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "boss_dreadnought",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "boss_sovereign",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "sabaq_sawarikh",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "relic_hold",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "tag_hunt",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "base_siege",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "drift_floes",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    },
+    {
+      "id": "duo_clash",
+      "flags": [],
+      "samples": [],
+      "hasEligibleSample": false,
+      "requiresBalanceReview": true,
+      "requiresDeviceReview": true
+    }
+  ],
+  "limitations": [
+    "Preserves recheck history; does not replace strict campaign attestation.",
+    "Overlapping sample seeds are not added together as independent matches.",
+    "No device, gameplay, archive, upload or release approval is inferred."
+  ]
+}

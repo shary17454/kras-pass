@@ -61,7 +61,7 @@ func build() -> void:
 		var ang := TAU * float(i) / float(PAD_COUNT) - PI * 0.5
 		var r := arena.def.radius * 0.62
 		var pos := arena.global_position + Vector3(cos(ang) * r, 0.12, sin(ang) * r)
-		var pad := MeshFactory.cylinder(2.0, 0.24, UIKit.PANEL_HI, 0.0, 24)
+		var pad := MeshFactory.cylinder(2.0, 0.24, MeshFactory.WORLD_PANEL, 0.0, 24)
 		pad.position = pos
 		ctx.world_root.add_child(pad)
 		var label := Label3D.new()
@@ -133,7 +133,7 @@ func _flash(index: int) -> void:
 	_flash_remaining = _step_time * 0.6
 	var pad = _pads[index]
 	var mesh: MeshInstance3D = pad["mesh"]
-	mesh.material_override = MeshFactory.toon(UIKit.ACCENT, 1.6)
+	mesh.material_override = MeshFactory.toon(MeshFactory.WORLD_GOLD, 1.6)
 	AudioManager.play_sfx("tick", pad["pos"], 0.8 + index * 0.12)
 
 
@@ -143,7 +143,7 @@ func _reset_pad_colors() -> void:
 	for pad in _pads:
 		var mesh: MeshInstance3D = pad["mesh"]
 		if is_instance_valid(mesh):
-			mesh.material_override = MeshFactory.toon(UIKit.PANEL_HI)
+			mesh.material_override = MeshFactory.toon(MeshFactory.WORLD_PANEL)
 
 
 func _read_inputs() -> void:

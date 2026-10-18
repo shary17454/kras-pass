@@ -1,0 +1,2607 @@
+{
+  "arenas": 34,
+  "autoloads": [
+    {
+      "instantiated": true,
+      "name": "UITheme",
+      "path": "res://src/ui/ui_theme_bootstrap.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Log",
+      "path": "res://src/core/logger.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Balance",
+      "path": "res://src/core/balance.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Loc",
+      "path": "res://src/localization/loc.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "SaveSystem",
+      "path": "res://src/save/save_system.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "AppleAccount",
+      "path": "res://src/net/apple_account.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "UserSettings",
+      "path": "res://src/settings/settings_service.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "EventBus",
+      "path": "res://src/core/event_bus.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "InputRouter",
+      "path": "res://src/input/input_router.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Haptics",
+      "path": "res://src/input/haptic_director.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "AudioManager",
+      "path": "res://src/audio/audio_manager.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Registry",
+      "path": "res://src/core/registry.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Access",
+      "path": "res://src/progression/owner_key.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Progression",
+      "path": "res://src/progression/progression_service.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Stats",
+      "path": "res://src/progression/stats_service.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Achievements",
+      "path": "res://src/progression/achievements_service.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Net",
+      "path": "res://src/net/net_service.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Pool",
+      "path": "res://src/core/object_pool.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Platform",
+      "path": "res://src/core/platform_service.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "Replays",
+      "path": "res://src/replay/replay_store.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "SceneRouter",
+      "path": "res://src/core/scene_router.gd"
+    },
+    {
+      "instantiated": true,
+      "name": "DevTools",
+      "path": "res://src/debug/dev_tools.gd"
+    }
+  ],
+  "characters": [
+    {
+      "archetype": "fast",
+      "id": "nabta",
+      "perk": "recovery",
+      "perk_scale": 0.9,
+      "starter": true,
+      "stats": {
+        "accel": 0.65,
+        "control": 0.45,
+        "jump": 0.55,
+        "power": 0.35,
+        "speed": 0.7,
+        "weight": 0.3
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "heavy",
+      "id": "sakhra",
+      "perk": "resistance",
+      "perk_scale": 1.04,
+      "starter": true,
+      "stats": {
+        "accel": 0.35,
+        "control": 0.3,
+        "jump": 0.3,
+        "power": 0.85,
+        "speed": 0.3,
+        "weight": 0.9
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "balanced",
+      "id": "fanoos",
+      "perk": "boost",
+      "perk_scale": 1.05,
+      "starter": true,
+      "stats": {
+        "accel": 0.5,
+        "control": 0.5,
+        "jump": 0.5,
+        "power": 0.5,
+        "speed": 0.5,
+        "weight": 0.5
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "agile",
+      "id": "ramla",
+      "perk": "turn",
+      "perk_scale": 1.05,
+      "starter": true,
+      "stats": {
+        "accel": 0.85,
+        "control": 0.3,
+        "jump": 0.4,
+        "power": 0.45,
+        "speed": 0.65,
+        "weight": 0.35
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "fast",
+      "id": "barq",
+      "perk": "acceleration",
+      "perk_scale": 1.05,
+      "starter": false,
+      "stats": {
+        "accel": 0.8,
+        "control": 0.25,
+        "jump": 0.5,
+        "power": 0.35,
+        "speed": 0.9,
+        "weight": 0.2
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "agile",
+      "id": "mowja",
+      "perk": "air_control",
+      "perk_scale": 1.05,
+      "starter": false,
+      "stats": {
+        "accel": 0.45,
+        "control": 0.7,
+        "jump": 0.45,
+        "power": 0.45,
+        "speed": 0.55,
+        "weight": 0.4
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "jumper",
+      "id": "ghaim",
+      "perk": "jump",
+      "perk_scale": 1.03,
+      "starter": false,
+      "stats": {
+        "accel": 0.4,
+        "control": 0.6,
+        "jump": 0.85,
+        "power": 0.3,
+        "speed": 0.6,
+        "weight": 0.25
+      },
+      "total": 3.0
+    },
+    {
+      "archetype": "heavy",
+      "id": "turs",
+      "perk": "invulnerability",
+      "perk_scale": 1.08,
+      "starter": false,
+      "stats": {
+        "accel": 0.4,
+        "control": 0.35,
+        "jump": 0.35,
+        "power": 0.75,
+        "speed": 0.35,
+        "weight": 0.8
+      },
+      "total": 3.0
+    }
+  ],
+  "engine": "4.7.1-stable (official)",
+  "files_by_extension": {
+    "bin": 2,
+    "gd": 423,
+    "gdshader": 11,
+    "glb": 1,
+    "gltf": 2,
+    "jpg": 21,
+    "json": 15,
+    "md": 4,
+    "mjs": 6,
+    "plist": 1,
+    "png": 15,
+    "py": 5,
+    "pyc": 3,
+    "res": 46,
+    "sh": 6,
+    "tres": 8,
+    "tscn": 32,
+    "ttf": 5,
+    "txt": 5
+  },
+  "generated_utc": "2026-10-08T05:07:44",
+  "ignored_by_godot": [
+    "res://assets/app_store/screenshots",
+    "res://assets/app_store/source",
+    "res://assets/natural/pine_sapling_small"
+  ],
+  "input_actions": [
+    {
+      "action": "pause",
+      "deadzone": 0.5,
+      "events": [
+        "Escape",
+        "Joypad Button 6 (Start, Xbox Menu, Nintendo +)"
+      ]
+    },
+    {
+      "action": "debug_menu",
+      "deadzone": 0.5,
+      "events": [
+        "F5"
+      ]
+    },
+    {
+      "action": "ui_back",
+      "deadzone": 0.5,
+      "events": [
+        "Backspace",
+        "Joypad Button 1 (Right Action, Sony Circle, Xbox B, Nintendo A)"
+      ]
+    }
+  ],
+  "issues": [],
+  "limitations": [
+    "Source/import dependency graph, not iOS archive validation.",
+    "InputRouter polls per-slot gameplay actions outside InputMap.",
+    "Runtime navigation and match completion are tested separately by check_party.sh.",
+    "No dead-code deletion is justified by an unused static dependency alone."
+  ],
+  "main_scene": "res://scenes/boot.tscn",
+  "minigames": 39,
+  "replay_version": 5,
+  "resources": [
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/ambience/atv_engine.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/ambience/wind.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/music/adventure.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/music/arena.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/music/arena_b.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/music/menu.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/music/tension.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/music/victory.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/beam.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/bounce.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/burn.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/cannon_fire.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/correct.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/countdown.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/crate_break.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/dash.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/eliminate.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/engine.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/explode.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/fall.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/go.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/gust.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/hit.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/ice_crack.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/lose.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/machine_alert.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/machine_hum.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/pickup.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/powerup.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/rumble.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/score.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/shield_break.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/shock.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/skid.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/splash.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/swing.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/tick.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/trophy.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/ui_back.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/ui_error.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/ui_move.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/ui_select.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/unlock.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/whistle.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/win.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/audio/sfx/wrong.res"
+    },
+    {
+      "dependencies": [],
+      "path": "res://assets/fonts/startup_theme.tres"
+    },
+    {
+      "dependencies": [
+        "res://assets/fonts/NotoSans.ttf",
+        "res://assets/fonts/NotoSansArabic.ttf",
+        "res://assets/fonts/NotoSansSymbols.ttf",
+        "res://assets/fonts/NotoSansSymbols2.ttf",
+        "res://assets/fonts/NotoEmoji.ttf"
+      ],
+      "path": "res://assets/fonts/ui_theme.tres"
+    },
+    {
+      "dependencies": [
+        "res://assets/natural/fern_02/textures/fern_02_diff_1k.jpg",
+        "res://assets/natural/fern_02/textures/fern_02_arm_1k.jpg",
+        "res://assets/natural/fern_02/textures/fern_02_nor_gl_1k.jpg"
+      ],
+      "path": "res://assets/natural/fern_02/fern_02_1k.gltf"
+    },
+    {
+      "dependencies": [
+        "res://assets/natural/pine_mobile_pine_sapling_small_bark_diff.jpg",
+        "res://assets/natural/pine_mobile_pine_sapling_small_bark_rough.jpg",
+        "res://assets/natural/pine_mobile_pine_sapling_small_bark_nor_gl.jpg",
+        "res://assets/natural/pine_mobile_pine_sapling_small_twig_diff.jpg",
+        "res://assets/natural/pine_mobile_pine_sapling_small_twig_rough.jpg",
+        "res://assets/natural/pine_mobile_pine_sapling_small_twig_nor_gl.jpg"
+      ],
+      "path": "res://assets/natural/pine_mobile.glb"
+    },
+    {
+      "dependencies": [
+        "res://assets/natural/rock_moss_set_01/textures/rock_moss_set_01_diff_2k.jpg",
+        "res://assets/natural/rock_moss_set_01/textures/rock_moss_set_01_rough_2k.jpg",
+        "res://assets/natural/rock_moss_set_01/textures/rock_moss_set_01_nor_gl_2k.jpg"
+      ],
+      "path": "res://assets/natural/rock_moss_set_01/rock_moss_set_01_2k.gltf"
+    },
+    {
+      "dependencies": [],
+      "path": "res://data/collision/rock_cover_0.tres"
+    },
+    {
+      "dependencies": [],
+      "path": "res://data/collision/rock_cover_1.tres"
+    },
+    {
+      "dependencies": [],
+      "path": "res://data/collision/rock_cover_2.tres"
+    },
+    {
+      "dependencies": [],
+      "path": "res://data/collision/rock_cover_3.tres"
+    },
+    {
+      "dependencies": [],
+      "path": "res://data/collision/rock_cover_4.tres"
+    },
+    {
+      "dependencies": [],
+      "path": "res://data/collision/rock_cover_5.tres"
+    },
+    {
+      "dependencies": [
+        "res://src/core/main.gd"
+      ],
+      "path": "res://scenes/boot.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/actors/character_rig.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/actors/collectible.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/actors/fighter.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/actors/game_ball.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/actors/projectile.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/ai_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/ball_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/bomber_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/boss_hunter_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/climber_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/collector_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/color_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/courier_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/dodger_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/draw_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/driver_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/duellist_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/duo_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/echo_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/generic_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/gunner_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/keeper_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/magnet_keeper_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/painter_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/platform_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/racer_armed_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/racer_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/relic_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/runner_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/saboteur_painter_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/siege_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/smasher_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/storm_keeper_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/tag_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/tank_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/brains/zone_brain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ai/forge_feeding_plan.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/alula_clouds.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/alula_sandstone.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/alula_world.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/arena.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/arena_hazards.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/arena_tile.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/battlefield_terrain.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/cover_hull_cache.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/crater_floor.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/fantasy_circuit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/forest_animal.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/forest_fur.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/forest_life.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/forest_waterfall.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/hover_machine.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/natural_valley.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/race_structures.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_asphalt.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_biome.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_boost.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_lava.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_precipitation.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_routes.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/racing_weather.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/tank_world.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/valley_terrain.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/valley_water.gdshader"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/arenas/voyage_world.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/audio/audio_manager.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/audio/synth.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/camera/arena_camera.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/camera/local_vehicle_views.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/balance.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/event_bus.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/logger.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/main.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/minigame_validator.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/object_pool.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/platform_service.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/registry.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/core/scene_router.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/data/arena_def.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/data/character_data.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/data/minigame_def.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/data/powerup_def.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/debug/dev_tools.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/debug/operation_trace.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/fx/burst.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/fx/mesh_factory.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/fx/quad_bike.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/fx/race_recovery.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/fx/sky_dome.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/input/control_profile.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/input/haptic_director.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/input/input_frame.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/input/input_router.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/input/touch_source.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/localization/loc.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/adventure_session.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/match_config.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/match_context.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/match_phase.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/match_resource_preparation.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/match_result.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/match_scene.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/mutator_system.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/player_config.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/playlist_generator.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/match/tournament.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/base_siege.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/blast_ball.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/boss_colossus.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/boss_controller.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/boss_dreadnought.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/boss_forge.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/boss_sovereign.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/bumper_bowl.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/color_stand.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/crate_relay.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/crate_smash.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/crumble_court.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/drift_floes.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/duel_pit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/duo_clash.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/fawda.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/gem_grab.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/goal_guard.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/hurdle_dash.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/kart_sprint.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/lab_crates.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/magnet_court.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/minigame_controller.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/mnatiq.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/mukharrib.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/paint_grid.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/quick_draw.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/relic_hold.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/ring_rumble.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/rising_tide.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/sabaq_sawarikh.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/scrap_karts.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/sky_court.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/star_rush.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/storm_heart.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/sweeper_storm.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/symbol_echo.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/tag_hunt.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/tank_arena.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/turret_duel.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/minigames/zone_hold.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/apple_account.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/armed_race_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/blast_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/bumper_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/collectible_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/color_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/colossus_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/crate_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/crumble_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/draw_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/dreadnought_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/duel_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/duo_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/echo_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/fawda_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/floe_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/forge_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/goal_guard_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/hurdle_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/kart_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/magnet_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/match_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/net_service.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/paint_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/relic_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/room_client.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/saboteur_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/scrap_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/siege_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/sky_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/sovereign_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/storm_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/sweeper_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/tag_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/tank_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/tide_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/turret_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/net/zone_replica.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/powerups/powerup_pickup.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/powerups/powerup_system.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/achievements_service.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/owner_key.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/party_library.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/party_playlist.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/profile_metrics.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/progression_service.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/progression/stats_service.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/replay/replay_data.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/replay/replay_highlights.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/replay/replay_input_buffer.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/replay/replay_store.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/save/save_system.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/settings/settings_service.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/match_hud.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/offscreen_player_cue.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/party_roster.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/account_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/achievements_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/adventure_map.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/boot_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/character_gallery.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/credits_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/customize_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/daily_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/game_library.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/local_play.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/main_menu.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/online_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/playlist_builder.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/profile_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/quick_play.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/replay_library.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/replay_player.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/results_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/rewards_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/settings_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/standings_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/stats_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/touch_layout_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/tournament_setup.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/training_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/screens/updates_screen.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/tank_radar.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/tournament_podium.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/ui_kit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/ui_theme_bootstrap.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://src/ui/widgets.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/_diag.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/_diag.gd"
+      ],
+      "path": "res://tests/_diag.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/colossus_ai_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/colossus_ai_check.gd"
+      ],
+      "path": "res://tests/colossus_ai_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/compile_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/compile_check.gd"
+      ],
+      "path": "res://tests/compile_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/fantasy_visual_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/fantasy_visual_check.gd"
+      ],
+      "path": "res://tests/fantasy_visual_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/fawda_round_evidence.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/fixtures/road_query_legacy.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/font_cache_live_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/font_cache_live_check.gd"
+      ],
+      "path": "res://tests/font_cache_live_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/font_memory_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/font_memory_check.gd"
+      ],
+      "path": "res://tests/font_memory_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/forest_life_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/forest_life_check.gd"
+      ],
+      "path": "res://tests/forest_life_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/fps_settings_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/fps_settings_check.gd"
+      ],
+      "path": "res://tests/fps_settings_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/layout_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/layout_check.gd"
+      ],
+      "path": "res://tests/layout_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/natural_visual_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/natural_visual_check.gd"
+      ],
+      "path": "res://tests/natural_visual_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/network_peer.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/network_peer.gd"
+      ],
+      "path": "res://tests/network_peer.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/network_smoke_config.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/network_version_visual.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/network_version_visual.gd"
+      ],
+      "path": "res://tests/network_version_visual.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/offscreen_visual_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/offscreen_visual_check.gd"
+      ],
+      "path": "res://tests/offscreen_visual_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/party_race_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/party_race_check.gd"
+      ],
+      "path": "res://tests/party_race_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/party_visual_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/party_visual_check.gd"
+      ],
+      "path": "res://tests/party_visual_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/perf.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/perf.gd"
+      ],
+      "path": "res://tests/perf.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/race_setup_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/race_setup_check.gd"
+      ],
+      "path": "res://tests/race_setup_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/soak_perf.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/soak_perf.gd"
+      ],
+      "path": "res://tests/soak_perf.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/stage_zero_stability.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/stage_zero_stability.gd"
+      ],
+      "path": "res://tests/stage_zero_stability.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/stage_zero_visual.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/stage_zero_visual.gd"
+      ],
+      "path": "res://tests/stage_zero_visual.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ai_compound_visibility.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ai_jump_actions.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ai_occlusion.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ai_tap_actions.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ai_tile_targets.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ai_visibility.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_apple_account.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_arena_respawn_scoring.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_arena_tiles.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_armed_race_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_balance_sim.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_blast_ball.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_boss_cooperation.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_boss_health_hud.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_boss_round_reset.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_boss_warning_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_boss_weak_point_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_bumper_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_bundled_ui_fonts.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_burst_reuse.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_character_effective_budget.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_climber_ground_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_collectible_arbitration.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_collection_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_collector_observed_motion.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_color_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_color_reaction_clock.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_colossus_approach.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_colossus_input_clock.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_colossus_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_colossus_respawn_spacing.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_colossus_targets.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_content.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_crate_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_crate_rounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_crater_clipping_bounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_crater_floor.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_crater_route_progress.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_crumble_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_dodger_camera_visibility.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_dodger_jump_timing.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_dodger_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_draw_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_dreadnought_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_driver_engagement.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_duel_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_duo_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_echo_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_echo_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_fawda_final_evidence.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_fawda_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_fawda_round_evidence.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_floe_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_floe_reset.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_forge_feeding.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_forge_feeding_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_forge_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_goal_guard.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_hover_machine_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_hud_numeric_direction.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_hud_player_name_fit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_hud_value_text_fit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_hurdle_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_hurdle_rounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_input_sources.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_kart_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_keeper_contact_plane.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_lab_smoke_budget.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_lifecycle.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_live_shadow_quality.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_local_vehicle_views.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_magnet_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_main_menu_exit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_match_preparation.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_match_preparation_session.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_matches.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_meaningful_leader_target.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_memory_pressure.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_mutators.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_network_preparation_cleanup.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_offscreen_cues.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_online_start_handoff.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_operation_trace.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_paint_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_paint_reset.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_party.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_party_progress.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_perf_sampling.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_platform_ground_routing.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_playlist.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_quick_draw.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_race_conditions.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_race_rounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_race_smoke_budget.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_ram_contact_lifetime.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_relay_floor.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_relay_rounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_release_version.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_relic_hold.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_future_save.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_input_chunks.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_payload.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_recovery.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_recovery_resume.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_retention.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_schema.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_replay_storage.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_rival_acquisition_delay.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_road_query.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_road_query_boundaries.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_round_announcement_fit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_router_recovery.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_runner_recovery.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_saboteur_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_save.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_scoring.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_scrap_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_scrub_warning_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_shared_pickup_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_shrink_ejection.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_siege_base_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_siege_final_evidence.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_siege_hud_text_fit.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_siege_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sky_court.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sky_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sovereign_collapse.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sovereign_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sovereign_targets.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sphere_mesh_reuse.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_status_toast_hud.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_storm_incoming_defense.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_storm_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_storm_warning_reaction.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_survival_rounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_survivor_winner_contract.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sweeper_impact.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sweeper_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_sweeper_visible_hitbox.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_symbol_echo.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_systems.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tag_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tank_crate_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tank_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tank_radar_layout.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tank_terrain.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tide_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tide_scoring.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tide_step_access.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tournament_checkpoint.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_tournament_prefetch.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_turret_network.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_turret_rounds.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_vehicle_dash_projection.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_visual_roster_policy.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_world_camera.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_zone_hold.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/suites/test_zone_perception.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/tank_visual_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/tank_visual_check.gd"
+      ],
+      "path": "res://tests/tank_visual_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/test_harness.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/test_runner.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/test_runner.gd"
+      ],
+      "path": "res://tests/test_runner.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/usability_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tests/usability_check.gd"
+      ],
+      "path": "res://tests/usability_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tests/zone_peer_driver.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/bake_original_music.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/bake_original_music.gd"
+      ],
+      "path": "res://tools/bake_original_music.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/bake_original_sfx.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/bake_original_sfx.gd"
+      ],
+      "path": "res://tools/bake_original_sfx.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/balance_evidence.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/balance_sim.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/balance_sim.gd"
+      ],
+      "path": "res://tools/balance_sim.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/configure_natural_imports.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/crumble_route_trace.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/crumble_route_trace.gd"
+      ],
+      "path": "res://tools/crumble_route_trace.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/inspect_natural_assets.gd"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/online_ui_check.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/online_ui_check.gd"
+      ],
+      "path": "res://tools/online_ui_check.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/party_content_audit.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/party_content_audit.gd"
+      ],
+      "path": "res://tools/party_content_audit.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/scrap_tactics_trace.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/scrap_tactics_trace.gd"
+      ],
+      "path": "res://tools/scrap_tactics_trace.tscn"
+    },
+    {
+      "dependencies": [],
+      "path": "res://tools/stage_zero_audit.gd"
+    },
+    {
+      "dependencies": [
+        "res://tools/stage_zero_audit.gd"
+      ],
+      "path": "res://tools/stage_zero_audit.tscn"
+    }
+  ],
+  "routes": [
+    {
+      "id": "game_library",
+      "path": "res://src/ui/screens/game_library.gd"
+    },
+    {
+      "id": "boot",
+      "path": "res://src/ui/screens/boot_screen.gd"
+    },
+    {
+      "id": "main_menu",
+      "path": "res://src/ui/screens/main_menu.gd"
+    },
+    {
+      "id": "adventure",
+      "path": "res://src/ui/screens/adventure_map.gd"
+    },
+    {
+      "id": "quick_play",
+      "path": "res://src/ui/screens/quick_play.gd"
+    },
+    {
+      "id": "tournament",
+      "path": "res://src/ui/screens/tournament_setup.gd"
+    },
+    {
+      "id": "playlist_builder",
+      "path": "res://src/ui/screens/playlist_builder.gd"
+    },
+    {
+      "id": "local_play",
+      "path": "res://src/ui/screens/local_play.gd"
+    },
+    {
+      "id": "online",
+      "path": "res://src/ui/screens/online_screen.gd"
+    },
+    {
+      "id": "training",
+      "path": "res://src/ui/screens/training_screen.gd"
+    },
+    {
+      "id": "daily",
+      "path": "res://src/ui/screens/daily_screen.gd"
+    },
+    {
+      "id": "characters",
+      "path": "res://src/ui/screens/character_gallery.gd"
+    },
+    {
+      "id": "rewards",
+      "path": "res://src/ui/screens/rewards_screen.gd"
+    },
+    {
+      "id": "achievements",
+      "path": "res://src/ui/screens/achievements_screen.gd"
+    },
+    {
+      "id": "stats",
+      "path": "res://src/ui/screens/stats_screen.gd"
+    },
+    {
+      "id": "settings",
+      "path": "res://src/ui/screens/settings_screen.gd"
+    },
+    {
+      "id": "touch_layout",
+      "path": "res://src/ui/screens/touch_layout_screen.gd"
+    },
+    {
+      "id": "updates",
+      "path": "res://src/ui/screens/updates_screen.gd"
+    },
+    {
+      "id": "credits",
+      "path": "res://src/ui/screens/credits_screen.gd"
+    },
+    {
+      "id": "customize",
+      "path": "res://src/ui/screens/customize_screen.gd"
+    },
+    {
+      "id": "profile",
+      "path": "res://src/ui/screens/profile_screen.gd"
+    },
+    {
+      "id": "account",
+      "path": "res://src/ui/screens/account_screen.gd"
+    },
+    {
+      "id": "results",
+      "path": "res://src/ui/screens/results_screen.gd"
+    },
+    {
+      "id": "replays",
+      "path": "res://src/ui/screens/replay_library.gd"
+    },
+    {
+      "id": "replay_player",
+      "path": "res://src/ui/screens/replay_player.gd"
+    },
+    {
+      "id": "standings",
+      "path": "res://src/ui/screens/standings_screen.gd"
+    },
+    {
+      "id": "match",
+      "path": "res://src/match/match_scene.gd"
+    }
+  ],
+  "save_schema_version": 2,
+  "scope": [
+    "res://src",
+    "res://scenes",
+    "res://data",
+    "res://assets",
+    "res://tests",
+    "res://tools"
+  ],
+  "source_fingerprint": "9a266d10686e6f387e4d703bad7cdb988335b0f988ca24a85aa79e4317d24fee"
+}

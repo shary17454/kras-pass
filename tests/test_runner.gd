@@ -3,14 +3,63 @@ extends Node
 ##
 ##   godot --headless --fixed-fps 60 --path . tests/test_runner.tscn
 ##
-## Backs up the real profile before running, restores it afterwards, and exits
+## Uses an isolated test profile, restores fixture state afterwards, and exits
 ## with a non-zero status on failure so CI can gate on it.
 
 const SUITES := [
+	"res://tests/suites/test_appearance.gd",
+	"res://tests/suites/test_network_match_boundary.gd",
+	"res://tests/suites/test_network_lobby_boundary.gd",
+	"res://tests/suites/test_network_start_boundary.gd",
+	"res://tests/suites/test_tank_stationary_aim.gd",
+	"res://tests/suites/test_tank_approach_routes.gd",
+	"res://tests/suites/test_tank_edge_braking.gd",
+	"res://tests/suites/test_balance_tank_trace.gd",
+	"res://tests/suites/test_balance_contact_trace.gd",
+	"res://tests/suites/test_duel_contact_budget.gd",
+	"res://tests/suites/test_balance_pair_schedule.gd",
+	"res://tests/suites/test_duel_damage_lives.gd",
+	"res://tests/suites/test_arena_spawn_clearance.gd",
+	"res://tests/suites/test_racer_pad_perception.gd",
+	"res://tests/suites/test_quick_picker_layout.gd",
+	"res://tests/suites/test_climber_ledge_contest.gd",
+	"res://tests/suites/test_tank_smoke_pilot.gd",
+	"res://tests/suites/test_routed_navigation.gd",
+	"res://tests/suites/test_tournament_flow.gd",
+	"res://tests/suites/test_daily_flow.gd",
+	"res://tests/suites/test_daily_layout.gd",
+	"res://tests/suites/test_daily_challenge.gd",
+	"res://tests/suites/test_replay_transport.gd",
+	"res://tests/suites/test_test_storage_isolation.gd",
+	"res://tests/suites/test_release_version.gd",
+	"res://tests/suites/test_local_vehicle_views.gd",
+	"res://tests/suites/test_shared_pickup_perception.gd",
+	"res://tests/suites/test_tank_crate_perception.gd",
+	"res://tests/suites/test_driver_engagement.gd",
+	"res://tests/suites/test_vehicle_dash_projection.gd",
+	"res://tests/suites/test_survivor_winner_contract.gd",
+	"res://tests/suites/test_meaningful_leader_target.gd",
+	"res://tests/suites/test_ai_tap_actions.gd",
+	"res://tests/suites/test_tide_step_access.gd",
+	"res://tests/suites/test_climber_ground_perception.gd",
+	"res://tests/suites/test_round_announcement_fit.gd",
+	"res://tests/suites/test_hud_player_name_fit.gd",
+	"res://tests/suites/test_siege_hud_text_fit.gd",
+	"res://tests/suites/test_siege_base_perception.gd",
+	"res://tests/suites/test_hover_machine_perception.gd",
+	"res://tests/suites/test_rival_acquisition_delay.gd",
+	"res://tests/suites/test_zone_perception.gd",
+	"res://tests/suites/test_scrub_warning_perception.gd",
+	"res://tests/suites/test_ai_tile_targets.gd",
+	"res://tests/suites/test_hud_value_text_fit.gd",
+	"res://tests/suites/test_tank_radar_layout.gd",
+	"res://tests/suites/test_crater_route_progress.gd",
 	"res://tests/suites/test_character_effective_budget.gd",
 	"res://tests/suites/test_dodger_jump_timing.gd",
 	"res://tests/suites/test_platform_ground_routing.gd",
 	"res://tests/suites/test_sweeper_visible_hitbox.gd",
+	"res://tests/suites/test_sweeper_character_clearance.gd",
+	"res://tests/suites/test_ice_surface_batches.gd",
 	"res://tests/suites/test_dodger_camera_visibility.gd",
 	"res://tests/suites/test_storm_warning_reaction.gd",
 	"res://tests/suites/test_storm_incoming_defense.gd",
@@ -21,6 +70,8 @@ const SUITES := [
 	"res://tests/suites/test_collectible_arbitration.gd",
 	"res://tests/suites/test_world_camera.gd",
 	"res://tests/suites/test_balance_sim.gd",
+	"res://tests/suites/test_balance_contact_probe.gd",
+	"res://tests/suites/test_sweeper_resistance_experiment.gd",
 	"res://tests/suites/test_network.gd",
 	"res://tests/suites/test_apple_account.gd",
 	"res://tests/suites/test_scoring.gd",
@@ -29,6 +80,8 @@ const SUITES := [
 	"res://tests/suites/test_systems.gd",
 	"res://tests/suites/test_memory_pressure.gd",
 	"res://tests/suites/test_input_sources.gd",
+	"res://tests/suites/test_party_touch_input.gd",
+	"res://tests/suites/test_visual_roster_policy.gd",
 	"res://tests/suites/test_replay.gd",
 	"res://tests/suites/test_replay_input_chunks.gd",
 	"res://tests/suites/test_replay_recovery.gd",
@@ -45,6 +98,7 @@ const SUITES := [
 	"res://tests/suites/test_perf_sampling.gd",
 	"res://tests/suites/test_burst_reuse.gd",
 	"res://tests/suites/test_boss_health_hud.gd",
+	"res://tests/suites/test_hud_numeric_direction.gd",
 	"res://tests/suites/test_status_toast_hud.gd",
 	"res://tests/suites/test_bundled_ui_fonts.gd",
 	"res://tests/suites/test_road_query.gd",
@@ -112,6 +166,7 @@ const SUITES := [
 	"res://tests/suites/test_collector_observed_motion.gd",
 	"res://tests/suites/test_race_smoke_budget.gd",
 	"res://tests/suites/test_lab_smoke_budget.gd",
+	"res://tests/suites/test_crate_smoke_budget.gd",
 	"res://tests/suites/test_fawda_network.gd",
 	"res://tests/suites/test_fawda_round_evidence.gd",
 	"res://tests/suites/test_fawda_final_evidence.gd",
@@ -124,6 +179,7 @@ const SUITES := [
 	"res://tests/suites/test_echo_network.gd",
 	"res://tests/suites/test_draw_network.gd",
 	"res://tests/suites/test_goal_guard.gd",
+	"res://tests/suites/test_keeper_reachable_threat.gd",
 	"res://tests/suites/test_magnet_network.gd",
 	"res://tests/suites/test_storm_network.gd",
 	"res://tests/suites/test_sky_court.gd",
@@ -135,12 +191,14 @@ const SUITES := [
 	"res://tests/suites/test_collection_network.gd",
 	"res://tests/suites/test_zone_hold.gd",
 	"res://tests/suites/test_relic_hold.gd",
+	"res://tests/suites/test_native_pause_presenter.gd",
 	"res://tests/suites/test_tag_network.gd",
 	"res://tests/suites/test_paint_reset.gd",
 	"res://tests/suites/test_paint_network.gd",
 	"res://tests/suites/test_saboteur_network.gd",
 	"res://tests/suites/test_race_conditions.gd",
 	"res://tests/suites/test_lifecycle.gd",
+	"res://tests/suites/test_ai_jump_actions.gd",
 ]
 
 var _t: TestHarness
@@ -153,6 +211,7 @@ func _ready() -> void:
 	_t = TestHarness.new()
 	print("\nKRAS PASS test suite — Godot %s, %s" % [
 		Engine.get_version_info().string, OS.get_name()])
+	print("TEST_STORAGE_ROOT=" + SaveSystem.storage_root)
 	_backup()
 	var started := Time.get_ticks_msec()
 	var filter := ""
@@ -191,8 +250,8 @@ func _ready() -> void:
 	get_tree().quit(code)
 
 
-## Tests write to the same `user://` directory as the game. Snapshot the two
-## real slots first so running the suite never costs a developer their progress.
+## SaveSystem selects a private test root before any autoload reads save data.
+## Preserve fixture slots when several suites share an explicit scratch root.
 func _backup() -> void:
 	_profile_backup = SaveSystem.profile().duplicate(true)
 	_settings_backup = SaveSystem.settings().duplicate(true)

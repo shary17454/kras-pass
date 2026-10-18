@@ -55,7 +55,7 @@ func decide(_delta: float) -> void:
 	steer_to(intercept)
 
 	if closing < 2.8 and rng.randf() < attack_chance:
-		press(Btn.ATTACK)
+		tap(Btn.ATTACK)
 		# Face a rival's goal so the clearance is a shot, not a giveaway.
 		var victim := leader_rival()
 		if victim >= 0:
@@ -70,6 +70,10 @@ func _most_dangerous_ball() -> GameBall:
 		return null
 	var best: GameBall = null
 	var best_score := -INF
+	var incoming: GameBall = null
+	var earliest := INF
+	var reachable: GameBall = null
+	var earliest_reachable := INF
 	for node in _tree.get_nodes_in_group("balls"):
 		var b := node as GameBall
 		if not can_observe(b):
@@ -77,14 +81,57 @@ func _most_dangerous_ball() -> GameBall:
 		var observed := perceive_ball(b)
 		if observed.is_empty():
 			continue
-		var to: Vector3 = _goal_pos - Vector3(observed["position"])
+		var position: Vector3 = observed["position"]
+		var velocity: Vector3 = observed["velocity"]
+		var to: Vector3 = _goal_pos - position
 		var dist := to.length()
 		if dist < 0.01:
 			continue
 		# Threat = how directly it is travelling at our goal, over distance.
-		var heading: float = Vector3(observed["velocity"]).normalized().dot(to.normalized())
+		var heading: float = velocity.normalized().dot(to.normalized())
 		var score: float = heading * 12.0 - dist * 0.35
 		if score > best_score:
 			best_score = score
 			best = b
-	return best
+		# An imminent goal threat takes precedence over nearby slow traffic.
+		# Use the same observed sphere/shield contact plane as interception.
+		var normal_speed := velocity.dot(_goal_normal)
+		if normal_speed >= -0.001:
+			continue
+		var contact_plane := _goal_pos
+		var radius := float(observed.get("radius", 0.0))
+		if controller != null and controller.has_method("keeper_contact_offset"):
+			contact_plane += _goal_normal * controller.keeper_contact_offset(radius)
+		var arrival := (contact_plane - position).dot(_goal_normal) / normal_speed
+		# Arrival is measured from the delayed sample, not from the current tick.
+		# A predicted crossing older than that sample's age is no longer incoming.
+		if arrival <= maxf(0.0, float(observed.get("age", 0.0))):
+			continue
+		var crossing := position + velocity * arrival
+		if absf(_goal_axis.dot(crossing - _goal_pos)) > _lane_limit + radius:
+			continue
+		if arrival < earliest:
+			earliest = arrival
+			incoming = b
+		if prediction >= 0.5 and arrival < earliest_reachable \
+				and _can_reach_crossing(crossing, arrival, observed):
+			earliest_reachable = arrival
+			reachable = b
+	if reachable != null:
+		return reachable
+	return incoming if incoming != null else best
+
+
+func _can_reach_crossing(crossing: Vector3, arrival: float, observed: Dictionary) -> bool:
+	var me := self_body()
+	if me == null:
+		return true
+	# An optimistic bound skips only clearly impossible saves, not marginal ones.
+	var remaining := maxf(0.0, arrival - float(observed.get("age", 0.0)))
+	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	var speed_bound := maxf(walk_speed, absf(me.velocity.dot(_goal_axis)))
+	if me.can_dash and me.can_afford_dash():
+		speed_bound += Balance.num("tuning", "fighter.dash_impulse", 15.0) * float(me.mods["speed"])
+	var shield_width := float(controller.PADDLE_HALF) * 1.25 + float(observed.get("radius", 0.0))
+	var needed := absf((crossing - me.global_position).dot(_goal_axis))
+	return needed <= shield_width + maxf(0.0, speed_bound) * remaining

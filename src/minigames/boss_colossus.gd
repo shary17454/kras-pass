@@ -14,7 +14,7 @@ const SWEEP_PERIOD := 7.0
 const ARM_DAMAGE := 55.0
 ## Carved craters require an approach around the rim, not through the fist.
 ## This window includes that travel while retaining one hit per player.
-const EXPOSED_TIME := 2.4
+const EXPOSED_TIME := 3.2
 ## One strike per exposure, so the reward is arriving, not standing there.
 const HIT_PER_WINDOW := true
 
@@ -25,6 +25,11 @@ var _arm: Node3D
 var _fist: Node3D
 var _craters: Array = []
 var _hit_this_window := {}
+
+
+func camera_mode() -> int:
+	# The central head otherwise hides the rear fighter at the ordinary arena angle.
+	return ArenaCamera.Mode.TOP_DOWN
 
 
 func boss_build() -> void:

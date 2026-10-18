@@ -31,4 +31,5 @@ run_check forge_ai_9614 tests/colossus_ai_check.tscn --game=boss_forge --seed=96
 run_check dreadnought_ai_9614 tests/colossus_ai_check.tscn --game=boss_dreadnought --seed=9614
 run_check sovereign_ai_9614 tests/colossus_ai_check.tscn --game=boss_sovereign --seed=9614
 run_check stability tests/stage_zero_stability.tscn --cycles="${KRAS_STABILITY_CYCLES:-1}"
+run_check local_matrix tests/stage_zero_stability.tscn --cycles=1 --human-matrix
 printf 'Compile and tests passed; inspect device performance separately.\n'

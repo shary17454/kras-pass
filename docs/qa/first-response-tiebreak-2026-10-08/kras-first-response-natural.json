@@ -1,0 +1,126 @@
+{
+	"failures": [],
+	"samples": [
+		{
+			"champion": 3,
+			"contenders": 2,
+			"duration": 3.83333333333332,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 209,
+			"signal_sequence": 1,
+			"ticks": 640,
+			"time_remaining": 16.1666666666669,
+			"tournament_complete": true,
+			"winners": [
+				1
+			]
+		},
+		{
+			"champion": 1,
+			"contenders": 2,
+			"duration": 2.94999999999999,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 502,
+			"signal_sequence": 1,
+			"ticks": 587,
+			"time_remaining": 17.0500000000002,
+			"tournament_complete": true,
+			"winners": [
+				0
+			]
+		},
+		{
+			"champion": 1,
+			"contenders": 2,
+			"duration": 4.26666666666666,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 2003,
+			"signal_sequence": 1,
+			"ticks": 666,
+			"time_remaining": 15.7333333333335,
+			"tournament_complete": true,
+			"winners": [
+				0
+			]
+		},
+		{
+			"champion": 3,
+			"contenders": 2,
+			"duration": 2.53333333333333,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 4011,
+			"signal_sequence": 1,
+			"ticks": 562,
+			"time_remaining": 17.4666666666668,
+			"tournament_complete": true,
+			"winners": [
+				1
+			]
+		},
+		{
+			"champion": 1,
+			"contenders": 4,
+			"duration": 3.84999999999999,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 209,
+			"signal_sequence": 1,
+			"ticks": 641,
+			"time_remaining": 16.1500000000002,
+			"tournament_complete": true,
+			"winners": [
+				1
+			]
+		},
+		{
+			"champion": 0,
+			"contenders": 4,
+			"duration": 3.28333333333333,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 502,
+			"signal_sequence": 1,
+			"ticks": 607,
+			"time_remaining": 16.7166666666669,
+			"tournament_complete": true,
+			"winners": [
+				0
+			]
+		},
+		{
+			"champion": 3,
+			"contenders": 4,
+			"duration": 4.31666666666666,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 2003,
+			"signal_sequence": 1,
+			"ticks": 669,
+			"time_remaining": 15.6833333333335,
+			"tournament_complete": true,
+			"winners": [
+				3
+			]
+		},
+		{
+			"champion": 2,
+			"contenders": 4,
+			"duration": 2.7,
+			"finished_naturally": true,
+			"resolve_sequence": 1,
+			"seed": 4011,
+			"signal_sequence": 1,
+			"ticks": 572,
+			"time_remaining": 17.3000000000002,
+			"tournament_complete": true,
+			"winners": [
+				2
+			]
+		}
+	],
+	"scope": "8 actual AI reaction deciders after a synthetic tied tournament result; not physical users or balance qualification"
+}

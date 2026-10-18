@@ -18,7 +18,7 @@ export function validColossusWorld(data, count) {
     || !validBossState(data.boss, 800, [.66, .33])
     || !vector(data.arm_rotation) || !data.arm_rotation.every(n => Math.abs(n) <= Math.PI)
     || !vector(data.fist_position) || !vector(data.fist_scale) || !data.fist_scale.every(n => n >= .8 && n <= 1.2)
-    || !Number.isFinite(data.exposed) || data.exposed < 0 || data.exposed > 2.4
+    || !Number.isFinite(data.exposed) || data.exposed < 0 || data.exposed > 3.2
     || !['warnings', 'craters'].every(group => Array.isArray(data[group]) && data[group].length <= 64)) return false;
   const ids = new Set();
   const row = (v, size) => {
@@ -281,18 +281,18 @@ export function validBlastWorld(data) {
     && (!data.detonated || data.fuse === 0);
 }
 
-export function validCrumbleWorld(data, tileCount = 113) {
+export function validCrumbleWorld(data, tileCount = 113, warningLimit = 2.4) {
   return !!data && Array.isArray(data.tiles) && data.tiles.length === tileCount
     && data.tiles.every(row => Array.isArray(row) && row.length === 4 && row.every(Number.isFinite)
       && Number.isInteger(row[0]) && row[0] >= 0 && row[0] <= 3
       && row[1] >= 0 && row[1] <= 10 && row[2] >= -32 && row[2] <= 0
       && Number.isInteger(row[3]) && row[3] >= 0 && row[3] <= 1000000
       && (row[0] !== 0 || (row[1] === 0 && row[2] === 0))
-      && (row[0] !== 1 || (row[1] <= .9 && row[2] === 0)));
+      && (row[0] !== 1 || (row[1] <= warningLimit && row[2] === 0)));
 }
 
 export function validColorWorld(data) {
-  return validCrumbleWorld(data, 121)
+  return validCrumbleWorld(data, 121, .9)
     && Array.isArray(data.colors) && data.colors.length === 121
     && data.colors.every(color => Number.isInteger(color) && color >= 0 && color <= 3)
     && Number.isInteger(data.called) && data.called >= 0 && data.called <= 3

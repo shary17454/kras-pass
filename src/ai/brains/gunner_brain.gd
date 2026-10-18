@@ -35,7 +35,7 @@ func decide(_delta: float) -> void:
 	var aligned: float = me.facing.normalized().dot(to.normalized())
 	if aligned > lerp(0.93, 0.985, accuracy) and dist < 22.0 and _has_line_of_sight(me.global_position, spot):
 		if rng.randf() < attack_chance + 0.25:
-			press(Btn.ATTACK)
+			tap(Btn.ATTACK)
 	if dist > IDEAL_RANGE * 2.0:
 		maybe_dash(0.8)
 

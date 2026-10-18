@@ -50,15 +50,30 @@ var enabled := true
 func _ready() -> void:
 	# Editor-only test runs must never read or rotate the player's real saves.
 	if OS.has_feature("editor"):
-		for argument in OS.get_cmdline_user_args():
-			if argument.begins_with("--test-data-dir="):
-				var requested := argument.trim_prefix("--test-data-dir=")
-				if requested.is_absolute_path():
-					storage_root = requested.path_join("")
+		storage_root = storage_root_for_launch(true, OS.get_cmdline_args(),
+			OS.get_cmdline_user_args(), "%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()])
 		DirAccess.make_dir_recursive_absolute(storage_root)
 	_cache[PROFILE] = load_slot(PROFILE)
 	_cache[SETTINGS] = load_slot(SETTINGS)
 	profile_loaded.emit(_cache[PROFILE])
+
+
+static func storage_root_for_launch(editor: bool, engine_args: PackedStringArray,
+		user_args: PackedStringArray, run_id: String) -> String:
+	if not editor:
+		return DIR
+	for argument in user_args:
+		if argument.begins_with("--test-data-dir="):
+			var requested := argument.trim_prefix("--test-data-dir=")
+			var real_root := ProjectSettings.globalize_path(DIR).simplify_path().trim_suffix("/")
+			var requested_root := ProjectSettings.globalize_path(requested).simplify_path().trim_suffix("/")
+			if requested.is_absolute_path() and requested_root != real_root:
+				return requested.path_join("")
+	for argument in engine_args:
+		var entry := ProjectSettings.localize_path(argument)
+		if entry.begins_with("res://tests/") and (entry.ends_with(".tscn") or entry.ends_with(".gd")):
+			return DIR.path_join("test-runs").path_join(run_id)
+	return DIR
 
 
 func _process(delta: float) -> void:
@@ -323,18 +338,30 @@ func _write_slot(slot: String, data: Dictionary) -> bool:
 	f.close()
 	if write_error != OK:
 		return false
+	var da := DirAccess.open(storage_root)
+	if da == null:
+		return false
 	# Rotate: current good file becomes the backup, tmp becomes current.
 	if _read(_path(slot)) != null:
 		var prev := FileAccess.open(_path(slot), FileAccess.READ)
-		if prev != null:
-			var prev_text := prev.get_as_text()
-			prev.close()
-			var bf := FileAccess.open(_path(slot) + ".bak", FileAccess.WRITE)
-			if bf != null:
-				bf.store_string(prev_text)
-				bf.close()
-	var da := DirAccess.open(storage_root)
-	return da != null and da.rename(tmp.get_file(), _path(slot).get_file()) == OK
+		if prev == null:
+			return false
+		var prev_text := prev.get_as_text()
+		var read_error := prev.get_error()
+		prev.close()
+		if read_error != OK and read_error != ERR_FILE_EOF:
+			return false
+		var backup_tmp := _path(slot) + ".bak.tmp"
+		var bf := FileAccess.open(backup_tmp, FileAccess.WRITE)
+		if bf == null:
+			return false
+		bf.store_string(prev_text)
+		bf.flush()
+		var backup_error := bf.get_error()
+		bf.close()
+		if backup_error != OK or da.rename(backup_tmp.get_file(), (_path(slot) + ".bak").get_file()) != OK:
+			return false
+	return da.rename(tmp.get_file(), _path(slot).get_file()) == OK
 
 
 func _read(path: String):

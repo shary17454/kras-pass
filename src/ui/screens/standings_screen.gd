@@ -24,23 +24,34 @@ func build() -> void:
 		return
 
 	title(Loc.t("tournament.standings"))
+	var results_parent: Control = body
 	if session.is_complete():
+		var columns := UIKit.adaptive_columns(24)
+		columns.name = "ChampionColumns"
+		columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		body.add_child(columns)
+		var summary := UIKit.vbox(12)
+		summary.name = "ChampionSummary"
+		summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		columns.add_child(summary)
+		results_parent = columns
 		var champ := session.champion()
 		var headline := UIKit.centered(
 			Loc.t("tournament.champion", {"name": session.players[champ].display_name()}) if champ >= 0 else Loc.t("party.shared_cup"),
 			UIKit.SIZE_HEADING, UIKit.ACCENT, true)
 		headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		body.add_child(headline)
+		summary.add_child(headline)
 		var podium := TournamentPodium.new()
-		body.add_child(podium)
+		summary.add_child(podium)
 		podium.setup(session)
+		podium.custom_minimum_size.y = 180 * UIKit.scale()
 		for award in session.fun_awards():
 			var names: Array[String] = []
 			for slot in award["slots"]:
 				names.append(session.players[slot].display_name())
 			var label := UIKit.centered(Loc.t(award["key"]) + ": " + " · ".join(names), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			body.add_child(label)
+			summary.add_child(label)
 	elif not session.tiebreak_slots.is_empty():
 		body.add_child(UIKit.centered(Loc.t("party.tiebreak"), UIKit.SIZE_HEADING, UIKit.ACCENT))
 	else:
@@ -48,9 +59,11 @@ func build() -> void:
 			Loc.t("tournament.game_of", {"n": session.index + 1, "total": session.total_games()}),
 			UIKit.SIZE_HEADING, UIKit.dim_color()))
 
-	var scroll_and_grid := Widgets.scroll_grid(1)
-	body.add_child(scroll_and_grid[0])
-	var grid: GridContainer = scroll_and_grid[1]
+	# Screen already provides scrolling; nested scrolling can collapse to a sliver.
+	var grid := UIKit.vbox(12)
+	grid.name = "StandingsRows"
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	results_parent.add_child(grid)
 	for row in session.rows():
 		var card := Widgets.standings_row(
 			int(row["rank"]), String(row["name"]), row["color"],
@@ -96,7 +109,8 @@ func _schedule_strip() -> Control:
 
 func _add_actions() -> void:
 	var row := UIKit.adaptive_columns(14)
-	body.add_child(row)
+	row.name = "StandingsActions"
+	body.get_parent().get_parent().add_child(row)
 	if session.is_complete():
 		var again := UIKit.button(Loc.t("results.rematch"), UIKit.SIZE_BODY)
 		again.size_flags_horizontal = Control.SIZE_EXPAND_FILL

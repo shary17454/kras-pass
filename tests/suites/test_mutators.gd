@@ -8,7 +8,9 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("mutators")
+	var children_before := host.get_child_count()
 	await _compatibility(t, host)
+	t.equal(host.get_child_count(), children_before, "compatibility cases release every spawned fixture")
 	await _magnitudes(t, host)
 	await _chaos_schedule(t, host)
 
@@ -50,7 +52,8 @@ func _compatibility(t: TestHarness, host: Node) -> void:
 	t.ok(not m.active.has("heavy_gravity"), "its declared opposite is rejected, not silently layered on top")
 
 	t.test("a mutator outside its declared categories is rejected")
-	var collect_ctx: MatchContext = _make_ctx("gem_grab", host)["ctx"]  # category: collect
+	var collect_built := _make_ctx("gem_grab", host)
+	var collect_ctx: MatchContext = collect_built["ctx"]  # category: collect
 	var m2 := MutatorSystem.new()
 	# double_hazards only lists push_out/survival in data/mutators.json.
 	m2.setup(collect_ctx, ["double_hazards"], false)
@@ -62,6 +65,7 @@ func _compatibility(t: TestHarness, host: Node) -> void:
 	t.ok(m3.active.has("hyper_speed"), "a mutator with no category list applies everywhere")
 
 	await _cleanup(host, built)
+	await _cleanup(host, collect_built)
 
 
 func _magnitudes(t: TestHarness, host: Node) -> void:

@@ -20,6 +20,12 @@ var completed := false
 var initial_positions: Array[Vector3] = []
 var moved := false
 var tournament_mode := false
+var tournament_rotation := "random_no_repeat"
+var arena_history: Array[String] = []
+var mixed_playlist := false
+var round_history: Array[Dictionary] = []
+var race_start_history: Array[Dictionary] = []
+var round_snapshot_start := 0
 var fawda_final_checkpoint := false
 var game_id := "ring_rumble"
 var requested_game_id := ""
@@ -58,6 +64,8 @@ var fawda_arenas_seen := {}
 var tank_arenas_seen := {}
 var tank_route := PackedVector3Array()
 var tank_route_target := Vector3.INF
+var tank_pilot_observation := {}
+var tank_final_checkpoint := false
 var observed_duo_score := false
 var observed_duo_life_loss := false
 var observed_duo_damage := false
@@ -92,6 +100,7 @@ var observed_blast_explosion := false
 var observed_color_drop := false
 var observed_draw_signal := false
 var observed_draw_response := false
+var observed_draw_response_prompts := {}
 var draw_tap_sequence := -1
 var observed_remote_input_slots := {}
 var observed_echo_cue := false
@@ -217,7 +226,8 @@ func _process(_delta: float) -> void:
 			for fighter in game.ctx.fighters:
 				positions.append(str(fighter.global_position))
 			print("NETWORK_ATV=" + JSON.stringify({"positions": positions, "armor": game.controller.armor,
-				"ammo": game.controller.ammo, "inventory_seen": observed_tank_inventory, "route": str(tank_route)}))
+				"ammo": game.controller.ammo, "inventory_seen": observed_tank_inventory, "route": str(tank_route),
+				"pilot": tank_pilot_observation}))
 
 class ResultDropTransport extends Node:
 	var delegate: Node
@@ -242,7 +252,10 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host": host = true
 		if arg == "--tournament": tournament_mode = true
+		if arg == "--mixed-playlist": mixed_playlist = true
+		if arg.begins_with("--rotation="): tournament_rotation = arg.trim_prefix("--rotation=")
 		if arg == "--fawda-final-checkpoint": fawda_final_checkpoint = true
+		if arg == "--tank-final-checkpoint": tank_final_checkpoint = true
 		if arg == "--duo-tiebreak": duo_tiebreak = true
 		if arg == "--race-tiebreak": race_tiebreak = true
 		if arg == "--siege-tiebreak": siege_tiebreak = true
@@ -253,6 +266,9 @@ func _ready() -> void:
 		if arg.begins_with("--room="): code = arg.trim_prefix("--room=")
 		if arg.begins_with("--humans="): count = int(arg.trim_prefix("--humans="))
 	requested_game_id = game_id
+	if not tournament_rotation in ["manual", "random", "random_no_repeat"]:
+		_fail("invalid tournament rotation")
+		return
 	if host and "--drop-host-result" in OS.get_cmdline_user_args():
 		result_drop = ResultDropTransport.new()
 		result_drop.delegate = Net.transport
@@ -274,6 +290,8 @@ func _ready() -> void:
 		deadline = preload("res://tests/network_smoke_config.gd").kart_deadline(tournament_mode)
 	if requested_game_id == "lab_crates":
 		deadline = preload("res://tests/network_smoke_config.gd").lab_deadline(tournament_mode)
+	if requested_game_id == "crate_smash":
+		deadline = preload("res://tests/network_smoke_config.gd").crate_deadline(tournament_mode)
 	get_tree().create_timer(deadline).timeout.connect(func(): _fail("timeout"))
 	if host:
 		Net.host_online(4, true, "Host")
@@ -301,11 +319,17 @@ func _room() -> void:
 			cfg["game"] = game_id
 			cfg["arena"] = Net.ONLINE_ARENAS[game_id][0]
 		if tournament_mode:
-			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": "random_no_repeat", "points": [5, 3, 2, 1],
+			cfg["tournament"] = {"mode": "points", "target": 3, "rotation": tournament_rotation, "points": [5, 3, 2, 1],
 				"entries": [{"game": "ring_rumble", "arena": "vortex_ring"}, {"game": "ring_rumble", "arena": "storm_ring"}]}
 			cfg["tournament"]["entries"] = []
 			for arena_id in Net.ONLINE_ARENAS[game_id]:
 				cfg["tournament"]["entries"].append({"game": game_id, "arena": arena_id})
+			if mixed_playlist:
+				cfg["tournament"]["entries"] = [
+					{"game": "ring_rumble", "arena": "vortex_ring"},
+					{"game": "ring_rumble", "arena": "storm_ring"},
+					{"game": "goal_guard", "arena": "quad_court"},
+					{"game": "hurdle_dash", "arena": "hurdle_track"}]
 			if duo_tiebreak or race_tiebreak or siege_tiebreak or forge_tiebreak or dread_tiebreak or sovereign_tiebreak:
 				cfg["tournament"]["points"] = [1, 1, 1, 1]
 		Net.set_lobby_config(cfg)
@@ -341,13 +365,24 @@ func _start(cfg: MatchConfig) -> void:
 		_fail("network match resource preparation failed or session changed: %s" % failed_path)
 		return
 	game_id = cfg.minigame_id
+	if tournament_mode and Net.lobby_config.get("tournament", {}).get("rotation", "") != tournament_rotation:
+		_fail("server rotation differs from requested policy")
+		return
+	arena_history.append(cfg.arena_id)
+	round_snapshot_start = snapshots
 	draw_tap_sequence = -1
+	observed_draw_response_prompts.clear()
+	observed_zone_score = false
 	observed_remote_input_slots.clear()
 	if game_id == "duo_clash":
 		duo_arenas_seen[cfg.arena_id] = true
 	cfg.duration_override = 4.0 if game_id == "ring_rumble" else 15.0
+	if game_id == "zone_hold":
+		cfg.duration_override = maxf(cfg.duration_override,
+			preload("res://tests/zone_peer_driver.gd").minimum_match_seconds(cfg.players.size()))
 	preload("res://tests/network_smoke_config.gd").configure_boss(cfg)
 	preload("res://tests/network_smoke_config.gd").configure_lab(cfg)
+	preload("res://tests/network_smoke_config.gd").configure_crate(cfg)
 	if game_id in ["boss_forge", "boss_dreadnought", "boss_sovereign", "boss_colossus"] and not cfg.rule("online_contenders", []).is_empty():
 		observed_boss_final = true
 		if boss_final_cups.is_empty(): boss_final_cups = Net.tournament.get("cups", []).duplicate()
@@ -367,7 +402,7 @@ func _start(cfg: MatchConfig) -> void:
 	if game_id == "turret_duel":
 		cfg.duration_override = 25.0
 	if game_id == "tank_arena":
-		cfg.duration_override = 30.0
+		preload("res://tests/network_smoke_config.gd").configure_tank(cfg)
 		tank_arenas_seen[cfg.arena_id] = true
 		tank_route.clear()
 		tank_route_target = Vector3.INF
@@ -444,6 +479,11 @@ func _start(cfg: MatchConfig) -> void:
 	game = load("res://src/match/match_scene.gd").new()
 	add_child(game)
 	game.setup({"config": cfg, "on_finished": _finished})
+	if game_id in ["kart_sprint", "sabaq_sawarikh"]:
+		var positions: Array = []
+		for point in game.arena.spawn_points:
+			positions.append([point.x, point.y, point.z])
+		race_start_history.append({"seed": cfg.seed, "arena": cfg.arena_id, "positions": positions})
 	preparation.release()
 	match_preparation = null
 	preparing_match = false
@@ -639,6 +679,8 @@ func _physics_process(_delta: float) -> void:
 	if game_id == "quick_draw":
 		observed_draw_signal = observed_draw_signal or game.controller.is_signalled()
 		observed_draw_response = observed_draw_response or game.controller._order.has(slot)
+		if game.controller._order.has(slot):
+			observed_draw_response_prompts[game.controller.signal_sequence] = true
 	if game_id == "color_stand":
 		observed_color_drop = observed_color_drop or game.controller.is_dropping()
 	if game_id == "blast_ball":
@@ -665,9 +707,8 @@ func _physics_process(_delta: float) -> void:
 		observed_warning = observed_warning or game.controller._target != null
 		var sequence: int = game.controller._scrub_sequence if host else int(game._network_replica.target.get("world", {}).get("scrub_sequence", 0))
 		observed_scrub = observed_scrub or sequence > 0
-	if game_id == "zone_hold":
-		for score in game.ctx.scores:
-			observed_zone_score = observed_zone_score or score > 0
+	if game_id == "zone_hold" and slot >= 0:
+		observed_zone_score = observed_zone_score or game.ctx.scores[slot] > 0
 	if game_id == "relic_hold":
 		observed_relic_holder = observed_relic_holder or game.controller.holder() >= 0
 		for score in game.ctx.scores:
@@ -847,10 +888,15 @@ func _physics_process(_delta: float) -> void:
 					if d < distance:
 						distance = d
 						target = other.global_position
+			var combat_position := target
 			var to := target - fighter.global_position
 			to.y = 0.0
 			var combat_target := to
+			var tank_combat_clear := false
 			if game_id == "tank_arena":
+				tank_combat_clear = _tank_clear_path(fighter.global_position, target)
+				target = preload("res://tests/tank_smoke_pilot.gd").approach(
+					fighter.global_position, target, game.arena.global_position, tank_combat_clear)
 				if not observed_tank_inventory:
 					var nearest := INF
 					for crate in game.controller.crates:
@@ -865,9 +911,20 @@ func _physics_process(_delta: float) -> void:
 			var current := atan2(fighter.facing.x, fighter.facing.z)
 			var diff := wrapf(desired - current, -PI, PI)
 			movement = Vector2(-clampf(diff * 1.8, -1.0, 1.0), -maxf(0.25, 1.0 - absf(diff) / PI))
+			if game_id == "tank_arena":
+				movement.y *= preload("res://tests/tank_smoke_pilot.gd").throttle(
+					combat_target.length(), fighter.facing.normalized().dot(combat_target.normalized()), tank_combat_clear)
+				tank_pilot_observation = {"position": str(fighter.global_position), "target": str(combat_position),
+					"facing": str(fighter.facing), "distance": combat_target.length(), "clear": tank_combat_clear,
+					"alignment": fighter.facing.normalized().dot(combat_target.normalized()), "movement": str(movement),
+					"can_fire": preload("res://tests/tank_smoke_pilot.gd").can_fire(
+						fighter.global_position, combat_position, fighter.facing, tank_combat_clear)}
 			if to.length() < 8.0 and game_id == "turret_duel":
 				movement.y = -0.2
-			if fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
+			if game_id == "tank_arena" and preload("res://tests/tank_smoke_pilot.gd").can_fire(
+				fighter.global_position, combat_position, fighter.facing, tank_combat_clear):
+				buttons = InputFrame.Btn.ATTACK
+			elif game_id != "tank_arena" and fighter.facing.normalized().dot(combat_target.normalized()) > 0.9 and (Time.get_ticks_msec() - started_at) % 700 < 180:
 				buttons = InputFrame.Btn.DASH if game_id == "scrap_karts" else InputFrame.Btn.ATTACK
 		if game_id == "drift_floes":
 			var fighter: Fighter = game.ctx.fighters[slot]
@@ -971,9 +1028,14 @@ func _physics_process(_delta: float) -> void:
 				buttons = InputFrame.Btn.ATTACK
 			movement = Vector2(target.x - position.x, target.z - position.z).limit_length()
 		if game_id == "zone_hold":
+			var round_seconds: float = game.config.duration_override
+			if round_seconds <= 0.0:
+				round_seconds = game.config.definition().duration
+			var capture_elapsed := float(game._round_index) * round_seconds \
+				+ clampf(round_seconds - game.ctx.time_left, 0.0, round_seconds)
 			var frame: InputFrame = load("res://tests/zone_peer_driver.gd").input(game.arena,
 				game.ctx.fighters, slot, game.controller.zone_position, game.controller.zone_radius,
-				Time.get_ticks_msec() - started_at)
+				int(capture_elapsed * 1000.0))
 			movement = frame.move
 			buttons = frame.bits
 		if game_id in ["gem_grab", "star_rush", "crate_relay"]:
@@ -1018,12 +1080,33 @@ func _observe_fawda_pickup(world: Dictionary) -> void:
 
 
 func _tank_waypoint(origin: Vector3, target: Vector3) -> Vector3:
+	if _tank_clear_path(origin, target):
+		tank_route.clear()
+		tank_route_target = Vector3.INF
+		return target
 	if tank_route.is_empty() or target.distance_to(tank_route_target) > 6.0:
 		tank_route = game.controller.world.route(origin, target)
 		tank_route_target = target
 	while not tank_route.is_empty() and origin.distance_to(tank_route[0]) < 3.0:
 		tank_route.remove_at(0)
 	return target if tank_route.is_empty() else tank_route[0]
+
+
+func _tank_clear_path(origin: Vector3, target: Vector3) -> bool:
+	var direction := target - origin
+	direction.y = 0.0
+	if direction.length_squared() < 0.01:
+		return true
+	var side := Vector3(-direction.z, 0.0, direction.x).normalized()
+	var space: PhysicsDirectSpaceState3D = game.controller.get_world_3d().direct_space_state
+	# A center ray alone can fit beside a building where the ATV cannot.
+	for offset in [-1.0, 0.0, 1.0]:
+		var lift: Vector3 = Vector3.UP + side * offset
+		var query := PhysicsRayQueryParameters3D.create(origin + lift, target + lift, 1)
+		query.hit_from_inside = true
+		if not space.intersect_ray(query).is_empty():
+			return false
+	return true
 
 
 func _collection_movement(slot: int) -> Vector2:
@@ -1136,6 +1219,11 @@ func _colossus_movement(from: Vector3, target: Vector3) -> Vector2:
 
 
 func _finished(result: MatchResult) -> void:
+	round_history.append({"epoch": Net.epoch, "game": game.config.minigame_id,
+		"arena": game.config.arena_id, "scores": Array(result.scores)})
+	if mixed_playlist and not host and snapshots - round_snapshot_start < 5:
+		_fail("mixed round lacks its own snapshots")
+		return
 	var contenders: Array = game.config.rule("online_contenders", [])
 	var spectator := not contenders.is_empty() and not contenders.has(Net.local_slot())
 	print("NETWORK_ROUND=" + JSON.stringify({"epoch": Net.epoch, "game": game.config.minigame_id,
@@ -1517,6 +1605,10 @@ func _finished(result: MatchResult) -> void:
 				or game.controller._order != host_order:
 			_fail("draw prompt or response order diverged: local=%s/%s/%s host=%s/%s/%s" % [game.controller._stage, game.controller._round_no, game.controller._order, world.stage, world.prompt, world.order])
 			return
+		for key in ["signal_sequence", "correct_sequence", "wrong_sequence", "resolve_sequence"]:
+			if game.controller.get(key) != int(world[key]):
+				_fail("draw event identity diverged: " + key)
+				return
 		for player_slot in world.locked.size():
 			if game.controller.is_locked(player_slot) != bool(world.locked[player_slot]):
 				_fail("draw false-start state diverged")
@@ -1673,6 +1765,9 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "tank_arena" and (not observed_turret_shot or not observed_tank_armor or not observed_tank_inventory):
 		_fail("ATV shot/armor/inventory evidence missing: %s %s %s" % [observed_turret_shot, observed_tank_armor, observed_tank_inventory])
 		return
+	if game_id == "zone_hold" and not observed_zone_score:
+		_fail("local zone participant never captured: slot=%d scores=%s" % [Net.local_slot(), result.scores])
+		return
 	finished_matches += 1
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
@@ -1686,13 +1781,10 @@ func _finished(result: MatchResult) -> void:
 	if game_id in ["star_rush", "crate_relay"] and not observed_carrying:
 		_fail("carrying was never observed")
 		return
-	if game_id == "zone_hold" and not observed_zone_score:
-		_fail("zone finished without capture scoring")
-		return
 	if game_id == "turret_duel" and (not observed_turret_shot or not observed_turret_damage or not observed_turret_score):
 		_fail("turret shot/damage/score evidence missing: %s %s %s" % [observed_turret_shot, observed_turret_damage, observed_turret_score])
 		return
-	if requested_game_id == "tank_arena" and tournament_mode and tank_arenas_seen.size() != 3:
+	if requested_game_id == "tank_arena" and tournament_mode and not tank_final_checkpoint and tank_arenas_seen.size() != 3:
 		_fail("ATV tournament did not visit all three authored arenas")
 		return
 	if requested_game_id == "fawda" and tournament_mode and not fawda_final_checkpoint and fawda_arenas_seen.size() != 2:
@@ -1785,6 +1877,10 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "quick_draw" and (not observed_draw_signal or not observed_draw_response):
 		_fail("draw never signalled or accepted this player's response")
 		return
+	if game_id == "quick_draw" and not bool(game.config.rule("party_tiebreak", false)) \
+			and observed_draw_response_prompts.size() < 2:
+		_fail("draw did not accept responses to multiple distinct prompts")
+		return
 	if game_id == "symbol_echo" and (not observed_echo_cue or not observed_echo_score):
 		_fail("echo never displayed a cue or accepted this player's observed answer")
 		return
@@ -1797,8 +1893,13 @@ func _finished(result: MatchResult) -> void:
 		return
 	completed = true
 	print("NETWORK_FINISHED=" + JSON.stringify({"id": Net.local_peer_id, "scores": result.scores,
+		"draw_response_prompts": observed_draw_response_prompts.keys(),
+		"zone_scored": observed_zone_score,
 		"snapshots": snapshots, "reconnected": restored, "humans": count, "moved": moved,
 		"matches": finished_matches, "tournament": Net.tournament, "world_snapshots": world_snapshots,
+		"tournament_rotation": tournament_rotation, "arena_history": arena_history,
+		"round_history": round_history,
+		"race_start_history": race_start_history,
 		"fawda_worlds": fawda_worlds,
 		"fawda_event_coverage": fawda_event_coverage,
 		"collection_scored": observed_collection_score, "carrying_seen": observed_carrying}))

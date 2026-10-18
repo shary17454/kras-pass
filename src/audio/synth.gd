@@ -1,11 +1,10 @@
 class_name Synth
 extends RefCounted
-## Runtime audio synthesis. The game ships with zero audio files.
+## Original procedural audio synthesis.
 ##
-## Every sound effect and every music loop is rendered into an AudioStreamWAV on
-## first use from a small parameter dictionary. That keeps the repository free of
-## any borrowed or licensed audio, keeps the build tiny, and means re-tuning a
-## sound is editing two numbers rather than re-exporting a wav.
+## Effects render on first use; music loops are baked from the same parameters
+## by tools/bake_original_music.tscn to avoid synthesizing during scene loading.
+## No borrowed audio is used. Runtime synthesis remains a development fallback.
 
 const RATE := 22050
 

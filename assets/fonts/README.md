@@ -18,9 +18,12 @@ the binaries have not been altered or subsetted.
 
 The UI uses variable weights 400 and 700 with explicit Latin, Arabic, symbols
 and monochrome emoji fallbacks. Automatic operating-system fallback is disabled
-on all ordinary faces. User-authored text outside their coverage gets a separate
-chain with a last-resort system fallback, preserving Unicode name input without
-changing the ordinary shared fonts. Known UI glyphs must shape from the bundled
-chain, verified by tests. Controls set their font before text to avoid priming
-the default theme's system fallback while being constructed. No global
-TextServer cache eviction is performed in live UI.
+on all ordinary faces. User-authored text outside their coverage uses the prior
+operating-system font path separately, preserving its platform-dependent name
+coverage without changing the ordinary shared fonts. Known UI glyphs must shape
+from the bundled chain, verified by tests. Controls set their font before text;
+this ordering alone did not reduce retained fallback memory in the headless
+Label probe. A bundled project theme is also configured, but memory and layout
+qualification remain separate from glyph coverage tests. No global TextServer
+cache eviction is performed in live UI. Both export presets explicitly include
+the original `*-OFL.txt` license files in the application pack.

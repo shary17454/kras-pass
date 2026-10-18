@@ -59,6 +59,8 @@ func run(t: TestHarness, host: Node) -> void:
 	t.ok(replica.accept(packet, 4, "quick_draw"), "accept response order and false start")
 	replica.render(scene, 0.1)
 	t.equal(Array(game._order), [2, 0], "guest displays host ranking")
+	for key in ["signal_sequence", "correct_sequence", "wrong_sequence", "resolve_sequence"]:
+		t.equal(game.get(key), int(packet.world[key]), "guest controller event identity matches host: " + key)
 	var decoded: Dictionary = JSON.parse_string(JSON.stringify(packet))
 	t.ok(replica.accept(decoded, 4, "quick_draw"), "accept JSON response order")
 	replica.render(scene, 0.1)
@@ -78,6 +80,7 @@ func run(t: TestHarness, host: Node) -> void:
 	replica._event_received_at = replica.received_at - 1501
 	replica.render(scene, 0.1)
 	t.ok(not AudioManager._last_played.has("go"), "reconnect skips historical signal audio")
+	t.equal(game.signal_sequence, int(packet.world.signal_sequence), "quiet reconnect still updates the current prompt identity")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

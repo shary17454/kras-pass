@@ -46,6 +46,12 @@ func tick(delta: float) -> void:
 	if ctx == null:
 		return
 	_tick_effects(delta)
+	# Physics overlaps are consumed only by simulation, never while paused.
+	# Retirement removes entries synchronously, so visit them backwards.
+	for index in range(_active_pickups.size() - 1, -1, -1):
+		var pickup := _active_pickups[index]
+		if is_instance_valid(pickup):
+			pickup.collect_overlaps()
 	if not enabled:
 		return
 	for p in _active_pickups:

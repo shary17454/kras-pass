@@ -20,7 +20,7 @@ static func capture(game: Node) -> Dictionary:
 
 
 static func valid(world: Variant) -> bool:
-	if not Floor.valid(world, TILE_COUNT) or not world.get("colors") is Array or world.colors.size() != TILE_COUNT:
+	if not Floor.valid(world, TILE_COUNT, 0.9) or not world.get("colors") is Array or world.colors.size() != TILE_COUNT:
 		return false
 	for value in world.colors:
 		if not _integer(value, 3):

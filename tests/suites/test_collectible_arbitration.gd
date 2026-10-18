@@ -58,6 +58,80 @@ func run(t: TestHarness, host: Node) -> void:
 		node.queue_free()
 	await host.get_tree().process_frame
 	await _crate_capacity(t, host)
+	await _crate_swings(t, host)
+
+
+func _crate_swings(t: TestHarness, host: Node) -> void:
+	for id in ["crate_smash", "lab_crates"]:
+		t.test("%s simultaneous crate swings" % id)
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build(id, ["fanoos", "nabta", "ramla", "sakhra"], 0, 1, 857)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		for nearest in 4:
+			scene.controller.cleanup()
+			scene.ctx.scores.fill(0)
+			for slot in 4:
+				var fighter: Fighter = scene.ctx.fighter(slot)
+				fighter.global_position = Vector3(0.4 if slot == nearest else 1.8, 1, 0)
+				fighter._attack_time = 1.0
+			var body := Node3D.new()
+			scene.ctx.world_root.add_child(body)
+			body.global_position = Vector3(0, 0.75, 0)
+			scene.controller._crates.append({"node": body, "bomb": false})
+			scene.controller._check_swings()
+			t.equal(scene.ctx.scores[nearest], 2, "%s nearest attacker at seat %d gets the contested crate" % [id, nearest])
+			t.equal(scene.ctx.scores.reduce(func(total, value): return total + value, 0), 2, "contested crate scores once")
+		var counts := [0, 0, 0, 0]
+		scene.ctx.rng.seed = 857
+		for sample in 64:
+			scene.controller.cleanup()
+			scene.ctx.scores.fill(0)
+			for fighter in scene.ctx.fighters:
+				fighter.global_position = Vector3(1, 1, 0)
+				fighter._attack_time = 1.0
+			var body := Node3D.new()
+			scene.ctx.world_root.add_child(body)
+			body.global_position = Vector3(0, 0.75, 0)
+			scene.controller._crates.append({"node": body, "bomb": false})
+			scene.controller._check_swings()
+			counts[scene.ctx.scores.find(2)] += 1
+		for slot in 4:
+			t.ok(counts[slot] > 0, "%s exact ties give seat %d opportunities" % [id, slot])
+		var sequence: Array[int] = []
+		scene.ctx.rng.seed = 891
+		for sample in 64:
+			sequence.append(scene.controller._swing_winner(Vector3.ZERO, 2.75, {}))
+		scene.ctx.rng.seed = 891
+		for sample in 64:
+			t.equal(scene.controller._swing_winner(Vector3.ZERO, 2.75, {}), sequence[sample], "seed reproduces tied swing selection")
+		scene.ctx.alive[0] = false
+		scene.ctx.fighter(1)._attack_time = 0.0
+		scene.ctx.fighter(2).global_position = Vector3(100, 1, 0)
+		var previous: int = scene.ctx.rng.state
+		t.equal(scene.controller._swing_winner(Vector3.ZERO, 2.75, {}), 3, "dead, idle and out-of-reach attackers are excluded")
+		t.equal(scene.ctx.rng.state, previous, "unique eligible swing consumes no random draw")
+		t.equal(scene.controller._swing_winner(Vector3.ZERO, 2.75, {3: true}), -1, "served attacker cannot break another crate this tick")
+		scene.controller.cleanup()
+		scene.ctx.scores.fill(0)
+		for index in 2:
+			var body := Node3D.new()
+			scene.ctx.world_root.add_child(body)
+			body.global_position = Vector3(0, 0.75, 0)
+			scene.controller._crates.append({"node": body, "bomb": false})
+		scene.controller._check_swings()
+		t.equal(scene.ctx.scores[3], 2, "single attacker gets one crate in one tick")
+		t.equal(scene.controller._crates.size(), 1, "second crate remains available")
+		scene.controller._check_swings()
+		t.equal(scene.ctx.scores[3], 4, "later tick can resolve remaining crate")
+		scene.controller._crates.append({"node": null, "bomb": false})
+		scene.controller._check_swings()
+		t.equal(scene.controller._crates.size(), 0, "invalid crate entry is retired safely")
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
 
 
 func _crate_capacity(t: TestHarness, host: Node) -> void:

@@ -4,7 +4,7 @@ import {NetworkTiming} from './network-timing.js';
 
 test('network timing separates handler work from scheduler stalls without payloads', () => {
   let time = 0, user = 0;
-  const timing = new NetworkTiming({now: () => time, cpu: () => ({user, system: 0})});
+  const timing = new NetworkTiming({now: () => time, cpu: () => ({user, system: 0}), epochOriginMs: 10000});
   timing.recordOperation('snapshot', 2);
   timing.recordOperation('snapshot', 3);
   timing.recordOperation('result', 1);
@@ -18,6 +18,8 @@ test('network timing separates handler work from scheduler stalls without payloa
   const stall = timing.sample(rooms);
   assert.equal(stall.delayMs, 1000);
   assert.equal(stall.cpuMs, 5);
+  assert.equal(stall.startEpochMs, 10100);
+  assert.equal(stall.endEpochMs, 11200);
   assert.deepEqual(stall.rooms, [{state: 'playing', epoch: 1, game: 'base_siege', arena: 'iron_flats'}]);
   assert.deepEqual(timing.report().operations.snapshot, {count: 2, totalMs: 5, maxMs: 3});
   assert.ok(!JSON.stringify(timing.report()).includes('secret'));
