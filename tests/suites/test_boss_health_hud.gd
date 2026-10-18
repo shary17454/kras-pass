@@ -6,6 +6,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var locale := Loc.locale
 	var window := host.get_tree().root
 	var original_size := window.size
+	var appearance = UserSettings.get_value("appearance")
 	for game_id in ["boss_forge", "boss_colossus", "boss_dreadnought", "boss_sovereign"]:
 		var scene: Node = load("res://src/match/match_scene.gd").new()
 		host.add_child(scene)
@@ -26,17 +27,22 @@ func run(t: TestHarness, host: Node) -> void:
 				continue
 			for resolution in [Vector2i(1280, 720), Vector2i(540, 960)]:
 				window.size = resolution
-				scene.hud.set_round(0, 3)
-				scene.hud.tick(1.0)
-				await host.get_tree().process_frame
-				await host.get_tree().process_frame
-				t.ok(meter.visible, "boss meter is visible in either orientation")
-				t.near(meter.value, 0.5, 0.00001, "meter reads authoritative health fraction")
-				t.ok(not meter.show_percentage, "percentage is not duplicated inside the small meter")
-				if resolution.x < resolution.y:
-					t.ok(scene.hud.occupied_top() < resolution.y * 0.35, "portrait boss HUD leaves the majority of the screen for gameplay")
-					for chip in scene.hud._chips:
-						t.ok(chip.root.get_global_rect().position.y >= meter.get_global_rect().end.y, "portrait player chips do not overlap health meter")
+				for mode in ["light", "dark"]:
+					UserSettings.set_value("appearance", mode)
+					scene.hud.set_round(0, 3)
+					scene.hud.tick(1.0)
+					await host.get_tree().process_frame
+					await host.get_tree().process_frame
+					t.ok(meter.visible, "boss meter is visible in either orientation")
+					t.near(meter.value, 0.5, 0.00001, "meter reads authoritative health fraction")
+					t.ok(not meter.show_percentage, "percentage is not duplicated inside the small meter")
+					var caption: Label = scene.hud._banner_label
+					t.ok(caption.size.x >= caption.get_parent().size.x - 1.0,
+						"wrapping health caption uses the available header width in " + mode)
+					if resolution.x < resolution.y:
+						t.ok(scene.hud.occupied_top() < resolution.y * 0.35, "portrait boss HUD leaves the majority of the screen for gameplay")
+						for chip in scene.hud._chips:
+							t.ok(chip.root.get_global_rect().position.y >= meter.get_global_rect().end.y, "portrait player chips do not overlap health meter")
 			for fraction in [1.0, 0.0, 2.0, -0.5]:
 				scene.controller.boss_health = scene.controller.boss_max_health * fraction
 				scene.hud.tick(1.0)
@@ -58,3 +64,4 @@ func run(t: TestHarness, host: Node) -> void:
 		await host.get_tree().process_frame
 	Loc.set_locale(locale)
 	window.size = original_size
+	UserSettings.set_value("appearance", appearance)

@@ -78,6 +78,8 @@ func _build() -> void:
 	top.add_child(_banner_label)
 	for label in [_timer_label, _round_label, _banner_label]:
 		UIKit.back_label(label)
+	# Wrapped captions need the header width, not the backing's minimum width.
+	_banner_label.size_flags_horizontal = Control.SIZE_FILL
 	_boss_meter = ProgressBar.new()
 	_boss_meter.custom_minimum_size = Vector2(240, 10)
 	_boss_meter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
