@@ -135,6 +135,7 @@ jobs:
           fi
           if [ "$GAME_ID" = zone_hold ]; then
             node network-smoke.js --game="$GAME_ID" --seed=438683058 2>&1 | tee "$RUNNER_TEMP/kras-network-zone-contest-regression.stdout"
+            node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --seed=1082281558 2>&1 | tee "$RUNNER_TEMP/kras-network-zone-tournament-regression.stdout"
           fi
           if [ "$GAME_ID" = fawda ]; then
             node network-smoke.js --game="$GAME_ID" --tournament --humans=2 --seed=1846961932 2>&1 | tee "$RUNNER_TEMP/kras-network-fawda-pursuit-regression.stdout"
