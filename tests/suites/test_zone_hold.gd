@@ -164,6 +164,17 @@ func run(t: TestHarness, host: Node) -> void:
 			t.equal(driver.capture_owner(turn * 6000 + 5999, count), turn % count, "capture turn stays stable until its boundary")
 	t.equal(driver.capture_owner(0, 0), -1, "empty roster cannot have a capture owner")
 	t.equal(driver.capture_owner(-1, 4), 0, "pre-start time cannot select a negative slot")
+	for zone_angle in [0.0, TAU / 3.0, PI]:
+		var zone := arena.global_position + Vector3(cos(zone_angle), 0, sin(zone_angle)) * arena.def.radius * 0.72
+		var waiting: Array[Vector3] = []
+		for slot in 4:
+			var position: Vector3 = driver.standby_position(arena, zone, 3.4, slot)
+			t.ok(arena.is_inside(position), "waiting fixture stays on the physical ring")
+			t.ok(position.distance_to(zone) >= 4.8, "waiting peers leave room for uncontested capture")
+			t.ok(position.distance_to(zone) <= 6.5, "all peers stage within a short move of their capture turn")
+			for other in waiting:
+				t.ok(position.distance_to(other) > 1.3, "waiting fixtures do not pile up in the same spot")
+			waiting.append(position)
 	var me: Fighter = scene.ctx.fighter(0)
 	var rival: Fighter = scene.ctx.fighter(1)
 	me.global_position = capture_position
