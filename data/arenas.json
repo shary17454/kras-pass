@@ -95,7 +95,7 @@
       "hazards": [
         {
           "type": "crumble",
-          "delay": 0.9,
+          "delay": 2.4,
           "respawn": 6.0
         }
       ]
@@ -180,6 +180,7 @@
       "radius": 16.0,
       "thickness": 1.0,
       "wall_height": 0.9,
+      "spawns": [[0.0, 1.4, -7.2], [7.2, 1.4, 0.0], [0.0, 1.4, 7.2], [-7.2, 1.4, 0.0]],
       "palette": {
         "floor": "#38414d",
         "accent": "#9fd8ff",
@@ -348,6 +349,8 @@
     {
       "id": "tide_spire",
       "shape": "pit",
+      "params": { "step_height": 1.1, "summit_gap": 1.1, "ledge_count": 8 },
+      "spawns": [[0, 0.1, -10.7], [10.7, 0.1, 0], [0, 0.1, 10.7], [-10.7, 0.1, 0]],
       "radius": 11.5,
       "thickness": 0.8,
       "wall_height": 0.0,
@@ -394,6 +397,7 @@
       "radius": 12.0,
       "thickness": 1.0,
       "wall_height": 0.0,
+      "spawns": [[0.0, 1.4, -4.32], [4.32, 1.4, 0.0], [0.0, 1.4, 4.32], [-4.32, 1.4, 0.0]],
       "palette": {
         "floor": "#402a34",
         "accent": "#ff9bb0",

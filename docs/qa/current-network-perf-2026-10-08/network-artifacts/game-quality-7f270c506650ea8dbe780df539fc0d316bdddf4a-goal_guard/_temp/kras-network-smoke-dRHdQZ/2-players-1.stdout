@@ -1,0 +1,20 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+WARNING: [WRN][Net] online transport lost: socket_1000
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _process (res://src/net/room_client.gd:88)
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":909,"phase":2,"running":true,"seed":372952048,"snapshots":155,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":909,"phase":4,"running":true,"seed":372952048,"snapshots":355,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":909,"phase":6,"running":true,"seed":372952048,"snapshots":555,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":909,"phase":4,"running":true,"seed":372952048,"snapshots":755,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":909,"phase":4,"running":true,"seed":372952048,"snapshots":955,"state":"playing"}
+NETWORK_ROUND={"arena":"quad_court","epoch":1,"game":"goal_guard","moved":true,"scores":[18,21,15,16],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":2,"id":2,"matches":1,"moved":true,"reconnected":true,"scores":[18,21,15,16],"snapshots":1088,"tournament":{},"world_snapshots":1088}

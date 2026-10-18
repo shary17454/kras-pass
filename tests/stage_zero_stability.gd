@@ -11,6 +11,10 @@ var _connections := {}
 var _release_ui_cache := false
 var _release_system_font_cache := false
 var _watched_paths := PackedStringArray()
+var _human_matrix := false
+var _qa_scene: Node
+var _qa_pilots: Array[AIBrain] = []
+var _qa_ready_tick := 0
 const PREPARATION = preload("res://src/match/match_resource_preparation.gd")
 
 
@@ -26,6 +30,9 @@ func _ready() -> void:
 			_release_ui_cache = true
 		elif arg == "--profile-system-font-cache":
 			_release_system_font_cache = true
+		elif arg == "--human-matrix":
+			_human_matrix = true
+	process_physics_priority = -110
 	if _release_system_font_cache and not _release_ui_cache:
 		push_error("System font attribution requires --profile-idle-ui after all matches are freed")
 		get_tree().quit(1)
@@ -45,13 +52,17 @@ func _ready() -> void:
 	var baseline_memory := _memory_snapshot()
 	print("STABILITY BASELINE MEMORY: ", JSON.stringify(baseline_memory))
 	var passes: Array = []
+	var human_counts: Array[int] = [0]
+	if _human_matrix:
+		human_counts.assign([0, 1, 2, 3, 4])
 	for cycle in _cycles:
 		for game in Registry.all_minigames():
-			var row := await _play(game, cycle)
-			_rows.append(row)
-			print("STABILITY %d/%d %s: %s" % [cycle + 1, _cycles, game.id, "PASS" if row.failures.is_empty() else row.failures])
-			for failure in row.failures:
-				_failures.append("%d/%s: %s" % [cycle, game.id, failure])
+			for humans in human_counts:
+				var row := await _play(game, cycle, humans)
+				_rows.append(row)
+				print("STABILITY %d/%d %s humans=%d: %s" % [cycle + 1, _cycles, game.id, humans, "PASS" if row.failures.is_empty() else row.failures])
+				for failure in row.failures:
+					_failures.append("%d/%s/humans=%d: %s" % [cycle, game.id, humans, failure])
 		var snapshot := _memory_snapshot()
 		snapshot["cycle"] = cycle
 		passes.append(snapshot)
@@ -92,7 +103,8 @@ func _ready() -> void:
 		_failures.append("graphics caches remain after memory warning")
 	print("STABILITY CACHE RELEASE: ", JSON.stringify({"before": before_release, "after": after_release, "settled_5s": settled_release}))
 	var report := {"engine": Engine.get_version_info().string, "cycles": _cycles,
-		"scope": "4 AI, 39 default arenas, shortened timed rounds; race laps unchanged; not device performance",
+		"scope": "39 default arenas, shortened timed rounds; race laps unchanged; not device performance",
+		"human_counts": human_counts, "synthetic_touch_pilots": _human_matrix,
 		"baseline_nodes": _baseline_nodes, "baseline_orphans": _baseline_orphans,
 		"baseline_memory": baseline_memory,
 		"cache_release": {"before": before_release, "after": after_release, "settled_5s": settled_release},
@@ -132,9 +144,25 @@ func _memory_snapshot() -> Dictionary:
 	return snapshot
 
 
-func _play(game: MiniGameDef, cycle: int) -> Dictionary:
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(_qa_scene) or _qa_scene._paused:
+		return
+	if _qa_scene.phase == MatchPhase.P.INSTRUCTIONS:
+		_qa_ready_tick += 1
+		for pilot in _qa_pilots:
+			InputRouter.push_virtual(pilot.slot, Vector2.ZERO, Vector2.ZERO,
+				InputFrame.Btn.ATTACK if _qa_ready_tick % 2 == 0 else 0)
+	elif _qa_scene.phase in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
+		for pilot in _qa_pilots:
+			pilot.tick(delta)
+
+
+func _play(game: MiniGameDef, cycle: int, humans := 0) -> Dictionary:
 	var failures: Array[String] = []
-	var cfg := MatchConfig.build(game.id, ["nabta", "sakhra", "fanoos", "ramla"], 0, 1, 250925 + cycle * 997)
+	var cfg := MatchConfig.build(game.id, ["nabta", "sakhra", "fanoos", "ramla"], humans, 1, 250925 + cycle * 997)
+	for player in cfg.players:
+		if player.is_human:
+			player.device_type = 2
 	cfg.rounds = 1
 	cfg.duration_override = 5.0
 	var scene: Node = load("res://src/match/match_scene.gd").new()
@@ -144,7 +172,21 @@ func _play(game: MiniGameDef, cycle: int) -> Dictionary:
 	scene.setup({"config": cfg, "on_finished": func(result): captured.append(result)})
 	var owned: Array[WeakRef] = [weakref(scene), weakref(scene.ctx), weakref(scene.controller), weakref(scene.mutators)]
 	for brain in scene._brains:
-		owned.append(weakref(brain))
+		if brain != null:
+			owned.append(weakref(brain))
+	if scene.touch_sources.size() != humans:
+		failures.append("unexpected touch source count")
+	# QA pilots publish ordinary frames without changing human configuration or
+	# registering as gameplay Bots. This does not exercise physical touch events.
+	for source in scene.touch_sources:
+		source.set_physics_process(false)
+		if InputRouter.source_of(source.slot) != InputRouter.Source.TOUCH:
+			failures.append("human input source is not touch")
+		var pilot: AIBrain = scene.controller.create_ai(source.slot, 1)
+		_qa_pilots.append(pilot)
+		owned.append(weakref(pilot))
+	_qa_scene = scene
+	_qa_ready_tick = 0
 	var ticks := 0
 	var limit := 60 * (480 if game.id in ["kart_sprint", "sabaq_sawarikh"] else 120)
 	while captured.is_empty() and ticks < limit:
@@ -170,6 +212,9 @@ func _play(game: MiniGameDef, cycle: int) -> Dictionary:
 				failures.append("invalid placement")
 		owned.append(weakref(result))
 	captured.clear()
+	var terminal_phase: int = scene.phase
+	_qa_scene = null
+	_qa_pilots.clear()
 	scene.teardown()
 	scene.queue_free()
 	scene = null
@@ -190,7 +235,9 @@ func _play(game: MiniGameDef, cycle: int) -> Dictionary:
 			failures.append("input source retained")
 	if Log.error_count() != errors:
 		failures.append("runtime error logged")
-	return {"game": game.id, "cycle": cycle, "seed": cfg.seed, "ticks": ticks,
+	return {"game": game.id, "cycle": cycle, "humans": humans, "synthetic_touch_pilots": humans,
+		"terminal_phase": MatchPhase.P.keys()[terminal_phase],
+		"seed": cfg.seed, "ticks": ticks,
 		"memory_bytes": OS.get_static_memory_usage(), "nodes": get_tree().get_node_count(), "failures": failures}
 
 

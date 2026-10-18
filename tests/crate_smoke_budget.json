@@ -1,0 +1,8 @@
+{
+  "round_seconds": 75,
+  "rounds_per_match": 2,
+  "tournament_matches": 3,
+  "maximum_finals": 3,
+  "setup_seconds": 60,
+  "node_grace_seconds": 60
+}

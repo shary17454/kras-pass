@@ -7,15 +7,24 @@ if [ ! -f "$log" ]; then
   printf 'Missing Godot log: %s\n' "$log" >&2
   exit 1
 fi
-if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Error importing|FAIL:|FAILED|Required object .* is null|ObjectDB instances (were )?leaked|resources still in use|RID allocations|PagedAllocator.*pages in use|Texture with GL ID.*leaked' "$log"; then
+if grep -Eq 'SCRIPT ERROR:|Parse Error:|Failed to load|Failed loading (resource|scene):|Error importing|FAIL:|FAILED|Required object .* is null|ObjectDB instances? (was |were )?leaked|resources still in use|RID allocations|PagedAllocator.*pages in use|Texture with GL ID.*leaked' "$log"; then
   printf 'Godot failure in %s\n' "$log" >&2
   exit 1
 fi
-if [ "$mode" = import ] && grep -q 'ERROR:' "$log"; then
-  printf 'Godot import error in %s\n' "$log" >&2
+if [ "$mode" != tests ] && grep -q 'ERROR:' "$log"; then
+  printf 'Godot engine error in %s\n' "$log" >&2
+  exit 1
+fi
+# Only unit suites may inject persistence failures; real campaigns must save.
+if [ "$mode" != tests ] && grep -q '\[ERR\]\[Save\]' "$log"; then
+  printf 'Unexpected Godot save failure in %s\n' "$log" >&2
   exit 1
 fi
 if [ "$mode" = tests ] && ! grep -Eq '^ALL TESTS PASSED[^0-9]*[1-9][0-9]* assertions$' "$log"; then
   printf 'Missing positive completed test summary in %s\n' "$log" >&2
+  exit 1
+fi
+if [ "$mode" = compile ] && { ! grep -Eq '^compile check: [1-9][0-9]* scripts$' "$log" || ! grep -Eq '^OK.*every script compiles$' "$log"; }; then
+  printf 'Missing positive completed compile summary in %s\n' "$log" >&2
   exit 1
 fi

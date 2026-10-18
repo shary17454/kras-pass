@@ -1,0 +1,22 @@
+==> Export evidence: /tmp/kras-preflight-7f-ios-evidence
+==> Toolchain
+    xcode     : Xcode 27.0 Build version 27A266a 
+    iphoneos  : 27.0 (24A430)
+==> Exporting iOS project
+{"fatal":[],"platformDiagnostics":["ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension","ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.","ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension","ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'."],"clean":false}
+Known iOS-only macOS editor diagnostics retained; this is NOT a clean import/export log.
+{"fatal":[],"platformDiagnostics":["ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension","ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.","ERROR: Error loading extension: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.","ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension","ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'.","ERROR: No GDExtension library found for current OS and architecture (macos.arm64) in configuration file: res://addons/kras_apple_runtime/kras_apple.gdextension","ERROR: GDExtension dynamic library not found: 'res://addons/kras_apple_runtime/kras_apple.gdextension'."],"clean":false}
+Known iOS-only macOS editor diagnostics retained; this is NOT a clean import/export log.
+==> Patching supported orientations (portrait and landscape)
+==> Declaring game controller support
+==> Removing unused permission usage descriptions
+==> Building for iphoneos
+==> BUILD SUCCEEDED
+    bundle    : /var/folders/77/ng2sccd50bd8dtpjwd7jqgj00000gn/T/tmp.ipK95yaOPT/Build/Products/Release-iphoneos/KrasPass.app
+    size      : 185M
+    binary    : Mach-O 64-bit executable arm64
+    sdk       : 27.0
+    identifier: com.shary.kraspass
+    min iOS   : 15.0
+    families  : Array{12}
+    landscape : 2 orientation(s)

@@ -42,7 +42,7 @@ func compute_scores() -> Array[int]:
 		ranks[slot] = rank
 	for slot in ranks.size():
 		ranks[slot] = ranks[slot] * 2 + int(ctx.details[slot].get("knockouts", 0)) * survival_knockout_weight
-	return ranks
+	return _prioritize_survivors(ranks)
 
 
 func tick(_delta: float) -> void:

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
 import {WebSocket} from 'ws';
-import {Rooms} from './rooms.js';
+import {Rooms, PROTOCOL} from './rooms.js';
 import {attachMultiplayer} from './multiplayer.js';
 
 const snapshot = () => ({phase: 4, round: 0, countdown: 0, radius: 10, time: 50,
@@ -50,7 +50,7 @@ test('colossus room validates host authority and restores carved world and resul
   const data = {...snapshot(), world: colossusWorld()};
   assert.throws(() => guest.send({op: 'snapshot', epoch, tick: 1, data}), /host_only/);
   host.send({op: 'snapshot', epoch, tick: 1, data});
-  for (const world of [undefined, {}, {...data.world, extra: 1}, {...data.world, exposed: 2.41},
+  for (const world of [undefined, {}, {...data.world, extra: 1}, {...data.world, exposed: 3.21},
     {...data.world, boss: {...data.world.boss, phase: 2}}, {...data.world, fist_scale: [0, 1, 1]},
     {...data.world, craters: [{...data.world.craters[0], id: '1'}]}]) {
     assert.throws(() => host.send({op: 'snapshot', epoch, tick: 2, data: {...data, world}}), /invalid_snapshot/);
@@ -271,7 +271,7 @@ test('wall clock adjustments cannot expire a live room', () => {
   try {
     const rooms = new Rooms();
     const client = rooms.connect(() => {});
-    rooms.handle(client, {v: 1, op: 'create', capacity: 4, public: true});
+    rooms.handle(client, {v: PROTOCOL, op: 'create', capacity: 4, public: true});
     wall += 86400000;
     rooms.sweep();
     assert.equal(rooms.rooms.size, 1);
@@ -287,7 +287,7 @@ function fixture(options = {}) {
   const client = () => {
     const messages = [];
     const c = rooms.connect(m => messages.push(structuredClone(m)));
-    return {c, messages, send: m => rooms.handle(c, {v: 1, ...m}), last: op => messages.findLast(m => m.op === op)};
+    return {c, messages, send: m => rooms.handle(c, {v: PROTOCOL, ...m}), last: op => messages.findLast(m => m.op === op)};
   };
   const host = client(); host.send({op: 'create', capacity: 4, public: true, name: 'Host'});
   return {rooms, host, client, advance: ms => { now += ms; rooms.sweep(); }};
@@ -1173,9 +1173,27 @@ test('host loss expires without fabricated winner, kick invalidates token', () =
   assert.equal(guest.last('result'), undefined);
 });
 
+test('incompatible protocols cannot create, join or resume a room', () => {
+  const {rooms, host, client} = fixture();
+  const token = host.last('welcome').token;
+  for (const version of [undefined, null, 0, 1, PROTOCOL + 1, 2.1, '2', true]) {
+    for (const message of [{op: 'create', capacity: 4, public: true},
+      {op: 'join', code: host.c.room.code}, {op: 'resume', token}]) {
+      const guest = client(), before = rooms.sessions.size;
+      assert.throws(() => rooms.handle(guest.c, {...message, v: version}), /version_mismatch/);
+      assert.equal(guest.c.room, null);
+      assert.equal(guest.c.player, null);
+      assert.equal(rooms.rooms.size, 1);
+      assert.equal(rooms.sessions.size, before);
+      assert.equal(guest.messages.length, 0);
+      assert.equal(host.c.player.connection, host.c);
+    }
+  }
+});
+
 test('protocol/config validation and bounded room resources', () => {
   const {host, rooms, client} = fixture();
-  assert.throws(() => rooms.handle(host.c, {op: 'start', v: 2}), /version_mismatch/);
+  assert.throws(() => rooms.handle(host.c, {op: 'start', v: PROTOCOL + 1}), /version_mismatch/);
   assert.throws(() => host.send({op: 'configure', config: {game: 'tank_arena'}}), /invalid_config/);
   assert.throws(() => host.send({op: 'ready', ready: 'true'}), /invalid_state/);
   assert.throws(() => host.send({op: 'character', character: 50}), /invalid_request/);
@@ -1240,6 +1258,43 @@ test('loading and silent-authority watchdogs terminate without a result', () => 
   assert.equal(f.host.last('result'), undefined);
 });
 
+test('four-peer mixed playlist advances game contracts and restores tournament identity', () => {
+  const {rooms, host, client} = fixture();
+  const peers = [host, ...Array.from({length: 3}, client)];
+  peers.slice(1).forEach(peer => peer.send({op: 'join', code: host.c.room.code}));
+  const entries = [{game: 'ring_rumble', arena: 'vortex_ring'},
+    {game: 'goal_guard', arena: 'quad_court'}, {game: 'hurdle_dash', arena: 'hurdle_track'}];
+  const config = {...host.c.room.config, bots: false, tournament: {mode: 'points', target: 3,
+    rotation: 'manual', points: [5, 3, 2, 1], entries}};
+  assert.throws(() => peers[1].send({op: 'configure', config}), /host_only/);
+  host.send({op: 'configure', config});
+  const id = peers[2].c.player.id;
+  for (let epoch = 1; epoch <= 3; epoch++) {
+    peers.forEach(peer => peer.send({op: 'ready', ready: true}));
+    host.send({op: epoch === 1 ? 'start' : 'next'});
+    peers.forEach(peer => {
+      assert.equal(peer.last('start').config.game, entries[epoch - 1].game);
+      assert.equal(peer.last('start').config.arena, entries[epoch - 1].arena);
+      assert.equal(peer.last('start').players[2].id, id);
+      peer.send({op: 'loaded', epoch});
+    });
+    const scores = epoch === 3 ? [100, 200, 300, 400] : [10, 8, 6, 2];
+    assert.throws(() => peers[1].send({op: 'result', epoch, scores}), /host_only/);
+    host.send({op: 'result', epoch, scores});
+    peers.forEach(peer => assert.deepEqual(peer.last('result'), host.last('result')));
+    if (epoch === 2) {
+      const token = peers[2].last('welcome').token;
+      rooms.disconnect(peers[2].c);
+      peers[2] = client(); peers[2].send({op: 'resume', token});
+      assert.equal(peers[2].c.player.id, id);
+      assert.deepEqual(peers[2].last('result').tournament, host.last('result').tournament);
+    }
+  }
+  assert.equal(host.last('result').tournament.complete, true);
+  assert.deepEqual(host.last('result').tournament.points, [15, 9, 6, 3]);
+  assert.deepEqual(host.last('result').tournament.champions, [0]);
+});
+
 test('online tournament keeps roster, requires ready between rounds and reconnects standings', () => {
   const {rooms, host, client} = fixture();
   const guest = client(); guest.send({op: 'join', code: host.c.room.code});
@@ -1278,6 +1333,21 @@ test('online tournament rejects unavailable games and malformed point tables', (
   assert.throws(() => host.send({op: 'configure', config: {...host.c.room.config, tournament: t}}), /invalid_config/);
 });
 
+test('host can configure independent random tournament rotation without bypassing readiness', () => {
+  const {host, client} = fixture();
+  const guest = client(); guest.send({op: 'join', code: host.c.room.code});
+  const tournament = {mode: 'points', target: 3, rotation: 'random', points: [5, 3, 2, 1],
+    entries: [{game: 'ring_rumble', arena: 'vortex_ring'}, {game: 'ring_rumble', arena: 'storm_ring'}]};
+  const config = {...host.c.room.config, tournament};
+  assert.throws(() => guest.send({op: 'configure', config}), /host_only/);
+  host.send({op: 'configure', config});
+  assert.equal(host.last('room').config.tournament.rotation, 'random');
+  assert.throws(() => host.send({op: 'start'}), /not_ready/);
+  host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
+  host.send({op: 'start'});
+  assert.ok(tournament.entries.some(e => e.arena === host.last('start').config.arena));
+});
+
 test('real WebSocket match, reconnect and closed-room input drain', async t => {
   const server = createServer();
   const multiplayer = attachMultiplayer(server, {enabled: true});
@@ -1310,10 +1380,15 @@ test('real WebSocket match, reconnect and closed-room input drain', async t => {
       waiters.push(waiter);
     });
     await Promise.all([once(socket, 'open'), wait('hello')]);
-    return {socket, messages, wait, send: m => socket.send(JSON.stringify({v: 1, ...m}))};
+    return {socket, messages, wait, send: m => socket.send(JSON.stringify({v: PROTOCOL, ...m}))};
   }
   const clients = await Promise.all(Array.from({length: 4}, connect));
+  assert.ok(clients.every(c => c.messages.find(m => m.op === 'hello')?.v === PROTOCOL));
   const host = clients[0];
+  const rejected = host.wait('error');
+  host.send({v: 1, op: 'create', capacity: 4, public: true});
+  assert.equal((await rejected).code, 'version_mismatch');
+  assert.equal(multiplayer.rooms.rooms.size, 0);
   let room = host.wait('room');
   host.send({op: 'create', capacity: 4, public: true}); const code = (await room).code;
   for (const c of clients.slice(1)) { const joined = c.wait('room'); c.send({op: 'join', code}); await joined; }

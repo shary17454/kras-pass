@@ -69,6 +69,9 @@ var _eye: MeshInstance3D
 var _rotor: Node3D
 var _beam: MeshInstance3D
 var _ground_ring: Node3D
+var _drop_preview: MeshInstance3D
+var _warning_serial := 0
+var _mark_serial := 0
 
 # --- the timed mark --------------------------------------------------------
 var _mark_slot := -1
@@ -99,16 +102,16 @@ func reset() -> void:
 		_beam.visible = false
 	if _ground_ring != null and is_instance_valid(_ground_ring):
 		_ground_ring.visible = false
+	if is_instance_valid(_drop_preview):
+		_drop_preview.visible = false
 
 
 func set_urgency(value: float) -> void:
 	urgency = maxf(0.2, value)
 
 
-# --- what the AI is allowed to know ---------------------------------------
-## All of this is on screen: the drone's position, the beam it is lining up and
-## the marker over a player's head. A bot reading these is reading the same
-## picture the player sees.
+# --- authoritative state for replay and tooling ---------------------------
+## AI uses visual_observation below rather than these unfiltered state queries.
 
 func is_telegraphing() -> bool:
 	return _state == State.TELEGRAPH
@@ -137,6 +140,42 @@ func marked_slot() -> int:
 
 func mark_seconds_left() -> float:
 	return _mark_left
+
+
+## Read actual rendered cues, never the pending item or hidden target identity.
+func visual_observation(kind: String, observable: Callable) -> Dictionary:
+	if not observable.is_valid() or kind not in ["mark", "warning"]:
+		return {}
+	if kind == "mark":
+		if not is_instance_valid(_mark_node) or not observable.call(_mark_node):
+			return {}
+		var carrier := _visible_carrier(_mark_node.global_position, observable)
+		return {"id": _mark_serial, "slot": carrier} if carrier >= 0 else {}
+	if not is_instance_valid(_ground_ring) or not is_instance_valid(_eye) \
+			or not observable.call(_ground_ring) or not observable.call(_eye):
+		return {}
+	var material := _eye.material_override as StandardMaterial3D
+	if material == null:
+		return {}
+	var point := _ground_ring.global_position - Vector3(0, 0.16, 0)
+	return {"id": _warning_serial, "point": point, "origin": _eye.global_position,
+		"penalty": material.emission.r > material.emission.g * 1.5,
+		"drop": is_instance_valid(_drop_preview) and observable.call(_drop_preview)}
+
+
+func _visible_carrier(point: Vector3, observable: Callable) -> int:
+	var found := -1
+	for i in ctx.fighters.size():
+		var body := ctx.fighter(i)
+		if not ctx.is_alive(i) or not observable.call(body):
+			continue
+		var offset := body.global_position - point
+		offset.y = 0.0
+		if offset.length() <= 0.25:
+			if found >= 0:
+				return -1
+			found = i
+	return found
 
 
 # --- per-tick --------------------------------------------------------------
@@ -211,11 +250,14 @@ func _begin_telegraph() -> void:
 ## Everything the telegraph does that is not a decision, so a replayed
 ## telegraph looks identical to the one that was recorded.
 func _show_telegraph() -> void:
+	_warning_serial += 1
 	AudioManager.play_sfx("machine_alert", global_position)
 	if _beam != null and is_instance_valid(_beam):
 		_beam.visible = true
 	if _ground_ring != null and is_instance_valid(_ground_ring):
 		_ground_ring.visible = true
+	if is_instance_valid(_drop_preview):
+		_drop_preview.visible = _action == Action.DROP
 	# Aim before the first frame is drawn. `_aim_beam()` otherwise runs a tick
 	# later, and for one rendered frame the column and the floor ring sit at the
 	# drone's own origin at full height and unscaled — a flicker in the wrong
@@ -224,6 +266,8 @@ func _show_telegraph() -> void:
 
 
 func _fire() -> void:
+	if is_instance_valid(_drop_preview):
+		_drop_preview.visible = false
 	_emit("machine_fire", {"action": _action, "target": _target_slot, "id": _pending_id,
 		"px": _target_point.x, "pz": _target_point.z})
 	_deliver()
@@ -372,6 +416,7 @@ func _scores_are_live() -> bool:
 # --- the timed mark --------------------------------------------------------
 
 func _set_mark(slot: int) -> void:
+	_mark_serial += 1
 	if slot < 0 or not ctx.is_alive(slot):
 		return
 	_emit("mark_set", {"slot": slot})
@@ -451,6 +496,7 @@ func _detonate_mark(carrier: Fighter) -> void:
 
 
 func _pass_mark(slot: int) -> void:
+	_mark_serial += 1
 	_mark_slot = slot
 	_mark_grace = float(_tuning.get("mark_pass_grace", 0.7))
 	var f := ctx.fighter(slot)
@@ -542,8 +588,6 @@ func _player_name(slot: int) -> String:
 # --- presentation ----------------------------------------------------------
 
 func _build() -> void:
-	if DisplayServer.get_name() == "headless":
-		return
 	# Sized and coloured for the camera this game actually uses. The first pass
 	# was a 0.66 m dark grey hull, which from a 22 m arena camera read as a
 	# pebble on the ice — I only saw it in a screenshot, because a headless
@@ -600,6 +644,10 @@ func _build() -> void:
 	_ground_ring.add_child(outer)
 	var inner := MeshFactory.torus(0.5, 0.8, Color(1.0, 0.86, 0.45), 1.4)
 	_ground_ring.add_child(inner)
+	_drop_preview = MeshFactory.box(Vector3(0.65, 0.65, 0.65), Color(1.0, 0.8, 0.3))
+	_drop_preview.name = "DropPreview"
+	_drop_preview.visible = false
+	add_child(_drop_preview)
 
 
 func _animate(delta: float) -> void:
@@ -644,6 +692,8 @@ func _aim_beam() -> void:
 		# says "here, now" far better than one that spreads.
 		var k := lerpf(1.35, 0.85, t)
 		_ground_ring.scale = Vector3(k, 1.0, k)
+	if is_instance_valid(_drop_preview):
+		_drop_preview.global_position = _target_point + Vector3(0, 0.8, 0)
 
 
 func _flash() -> void:
@@ -655,7 +705,7 @@ func _flash() -> void:
 
 
 func _build_mark() -> void:
-	if DisplayServer.get_name() == "headless" or ctx.world_root == null:
+	if ctx.world_root == null:
 		return
 	_mark_node = Node3D.new()
 	_mark_node.name = "MachineMark"

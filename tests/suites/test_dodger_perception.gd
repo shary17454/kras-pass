@@ -51,8 +51,46 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_visibility_gap(t, brain, arena, arm)
 	_test_history_capacity(t, brain, arena, arm)
 	_test_prediction(t, brain, arena, arm)
+	_test_own_velocity(t, brain, arena, arm)
 	arena.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_own_velocity(t: TestHarness, brain, arena: Arena, arm: ArenaHazards.Sweeper) -> void:
+	t.test("arrival relative to own observable movement")
+	var body := Fighter.new()
+	arena.add_child(body)
+	body.set_physics_process(false)
+	brain.ctx.fighters.append(body)
+	brain.reaction_time = 0.5
+	brain.prediction = 0.0
+	brain.edge_awareness = 1.0
+	for angle in [0.0, 0.7, -1.4]:
+		for direction in [-1.0, 1.0]:
+			brain.on_round_start()
+			brain._time = 0.0
+			arm.rotation.y = angle
+			brain._record_history()
+			brain._time = 0.1
+			arm.rotation.y += direction * 0.1
+			brain._record_history()
+			brain._time = 0.6
+			var target := Vector3.RIGHT.rotated(Vector3.UP, angle + direction * 0.5) * 3.0
+			body.position = target
+			var tangent := Vector3.UP.cross(target.normalized())
+			for angular_motion in [-0.5, 0.0, 0.5]:
+				body.velocity = tangent * 3.0 * direction * angular_motion
+				var threat: Dictionary = brain._incoming_arm(arena, target)
+				t.ok(not threat.is_empty(), "visible arm approach remains actionable with own movement")
+				if not threat.is_empty():
+					t.near(float(threat.eta), 0.4 / (1.0 - angular_motion), 0.001, "arrival accounts for own tangential velocity without reading rival or schedule state")
+			body.velocity = tangent * 3.0 * direction
+			t.ok(brain._incoming_arm(arena, target).is_empty(), "equal angular motion is not a closing encounter")
+			arm.hide()
+			body.velocity = -tangent * 3.0 * direction
+			t.ok(brain._incoming_arm(arena, target).is_empty(), "own velocity cannot reveal a hidden arm")
+			arm.show()
+	brain.ctx.fighters.clear()
 
 
 func _test_signed_motion(t: TestHarness, brain, arena: Arena, arm: ArenaHazards.Sweeper) -> void:

@@ -31,6 +31,22 @@ class RoutingWorld extends RefCounted:
 		return PackedVector3Array([from, waypoint])
 
 
+class CombatSteeringProbe extends "res://src/ai/brains/tank_brain.gd":
+	var target := Vector3.ZERO
+	var clear := true
+	var crate: Node3D
+	func priority_rival() -> int:
+		return 1
+	func predict(_target_slot: int, _lead: float = 0.35) -> Vector3:
+		return target
+	func _has_line_of_sight(_from: Vector3, _to: Vector3) -> bool:
+		return clear
+	func _visible_weapon_crate() -> Node3D:
+		return crate
+	func _perceived_crate_position(_node: Node3D) -> Vector3:
+		return target + Vector3.RIGHT * 10.0
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("tank network presentation")
 	var enabled: bool = AudioManager.enabled
@@ -43,6 +59,7 @@ func run(t: TestHarness, host: Node) -> void:
 	var game = scene.controller
 	_test_routing_clock(t, scene)
 	_test_ammo_perception(t, scene)
+	_test_combat_distance(t, scene)
 	var peer: Node = load("res://tests/network_peer.gd").new()
 	peer.game = scene
 	var origin: Vector3 = game.world.roads.get_point_position(0)
@@ -55,6 +72,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(peer._tank_waypoint(between, destination), waypoint, "ATV route does not steer back when nearest-node lookup still selects origin")
 	t.ok(peer._tank_waypoint(waypoint, destination).distance_to(waypoint) > 3.0, "ATV fixture advances after reaching each waypoint")
 	peer.free()
+	await _test_peer_corridor(t, host, scene)
 	t.not_null(game._engine, "audio-enabled test creates an actual engine player")
 	for kind in 7:
 		game._spawn_shell(0, kind, Vector3(100, 4, 100), Vector3.FORWARD)
@@ -170,6 +188,18 @@ func run(t: TestHarness, host: Node) -> void:
 	t.equal(reused.launch_serial, serial + 1, "reused shell has a fresh launch generation")
 	Pool.release(game.POOL_KEY, reused)
 	game.on_round_start()
+	for slot in 4:
+		var fighter: Fighter = scene.ctx.fighter(slot)
+		var inward: Vector3 = scene.ctx.arena_center() - fighter.global_position
+		inward.y = 0.0
+		t.ok(fighter.facing.is_equal_approx(inward.normalized()), "round start faces every ATV toward the arena, independent of slot")
+		fighter.face_direction(-inward)
+	game.on_round_start()
+	for slot in 4:
+		var fighter: Fighter = scene.ctx.fighter(slot)
+		var inward: Vector3 = scene.ctx.arena_center() - fighter.global_position
+		inward.y = 0.0
+		t.ok(fighter.facing.is_equal_approx(inward.normalized()), "round restart resets the previous ATV heading")
 	packet = JSON.parse_string(JSON.stringify(replica.capture(scene)))
 	packet.round = 1
 	packet.phase = MatchPhase.P.INTRO
@@ -185,6 +215,41 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _test_combat_distance(t: TestHarness, scene: Node) -> void:
+	t.test("tank bots hold a clear firing lane without abandoning a close rival for ammo")
+	var me: Fighter = scene.ctx.fighter(0)
+	var origin := me.global_position
+	var facing := me.facing
+	me.global_position = scene.ctx.arena_center() + Vector3.UP
+	me.facing = Vector3.FORWARD
+	var brain := CombatSteeringProbe.new()
+	brain.configure(0, scene.ctx, 3, 117)
+	brain.controller = scene.controller
+	for tier in 4:
+		brain.configure(0, scene.ctx, tier, 117)
+		brain.target = me.global_position + Vector3.FORWARD * 10.0
+		brain.decide(0.0)
+		t.near(brain.move.y, 0.0, 0.00001, "every tier stops closing inside effective firing range")
+		brain.target = me.global_position + Vector3.FORWARD * 30.0
+		brain.decide(0.0)
+		t.ok(brain.move.y < 0.0, "distant observed opponent still needs normal forward movement")
+		brain.target = me.global_position + Vector3.FORWARD * 2.0
+		brain.decide(0.0)
+		t.ok(brain.move.y > 0.0, "point-blank approach reverses instead of passing the muzzle through a rival")
+	brain.target = me.global_position + Vector3.FORWARD * 10.0
+	brain.crate = scene.controller.crates[0].node
+	brain.decide(0.0)
+	t.near(brain.move.y, 0.0, 0.00001, "visible ammo does not override a close clear engagement")
+	brain.crate = null
+	brain.clear = false
+	brain._route = PackedVector3Array([me.global_position + Vector3.FORWARD * 6.0])
+	brain._route_refresh_at = INF
+	brain.decide(0.0)
+	t.ok(brain.move.y < 0.0, "blocked firing lane follows known road instead of stopping at cover")
+	me.global_position = origin
+	me.facing = facing
 
 
 func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
@@ -216,6 +281,9 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 	t.equal(game.crate_target(0), second.global_position, "hidden ammo cannot displace a visible target")
 	var brain := AmmoSteeringProbe.new()
 	brain.configure(0, scene.ctx, 3, 117)
+	# This fixture isolates steering/availability; difficulty delays are tested
+	# with all four profiles in test_tank_crate_perception.gd.
+	brain.reaction_time = 0.0
 	brain.controller = game
 	t.ok(brain.can_observe(second), "ammo fixture's visible crate is inside the observation view")
 	brain.decide(0.0)
@@ -277,6 +345,35 @@ func _test_ammo_perception(t: TestHarness, scene: Node) -> void:
 		scene.ctx.fighter(index).visible = fighter_visibility[index]
 	me.global_position = origin
 	scene.camera.global_transform = camera_transform
+
+
+func _test_peer_corridor(t: TestHarness, host: Node, scene: Node) -> void:
+	var peer: Node = load("res://tests/network_peer.gd").new()
+	peer.game = scene
+	var origin := Vector3(100, 1, 100)
+	var target := Vector3(100, 1, 110)
+	t.ok(peer._tank_clear_path(origin, target), "empty vehicle-width corridor permits direct pursuit")
+	peer.tank_route = PackedVector3Array([Vector3(0, 0, 6)])
+	t.equal(peer._tank_waypoint(origin, target), target, "clear combat corridor bypasses the road detour")
+	t.equal(peer.tank_route.size(), 0, "direct pursuit discards a stale road route")
+	var barrier := StaticBody3D.new()
+	barrier.collision_layer = 1
+	var collision := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3.ONE * 0.4
+	collision.shape = box
+	barrier.add_child(collision)
+	host.add_child(barrier)
+	barrier.global_position = Vector3(101, 2, 105)
+	await host.get_tree().physics_frame
+	await host.get_tree().process_frame
+	t.ok(not peer._tank_clear_path(origin, target), "side barrier blocks an ATV corridor even when the center ray is clear")
+	barrier.global_position = Vector3(100, 2, 105)
+	await host.get_tree().physics_frame
+	await host.get_tree().process_frame
+	t.ok(not peer._tank_clear_path(origin, target), "center barrier also retains road navigation")
+	barrier.free()
+	peer.free()
 
 
 func _test_routing_clock(t: TestHarness, scene: Node) -> void:

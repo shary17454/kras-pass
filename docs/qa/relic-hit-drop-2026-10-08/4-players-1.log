@@ -1,0 +1,20 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+WARNING: [WRN][Net] online transport lost: socket_1000
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:75)
+       [1] w (res://src/core/logger.gd:34)
+       [2] _transport_lost (res://src/net/net_service.gd:482)
+       [3] _process (res://src/net/room_client.gd:88)
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":701,"phase":2,"running":true,"seed":2900051,"snapshots":158,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":701,"phase":4,"running":true,"seed":2900051,"snapshots":358,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":701,"phase":6,"running":true,"seed":2900051,"snapshots":558,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":701,"phase":4,"running":true,"seed":2900051,"snapshots":758,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":701,"phase":4,"running":true,"seed":2900051,"snapshots":958,"state":"playing"}
+NETWORK_ROUND={"arena":"star_meadow","epoch":1,"game":"relic_hold","moved":true,"scores":[2,2,1,5],"spectator":false}
+NETWORK_FINISHED={"arena_history":["star_meadow"],"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":2,"matches":1,"moved":true,"reconnected":true,"round_history":[{"arena":"star_meadow","epoch":1,"game":"relic_hold","scores":[2,2,1,5]}],"scores":[2,2,1,5],"snapshots":1088,"tournament":{},"tournament_rotation":"random_no_repeat","world_snapshots":1088}

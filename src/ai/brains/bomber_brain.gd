@@ -79,9 +79,9 @@ func decide(delta: float) -> void:
 			var spot := predict(target, 0.35)
 			steer_to(spot)
 			if distance_to(spot) < THROW_RANGE or fuse < PANIC_FUSE:
-				press(Btn.ATTACK)
+				tap(Btn.ATTACK)
 		elif fuse < PANIC_FUSE:
-			press(Btn.ATTACK)
+			tap(Btn.ATTACK)
 		return
 
 	# Not holding: flee anything close and nearly spent.
@@ -107,7 +107,7 @@ func _rival_within(radius: float) -> bool:
 	if me == null:
 		return false
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		if me.global_position.distance_to(perceive(i)) <= radius:
 			return true

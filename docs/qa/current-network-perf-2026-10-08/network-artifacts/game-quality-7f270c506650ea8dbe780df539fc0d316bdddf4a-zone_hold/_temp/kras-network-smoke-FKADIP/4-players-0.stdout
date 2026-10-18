@@ -1,0 +1,26 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+NETWORK_ROOM=6CZEHE
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":755,"phase":2,"running":true,"seed":667276548,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":755,"phase":4,"running":true,"seed":667276548,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":755,"phase":4,"running":true,"seed":667276548,"snapshots":0,"state":"playing"}
+WARNING: [WRN][Net] online transport lost: socket_1000
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _process (res://src/net/room_client.gd:88)
+NETWORK_ROUND={"arena":"dune_ring","epoch":1,"game":"zone_hold","moved":true,"scores":[12,0,0,0],"spectator":false}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":755,"phase":2,"running":true,"seed":211277568,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":755,"phase":4,"running":true,"seed":211277568,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":755,"phase":6,"running":true,"seed":211277568,"snapshots":0,"state":"playing"}
+NETWORK_ROUND={"arena":"dune_ring","epoch":2,"game":"zone_hold","moved":true,"scores":[13,0,0,0],"spectator":false}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":755,"phase":3,"running":true,"seed":410879754,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":755,"phase":4,"running":true,"seed":410879754,"snapshots":0,"state":"playing"}
+NETWORK_ROUND={"arena":"dune_ring","epoch":3,"game":"zone_hold","moved":true,"scores":[15,0,0,0],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":1,"matches":3,"moved":true,"reconnected":true,"scores":[15,0,0,0],"snapshots":0,"tournament":{"awards":[5.0,2.0,2.0,2.0],"champions":[0.0],"complete":true,"contenders":[],"cups":[3.0,0.0,0.0,0.0],"mode":"points","points":[15.0,6.0,6.0,6.0],"round":3.0,"target":3.0,"tie_attempts":0.0},"world_snapshots":0}

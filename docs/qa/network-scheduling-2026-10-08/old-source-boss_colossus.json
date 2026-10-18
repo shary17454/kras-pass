@@ -1,0 +1,1001 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 129.477083333334,
+      "avg_score": 197.65625,
+      "baseline_seeds": [
+        1209001,
+        1209614,
+        1210227,
+        1210840,
+        1211453,
+        1212066,
+        1212679,
+        1213292,
+        1213905,
+        1214518,
+        1215131,
+        1215744,
+        1216357,
+        1216970,
+        1217583,
+        1218196,
+        1218809,
+        1219422,
+        1220035,
+        1220648,
+        1221261,
+        1221874,
+        1222487,
+        1223100
+      ],
+      "boss_defeated_runs": 22,
+      "boss_outcomes": [
+        {
+          "outcome": "defeated",
+          "seed": 1209001
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1209614
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1210227
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1210840
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1211453
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1212066
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1212679
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1213292
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1213905
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1214518
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1215131
+        },
+        {
+          "outcome": "survived",
+          "seed": 1215744
+        },
+        {
+          "outcome": "survived",
+          "seed": 1216357
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1216970
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1217583
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1218196
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1218809
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1219422
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1220035
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1220648
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1221261
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1221874
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1222487
+        },
+        {
+          "outcome": "defeated",
+          "seed": 1223100
+        }
+      ],
+      "boss_survived_runs": 2,
+      "boss_unknown_runs": 0,
+      "category": "combat",
+      "character_bias": 0.171296296296296,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "boss_outcome": "defeated",
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 470,
+              "falls": 4,
+              "hits_taken": 5
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 275,
+              "falls": 4,
+              "hits_taken": 5
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 8,
+              "hits_taken": 10
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 11,
+              "hits_taken": 8
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            470,
+            275,
+            0,
+            55
+          ],
+          "seed": 1204242
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 16,
+              "hits_taken": 19
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 16,
+              "hits_taken": 18
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 305,
+              "falls": 12,
+              "hits_taken": 11
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 440,
+              "falls": 7,
+              "hits_taken": 9
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            55,
+            305,
+            440
+          ],
+          "seed": 1204242
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 385,
+              "falls": 1,
+              "hits_taken": 7
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 305,
+              "falls": 2,
+              "hits_taken": 5
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 9,
+              "hits_taken": 6
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 8,
+              "hits_taken": 12
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            3
+          ],
+          "scores": [
+            385,
+            305,
+            55,
+            55
+          ],
+          "seed": 1204339
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 4,
+              "hits_taken": 10
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 9,
+              "hits_taken": 8
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 415,
+              "falls": 1,
+              "hits_taken": 2
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 330,
+              "falls": 2,
+              "hits_taken": 4
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            0,
+            55,
+            415,
+            330
+          ],
+          "seed": 1204339
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 440,
+              "falls": 3,
+              "hits_taken": 2
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 360,
+              "falls": 3,
+              "hits_taken": 3
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 9,
+              "hits_taken": 9
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 10,
+              "hits_taken": 7
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            3
+          ],
+          "scores": [
+            440,
+            360,
+            0,
+            0
+          ],
+          "seed": 1204436
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 11,
+              "hits_taken": 13
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 10,
+              "hits_taken": 7
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 385,
+              "falls": 4,
+              "hits_taken": 8
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 415,
+              "falls": 3,
+              "hits_taken": 7
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            0,
+            385,
+            415
+          ],
+          "seed": 1204436
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 440,
+              "falls": 7,
+              "hits_taken": 5
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 330,
+              "falls": 4,
+              "hits_taken": 10
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 13,
+              "hits_taken": 19
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 30,
+              "falls": 12,
+              "hits_taken": 16
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            440,
+            330,
+            0,
+            30
+          ],
+          "seed": 1204533
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 7,
+              "hits_taken": 10
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 10,
+              "hits_taken": 9
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 415,
+              "falls": 2,
+              "hits_taken": 5
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 330,
+              "falls": 3,
+              "hits_taken": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            55,
+            0,
+            415,
+            330
+          ],
+          "seed": 1204533
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 360,
+              "falls": 3,
+              "hits_taken": 4
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 385,
+              "falls": 5,
+              "hits_taken": 3
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 8,
+              "hits_taken": 9
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 8,
+              "hits_taken": 10
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            4,
+            3
+          ],
+          "scores": [
+            360,
+            385,
+            0,
+            55
+          ],
+          "seed": 1204630
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 12,
+              "hits_taken": 7
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 14,
+              "hits_taken": 15
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 360,
+              "falls": 4,
+              "hits_taken": 4
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 385,
+              "falls": 8,
+              "hits_taken": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            55,
+            360,
+            385
+          ],
+          "seed": 1204630
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 385,
+              "falls": 1
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 415,
+              "hits_taken": 2
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 7,
+              "hits_taken": 3
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 7,
+              "hits_taken": 5
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            3
+          ],
+          "scores": [
+            385,
+            415,
+            0,
+            0
+          ],
+          "seed": 1204727
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 7,
+              "hits_taken": 6
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 7,
+              "hits_taken": 7
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 360,
+              "hits_taken": 6
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 440,
+              "falls": 2,
+              "hits_taken": 3
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            0,
+            360,
+            440
+          ],
+          "seed": 1204727
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 415,
+              "falls": 3,
+              "hits_taken": 3
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 385,
+              "falls": 2,
+              "hits_taken": 2
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 8,
+              "hits_taken": 7
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 7,
+              "hits_taken": 11
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            3
+          ],
+          "scores": [
+            415,
+            385,
+            0,
+            0
+          ],
+          "seed": 1204824
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 5,
+              "hits_taken": 6
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 110,
+              "falls": 5,
+              "hits_taken": 9
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 330,
+              "falls": 3,
+              "hits_taken": 6
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 360,
+              "falls": 1,
+              "hits_taken": 5
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            110,
+            330,
+            360
+          ],
+          "seed": 1204824
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 360,
+              "falls": 1,
+              "hits_taken": 4
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 440,
+              "hits_taken": 4
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 5,
+              "hits_taken": 11
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 3,
+              "hits_taken": 7
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            3
+          ],
+          "scores": [
+            360,
+            440,
+            0,
+            0
+          ],
+          "seed": 1204921
+        },
+        {
+          "boss_outcome": "defeated",
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "falls": 12,
+              "hits_taken": 13
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 55,
+              "falls": 9,
+              "hits_taken": 10
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 330,
+              "falls": 5,
+              "hits_taken": 4
+            },
+            {
+              "boss_defeats": 1,
+              "boss_rounds": 1,
+              "damage": 415,
+              "falls": 5,
+              "hits_taken": 9
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            0,
+            55,
+            330,
+            415
+          ],
+          "seed": 1204921
+        }
+      ],
+      "expert_edge": 0.67065868263473,
+      "flags": [],
+      "id": "boss_colossus",
+      "name": "العملاق",
+      "round_window": 150.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 1200000,
+      "severity": 0,
+      "slot_bias": 0.12037037037037,
+      "tie_rate": 0.0833333333333333,
+      "wins_by_character": {
+        "barq": 3,
+        "fanoos": 5,
+        "ghaim": 3,
+        "mowja": 3,
+        "nabta": 1,
+        "ramla": 3,
+        "sakhra": 8,
+        "turs": 1
+      },
+      "wins_by_slot": [
+        10,
+        4,
+        7,
+        6
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-08T00:29:02",
+  "mutator_smoke": [
+    {
+      "chaos_boss_outcome": "survived",
+      "chaos_ok": true,
+      "chaos_seed": 1205502,
+      "flags": [],
+      "id": "boss_colossus",
+      "mutated_boss_outcome": "survived",
+      "mutated_ok": true,
+      "mutated_seed": 1205501,
+      "name": "العملاق",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 1200000,
+  "simulation_source_end": "d0b4951682ded2f83058ab8a7d99f6558a527798d8d028b770efbcdcc4ca087e",
+  "simulation_source_start": "d0b4951682ded2f83058ab8a7d99f6558a527798d8d028b770efbcdcc4ca087e"
+}

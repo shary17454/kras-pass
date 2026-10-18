@@ -7,13 +7,144 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("systems")
 	_input_frames(t)
 	_music_toggle(t)
+	_original_music(t)
+	_original_sounds(t)
 	await _audio_shutdown(t, host)
 	_platform(t)
 	_ai_profiles(t)
 	_pooling(t)
+	await _projectile_visual_reuse(t, host)
+	await _local_marker_scale(t, host)
+	await _player_marker_symbols(t, host)
 	_procedural_geometry(t)
 	await _powerups(t, host)
 	await _navigation(t, host)
+
+
+func _player_marker_symbols(t: TestHarness, host: Node) -> void:
+	t.test("in-world player identity is independent of character color")
+	var seen: Array[String] = []
+	for slot in 4:
+		var fighter := Fighter.new()
+		fighter.slot = slot
+		host.add_child(fighter)
+		fighter._build_markers()
+		var label := fighter._markers.get_node("PlayerSymbol") as Label3D
+		t.equal(label.text, PlayerConfig.SYMBOLS[slot], "world and HUD use the same slot symbol")
+		t.ok(not seen.has(label.text), "all four slots have distinct symbols")
+		seen.append(label.text)
+		t.ok(not label.no_depth_test, "identity cannot expose a player through a wall")
+		t.ok(not label.fixed_size, "identity retains bounded world dimensions")
+		t.equal(label.billboard, BaseMaterial3D.BILLBOARD_ENABLED, "symbol faces either camera orientation")
+		t.ok(label.font != null, "identity uses the bundled UI font")
+		fighter.hide()
+		t.ok(not label.is_visible_in_tree(), "hidden player does not leak identity")
+		fighter.show()
+		fighter._markers.hide()
+		t.ok(not label.is_visible_in_tree(), "elimination hides identity with other markers")
+		fighter._markers.show()
+		t.ok(label.is_visible_in_tree(), "respawn restores identity")
+		fighter.locomotion = Fighter.Locomotion.DRIVE
+		fighter._build_markers()
+		var driving_label := fighter._markers.get_node("PlayerSymbol") as Label3D
+		t.near(driving_label.pixel_size, 0.005, 0.00001, "close vehicle camera uses a compact symbol")
+		fighter.queue_free()
+		await host.get_tree().process_frame
+
+
+func _local_marker_scale(t: TestHarness, host: Node) -> void:
+	t.test("local identity ring enlargement survives pulse updates")
+	for local in [false, true]:
+		var fighter := Fighter.new()
+		host.add_child(fighter)
+		fighter._build_markers()
+		if local:
+			fighter.mark_as_local()
+		var ring := fighter._markers.get_node("Ring") as Node3D
+		var body_scale := fighter.scale
+		for phase in [0.0, PI / 8.0, PI * 3.0 / 8.0, PI / 2.0]:
+			fighter._fx_time = phase
+			fighter._update_markers(1.0 / 60.0)
+			var expected := (1.18 if local else 1.0) * (1.0 + sin(phase * 4.0) * (0.06 if local else 0.03))
+			t.near(ring.scale.x, expected, 0.00001, "pulse retains the intended identity-ring base size")
+			t.near(ring.scale.z, expected, 0.00001, "ring enlargement is symmetric on the floor")
+			t.near(ring.scale.y, 1.0, 0.00001, "ring never changes floor thickness")
+			t.equal(fighter.scale, body_scale, "identity cue cannot enlarge the collision body")
+		fighter.queue_free()
+		await host.get_tree().process_frame
+
+
+func _projectile_visual_reuse(t: TestHarness, host: Node) -> void:
+	t.test("pooled projectile retains visual instances across color changes")
+	var shot := Projectile.new()
+	host.add_child(shot)
+	shot.configure(Color.RED)
+	var root_id: int = shot._mesh.get_instance_id()
+	var core_id: int = shot._mesh.get_child(0).get_instance_id()
+	var tail_id: int = shot._mesh.get_child(1).get_instance_id()
+	var core_mesh: Mesh = shot._mesh.get_child(0).mesh
+	var tail_mesh: Mesh = shot._mesh.get_child(1).mesh
+	for index in 64:
+		shot.on_released()
+		shot.on_acquired()
+		shot.configure(Color.GREEN if index % 2 == 0 else Color.BLUE)
+		await host.get_tree().process_frame
+	t.equal(shot._mesh.get_instance_id(), root_id, "visual root reused after 64 pool cycles")
+	t.equal(shot._mesh.get_child(0).get_instance_id(), core_id, "core instance reused")
+	t.equal(shot._mesh.get_child(1).get_instance_id(), tail_id, "tail instance reused")
+	t.equal(shot._mesh.get_child_count(), 2, "no duplicate visual parts")
+	t.equal(shot.get_child_count(), 2, "only collision and one visual root remain")
+	t.equal(shot._mesh.get_child(0).mesh, core_mesh, "core geometry unchanged")
+	t.equal(shot._mesh.get_child(1).mesh, tail_mesh, "tail geometry unchanged")
+	t.equal(shot._mesh.get_child(0).material_override, MeshFactory.toon(Color.BLUE, 2.0), "core color and emission updated")
+	t.equal(shot._mesh.get_child(1).material_override, MeshFactory.toon(Color.BLUE, 1.4), "tail color and emission updated")
+	t.equal(shot._mesh.get_child(1).position, Vector3(0, 0, 0.5), "tail placement unchanged")
+	shot.queue_free()
+	await host.get_tree().process_frame
+
+
+func _original_music(t: TestHarness) -> void:
+	t.test("baked original music preserves synthesis and looping")
+	for id in ["menu", "arena", "arena_b", "tension", "victory", "adventure"]:
+		var baked := load("res://assets/audio/music/" + id + ".res") as AudioStreamWAV
+		t.not_null(baked, id + " is bundled")
+		if baked == null:
+			continue
+		var generated := Synth.to_stream(AudioManager._render_track(id), true)
+		t.ok(baked.data == generated.data, id + " retains every original PCM byte")
+		t.equal(baked.format, generated.format, id + " retains sample format")
+		t.equal(baked.mix_rate, generated.mix_rate, id + " retains sample rate")
+		t.equal(baked.stereo, generated.stereo, id + " retains channel layout")
+		t.equal(baked.loop_mode, generated.loop_mode, id + " retains looping")
+		t.equal(baked.loop_begin, generated.loop_begin, id + " retains loop start")
+		t.equal(baked.loop_end, generated.loop_end, id + " retains loop end")
+		t.ok(AudioManager._track(id) == baked, id + " uses bundled resource")
+		t.ok(AudioManager._track(id) == baked, id + " reuses cached resource")
+	t.ok(AudioManager._track("unknown_music") == null, "unknown music remains unsupported")
+
+
+func _original_sounds(t: TestHarness) -> void:
+	t.test("baked original sounds retain PCM and cached playback")
+	var catalogue = load("res://tools/bake_original_sfx.gd")
+	for category in ["sfx", "ambience"]:
+		for id in catalogue.SOUNDS if category == "sfx" else catalogue.AMBIENCES:
+			var path: String = "res://assets/audio/" + category + "/" + id + ".res"
+			var baked := load(path) as AudioStreamWAV
+			t.not_null(baked, id + " is bundled")
+			if baked == null:
+				continue
+			var samples = AudioManager._render_sfx(id) if category == "sfx" else AudioManager._render_ambience(id)
+			var generated := Synth.to_stream(samples, category == "ambience")
+			t.ok(baked.data == generated.data, id + " preserves every PCM byte")
+			for property in ["format", "mix_rate", "stereo", "loop_mode", "loop_begin", "loop_end"]:
+				t.equal(baked.get(property), generated.get(property), id + " preserves " + property)
+			var played = AudioManager._sound(id) if category == "sfx" else AudioManager._ambience_stream(id)
+			t.ok(played == baked, id + " plays the bundled resource instead of synthesizing")
+			var cached = AudioManager._sound(id) if category == "sfx" else AudioManager._ambience_stream(id)
+			t.ok(cached == baked, id + " reuses the cached resource")
+	t.ok(AudioManager._sound("shoot") == AudioManager._sound("cannon_fire"), "shoot alias shares the original sound")
+	t.ok(AudioManager._sound("victory") == AudioManager._sound("win"), "victory alias shares the original sound")
+	t.ok(AudioManager._ambience_stream("unknown_ambience") == null, "unknown ambience stays unsupported")
 
 
 func _audio_shutdown(t: TestHarness, host: Node) -> void:
