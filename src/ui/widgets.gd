@@ -39,12 +39,24 @@ static func character_card(c: CharacterData, unlocked: bool, selected: bool = fa
 	return card
 
 
-static func character_portrait(character: CharacterData) -> Control:
+static func portrait_path(character: CharacterData) -> String:
+	var recipe := [1, character.id, character.body_shape, character.head_shape,
+		character.height_scale, character.girth_scale, character.accessory,
+		character.color.to_html(), character.accent.to_html()]
+	return "res://assets/ui/portraits/%s.png" % JSON.stringify(recipe).sha256_text().left(20)
+
+
+static func character_portrait(character: CharacterData, force_live := false) -> Control:
 	var image := TextureRect.new()
 	image.custom_minimum_size = Vector2(160, 160)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var baked := portrait_path(character)
+	if not force_live and ResourceLoader.exists(baked):
+		image.texture = load(baked) as Texture2D
+		image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		return image
 	if DisplayServer.get_name() == "headless":
 		return image
 	var viewport := SubViewport.new()
@@ -163,11 +175,14 @@ static func standings_row(rank: int, name: String, color: Color, value: String, 
 
 static func progress_row(label_text: String, value: String, fraction: float, color: Color) -> Control:
 	var v := UIKit.vbox(4)
-	var h := UIKit.hbox(12)
+	var h := UIKit.adaptive_columns(6)
 	var l := UIKit.label(label_text, UIKit.SIZE_SMALL)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(l)
-	h.add_child(UIKit.label(value, UIKit.SIZE_SMALL, UIKit.ACCENT, true))
+	var amount := UIKit.label(value, UIKit.SIZE_SMALL, UIKit.ACCENT, true)
+	amount.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	h.add_child(amount)
 	v.add_child(h)
 	v.add_child(UIKit.stat_bar(fraction, color, 520.0))
 	return v

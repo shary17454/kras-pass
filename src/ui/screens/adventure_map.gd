@@ -9,12 +9,12 @@ var _world_index := 0
 var _character_index := 0
 var _characters: Array[CharacterData] = []
 var _stage_holder: VBoxContainer
-var _world_tabs: BoxContainer
+var _world_tabs: OptionButton
 
 
 func build() -> void:
 	title(Loc.t("adventure.title"))
-	header.add_child(_completion_strip())
+	add_header_detail(_completion_strip())
 	_characters = Progression.playable_characters()
 	var last := Progression.last_character()
 	for i in _characters.size():
@@ -30,7 +30,13 @@ func build() -> void:
 			if int(prog["cleared"]) < int(prog["total"]):
 				break
 
-	_world_tabs = UIKit.adaptive_columns(10)
+	_world_tabs = UIKit.option([], 0)
+	_world_tabs.name = "AdventureWorldPicker"
+	_world_tabs.custom_minimum_size.x = 0
+	_world_tabs.add_theme_font_size_override("font_size", int(UIKit.SIZE_SMALL * UIKit.scale()))
+	_world_tabs.item_selected.connect(func(index: int):
+		_world_index = index
+		_build_stages())
 	body.add_child(_world_tabs)
 	_build_tabs()
 
@@ -63,8 +69,8 @@ func build() -> void:
 
 
 func _completion_strip() -> Control:
-	var h := UIKit.hbox(16)
-	h.size_flags_horizontal = Control.SIZE_SHRINK_END
+	var h := HFlowContainer.new()
+	h.add_theme_constant_override("h_separation", 16)
 	h.add_child(UIKit.label("🏆 %d" % Progression.trophies(), UIKit.SIZE_BODY, UIKit.ACCENT, true))
 	h.add_child(UIKit.label("%s %.0f%%" % [Loc.t("adventure.completion"), Progression.completion_percent()],
 		UIKit.SIZE_BODY, UIKit.ACCENT_2, true))
@@ -72,8 +78,7 @@ func _completion_strip() -> Control:
 
 
 func _build_tabs() -> void:
-	for c in _world_tabs.get_children():
-		c.queue_free()
+	_world_tabs.clear()
 	var worlds := Registry.worlds()
 	for i in worlds.size():
 		var w: Dictionary = worlds[i]
@@ -81,21 +86,12 @@ func _build_tabs() -> void:
 		var unlocked := Progression.is_world_unlocked(wid)
 		var prog := Progression.world_progress(wid)
 		var label := "%s  %d/%d" % [Loc.t(String(w.get("name_key", ""))), prog["cleared"], prog["total"]]
-		var b := UIKit.button(label if unlocked else "🔒 " + Loc.t(String(w.get("name_key", ""))), UIKit.SIZE_SMALL)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.disabled = not unlocked
-		if unlocked:
-			b.pressed.connect(func():
-				_world_index = i
-				_build_stages()
-				_build_tabs())
-		else:
-			b.tooltip_text = Loc.t("adventure.requires", {"n": w.get("required_trophies", 0)})
-		if i == _world_index:
-			b.add_theme_stylebox_override("normal", UIKit.stylebox(UIKit.PANEL_HI, 14, 2, UIKit.ACCENT))
-		_world_tabs.add_child(b)
-		if first_focus == null and unlocked:
-			first_focus = b
+		_world_tabs.add_item(label if unlocked else "🔒 " + Loc.t(String(w.get("name_key", ""))))
+		_world_tabs.set_item_disabled(i, not unlocked)
+		if not unlocked:
+			_world_tabs.get_popup().set_item_tooltip(i, Loc.t("adventure.requires", {"n": w.get("required_trophies", 0)}))
+	_world_tabs.selected = _world_index
+	first_focus = _world_tabs
 
 
 func _build_stages() -> void:
@@ -127,26 +123,36 @@ func _stage_row(world: Dictionary, stage: Dictionary, index: int, rec: Dictionar
 	var m := Registry.minigame(String(stage.get("game", "")))
 	var boss := bool(stage.get("boss", false))
 	var card := UIKit.panel(UIKit.PANEL_HI if boss else UIKit.PANEL, 14)
-	var h := UIKit.hbox(16)
-	card.add_child(h)
+	var content := UIKit.vbox(10)
+	card.add_child(content)
+	var h := UIKit.hbox(12)
+	content.add_child(h)
 
 	var glyph := UIKit.label("👑" if boss else (m.icon_glyph if m != null else "◆"), UIKit.SIZE_HEADING, UIKit.ACCENT, true)
-	glyph.custom_minimum_size = Vector2(60, 0)
+	glyph.custom_minimum_size = Vector2(48, 0)
 	h.add_child(glyph)
 
 	var info := UIKit.vbox(2)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name := Loc.t(String(stage["name_key"])) if stage.has("name_key") else (m.display_name() if m != null else "?")
-	info.add_child(UIKit.label("%d. %s" % [index + 1, name], UIKit.SIZE_BODY, UIKit.text_color(), true))
+	var caption := UIKit.label("%d. %s" % [index + 1, name], UIKit.SIZE_BODY, UIKit.text_color(), true)
+	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.add_child(caption)
 	var arena := Registry.arena(String(stage.get("arena", "")))
-	info.add_child(UIKit.label("%s · %s" % [
+	var details := UIKit.label("%s · %s" % [
 		arena.display_name() if arena != null else "",
 		Loc.t(PlayerConfig.DIFFICULTY_KEYS[clampi(int(stage.get("difficulty", 1)), 0, 3)]),
-	], UIKit.SIZE_TINY, UIKit.dim_color()))
+	], UIKit.SIZE_TINY, UIKit.dim_color())
+	details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.add_child(details)
 	h.add_child(info)
 
 	var stars := int(rec.get("stars", 0))
-	h.add_child(UIKit.label("★".repeat(stars) + "☆".repeat(3 - stars), UIKit.SIZE_BODY, UIKit.ACCENT))
+	var actions := UIKit.hbox(12)
+	content.add_child(actions)
+	var rating := UIKit.label("★".repeat(stars) + "☆".repeat(3 - stars), UIKit.SIZE_BODY, UIKit.ACCENT)
+	rating.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(rating)
 
 	var play := UIKit.button(Loc.t("adventure.play") if enterable else Loc.t("common.locked"), UIKit.SIZE_SMALL)
 	play.custom_minimum_size = Vector2(160, 0)
@@ -155,7 +161,7 @@ func _stage_row(world: Dictionary, stage: Dictionary, index: int, rec: Dictionar
 		play.pressed.connect(func(): _enter(world, stage))
 		if first_focus == null:
 			first_focus = play
-	h.add_child(play)
+	actions.add_child(play)
 	return card
 
 

@@ -15,8 +15,10 @@ func setup(a: Dictionary) -> void:
 
 func build() -> void:
 	title(Loc.t("app.title"), false)
-	header.add_child(_currency_strip())
-	body.add_child(UIKit.centered(Loc.t("party.tagline"), UIKit.SIZE_BODY, UIKit.ACCENT_2))
+	add_header_detail(_currency_strip())
+	var tagline := UIKit.centered(Loc.t("party.tagline"), UIKit.SIZE_BODY, UIKit.ACCENT_2)
+	tagline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(tagline)
 	if SaveSystem.is_read_only(SaveSystem.PROFILE) or SaveSystem.is_read_only(SaveSystem.SETTINGS):
 		var notice := UIKit.label(Loc.t("save.newer_version"), UIKit.SIZE_BODY, UIKit.DANGER)
 		notice.name = "SaveCompatibilityNotice"
@@ -30,7 +32,7 @@ func build() -> void:
 	var modes := UIKit.vbox(10)
 	modes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var side := UIKit.vbox(14)
-	side.custom_minimum_size = Vector2(520, 0)
+	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	columns.add_child(modes)
 	columns.add_child(side)
@@ -123,7 +125,9 @@ func _profile_card() -> Control:
 	var card := UIKit.panel(UIKit.PANEL, 20)
 	var v := UIKit.vbox(10)
 	card.add_child(v)
-	v.add_child(UIKit.label(Loc.t("profile.title"), UIKit.SIZE_HEADING, UIKit.text_color(), true))
+	var caption := UIKit.label(Loc.t("profile.title"), UIKit.SIZE_HEADING, UIKit.text_color(), true)
+	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(caption)
 	var completion := Progression.completion_percent()
 	v.add_child(Widgets.progress_row(Loc.t("adventure.completion"), "%.0f%%" % completion, completion / 100.0, UIKit.ACCENT))
 	v.add_child(Widgets.progress_row(
@@ -156,10 +160,12 @@ func _next_up_card() -> Control:
 	if target.is_empty():
 		v.add_child(UIKit.label(Loc.t("achievement.adventure_done.name"), UIKit.SIZE_SMALL, UIKit.OK))
 	else:
-		v.add_child(UIKit.label("%s — %s" % [
+		var caption := UIKit.label("%s — %s" % [
 			Loc.t(String(target["world_name"])),
 			String(target["stage_name"]),
-		], UIKit.SIZE_SMALL, UIKit.dim_color()))
+		], UIKit.SIZE_SMALL, UIKit.dim_color())
+		caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(caption)
 		var go := UIKit.button(Loc.t("adventure.play"), UIKit.SIZE_SMALL)
 		go.pressed.connect(func(): SceneRouter.go_to("adventure"))
 		v.add_child(go)
