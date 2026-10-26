@@ -17,6 +17,17 @@ authorization still requires an acceptance test on a signed device.
 
 Use Node 24 or newer. `npm ci`, `npm test`, `npm start`.
 
+## Online multiplayer
+
+`MULTIPLAYER_ENABLED=true` enables the existing protocol-v1 WebSocket rooms at
+`wss://kras-pass-production.up.railway.app/multiplayer`. Browser origins remain
+denied unless explicitly listed in `MULTIPLAYER_ORIGINS`; native clients omit
+Origin. The project setting `kras/online/endpoint` supplies the production URL
+for subsequent client builds; `KRAS_MULTIPLAYER_URL` can override it for tests.
+Previously installed builds with no configured endpoint need a new app build.
+An enabled health flag alone does not establish a playable match: verify room
+creation, joining, loading, input relay, reconnect, results and room cleanup.
+
 ## Flow
 
 1. POST `/auth/apple/challenge` returns a nonce and challenge ID (five minutes).

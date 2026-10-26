@@ -18,6 +18,10 @@ boot_splash/show_image=false
 
 general/text_to_speech=true
 
+[kras]
+
+online/endpoint="wss://kras-pass-production.up.railway.app/multiplayer"
+
 [autoload]
 
 
