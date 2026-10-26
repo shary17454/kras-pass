@@ -41,7 +41,7 @@ func build() -> void:
 				PartyPlaylist.remove(_plan["name"])
 				SceneRouter.go_to("playlist_builder", {}, false, 0))
 			dialog.popup_centered())
-		header.add_child(remove)
+		add_header_detail(remove)
 	_name = LineEdit.new()
 	UIKit.fit_input_font(_name, _plan["name"])
 	_name.max_length = 32

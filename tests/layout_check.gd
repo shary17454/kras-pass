@@ -63,9 +63,16 @@ func _ready() -> void:
 				var label := "%s/%s/%dx%d" % [locale, screen_id, resolution.x, resolution.y]
 				var errors_before := Log.error_count()
 				var failures_before := _failures.size()
+				var began := Time.get_ticks_usec()
 				var opened := await SceneRouter.go_to(screen_id, {}, false, 0.0)
+				var open_ms := float(Time.get_ticks_usec() - began) / 1000.0
+				var last_frame := Time.get_ticks_usec()
+				var max_frame_ms := 0.0
 				for i in SETTLE_FRAMES:
 					await get_tree().process_frame
+					var now := Time.get_ticks_usec()
+					max_frame_ms = maxf(max_frame_ms, float(now - last_frame) / 1000.0)
+					last_frame = now
 				if not opened or SceneRouter.current_node == null or SceneRouter.current_id != screen_id:
 					_failures.append(label + " never opened")
 					continue
@@ -87,6 +94,7 @@ func _ready() -> void:
 					_failures.append(label + " logged a runtime error")
 				_shots.append({"screen": screen_id, "locale": locale,
 					"resolution": [resolution.x, resolution.y], "image": file,
+					"open_ms": open_ms, "max_settle_frame_ms": max_frame_ms,
 					"nonblank_colors": colors.size(), "passed": _failures.size() == failures_before})
 	if Log.error_count() != initial_errors:
 		_failures.append("runtime errors occurred during layout QA")
@@ -142,7 +150,7 @@ func _scan(node: Node, label: String) -> void:
 		# Zero-sized spacers and hidden branches draw nothing, so they cannot
 		# be the reason a player sees an empty screen.
 		if c.is_visible_in_tree() and r.size.x > 1.0 and r.size.y > 1.0:
-			if r.position.x >= view.end.x or r.end.x <= view.position.x:
+			if r.position.x < view.position.x - 1.0 or r.end.x > view.end.x + 1.0:
 				_failures.append("%s :: %s [%s] at %s" % [label, c.name, c.get_class(), str(r)])
 	for child in node.get_children():
 		_scan(child, label)

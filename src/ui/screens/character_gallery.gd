@@ -5,7 +5,9 @@ extends Screen
 
 func build() -> void:
 	title(Loc.t("menu.characters"))
-	body.add_child(UIKit.label(Loc.t("char.select.hint"), UIKit.SIZE_SMALL, UIKit.dim_color()))
+	var hint := UIKit.label(Loc.t("char.select.hint"), UIKit.SIZE_SMALL, UIKit.dim_color())
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(hint)
 	var scroll_and_grid := Widgets.scroll_grid(4)
 	body.add_child(scroll_and_grid[0])
 	var grid: GridContainer = scroll_and_grid[1]

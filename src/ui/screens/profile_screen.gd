@@ -35,7 +35,7 @@ func build() -> void:
 	if AppleAccount.available():
 		var account_button := UIKit.button(Loc.t("account.title"), UIKit.SIZE_SMALL)
 		account_button.pressed.connect(func(): SceneRouter.go_to("account"))
-		header.add_child(account_button)
+		add_header_detail(account_button)
 	body.add_child(UIKit.label(Loc.t("title.%s.name" % Progression.selected_title()), UIKit.SIZE_BODY, UIKit.ACCENT_2, true))
 	var completion := Progression.completion_percent()
 	body.add_child(Widgets.progress_row(Loc.t("profile.completion"), "%.1f%%" % completion, completion / 100.0, UIKit.ACCENT))

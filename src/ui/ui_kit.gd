@@ -285,6 +285,12 @@ static func button(text: String, size: int = SIZE_BODY) -> Button:
 	b.add_theme_font_override("font", font_for_text(text, true))
 	b.add_theme_font_size_override("font_size", int(size * scale()))
 	b.text = text
+	# Flow toolbars need intrinsic button widths; vertical menus can wrap.
+	if text.length() > 1:
+		b.tree_entered.connect(func():
+			var parent := b.get_parent()
+			var wrap: bool = parent is GridContainer or parent is BoxContainer and parent.vertical
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF)
 	b.add_theme_color_override("font_color", text_color())
 	b.add_theme_color_override("font_hover_color", text_color())
 	b.add_theme_color_override("font_focus_color", text_color())
@@ -448,7 +454,9 @@ static func adaptive_columns(separation: int = 24) -> BoxContainer:
 	box.add_theme_constant_override("separation", separation)
 	var fit := func():
 		var view := box.get_viewport_rect().size
-		box.vertical = view.x < view.y
+		var portrait := view.x < view.y
+		if box.vertical != portrait:
+			box.vertical = portrait
 	box.resized.connect(fit)
 	box.tree_entered.connect(func(): box.get_viewport().size_changed.connect(fit))
 	box.tree_exiting.connect(func(): box.get_viewport().size_changed.disconnect(fit))

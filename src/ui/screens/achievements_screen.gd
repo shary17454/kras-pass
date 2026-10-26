@@ -7,7 +7,7 @@ extends Screen
 
 func build() -> void:
 	title(Loc.t("menu.achievements"))
-	header.add_child(UIKit.label(
+	add_header_detail(UIKit.label(
 		Loc.t("achievements.progress", {"n": Achievements.earned_count(), "total": Achievements.total_count()}),
 		UIKit.SIZE_BODY, UIKit.ACCENT, true))
 
@@ -28,7 +28,7 @@ func _row(r: Dictionary) -> Control:
 	var unlocked: bool = bool(r["unlocked"])
 	var secret: bool = bool(r["secret"]) and not unlocked
 	var card := UIKit.panel(UIKit.PANEL_HI if unlocked else UIKit.PANEL, 14)
-	card.custom_minimum_size = Vector2(600, 96)
+	card.custom_minimum_size = Vector2(0, 96)
 	var h := UIKit.hbox(16)
 	card.add_child(h)
 	var icon := UIKit.label(String(r["icon"]) if not secret else "❔", UIKit.SIZE_HEADING, UIKit.ACCENT if unlocked else UIKit.dim_color(), true)
@@ -37,14 +37,16 @@ func _row(r: Dictionary) -> Control:
 	var v := UIKit.vbox(4)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(v)
-	v.add_child(UIKit.label(
+	var caption := UIKit.label(
 		String(r["name"]) if not secret else Loc.t("achievements.secret"),
-		UIKit.SIZE_BODY, UIKit.text_color() if unlocked else UIKit.dim_color(), true))
+		UIKit.SIZE_BODY, UIKit.text_color() if unlocked else UIKit.dim_color(), true)
+	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(caption)
 	var desc := UIKit.label(String(r["desc"]) if not secret else "", UIKit.SIZE_TINY, UIKit.dim_color())
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)
 	if not unlocked and not secret:
-		v.add_child(UIKit.stat_bar(float(r["progress"]), UIKit.ACCENT_2, 420.0))
+		v.add_child(UIKit.stat_bar(float(r["progress"]), UIKit.ACCENT_2, 520.0))
 	elif unlocked:
 		v.add_child(UIKit.label(Loc.t("common.unlocked"), UIKit.SIZE_TINY, UIKit.OK))
 	return card

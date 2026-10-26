@@ -23,11 +23,15 @@ func build() -> void:
 	body.add_child(centre)
 	var v := UIKit.vbox(10)
 	centre.add_child(v)
-	v.add_child(UIKit.centered(Loc.t("app.title"), 128, UIKit.ACCENT, true))
-	v.add_child(UIKit.centered(Loc.t("app.subtitle"), UIKit.SIZE_HEADING, UIKit.TEXT))
-	v.add_child(UIKit.centered(Loc.t("app.tagline"), UIKit.SIZE_SMALL, UIKit.dim_color()))
+	centre.resized.connect(func(): v.custom_minimum_size.x = minf(640.0, centre.size.x))
+	for entry in [["app.title", 96, UIKit.ACCENT], ["app.subtitle", UIKit.SIZE_HEADING, UIKit.TEXT],
+		["app.tagline", UIKit.SIZE_SMALL, UIKit.dim_color()]]:
+		var caption := UIKit.centered(Loc.t(entry[0]), entry[1], entry[2], entry[0] == "app.title")
+		caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(caption)
 	v.add_child(UIKit.spacer(48))
 	var prompt := UIKit.centered(Loc.t("common.press_start"), UIKit.SIZE_BODY, UIKit.ACCENT_2)
+	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(prompt)
 	if DisplayServer.get_name() != "headless":
 		var tw := create_tween().set_loops()
