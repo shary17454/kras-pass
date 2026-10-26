@@ -161,6 +161,14 @@ func _process(_delta: float) -> void:
 			"seed": game.config.seed if is_instance_valid(game) else 0,
 			"phase": game.phase if is_instance_valid(game) else -1, "running": Net.match_running,
 			"max_frame_gap_ms": _max_frame_gap_ms, "snapshots": snapshots}))
+		if game_id == "zone_hold" and is_instance_valid(game) and game.ctx != null:
+			var fighters: Array = []
+			for fighter in game.ctx.fighters:
+				fighters.append({"slot": fighter.slot, "position": str(fighter.global_position),
+					"facing": str(fighter.facing), "alive": fighter.alive, "attack": fighter.is_attacking()})
+			print("NETWORK_ZONE=" + JSON.stringify({"round": game._round_index,
+				"time_left": game.ctx.time_left, "zone": str(game.controller.zone_position),
+				"radius": game.controller.zone_radius, "scores": game.ctx.scores, "fighters": fighters}))
 		if game_id == "boss_colossus" and is_instance_valid(game):
 			var world := _colossus_world()
 			var fighters: Array = []
