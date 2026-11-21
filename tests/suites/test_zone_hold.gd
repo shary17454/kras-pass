@@ -164,6 +164,75 @@ func run(t: TestHarness, host: Node) -> void:
 			t.equal(driver.capture_owner(turn * 6000 + 5999, count), turn % count, "capture turn stays stable until its boundary")
 	t.equal(driver.capture_owner(0, 0), -1, "empty roster cannot have a capture owner")
 	t.equal(driver.capture_owner(-1, 4), 0, "pre-start time cannot select a negative slot")
+	for elapsed in [0, 5999, 6000, 12000, 18000, 24000, 29999]:
+		t.equal(driver.capture_owner(elapsed, 4, [0, 0, 1, 1], [0, 1]), 0,
+			"unscored network participant keeps capture input across bot turns")
+		t.equal(driver.capture_owner(elapsed, 4, [3, 0, 4, 1], [0, 1]), 1,
+			"recorded CI score keeps unscored guest capturing regardless of timer")
+		t.equal(driver.capture_owner(elapsed, 4, [3, 1, 4, 1], [0, 1]),
+			driver.capture_owner(elapsed, 4), "normal rotation resumes only after every participant scores")
+	t.equal(driver.capture_owner(18000, 4, [0, 0, 0, 0], [1, 3]), 1,
+		"capture coverage uses actual participant slots rather than bot slots")
+	t.equal(driver.capture_owner(18000, 4, [0, 1, 0, 0], [1, 3]), 3,
+		"scoring hands coverage to the next unscored participant")
+	var online_cfg := MatchConfig.build("zone_hold", ["fanoos", "nabta", "ramla", "sakhra"], 2, 1, 86)
+	online_cfg.context = MatchConfig.Context.ONLINE
+	online_cfg.players[0].peer_id = 1
+	online_cfg.players[1].peer_id = 2
+	for local_slot in 2:
+		for player in online_cfg.players:
+			player.is_human = player.slot == local_slot
+		t.equal(online_cfg.human_competitor_slots(), [0, 1],
+			"host and guest share participant coverage despite different local devices")
+		t.equal(driver.capture_owner(20500, 4, [3, 0, 4, 1], online_cfg.human_competitor_slots()), 1,
+			"host and guest select the same unscored network participant")
+	t.equal(driver.active_participant_slots(online_cfg), [0, 1], "ordinary matches require every network human")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [3, 0, 4, 1], false, true),
+		"recorded unscored active guest still fails capture evidence")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [3, 0, 4, 1], false, false),
+		"temporary death cannot excuse an eligible unscored guest")
+	t.ok(driver.capture_evidence(online_cfg, 1, [3, 1, 4, 1], true, false),
+		"eligible human retains actual capture evidence across a later fall")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [3, 1, 4, 1], false, true),
+		"positive final points cannot replace observed capture")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [3, 0, 4, 1], true, true),
+		"stale observation cannot replace positive final points")
+	online_cfg.rules["online_contenders"] = [2, 3]
+	t.equal(driver.active_participant_slots(online_cfg), [], "bot-only final has no eligible human pilots")
+	for local_slot in 2:
+		t.ok(driver.capture_evidence(online_cfg, local_slot, [0, 0, 3, 7], false, false),
+			"configured bot-only final proves excluded human stayed inactive and unscored")
+		t.ok(not driver.capture_evidence(online_cfg, local_slot, [0, 0, 3, 7], false, true),
+			"configured spectator remaining alive fails the final contract")
+		t.ok(not driver.capture_evidence(online_cfg, local_slot, [0, 0, 3, 7], true, false),
+			"configured spectator with observed capture fails the final contract")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [0, 1, 3, 7], false, false),
+		"configured spectator with unexpected points fails the final contract")
+	online_cfg.rules["online_contenders"] = [0, 2]
+	t.equal(driver.active_participant_slots(online_cfg), [0], "mixed final only pilots the eligible human")
+	t.ok(driver.capture_evidence(online_cfg, 0, [1, 0, 16, 0], true, true),
+		"mixed final preserves capture obligation for its active human")
+	t.ok(not driver.capture_evidence(online_cfg, 0, [0, 0, 16, 0], false, false),
+		"dead eligible final human cannot be treated as a spectator")
+	t.ok(driver.capture_evidence(online_cfg, 1, [1, 0, 16, 0], false, false),
+		"recorded mixed-final guest is excluded by config rather than death alone")
+	online_cfg.rules["online_contenders"] = [1, 3]
+	t.equal(driver.capture_owner(18000, 4, [0, 0, 0, 0], driver.active_participant_slots(online_cfg)), 1,
+		"unscored excluded host cannot monopolize an eligible guest's capture turn")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [0, 0, 3, 0], false, true),
+		"eligible final guest still must capture")
+	for invalid in [[-1, 3], [2, 4], [2, 2], ["2", 3], [true, 3]]:
+		online_cfg.rules["online_contenders"] = invalid
+		t.ok(not driver.capture_evidence(online_cfg, 1, [0, 0, 3, 7], false, false),
+			"malformed contenders cannot authorize a spectator bypass")
+	online_cfg.rules["online_contenders"] = [2, 3]
+	t.ok(not driver.capture_evidence(online_cfg, 2, [0, 0, 3, 7], true, true),
+		"human evidence helper cannot misclassify an autonomous bot")
+	t.ok(not driver.capture_evidence(online_cfg, 1, [], false, false), "missing scores cannot prove spectator state")
+	t.ok(not driver.capture_evidence(online_cfg, -1, [0, 0, 3, 7], false, false), "invalid local slot fails evidence")
+	online_cfg.context = MatchConfig.Context.QUICK
+	t.ok(not driver.capture_evidence(online_cfg, 0, [0, 0, 3, 7], false, false),
+		"offline config cannot authorize an online spectator exception")
 	for zone_angle in [0.0, TAU / 3.0, PI]:
 		var zone := arena.global_position + Vector3(cos(zone_angle), 0, sin(zone_angle)) * arena.def.radius * 0.72
 		var waiting: Array[Vector3] = []
@@ -220,6 +289,22 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(body.global_position, before, "coverage driver does not teleport a player")
 		t.equal(scene.ctx.scores, scores, "coverage driver does not award points")
 		body.hide()
+	var unscored: Fighter = scene.ctx.fighter(1)
+	unscored.show()
+	unscored.global_position = capture_position + (capture_position - arena.global_position).normalized()
+	var before_capture: Vector3 = unscored.global_position
+	var scores_before_capture: Array = scene.ctx.scores.duplicate()
+	var recorded_scores := [3, 0, 4, 1]
+	var recorded_before := recorded_scores.duplicate()
+	var required_direction := Vector2(capture_position.x - before_capture.x,
+		capture_position.z - before_capture.z).normalized()
+	var coverage_frame: InputFrame = driver.input(arena, scene.ctx.fighters, 1,
+		capture_position, 3.4, 20500, recorded_scores, [0, 1])
+	t.ok(coverage_frame.move.dot(required_direction) > 0.99,
+		"unscored guest does not retreat to standby during an autonomous bot turn")
+	t.equal(unscored.global_position, before_capture, "score-aware pilot never moves a body directly")
+	t.equal(scene.ctx.scores, scores_before_capture, "score-aware pilot never changes authoritative scores")
+	t.equal(recorded_scores, recorded_before, "score-aware pilot treats replicated scores as read-only")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

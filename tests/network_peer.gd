@@ -79,6 +79,7 @@ var observed_bumper_respawn := false
 var bumper_waiting := {}
 var observed_collection_score := false
 var observed_zone_score := false
+var _zone_trace_key := ""
 var observed_relic_holder := false
 var observed_relic_score := false
 var observed_tag_change := false
@@ -1041,11 +1042,15 @@ func _physics_process(_delta: float) -> void:
 				round_seconds = game.config.definition().duration
 			var capture_elapsed := float(game._round_index) * round_seconds \
 				+ clampf(round_seconds - game.ctx.time_left, 0.0, round_seconds)
-			var frame: InputFrame = load("res://tests/zone_peer_driver.gd").input(game.arena,
+			var zone_driver = load("res://tests/zone_peer_driver.gd")
+			var frame: InputFrame = zone_driver.input(game.arena,
 				game.ctx.fighters, slot, game.controller.zone_position, game.controller.zone_radius,
-				int(capture_elapsed * 1000.0))
+				int(capture_elapsed * 1000.0), game.ctx.scores,
+				zone_driver.active_participant_slots(game.config))
 			movement = frame.move
 			buttons = frame.bits
+			if OS.get_environment("KRAS_ZONE_TRACE") == "1":
+				_trace_zone_input(frame, int(capture_elapsed * 1000.0))
 		if game_id in ["gem_grab", "star_rush", "crate_relay"]:
 			movement = _collection_movement(slot)
 			if game_id == "gem_grab" and (Time.get_ticks_msec() / 500) % 2 == 0:
@@ -1224,6 +1229,44 @@ func _colossus_movement(from: Vector3, target: Vector3) -> Vector2:
 	var local_from: Vector3 = from - game.arena.global_position
 	var best: Vector3 = floor.steering_direction(local_from, target - game.arena.global_position)
 	return Vector2(best.x, best.z) * minf(1.0, direction.length())
+
+
+func _trace_zone_input(frame: InputFrame, elapsed_ms: int) -> void:
+	if game.phase not in [MatchPhase.P.PLAYING, MatchPhase.P.SUDDEN_DEATH]:
+		return
+	var key := "%d:%d:%d" % [Net.epoch, game._round_index, elapsed_ms / 250]
+	if key == _zone_trace_key:
+		return
+	_zone_trace_key = key
+	var fighters: Array = []
+	var inside: Array = []
+	for body: Fighter in game.ctx.fighters:
+		var position := body.global_position
+		var offset: Vector3 = position - game.controller.zone_position
+		offset.y = 0.0
+		if game.ctx.is_alive(body.slot) and offset.length() <= game.controller.zone_radius:
+			inside.append(body.slot)
+		var applied: InputFrame = InputRouter.frame(body.slot)
+		var packet: Dictionary = Net._inputs.get(body.slot, {}) if host else {}
+		fighters.append({"slot": body.slot, "position": [position.x, position.y, position.z],
+			"velocity": [body.velocity.x, body.velocity.y, body.velocity.z],
+			"facing": [body.facing.x, body.facing.z], "alive": body.alive,
+			"eligible": game.ctx.is_alive(body.slot), "visible": body.visible,
+			"router_move_before_match": [applied.move.x, applied.move.y],
+			"router_bits_before_match": applied.bits,
+			"received_axes": packet.get("axes", []), "received_bits": packet.get("bits", 0),
+			"received_age_ms": Time.get_ticks_msec() - int(packet.time) if packet.has("time") else -1,
+			"stun": body._stun, "hitstop": body._hitstop, "attack_cd": body._attack_cd})
+	var participants: Array = load("res://tests/zone_peer_driver.gd").active_participant_slots(game.config)
+	var zone: Vector3 = game.controller.zone_position
+	print("NETWORK_ZONE_TRACE=" + JSON.stringify({"epoch": Net.epoch, "host": host,
+		"tick": game._network_tick, "elapsed_ms": elapsed_ms, "slot": Net.local_slot(),
+		"zone": [zone.x, zone.y, zone.z], "radius": game.controller.zone_radius,
+		"scores": game.ctx.scores, "inside": inside, "fighters": fighters,
+		"accum": game.controller._accum if host else [],
+		"owner": load("res://tests/zone_peer_driver.gd").capture_owner(elapsed_ms,
+			game.ctx.player_count(), game.ctx.scores, participants),
+		"pilot_move": [frame.move.x, frame.move.y], "pilot_bits": frame.bits}))
 
 
 func _finished(result: MatchResult) -> void:
@@ -1773,9 +1816,18 @@ func _finished(result: MatchResult) -> void:
 	if game_id == "tank_arena" and (not observed_turret_shot or not observed_tank_armor or not observed_tank_inventory):
 		_fail("ATV shot/armor/inventory evidence missing: %s %s %s" % [observed_turret_shot, observed_tank_armor, observed_tank_inventory])
 		return
-	if game_id == "zone_hold" and not observed_zone_score:
-		_fail("local zone participant never captured: slot=%d scores=%s" % [Net.local_slot(), result.scores])
-		return
+	if game_id == "zone_hold":
+		var zone_driver = load("res://tests/zone_peer_driver.gd")
+		var zone_slot := Net.local_slot()
+		var zone_alive: bool = game.ctx.is_alive(zone_slot)
+		print("NETWORK_ZONE_COVERAGE=" + JSON.stringify({"epoch": Net.epoch, "slot": zone_slot,
+			"contenders": contenders, "participants": game.config.human_competitor_slots(),
+			"active_participants": zone_driver.active_participant_slots(game.config),
+			"observed_score": observed_zone_score, "alive": zone_alive, "scores": result.scores}))
+		if not zone_driver.capture_evidence(game.config, zone_slot, result.scores, observed_zone_score, zone_alive):
+			_fail("zone capture eligibility/evidence mismatch: slot=%d contenders=%s scores=%s alive=%s observed=%s" % [
+				zone_slot, contenders, result.scores, zone_alive, observed_zone_score])
+			return
 	finished_matches += 1
 	if tournament_mode and not bool(Net.tournament.get("complete", false)):
 		call_deferred("_continue_tournament")
