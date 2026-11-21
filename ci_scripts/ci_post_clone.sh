@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 
-ROOT="${CI_PRIMARY_REPOSITORY_PATH:-$(pwd)}"
-bash "$ROOT/ci_scripts/export_current_ios.sh"
+printf '%s\n' 'Xcode Cloud builds are disabled. Use tools/export_ios.sh and tools/archive_ios_local.sh with local Xcode 27 or newer.' >&2
+exit 1

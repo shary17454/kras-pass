@@ -13,3 +13,4 @@ func run(t: TestHarness) -> void:
 	t.ok(build.is_valid_int() and build.to_int() > 0, "iOS build is a positive integer")
 	t.equal(config.get_value(options, "application/bundle_identifier"), "com.shary.kraspass", "approved iOS bundle identity remains unchanged")
 	t.equal(config.get_value(options, "application/app_store_team_id"), "4HM66AD594", "approved Apple team remains unchanged")
+	t.equal(config.get_value(options, "application/min_ios_version"), "18.0", "minimum iOS version remains 18.0")

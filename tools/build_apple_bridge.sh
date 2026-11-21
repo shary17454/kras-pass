@@ -22,7 +22,7 @@ for variant in device simulator; do
     LIB="libgodot-cpp.ios.template_release.universal.simulator.a"
   fi
   GODOT_CPP_PATH="$CPP" "$SCONS" platform=ios target=template_release arch="$ARCH" \
-    ios_simulator="$SIM" ios_min_version=15.0 build_profile=build_profile.json \
+    ios_simulator="$SIM" ios_min_version=18.0 build_profile=build_profile.json \
     IOS_TOOLCHAIN_PATH="$DEVELOPER/Toolchains/XcodeDefault.xctoolchain" -j6
   mkdir -p "bin/$variant"
   xcrun libtool -static -o "bin/$variant/libKrasApple.a" "bin/libKrasApple.$variant" "$CPP/bin/$LIB"

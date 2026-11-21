@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-"$SCRIPT_DIR/ci_post_clone.sh"
+printf '%s\n' 'Xcode Cloud builds are disabled. Archive locally with Xcode 27 or newer.' >&2
+exit 1
