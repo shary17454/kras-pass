@@ -23,6 +23,7 @@ func _endpoint_policy(t: TestHarness) -> void:
 	t.suite("Network endpoint policy")
 	var transport = load("res://src/net/room_client.gd").new()
 	for url in ["wss://kras-pass-production.up.railway.app/multiplayer",
+			"wss://kras-pass-production.up.railway.app/multiplayer/v2",
 			"ws://127.0.0.1:8080/multiplayer", "ws://localhost:1/multiplayer",
 			"ws://localhost:65535/multiplayer", "ws://127.0.0.1:08080/multiplayer?test=1"]:
 		t.ok(transport.allowed_endpoint(url), "allow encrypted or canonical loopback endpoint")

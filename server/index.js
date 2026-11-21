@@ -94,6 +94,7 @@ const server = createServer(async (req, res) => {
   }
 });
 const multiplayer = attachMultiplayer(server, {
+  legacyEnabled: true,
   enabled: process.env.MULTIPLAYER_ENABLED === 'true',
   origins: (process.env.MULTIPLAYER_ORIGINS || '').split(',').filter(Boolean),
 });

@@ -89,7 +89,9 @@ function validSnapshot(data, count, game, arena, raceLaps = 3) {
 // No Apple identity, email or long-lived credential is needed for guest play.
 export class Rooms {
   constructor({now = () => performance.now(), grace = 30000, maxRooms = 200,
-    seed = () => randomInt(1, 2147483647)} = {}) {
+    seed = () => randomInt(1, 2147483647), protocol = PROTOCOL} = {}) {
+    if (protocol !== 1 && protocol !== 2) fail('invalid_protocol');
+    Object.defineProperty(this, 'protocol', {value: protocol, enumerable: true});
     this.now = now; this.grace = grace; this.maxRooms = maxRooms;
     this.seed = seed;
     this.rooms = new Map(); this.sessions = new Map();
@@ -106,7 +108,7 @@ export class Rooms {
   handle(connection, message) {
     if (!message || typeof message !== 'object' || Array.isArray(message)) fail('invalid_request');
     const c = connection, m = message;
-    if (m.v !== PROTOCOL) fail('version_mismatch');
+    if (m.v !== this.protocol) fail('version_mismatch');
     if (m.op === 'list') {
       c.send({op: 'rooms', rooms: [...this.rooms.values()]
         .filter(r => r.public && r.state === 'lobby' && r.players.size < r.capacity && r.players.get(r.host)?.connection)

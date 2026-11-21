@@ -20,7 +20,7 @@ general/text_to_speech=true
 
 [kras]
 
-online/endpoint="wss://kras-pass-production.up.railway.app/multiplayer"
+online/endpoint="wss://kras-pass-production.up.railway.app/multiplayer/v2"
 
 [autoload]
 
