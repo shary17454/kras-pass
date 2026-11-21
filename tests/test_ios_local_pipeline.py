@@ -69,6 +69,10 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(colors[0].attrib, {'key': 'backgroundColor',
                                           'systemColor': 'systemBackgroundColor'})
         self.assertIsNotNone(document.find("./resources/systemColor[@name='systemBackgroundColor']"))
+        fallback = document.find("./resources/systemColor[@name='systemBackgroundColor']/color")
+        self.assertEqual(fallback.attrib, {'red': '1', 'green': '1', 'blue': '1',
+                                          'alpha': '1', 'colorSpace': 'custom',
+                                          'customColorSpace': 'sRGB'})
         self.assertIsNotNone(document.find("./dependencies/capability[@name='System colors in document resources']"))
         for element in document.iter():
             for key in ('appearance', 'userInterfaceStyle', 'overrideUserInterfaceStyle'):

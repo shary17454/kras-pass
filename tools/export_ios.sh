@@ -234,8 +234,10 @@ for path in matches:
     system = resources.find("systemColor[@name='systemBackgroundColor']")
     if system is None:
         system = ET.SubElement(resources, 'systemColor', name='systemBackgroundColor')
-        ET.SubElement(system, 'color', white='1', alpha='1', colorSpace='custom',
-                      customColorSpace='genericGamma22GrayColor')
+    for fallback in list(system):
+        system.remove(fallback)
+    ET.SubElement(system, 'color', red='1', green='1', blue='1', alpha='1',
+                  colorSpace='custom', customColorSpace='sRGB')
     # systemBackgroundColor is available before iOS 18; no newer UIKit API needed.
     if any(element.get(key) is not None for element in document.iter()
            for key in ('appearance', 'userInterfaceStyle', 'overrideUserInterfaceStyle')):
