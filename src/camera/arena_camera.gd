@@ -133,6 +133,8 @@ func _update_camera(delta: float) -> void:
 		return
 	if _intro_left > 0.0:
 		_tick_intro(delta)
+		if arena != null:
+			_fit_follow_pane(arena.global_position + Vector3.UP, view)
 		return
 	if shared_world:
 		_frame_shared_world(delta, view)
@@ -152,6 +154,7 @@ func _update_camera(delta: float) -> void:
 		global_position = candidate
 		focus = subject
 		look_at(subject + heading * follow_lookahead + Vector3.UP)
+		_fit_follow_pane(subject + Vector3.UP, view)
 		return
 	_update_focus_and_zoom(false)
 	_shake = maxf(0.0, _shake - _shake_decay * delta)
@@ -162,14 +165,15 @@ func _update_camera(delta: float) -> void:
 func _frame_court(view: Vector2) -> void:
 	projection = Camera3D.PROJECTION_ORTHOGONAL
 	var aspect := view.x / maxf(view.y, 1.0)
-	var top := 0.05
+	var pane := _safe_pane(view)
+	var top := pane.position.y + pane.size.y * 0.05
 	if shared_hud_bottom.is_valid():
-		top = clampf((float(shared_hud_bottom.call()) + 20.0) / view.y, 0.05, 0.70)
-	var bottom := 0.95
+		top = clampf(float(shared_hud_bottom.call()) + 20.0, top, pane.position.y + pane.size.y * 0.70)
+	var bottom := pane.position.y + pane.size.y * 0.95
 	if shared_touch_count > 1:
-		bottom = TouchSource.party_region(view, 0, shared_touch_count).position.y / view.y - 0.02
+		bottom = pane.position.y + TouchSource.party_region(pane.size, 0, shared_touch_count).position.y - pane.size.y * 0.02
 	elif shared_touch_count == 1:
-		bottom = 0.76 if view.x < view.y else 0.80
+		bottom = pane.position.y + pane.size.y * (0.76 if pane.size.x < pane.size.y else 0.80)
 	var centre := arena.global_position
 	global_position = centre + Vector3(0, 30, 17)
 	look_at(centre, Vector3.UP)
@@ -177,9 +181,10 @@ func _frame_court(view: Vector2) -> void:
 	# HUD/control safe area instead of centring it behind the portrait scoreboard.
 	var diameter := arena.def.radius * 2.0 + 2.8
 	var projected_height := diameter * absf(global_basis.y.z) + 4.0 * absf(global_basis.y.y)
-	var world_height := maxf(diameter / (aspect * 0.92), projected_height / maxf(0.10, bottom - top))
+	var world_height := maxf(diameter * view.y / (pane.size.x * 0.92), projected_height * view.y / maxf(pane.size.y * 0.10, bottom - top))
 	size = world_height * aspect if view.x < view.y else world_height
-	global_position += global_basis.y * (((top + bottom) * 0.5 - 0.5) * world_height)
+	global_position -= global_basis.x * ((pane.get_center().x / view.x - 0.5) * world_height * aspect)
+	global_position += global_basis.y * (((top + bottom) * 0.5 / view.y - 0.5) * world_height)
 	focus = centre
 
 
@@ -195,25 +200,30 @@ func _frame_shared_world(delta: float, view: Vector2) -> void:
 	var centre := (minimum + maximum) * 0.5
 	var portrait := view.x < view.y
 	var aspect := view.x / maxf(view.y, 1.0)
-	var top := 0.29 if portrait else 0.20
+	var pane := _safe_pane(view)
+	var top := 0.29 if pane.size.x < pane.size.y else 0.20
 	if shared_hud_bottom.is_valid():
-		top = maxf(0.12, (float(shared_hud_bottom.call()) + 30.0) / view.y)
+		top = maxf(0.12, (float(shared_hud_bottom.call()) + 30.0 - pane.position.y) / pane.size.y)
 	var bottom := 1.0
 	if shared_touch_count > 1:
-		bottom = TouchSource.party_region(view, 0, shared_touch_count).position.y / view.y
+		bottom = TouchSource.party_region(pane.size, 0, shared_touch_count).position.y / pane.size.y
 	var safe_height := maxf(0.1, bottom - top - 0.08)
+	var pane_aspect := pane.size.x / pane.size.y
 	var width := maxf((maximum.x - minimum.x + 10.0) / 0.90,
-		(maximum.z - minimum.z + 10.0) * aspect / safe_height)
+		(maximum.z - minimum.z + 10.0) * pane_aspect / safe_height)
 	# A fixed, north-up shared view avoids privileging one driver's heading.
 	# Bound the zoom to the authored world, never an unbounded falling target.
 	var limit := maxf(80.0, arena.current_radius * 5.0) if arena != null else 400.0
-	width = clampf(width, 24.0, limit)
+	# Preserve the authored span on both axes when a pane changes aspect ratio.
+	limit *= maxf(1.0, pane_aspect / aspect)
+	width = clampf(width, 24.0, limit) * view.x / pane.size.x
 	projection = Camera3D.PROJECTION_ORTHOGONAL
 	var target_size := width if portrait else width / aspect
 	var blend := 1.0 - exp(-5.0 * delta)
 	size = maxf(target_size, lerpf(size, target_size, blend))
 	var world_height := size / aspect if portrait else size
-	centre.z += (0.5 - (top + bottom) * 0.5) * world_height
+	centre.x -= (pane.get_center().x / view.x - 0.5) * world_height * aspect
+	centre.z += (0.5 - (pane.position.y + (top + bottom) * 0.5 * pane.size.y) / view.y) * world_height
 	focus = centre
 	global_position = centre + Vector3.UP * maxf(160.0, width)
 	look_at(centre, Vector3.FORWARD)
@@ -376,6 +386,8 @@ func _apply(weight: float, delta: float) -> void:
 	global_position = pos
 	look_at(look_focus, Vector3.UP)
 	rotation.x = clampf(rotation.x, deg_to_rad(-88.0), deg_to_rad(-8.0))
+	if mode in [Mode.WORLD, Mode.RACE, Mode.THIRD_PERSON]:
+		_fit_follow_pane(live_focus + Vector3.UP, get_viewport().get_visible_rect().size)
 	if mode in [Mode.ARENA, Mode.TOP_DOWN, Mode.ISOMETRIC] and arena != null:
 		_fit_arena_region()
 
@@ -393,18 +405,37 @@ func _world_obstruction(anchor: Vector3, candidate: Vector3, side: Vector3, excl
 	return {}
 
 
-func arena_safe_rect(view: Vector2) -> Rect2:
+func _fit_follow_pane(subject: Vector3, view: Vector2) -> void:
+	var pane := _safe_pane(view)
+	if pane.is_equal_approx(Rect2(Vector2.ZERO, view)) or is_position_behind(subject):
+		return
+	# Rotate the view, not the collision-tested camera origin. The subject keeps
+	# its relative screen position inside the clear pane without crossing walls.
+	var pixel := unproject_position(subject)
+	var relative := (pixel / view).clamp(Vector2(0.15, 0.15), Vector2(0.85, 0.85))
+	var wanted := pane.position + relative * pane.size
+	var ray := project_ray_normal(wanted).normalized()
+	var direction := (subject - global_position).normalized()
+	global_basis = Basis(Quaternion(ray, direction)) * global_basis
+
+
+func _safe_pane(view: Vector2) -> Rect2:
 	var inset := Platform.safe_insets()
-	var top := maxf(view.y * 0.06, inset.y)
+	return Rect2(Vector2(inset.x, inset.y), (view - Vector2(inset.x + inset.z, inset.y + inset.w)).max(Vector2.ONE))
+
+
+func arena_safe_rect(view: Vector2) -> Rect2:
+	var pane := _safe_pane(view)
+	var top := pane.position.y + pane.size.y * 0.06
 	if shared_hud_bottom.is_valid():
 		top = maxf(top, float(shared_hud_bottom.call()) + 24.0)
-	var bottom := view.y * 0.92 - inset.w
+	var bottom := pane.position.y + pane.size.y * 0.92
 	if shared_touch_count > 1:
-		bottom = TouchSource.party_region(view, 0, shared_touch_count).position.y - 20.0
+		bottom = pane.position.y + TouchSource.party_region(pane.size, 0, shared_touch_count).position.y - 20.0
 	elif shared_touch_count == 1:
-		bottom = view.y * (0.76 if view.x < view.y else 0.80) - inset.w
-	var left := view.x * 0.06 + inset.x
-	var right := view.x * 0.94 - inset.z
+		bottom = pane.position.y + pane.size.y * (0.76 if pane.size.x < pane.size.y else 0.80)
+	var left := pane.position.x + pane.size.x * 0.06
+	var right := pane.position.x + pane.size.x * 0.94
 	return Rect2(Vector2(left, top), Vector2(maxf(32.0, right - left), maxf(32.0, bottom - top)))
 
 
@@ -431,7 +462,10 @@ func _fit_arena_region() -> void:
 		points.append(target.global_position + Vector3.UP * 1.8)
 	# Correct projection, not the world focus: retain the current viewing angle
 	# while fitting the whole playable rim above the on-screen controls.
-	for iteration in 4:
+	# Moving a perspective frame into a remote pane changes corner depths too.
+	# Allow the projection correction to converge before displaying that frame.
+	var corrections := 4 if safe.has_point(view * 0.5) else 12
+	for iteration in corrections:
 		var inverse := get_camera_transform().affine_inverse()
 		var minimum_depth := INF
 		for point in points:

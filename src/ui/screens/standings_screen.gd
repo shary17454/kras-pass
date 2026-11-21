@@ -16,7 +16,7 @@ func setup(a: Dictionary) -> void:
 func build() -> void:
 	if session == null:
 		title(Loc.t("tournament.title"))
-		body.add_child(UIKit.centered(Loc.t("common.loading"), UIKit.SIZE_BODY, UIKit.dim_color()))
+		body.add_child(_wrapped_centered(Loc.t("common.loading"), UIKit.SIZE_BODY, UIKit.dim_color()))
 		var home := UIKit.button(Loc.t("results.quit"))
 		home.pressed.connect(func(): SceneRouter.go_to("main_menu", {}, false))
 		body.add_child(home)
@@ -53,9 +53,9 @@ func build() -> void:
 			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			summary.add_child(label)
 	elif not session.tiebreak_slots.is_empty():
-		body.add_child(UIKit.centered(Loc.t("party.tiebreak"), UIKit.SIZE_HEADING, UIKit.ACCENT))
+		body.add_child(_wrapped_centered(Loc.t("party.tiebreak"), UIKit.SIZE_HEADING, UIKit.ACCENT))
 	else:
-		body.add_child(UIKit.centered(
+		body.add_child(_wrapped_centered(
 			Loc.t("tournament.game_of", {"n": session.index + 1, "total": session.total_games()}),
 			UIKit.SIZE_HEADING, UIKit.dim_color()))
 
@@ -69,6 +69,7 @@ func build() -> void:
 			int(row["rank"]), String(row["name"]), row["color"],
 			"%d %s" % [int(row["points"]), Loc.t(session.score_label_key())],
 			bool(row["human"]))
+		_fit_standings_row(card)
 		grid.add_child(card)
 		UIKit.animate_in(card, 0.05 * int(row["rank"]))
 
@@ -78,24 +79,30 @@ func build() -> void:
 		for slot in awarded.size():
 			if awarded[slot] > 0:
 				line.append("%s +%d" % [session.players[slot].display_name(), awarded[slot]])
-		body.add_child(UIKit.centered("   ·   ".join(line), UIKit.SIZE_SMALL, UIKit.ACCENT_2))
+		body.add_child(_wrapped_centered("   ·   ".join(line), UIKit.SIZE_SMALL, UIKit.ACCENT_2))
 
 	if not session.is_complete():
 		body.add_child(_schedule_strip())
 	if not session.is_complete():
 		var next_game := session.current_game()
-		body.add_child(UIKit.centered(next_game.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT_2))
+		body.add_child(_wrapped_centered(next_game.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT_2))
 		if session.double_final and session.index == session.total_games() - 1:
-			body.add_child(UIKit.centered(Loc.t("party.double_final"), UIKit.SIZE_BODY, UIKit.ACCENT))
+			body.add_child(_wrapped_centered(Loc.t("party.double_final"), UIKit.SIZE_BODY, UIKit.ACCENT))
 	_add_actions()
+
+
+func _wrapped_centered(text: String, size: int, color: Color) -> Label:
+	var label := UIKit.centered(text, size, color)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return label
 
 
 func _schedule_strip() -> Control:
 	var h := GridContainer.new()
-	h.columns = 1 if get_viewport_rect().size.x < get_viewport_rect().size.y else 3
-	var fit := func(): h.columns = 1 if get_viewport_rect().size.x < get_viewport_rect().size.y else 3
-	get_viewport().size_changed.connect(fit)
-	h.tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit))
+	h.name = "StandingsSchedule"
+	var fit := func():
+		h.columns = clampi(int(h.size.x / (320.0 * UIKit.scale())), 1, 3)
+	h.resized.connect(fit)
 	for i in session.game_ids.size():
 		var m := Registry.minigame(session.game_ids[i])
 		var played := i < session.index
@@ -105,6 +112,22 @@ func _schedule_strip() -> Control:
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(l)
 	return h
+
+
+func _fit_standings_row(card: Control) -> void:
+	# Retain the shared row's styling and identity, but let the score move below
+	# the player on compact layouts instead of forcing the whole screen wider.
+	var player_line := card.get_child(0) as HBoxContainer
+	var score := player_line.get_child(player_line.get_child_count() - 1) as Label
+	player_line.remove_child(score)
+	card.remove_child(player_line)
+	var layout := UIKit.adaptive_columns(12)
+	card.add_child(layout)
+	player_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_child(player_line)
+	score.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	score.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_child(score)
 
 
 func _add_actions() -> void:

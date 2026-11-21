@@ -65,7 +65,12 @@ func setup(player_slot: int, def: MiniGameDef, index_in_group := 0, group_size :
 	# follow rotations and window resizes.
 	_fit_to_viewport()
 	get_viewport().size_changed.connect(_fit_to_viewport)
+	Platform.safe_area_changed.connect(_on_safe_area_changed)
 	set_process_input(true)
+
+
+func _on_safe_area_changed(_rect: Rect2i) -> void:
+	_fit_to_viewport()
 
 
 func _fit_to_viewport() -> void:
@@ -76,21 +81,20 @@ func _fit_to_viewport() -> void:
 	_bits = 0
 	_steer = 0.0
 	_throttle = 0.0
-	position = Vector2.ZERO
-	size = get_viewport_rect().size
 	# Keep the thumb targets clear of the notch and the home indicator.
 	var insets := Platform.safe_insets()
-	_inset_left = insets.x
-	_inset_right = insets.z
-	_inset_bottom = insets.w
+	var available := Rect2(Vector2(insets.x, insets.y),
+		(get_viewport_rect().size - Vector2(insets.x + insets.z, insets.y + insets.w)).max(Vector2.ONE))
+	position = available.position
+	size = available.size
+	_inset_left = 0.0
+	_inset_right = 0.0
+	_inset_bottom = 0.0
 	if touch_count > 1:
-		var region := party_region(size, touch_index, touch_count)
-		position = region.position
+		var region := party_region(available.size, touch_index, touch_count)
+		position = available.position + region.position
 		size = region.size
-		_inset_left = 0.0
-		_inset_right = 0.0
-		_inset_bottom = 0.0
-		_scale = minf(float(UserSettings.get_value("touch_scale")), minf(size.x / 700.0, size.y / 550.0))
+	_scale = minf(float(UserSettings.get_value("touch_scale")), minf(size.x / 700.0, size.y / 550.0))
 	InputRouter.push_virtual(slot, Vector2.ZERO, Vector2.ZERO, 0)
 	queue_redraw()
 
@@ -105,7 +109,7 @@ static func party_region(viewport_size: Vector2, index: int, count: int) -> Rect
 
 func _read_settings() -> void:
 	_scale = float(UserSettings.get_value("touch_scale"))
-	if touch_count > 1 and size.x > 0 and size.y > 0:
+	if size.x > 0 and size.y > 0:
 		_scale = minf(_scale, minf(size.x / 700.0, size.y / 550.0))
 	_opacity = float(UserSettings.get_value("touch_opacity"))
 	_left_handed = bool(UserSettings.get_value("touch_left_handed"))

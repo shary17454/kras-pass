@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="GDScript" id="GDScript_qa"]
+script/source = "extends Node
+
+func _ready() -> void:
+	await get_tree().process_frame
+	var harness := TestHarness.new()
+	var suite = load(\"res://tests/suites/test_duo_layout.gd\").new()
+	await suite.run(harness, self)
+	harness.ok(suite.completed, \"layout suite reached completion without aborting\")
+	AudioManager.shutdown()
+	await get_tree().process_frame
+	get_tree().quit(harness.report())
+"
+
+[node name="DuoLayoutQA" type="Node"]
+script = SubResource("GDScript_qa")

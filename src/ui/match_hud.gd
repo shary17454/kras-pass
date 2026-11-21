@@ -19,6 +19,8 @@ var _timer_label: Label
 var _banner_label: Label
 var _boss_meter: ProgressBar
 var _fit_top_rows: Callable
+var _fit_hint: Callable
+var _fit_rules: Callable
 var _round_label: Label
 var _centre_label: Label
 var _announcement_tween: Tween
@@ -49,6 +51,22 @@ func setup(context: MatchContext, ctrl: MiniGameController) -> void:
 	EventBus.notification_requested.connect(show_toast)
 	EventBus.status_notification_requested.connect(show_status_toast)
 	EventBus.lead_changed.connect(_on_lead_changed)
+	Platform.safe_area_changed.connect(_on_safe_area_changed)
+
+
+func _on_safe_area_changed(_rect: Rect2i) -> void:
+	if _fit_top_rows.is_valid():
+		_fit_top_rows.call()
+	if _fit_rules.is_valid():
+		_fit_rules.call()
+	_fit_announcement()
+	_fit_toasts()
+
+
+func _usable_rect() -> Rect2:
+	var inset := Platform.safe_insets()
+	return Rect2(Vector2(inset.x, inset.y),
+		(get_viewport().get_visible_rect().size - Vector2(inset.x + inset.z, inset.y + inset.w)).max(Vector2.ONE))
 
 
 func _build() -> void:
@@ -60,6 +78,7 @@ func _build() -> void:
 
 	# --- clock -------------------------------------------------------------
 	var top := VBoxContainer.new()
+	top.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	top.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	top.anchor_left = 0.5
 	top.anchor_right = 0.5
@@ -133,8 +152,14 @@ func _build() -> void:
 		tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		chips.add_child(tail)
 	var fit_chips := func():
-		var portrait := root.get_viewport_rect().size.x < root.get_viewport_rect().size.y
+		var usable := _usable_rect()
+		var portrait := usable.size.x < usable.size.y
 		var inset := Platform.safe_insets()
+		var clock_width := minf(440.0, maxf(1.0, usable.size.x - 48.0))
+		top.anchor_left = 0.0
+		top.anchor_right = 0.0
+		top.offset_left = usable.position.x + (usable.size.x - clock_width) * 0.5
+		top.offset_right = top.offset_left + clock_width
 		var text_scale := UIKit.scale()
 		chips.columns = 4 if portrait else 5
 		_timer_label.add_theme_font_size_override("font_size", int((40 if portrait else 48) * text_scale))
@@ -196,26 +221,27 @@ func _build() -> void:
 	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hint_label)
 	var fit_hint := func():
-		var viewport_size := root.get_viewport_rect().size
-		var portrait := viewport_size.x < viewport_size.y
-		_hint_label.anchor_left = 0.08 if portrait else 0.25
-		_hint_label.anchor_right = 0.92 if portrait else 0.75
-		_hint_label.anchor_top = 0.0 if portrait else 1.0
-		_hint_label.anchor_bottom = _hint_label.anchor_top
-		var hint_y := occupied_top() + 12.0
-		_hint_label.offset_top = hint_y if portrait else -120
-		_hint_label.offset_bottom = hint_y + 100.0 if portrait else -22
+		var usable := _usable_rect()
+		var portrait := usable.size.x < usable.size.y
+		_hint_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		var width := usable.size.x * (0.84 if portrait else 0.5)
+		_hint_label.size.x = width
+		var height := maxf(100.0, _hint_label.get_combined_minimum_size().y)
+		var hint_y := usable.end.y - height - 22.0
+		if portrait:
+			hint_y = maxf(occupied_top() + 12.0, auxiliary_overlay_top() + _auxiliary_overlay_height + 12.0)
 		var touch_count := 0
 		for p in ctx.config.players:
 			if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
 				touch_count += 1
 		if touch_count > 1:
-			var controls_top := TouchSource.party_region(viewport_size, 0, touch_count).position.y / viewport_size.y
-			_hint_label.anchor_top = controls_top
-			_hint_label.anchor_bottom = controls_top
-			_hint_label.offset_top = -100
-			_hint_label.offset_bottom = -16
+			var controls_top := usable.position.y + TouchSource.party_region(usable.size, 0, touch_count).position.y
+			hint_y = controls_top - height - 16.0
+		_hint_label.position = Vector2(usable.position.x + (usable.size.x - width) * 0.5, hint_y)
+		_hint_label.size = Vector2(width, height)
+	_fit_hint = fit_hint
 	get_viewport().size_changed.connect(fit_hint)
+	_hint_label.minimum_size_changed.connect(fit_hint)
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_hint))
 	fit_hint.call()
 	for player in ctx.config.players:
@@ -377,11 +403,8 @@ func _fit_toasts() -> void:
 	_toast_box.offset_right = 24 + inset.x + width if Loc.is_rtl() else -24 - inset.z
 	_toast_box.offset_top = occupied_top() + 12.0
 	_toast_box.offset_bottom = _toast_box.offset_top
-	if _hint_label != null and _hint_label.anchor_top == 0.0:
-		var hint_y := occupied_top() + 12.0
-		var overlay_bottom := auxiliary_overlay_top() + _auxiliary_overlay_height
-		_hint_label.offset_top = maxf(hint_y, overlay_bottom + (12.0 if _auxiliary_overlay_height > 0.0 else 0.0))
-		_hint_label.offset_bottom = _hint_label.offset_top + 100.0
+	if _fit_hint.is_valid():
+		_fit_hint.call()
 	auxiliary_overlay_layout_changed.emit()
 
 
@@ -458,14 +481,22 @@ func _make_portrait(p: PlayerConfig, col: Color) -> Control:
 
 func _make_rules_card() -> Control:
 	var wrapper := CenterContainer.new()
-	wrapper.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wrapper.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var card := UIKit.panel(Color(UIKit.PANEL.r, UIKit.PANEL.g, UIKit.PANEL.b, 0.94), 24)
+	card.layout_direction = Control.LAYOUT_DIRECTION_RTL if Loc.is_rtl() else Control.LAYOUT_DIRECTION_LTR
 	card.custom_minimum_size = Vector2(1080, 0)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	card.add_child(scroll)
 	var v := UIKit.vbox(14)
-	card.add_child(v)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(v)
 	var d := ctx.definition
-	v.add_child(UIKit.centered(d.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT, true))
+	var title := UIKit.centered(d.display_name(), UIKit.SIZE_HEADING, UIKit.ACCENT, true)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(title)
 	var rules := UIKit.centered(Loc.t(d.rules_key), UIKit.SIZE_BODY)
 	rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rules.custom_minimum_size = Vector2.ZERO
@@ -473,16 +504,27 @@ func _make_rules_card() -> Control:
 	var controls := UIKit.centered(_control_hint_text(), UIKit.SIZE_SMALL, UIKit.ACCENT_2)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(controls)
-	v.add_child(UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, UIKit.text_color()))
+	var ready_hint := UIKit.centered(Loc.t("hud.ready_hint"), UIKit.SIZE_SMALL, UIKit.text_color())
+	ready_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(ready_hint)
 	var start := UIKit.button(Loc.t("common.start"), UIKit.SIZE_HEADING)
 	start.custom_minimum_size.y = 80
 	start.pressed.connect(func(): ready_requested.emit())
 	v.add_child(start)
 	if ctx.config.subtitle_key != "":
-		v.add_child(UIKit.centered(Loc.t(ctx.config.subtitle_key), UIKit.SIZE_SMALL, UIKit.dim_color()))
+		var subtitle := UIKit.centered(Loc.t(ctx.config.subtitle_key), UIKit.SIZE_SMALL, UIKit.dim_color())
+		subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(subtitle)
 	wrapper.add_child(card)
-	var fit_rules := func(): card.custom_minimum_size.x = minf(1080, get_viewport().get_visible_rect().size.x - 96)
+	var fit_rules := func():
+		var usable := _usable_rect()
+		wrapper.position = usable.position
+		wrapper.size = usable.size
+		card.custom_minimum_size.x = maxf(1.0, minf(1080.0, usable.size.x - 96.0))
+		card.custom_minimum_size.y = minf(v.get_combined_minimum_size().y + 48.0, maxf(1.0, usable.size.y - 96.0))
+	_fit_rules = fit_rules
 	get_viewport().size_changed.connect(fit_rules)
+	v.minimum_size_changed.connect(fit_rules)
 	tree_exiting.connect(func(): get_viewport().size_changed.disconnect(fit_rules))
 	fit_rules.call()
 	return wrapper
@@ -547,19 +589,18 @@ func show_hints(visible_: bool) -> void:
 func _fit_announcement() -> void:
 	if _centre_label == null:
 		return
-	var viewport_size := get_viewport().get_visible_rect().size
-	var inset := Platform.safe_insets()
+	var usable := _usable_rect()
 	var upper := occupied_top() + 24.0
-	var lower := viewport_size.y * 0.76 - inset.w
+	var lower := usable.position.y + usable.size.y * 0.76
 	var touch_count := 0
 	for player in ctx.config.players:
 		if player.is_human and (player.device_type == 2 or (player.device_type == 0 and TouchSource.should_show())):
 			touch_count += 1
 	if touch_count > 1:
-		lower = TouchSource.party_region(viewport_size, 0, touch_count).position.y - 24.0
+		lower = usable.position.y + TouchSource.party_region(usable.size, 0, touch_count).position.y - 24.0
 	var height := maxf(1.0, lower - upper)
-	var left := maxf(24.0 + inset.x, viewport_size.x * 0.12)
-	var right := viewport_size.x - maxf(24.0 + inset.z, viewport_size.x * 0.12)
+	var left := usable.position.x + maxf(24.0, usable.size.x * 0.12)
+	var right := usable.end.x - maxf(24.0, usable.size.x * 0.12)
 	# Reserve room for the pop animation as well as the settled text.
 	_centre_label.position = Vector2(left, upper + height * 0.08)
 	_centre_label.size = Vector2(maxf(1.0, right - left), height * 0.84)

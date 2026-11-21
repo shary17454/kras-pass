@@ -157,6 +157,12 @@ func _capture(t: TestHarness, host: Node, filename: String) -> void:
 		t.ok(false, "appearance screenshots require a renderer")
 		return
 	await host.get_tree().process_frame
+	# Capture settled UI, not the low-opacity entrance frame of a new screen.
+	await host.get_tree().create_timer(0.65, true, false, true).timeout
+	var current_screen = SceneRouter.current_node
+	if current_screen is Screen and current_screen.header != null:
+		var column: Control = current_screen.header.get_parent()
+		t.ok(column.modulate.a >= 0.99, "screen entrance completes before visual QA")
 	# A background/occluded macOS window may not emit frame_post_draw.
 	# Force a draw for this test-only capture instead of waiting indefinitely.
 	RenderingServer.force_draw(false)

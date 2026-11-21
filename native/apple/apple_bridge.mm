@@ -3,12 +3,49 @@
 #import <UIKit/UIKit.h>
 #import "glass_pause_menu.h"
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/rect2.hpp>
+#include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/godot.hpp>
 #include <atomic>
+#include <algorithm>
+#include <cmath>
 
 using namespace godot;
+
+static bool kras_finite_rect(CGRect rect) {
+    return std::isfinite(rect.origin.x) && std::isfinite(rect.origin.y) &&
+        std::isfinite(rect.size.width) && std::isfinite(rect.size.height) &&
+        rect.size.width >= 0 && rect.size.height >= 0;
+}
+
+static bool kras_normalize_rect(CGRect rect, CGRect bounds, Rect2 &result) {
+    if (!kras_finite_rect(bounds) || bounds.size.width <= 0 || bounds.size.height <= 0 ||
+        !kras_finite_rect(rect)) return false;
+    const CGFloat left = std::max(CGRectGetMinX(rect), CGRectGetMinX(bounds));
+    const CGFloat top = std::max(CGRectGetMinY(rect), CGRectGetMinY(bounds));
+    const CGFloat right = std::min(CGRectGetMaxX(rect), CGRectGetMaxX(bounds));
+    const CGFloat bottom = std::min(CGRectGetMaxY(rect), CGRectGetMaxY(bounds));
+    // Keep zero-width/height division lines; CGRectIsEmpty would discard them.
+    if (right < left || bottom < top) return false;
+    result = Rect2((left - bounds.origin.x) / bounds.size.width,
+        (top - bounds.origin.y) / bounds.size.height,
+        (right - left) / bounds.size.width, (bottom - top) / bounds.size.height);
+    return true;
+}
+
+static TypedArray<Rect2> kras_reserved_rects(UIView *view, CGRect bounds, UIViewReservedRegionKind *kind)
+    API_AVAILABLE(ios(27.1)) {
+    TypedArray<Rect2> result;
+    // UIViewReservedRegion.h: frame is in this view's coordinates, INCLUDING margins.
+    for (UIViewReservedRegion *region in [view reservedRegionsOfKind:kind options:UIViewReservedRegionQueryOptionsNone]) {
+        if (!region.isActive) continue;
+        Rect2 normalized;
+        if (kras_normalize_rect(region.frame, bounds, normalized)) result.append(normalized);
+    }
+    return result;
+}
 
 @interface KrasAppleAuthorization : NSObject <ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding>
 @property(nonatomic, strong) ASAuthorizationController *controller;
@@ -64,10 +101,51 @@ protected:
         ClassDB::bind_method(D_METHOD("present_glass_menu", "labels", "session", "rtl", "allows_restart"), &KrasAppleBridge::present_glass_menu);
         ClassDB::bind_method(D_METHOD("dismiss_glass_menu"), &KrasAppleBridge::dismiss_glass_menu);
         ClassDB::bind_method(D_METHOD("navigate_glass_menu", "session", "direction", "activate"), &KrasAppleBridge::navigate_glass_menu);
+        ClassDB::bind_method(D_METHOD("request_viewport_metrics"), &KrasAppleBridge::request_viewport_metrics);
+        ClassDB::bind_method(D_METHOD("_deliver_viewport_metrics", "metrics", "keep"), &KrasAppleBridge::deliver_viewport_metrics);
+        ADD_SIGNAL(MethodInfo("viewport_metrics_received", PropertyInfo(Variant::DICTIONARY, "metrics")));
         ADD_SIGNAL(MethodInfo("menu_action", PropertyInfo(Variant::INT, "session"), PropertyInfo(Variant::STRING, "action")));
         ADD_SIGNAL(MethodInfo("identity_received", PropertyInfo(Variant::STRING, "token"), PropertyInfo(Variant::STRING, "code"), PropertyInfo(Variant::STRING, "error")));
     }
+    void deliver_viewport_metrics(Dictionary metrics, Ref<KrasAppleBridge> keep) {
+        if (keep.ptr() == this) emit_signal("viewport_metrics_received", metrics);
+    }
 public:
+    // One deferred response per request; no subscription, controller hooks, or UIKit on the caller's thread.
+    // Rect2s use physical top-left axes in [0, 1], relative to the game root view's bounds.
+    // valid=false means no attached foreground game view / usable bounds; ignore that sample.
+    void request_viewport_metrics() {
+        Ref<KrasAppleBridge> keep(this);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            Dictionary metrics;
+            metrics["valid"] = false;
+            metrics["safe_rect"] = Rect2();
+            metrics["occlusions"] = TypedArray<Rect2>();
+            metrics["divisions"] = TypedArray<Rect2>();
+            UIWindow *window = nil;
+            for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+                if (scene.activationState != UISceneActivationStateForegroundActive || ![scene isKindOfClass:UIWindowScene.class]) continue;
+                for (UIWindow *candidate in ((UIWindowScene *)scene).windows) if (candidate.isKeyWindow) window = candidate;
+            }
+            // Read the game root, not a presented native sheet, screen, or guessed child view.
+            UIView *view = window.rootViewController.viewIfLoaded;
+            if (view && view.window == window) {
+                const CGRect bounds = view.bounds;
+                Rect2 safe_rect;
+                if (kras_normalize_rect(UIEdgeInsetsInsetRect(bounds, view.safeAreaInsets), bounds, safe_rect) &&
+                    safe_rect.size.x > 0 && safe_rect.size.y > 0) {
+                    metrics["valid"] = true;
+                    metrics["safe_rect"] = safe_rect;
+                    if (@available(iOS 27.1, *)) {
+                        metrics["occlusions"] = kras_reserved_rects(view, bounds, [UIViewReservedRegionKind occlusionRegionKind]);
+                        metrics["divisions"] = kras_reserved_rects(view, bounds, [UIViewReservedRegionKind divisionRegionKind]);
+                    }
+                }
+            }
+            // The queued Variant holds keep until delivery, not only until this UIKit block ends.
+            keep->call_deferred("_deliver_viewport_metrics", metrics, keep);
+        });
+    }
     bool supports_glass_menu() const {
         if (@available(iOS 26.0, *)) return true;
         return false;
