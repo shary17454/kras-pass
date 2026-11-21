@@ -67,8 +67,10 @@ cp "$OPTIONS" "$RUN/ExportOptions.plist"
 PROFILE="$(/usr/libexec/PlistBuddy -c 'Print :provisioningProfiles:com.shary.kraspass' "$RUN/ExportOptions.plist")"
 CERTIFICATE="$(/usr/libexec/PlistBuddy -c 'Print :signingCertificate' "$RUN/ExportOptions.plist")"
 ARCHIVE="$RUN/KrasPass.xcarchive"
+mkdir "$RUN/ArchiveRegistry"
 # No automatic provisioning updates, cloud execution or upload flags.
 xcodebuild -project "$EXPORT/KrasPass.xcodeproj" -scheme KrasPass \
+	-IDECustomDistributionArchivesLocation="$RUN/ArchiveRegistry" \
 	-configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
 	-derivedDataPath "$RUN/DerivedData" -archivePath "$ARCHIVE" \
 	IPHONEOS_DEPLOYMENT_TARGET=18.0 DEVELOPMENT_TEAM=4HM66AD594 \
@@ -169,6 +171,7 @@ PY
 python3 "$EVIDENCE" verify "$ROOT" "$EXPORT"
 if [[ "${4:-}" == "--export-ipa" ]]; then
 	xcodebuild -exportArchive -archivePath "$ARCHIVE" \
+		-IDECustomDistributionArchivesLocation="$RUN/ArchiveRegistry" \
 		-exportOptionsPlist "$RUN/ExportOptions.plist" -exportPath "$RUN/ipa" > "$RUN/export.stdout" 2>&1
 	test -f "$RUN/ipa/KrasPass.ipa"
 fi

@@ -87,6 +87,9 @@ not exist or be inside the export. The script checks disk space and toolchain,
 uses manual distribution signing with the existing team/profile/certificate,
 and archives for generic iOS devices with deployment target 18.0. It does not
 enable automatic provisioning or contact App Store Connect to update profiles.
+Both Xcode invocations use a process-local archive registry inside the release
+output. This avoids scanning unrelated historical archives without changing
+global Xcode preferences or deleting/moving any existing archive.
 Xcode resolves the profile locally; the resulting embedded profile is then
 checked for exact name/team/app identity, expiry, non-debug Apple sign-in
 entitlements, absence of device/ad-hoc/enterprise provisioning, and membership

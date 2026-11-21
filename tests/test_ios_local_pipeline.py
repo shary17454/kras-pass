@@ -378,6 +378,11 @@ class LocalPipelineTests(unittest.TestCase):
                        'altool', 'notarytool', 'git commit', 'git push', 'xcode-select --switch'):
             self.assertNotIn(unsafe, ARCHIVE)
 
+    def test_archive_registry_is_process_local_and_isolated(self):
+        self.assertIn('mkdir "$RUN/ArchiveRegistry"', ARCHIVE)
+        self.assertEqual(ARCHIVE.count('-IDECustomDistributionArchivesLocation="$RUN/ArchiveRegistry"'), 2)
+        self.assertNotIn('defaults write', ARCHIVE)
+
 
 if __name__ == '__main__':
     unittest.main()
