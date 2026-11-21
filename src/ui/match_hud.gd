@@ -229,7 +229,9 @@ func _build() -> void:
 		var height := maxf(100.0, _hint_label.get_combined_minimum_size().y)
 		var hint_y := usable.end.y - height - 22.0
 		if portrait:
-			hint_y = maxf(occupied_top() + 12.0, auxiliary_overlay_top() + _auxiliary_overlay_height + 12.0)
+			var overlay_bottom := auxiliary_overlay_top() + _auxiliary_overlay_height
+			hint_y = maxf(occupied_top() + 12.0,
+				overlay_bottom + (12.0 if _auxiliary_overlay_height > 0.0 else 0.0))
 		var touch_count := 0
 		for p in ctx.config.players:
 			if p.is_human and (p.device_type == 2 or (p.device_type == 0 and TouchSource.should_show())):
