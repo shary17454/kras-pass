@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import plistlib
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -386,6 +387,46 @@ class LocalPipelineTests(unittest.TestCase):
     def test_codesign_optional_certificate_prefix_uses_equals(self):
         self.assertIn('codesign -d --extract-certificates="$RUN/signer-" "$APP"', ARCHIVE)
         self.assertNotIn('--extract-certificates "$RUN/signer-"', ARCHIVE)
+
+    def archive_result(self, *, archived_build='112', exported_build='$(CURRENT_PROJECT_VERSION)'):
+        source, exported, run = [self.root / name for name in ('source', 'exported', 'run')]
+        for directory in (source, exported / 'KrasPass', run):
+            directory.mkdir(parents=True)
+        (source / 'export_presets.cfg').write_text('''[preset.0.options]
+application/bundle_identifier="com.shary.kraspass"
+application/short_version="1.1.12"
+application/version="112"
+''')
+        (run / 'source-before.json').write_text('{}')
+        (run / 'toolchain.txt').write_text('Xcode fixture')
+        app = run / 'KrasPass.xcarchive/Products/Applications/KrasPass.app'
+        app.mkdir(parents=True)
+        (app / 'Info.plist').write_bytes(plistlib.dumps({
+            'CFBundleIdentifier': 'com.shary.kraspass', 'CFBundleShortVersionString': '1.1.12',
+            'CFBundleVersion': archived_build, 'MinimumOSVersion': '18.0'}))
+        (exported / 'KrasPass/KrasPass-Info.plist').write_bytes(plistlib.dumps({
+            'CFBundleIdentifier': '$(PRODUCT_BUNDLE_IDENTIFIER)',
+            'CFBundleShortVersionString': '$(MARKETING_VERSION)', 'CFBundleVersion': exported_build}))
+        helper = {'source_identity': lambda root: {}, 'verify': lambda root, out: True,
+                  'sha_file': lambda path: 'fixture', 'outputs': lambda path: {}, 'STAMP': 'stamp'}
+        code = python_block(ARCHIVE, 'python3 - "$ROOT" "$EXPORT" "$RUN"')
+        with arguments(source, exported, run), patch.object(runpy, 'run_path', return_value=helper):
+            exec(compile(code, '<archive-result-fixture>', 'exec'), {})
+        return json.loads((run / 'release-evidence.json').read_text())
+
+    def test_archive_resolves_only_known_export_placeholders_against_committed_preset(self):
+        result = self.archive_result()
+        self.assertEqual(result['bundle']['CFBundleVersion'], '112')
+        self.assertTrue(result['signed_archive_verified'])
+        self.assertFalse(result['uploaded'])
+
+    def test_archive_still_rejects_changed_build_number(self):
+        with self.assertRaisesRegex(SystemExit, 'differs'):
+            self.archive_result(archived_build='113')
+
+    def test_archive_rejects_unknown_export_placeholder(self):
+        with self.assertRaisesRegex(SystemExit, 'Unsupported exported metadata'):
+            self.archive_result(exported_build='$(UNKNOWN_BUILD)')
 
 
 if __name__ == '__main__':

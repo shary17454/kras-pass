@@ -176,7 +176,7 @@ if [[ "${4:-}" == "--export-ipa" ]]; then
 	test -f "$RUN/ipa/KrasPass.ipa"
 fi
 python3 - "$ROOT" "$EXPORT" "$RUN" <<'PY'
-import json, plistlib, runpy, sys
+import configparser, json, plistlib, runpy, sys
 from pathlib import Path
 root, export, run = map(Path, sys.argv[1:])
 evidence = runpy.run_path(str(root / 'tools/ios_export_evidence.py'))
@@ -187,8 +187,17 @@ with (run / 'KrasPass.xcarchive/Products/Applications/KrasPass.app/Info.plist').
     info = plistlib.load(stream)
 with (export / 'KrasPass/KrasPass-Info.plist').open('rb') as stream:
     original = plistlib.load(stream)
-for key in ('CFBundleIdentifier', 'CFBundleShortVersionString', 'CFBundleVersion'):
-    if not info.get(key) or info[key] != original.get(key):
+configuration = configparser.ConfigParser(interpolation=None)
+configuration.read(root / 'export_presets.cfg')
+options = configuration['preset.0.options']
+fields = {'CFBundleIdentifier': ('application/bundle_identifier', '$(PRODUCT_BUNDLE_IDENTIFIER)'),
+          'CFBundleShortVersionString': ('application/short_version', '$(MARKETING_VERSION)'),
+          'CFBundleVersion': ('application/version', '$(CURRENT_PROJECT_VERSION)')}
+for key, (option, placeholder) in fields.items():
+    expected = options[option].strip('"')
+    if not expected or original.get(key) not in (expected, placeholder):
+        raise SystemExit(f'Unsupported exported metadata: {key}')
+    if info.get(key) != expected:
         raise SystemExit(f'Archive metadata differs from committed export: {key}')
 result = {'schema_version': 1, 'source': before, 'signed_archive_verified': True,
           'uploaded': False, 'bundle': {key: info[key] for key in
