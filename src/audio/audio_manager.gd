@@ -266,9 +266,18 @@ func stop_music(fade := 0.8) -> void:
 		return
 	if _fade_tween != null and _fade_tween.is_valid():
 		_fade_tween.kill()
-	_fade_tween = create_tween()
-	_fade_tween.tween_property(_music_active, "volume_db", -40.0, fade)
-	_fade_tween.tween_callback(_music_active.stop)
+	_fade_tween = null
+	if fade <= 0.0:
+		_music_a.stop()
+		_music_b.stop()
+		return
+	# Cancelling a cross-fade also cancels its outgoing player's stop callback.
+	_fade_tween = create_tween().set_parallel(true)
+	_fade_tween.tween_property(_music_a, "volume_db", -40.0, fade)
+	_fade_tween.tween_property(_music_b, "volume_db", -40.0, fade)
+	_fade_tween.chain().tween_callback(func():
+		_music_a.stop()
+		_music_b.stop())
 
 
 func current_track() -> String:

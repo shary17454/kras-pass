@@ -55,6 +55,7 @@ var _history_times := PackedFloat32Array()
 var _history_positions: Array[PackedVector3Array] = []
 var _history_velocities: Array[PackedVector3Array] = []
 var _history_damage: Array[PackedFloat32Array] = []
+var _history_empowered: Array[PackedByteArray] = []
 var _history_balls: Array[Dictionary] = []
 var _first_seen_times := PackedFloat64Array()
 var _visible_since_times := PackedFloat64Array()
@@ -130,6 +131,7 @@ func on_round_start() -> void:
 	_history_positions.clear()
 	_history_velocities.clear()
 	_history_damage.clear()
+	_history_empowered.clear()
 	_history_balls.clear()
 	_first_seen_times.clear()
 	_visible_since_times.clear()
@@ -213,9 +215,11 @@ func _record_history() -> void:
 	var positions := PackedVector3Array()
 	var velocities := PackedVector3Array()
 	var damage := PackedFloat32Array()
+	var empowered := PackedByteArray()
 	positions.resize(ctx.fighters.size())
 	velocities.resize(ctx.fighters.size())
 	damage.resize(ctx.fighters.size())
+	empowered.resize(ctx.fighters.size())
 	var previous := (_history_head + _history_count - 1) % HISTORY_CAP if _history_count > 0 else -1
 	var balls := _ball_snapshot(previous)
 	for i in ctx.fighters.size():
@@ -225,6 +229,7 @@ func _record_history() -> void:
 			_visible_since_times[i] = minf(_visible_since_times[i], _time)
 			positions[i] = f.global_position
 			velocities[i] = f.velocity
+			empowered[i] = int(_empowerment_state(f))
 			if _tracks_damage:
 				# Duel HUD displays whole percentages, not private fractional damage.
 				damage[i] = floorf(f.damage_percent)
@@ -234,10 +239,12 @@ func _record_history() -> void:
 			positions[i] = _history_positions[previous][i] if previous >= 0 else Vector3.ZERO
 			velocities[i] = Vector3.ZERO
 			damage[i] = _history_damage[previous][i] if previous >= 0 else 0.0
+			empowered[i] = _history_empowered[previous][i] if previous >= 0 else 0
 	if _history_count < HISTORY_CAP:
 		_history_positions.append(positions)
 		_history_velocities.append(velocities)
 		_history_damage.append(damage)
+		_history_empowered.append(empowered)
 		_history_balls.append(balls)
 		_history_times.append(_time)
 		_history_count += 1
@@ -245,6 +252,7 @@ func _record_history() -> void:
 	_history_positions[_history_head] = positions
 	_history_velocities[_history_head] = velocities
 	_history_damage[_history_head] = damage
+	_history_empowered[_history_head] = empowered
 	_history_balls[_history_head] = balls
 	_history_times[_history_head] = _time
 	_history_head = (_history_head + 1) % HISTORY_CAP
@@ -644,6 +652,19 @@ func is_empowered(check_slot: int) -> bool:
 	var f := ctx.fighter(check_slot)
 	if not can_observe(f):
 		return false
+	if check_slot == slot or reaction_time <= 0.0:
+		return _empowerment_state(f)
+	# Rival buffs use the same delayed observations and reacquisition as position.
+	if not can_target(check_slot):
+		return false
+	var want := _time - reaction_time
+	var idx := _history_index(want + 0.000001)
+	if idx < 0 or float(_history_times[idx]) > want + 0.000001:
+		return false
+	return _history_empowered[idx][check_slot] != 0
+
+
+static func _empowerment_state(f: Fighter) -> bool:
 	return float(f.mods["push"]) > 1.2 or float(f.mods["weight"]) > 1.3 \
 		or float(f.mods["size"]) > 1.2 or float(f.mods["shield"]) > 0.0
 

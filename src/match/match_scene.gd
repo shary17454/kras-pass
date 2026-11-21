@@ -570,13 +570,19 @@ func _physics_process(delta: float) -> void:
 				_network_previous_bits[p.slot] = _network_frame.bits
 	if _paused:
 		return
+	_tick_phase(delta)
+	if _online() and Net.is_host and _network_tick % 3 == 0:
+		Net.publish_snapshot(_network_replica.capture(self), _network_tick)
+
+
+func _tick_phase(delta: float, seeking := false) -> void:
 	match phase:
 		P.INTRO, P.INSTRUCTIONS, P.NEXT_ROUND:
 			_advance_timed_phase(delta)
 		P.COUNTDOWN:
 			_tick_countdown(delta)
 		P.PLAYING, P.SUDDEN_DEATH:
-			if playback != null:
+			if playback != null and not seeking:
 				_tick_playback(delta)
 			else:
 				_tick_live(delta)
@@ -585,8 +591,6 @@ func _physics_process(delta: float) -> void:
 			_phase_timer -= delta
 			if _phase_timer <= 0.0:
 				_set_phase(P.RESULTS)
-	if _online() and Net.is_host and _network_tick % 3 == 0:
-		Net.publish_snapshot(_network_replica.capture(self), _network_tick)
 
 
 func _process(delta: float) -> void:
@@ -609,7 +613,7 @@ func _tick_playback(delta: float) -> void:
 	var steps := int(_speed_accum)
 	_speed_accum -= float(steps)
 	for i in steps:
-		if phase == P.DONE:
+		if not MatchPhase.is_live(phase):
 			break
 		_tick_live(delta)
 	if playback_tick >= playback.tick_count():
@@ -1104,39 +1108,67 @@ func pb_set_speed(value: float) -> void:
 ## point of an input recording is that the state is derivable, and a 90-second
 ## round fast-forwards in well under a second.
 func pb_seek(target_tick: int) -> void:
-	if playback == null:
+	if playback == null or ctx == null or _torn_down or _aborted:
 		return
 	target_tick = clampi(target_tick, 0, playback.tick_count())
-	if target_tick < playback_tick:
+	if target_tick == 0 or target_tick < playback_tick:
 		_restart_playback()
+	_speed_accum = 0.0
+	var delta := 1.0 / float(maxi(1, playback.tick_rate))
 	var guard := 0
-	while playback_tick < target_tick and phase != P.DONE and guard < 60 * 60 * 10:
-		_tick_live(1.0 / 60.0)
+	# Preparation and inter-round phases consume time, not recorded inputs.
+	# Seeking ignores transport pause/speed but uses the ordinary lifecycle.
+	var budget := REPLAY_MAX_TICKS + 60 * 60 * _total_rounds
+	while (playback_tick < target_tick or (playback_tick == 0 and not MatchPhase.is_live(phase))) \
+			and phase != P.DONE and guard < budget:
+		_tick_phase(delta, true)
 		guard += 1
+	playback_progress.emit(playback_tick, playback.tick_count())
 
 
 func _restart_playback() -> void:
+	# Round reset hooks are not a match reset: controllers, hazards, mutators
+	# and the shared RNG retain build-time state. Recreate the owned world via
+	# the same seeded build path instead of maintaining a partial reset list.
+	var hud_visible := hud.visible
+	var camera_mode := camera.mode
+	controller.cleanup()
+	InputRouter.clear_all()
+	Pool.drain()
+	if EventBus.player_hit.is_connected(_on_hit_for_floor):
+		EventBus.player_hit.disconnect(_on_hit_for_floor)
+	for child in get_children():
+		child.free()
+	_fighters.clear()
+	_brains.clear()
+	_playback_frames.clear()
+	machine = null
+	vehicle_views = null
+	touch = null
+	touch_sources.clear()
+	mutators = null
+	ctx = null
+	phase = P.LOADING
+	_phase_timer = 0.0
+	_phase_duration = 0.0
 	playback_tick = 0
+	_tick_index = 0
+	_speed_accum = 0.0
 	desync_tick = -1
 	playback_drift = 0.0
 	_round_index = 0
 	_round_results.clear()
+	_round_elapsed = 0.0
 	_phase_locked = false
-	ctx.early_finish = false
-	ctx.elimination_order.clear()
-	ctx.alive.fill(true)
-	ctx.scores.fill(0)
-	for i in ctx.details.size():
-		ctx.details[i] = {}
-	arena.reset_hazards()
-	powerups.clear_all()
-	controller.reset_lives()
-	for f in _fighters:
-		if is_instance_valid(f):
-			f.reset_damage()
-			f.respawn_at(arena.global_position + arena.spawn_points[f.slot % arena.spawn_points.size()])
-			f.control_enabled = true
-			f.carrying = 0
+	_sudden_death_used = false
+	_noted_leader = -1
+	_noted_last = -1
+	_warn_second = -1
+	_splashed.clear()
+	_shrink_ejected.clear()
+	_build()
+	hud.visible = hud_visible
+	camera.configure(camera_mode, arena)
 
 
 func _start_next_round() -> void:
