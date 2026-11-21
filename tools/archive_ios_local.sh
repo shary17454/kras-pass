@@ -83,7 +83,7 @@ codesign -d --entitlements :- "$APP" > "$RUN/entitlements.plist" 2> "$RUN/codesi
 codesign -dv --verbose=4 "$APP" > "$RUN/codesign-details.stdout" 2>&1
 grep -Fqx "Authority=$CERTIFICATE" "$RUN/codesign-details.stdout"
 security cms -D -i "$APP/embedded.mobileprovision" > "$RUN/profile.plist"
-codesign -d --extract-certificates "$RUN/signer-" "$APP" > "$RUN/codesign-certificates.stdout" 2>&1
+codesign -d --extract-certificates="$RUN/signer-" "$APP" > "$RUN/codesign-certificates.stdout" 2>&1
 xcrun vtool -show-build "$APP/KrasPass" > "$RUN/macho-build.txt"
 python3 - "$APP" "$RUN" "$EXPORT" "$ROOT" <<'PY'
 from datetime import datetime, timezone

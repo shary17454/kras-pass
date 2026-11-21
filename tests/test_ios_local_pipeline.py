@@ -383,6 +383,10 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(ARCHIVE.count('-IDECustomDistributionArchivesLocation="$RUN/ArchiveRegistry"'), 2)
         self.assertNotIn('defaults write', ARCHIVE)
 
+    def test_codesign_optional_certificate_prefix_uses_equals(self):
+        self.assertIn('codesign -d --extract-certificates="$RUN/signer-" "$APP"', ARCHIVE)
+        self.assertNotIn('--extract-certificates "$RUN/signer-"', ARCHIVE)
+
 
 if __name__ == '__main__':
     unittest.main()
