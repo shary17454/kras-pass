@@ -27,6 +27,7 @@ const SUITES := [
 	"res://tests/suites/test_arena_spawn_clearance.gd",
 	"res://tests/suites/test_racer_pad_perception.gd",
 	"res://tests/suites/test_quick_picker_layout.gd",
+	"res://tests/suites/test_quick_settings_layout.gd",
 	"res://tests/suites/test_climber_ledge_contest.gd",
 	"res://tests/suites/test_tank_smoke_pilot.gd",
 	"res://tests/suites/test_routed_navigation.gd",

@@ -5,6 +5,9 @@ extends Screen
 ## gameplay knowledge of its own, which is why adding a mini-game never means
 ## editing it.
 
+const SettingToggle = preload("res://src/ui/components/setting_toggle.gd")
+const FORM_FIELD_HEIGHT := 96.0
+
 var _game_index := 0
 var _character_index := 0
 var _games: Array[MiniGameDef] = []
@@ -29,6 +32,8 @@ var _tank_row: Control
 
 func build() -> void:
 	title(Loc.t("quick.title"))
+	var screen_title := header.get_node("ScreenTitle") as Label
+	screen_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_games = Progression.playable_games()
 	_characters = Progression.playable_characters()
 	if _games.is_empty() or _characters.is_empty():
@@ -51,7 +56,7 @@ func build() -> void:
 		_game_index = i
 		_arena_index = 0
 		_refresh_game())
-	body.add_child(UIKit.row(Loc.t("quick.game"), _game_option))
+	body.add_child(_setting_row("Game", Loc.t("quick.game"), _game_option))
 
 	var columns := UIKit.adaptive_columns(32)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -60,38 +65,43 @@ func build() -> void:
 	var left := UIKit.vbox(12)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var right := UIKit.vbox(12)
-	right.custom_minimum_size = Vector2(560, 0)
+	right.name = "FormSettings"
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(left)
 	columns.add_child(right)
 
-	left.add_child(UIKit.heading(Loc.t("quick.game")))
+	var game_heading := UIKit.heading(Loc.t("quick.game"))
+	game_heading.name = "GameHeading"
+	game_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	left.add_child(game_heading)
 	_game_card_holder = _picker(left, func(step): _cycle_game(step))
-	left.add_child(UIKit.heading(Loc.t("quick.character")))
+	var character_heading := UIKit.heading(Loc.t("quick.character"))
+	character_heading.name = "CharacterHeading"
+	character_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	left.add_child(character_heading)
 	_character_card_holder = _picker(left, func(step): _cycle_character(step))
 
-	right.add_child(UIKit.heading(Loc.t("quick.title")))
 	var opp := UIKit.option(["0", "1", "2", "3"], _opponents)
 	opp.item_selected.connect(func(i): _opponents = i)
-	right.add_child(UIKit.row(Loc.t("quick.opponents"), opp))
+	right.add_child(_setting_row("Opponents", Loc.t("quick.opponents"), opp, true))
 
 	var diff := UIKit.option([
 		Loc.t("difficulty.easy"), Loc.t("difficulty.medium"),
 		Loc.t("difficulty.hard"), Loc.t("difficulty.expert"),
 	], _difficulty)
 	diff.item_selected.connect(func(i): _difficulty = i)
-	right.add_child(UIKit.row(Loc.t("quick.difficulty"), diff))
+	right.add_child(_setting_row("Difficulty", Loc.t("quick.difficulty"), diff))
 
 	_arena_option = UIKit.option([], 0)
 	_arena_option.item_selected.connect(func(i): _arena_index = i)
-	right.add_child(UIKit.row(Loc.t("quick.arena"), _arena_option))
+	right.add_child(_setting_row("Arena", Loc.t("quick.arena"), _arena_option))
 
 	_rounds_option = UIKit.option(["1", "2", "3", "5"], 0)
 	_rounds_option.item_selected.connect(func(i): _rounds = [1, 2, 3, 5][i])
-	right.add_child(UIKit.row(Loc.t("quick.rounds"), _rounds_option))
+	right.add_child(_setting_row("Rounds", Loc.t("quick.rounds"), _rounds_option, true))
 	_laps_option = UIKit.option(["3", "4", "5", "6", "7", "8", "9", "10"], 0)
-	_laps_option.get_popup().add_theme_font_size_override("font_size", UIKit.SIZE_BODY)
 	_laps_option.item_selected.connect(func(i): _laps = i + 3)
-	_laps_row = UIKit.row(Loc.t("race.laps"), _laps_option)
+	_laps_row = _setting_row("Laps", Loc.t("race.laps"), _laps_option, true)
 	right.add_child(_laps_row)
 	var variants := ["normal", "ricochet", "one_shot", "infinite"]
 	var names: Array = []
@@ -99,22 +109,126 @@ func build() -> void:
 		names.append(Loc.t("tank.variant." + id))
 	var variant := UIKit.option(names, 0)
 	variant.item_selected.connect(func(i): _tank_variant = variants[i])
-	_tank_row = UIKit.row(Loc.t("party.variant"), variant)
+	_tank_row = _setting_row("TankVariant", Loc.t("party.variant"), variant)
 	right.add_child(_tank_row)
 
-	var pu := UIKit.checkbox("", _powerups)
+	var pu := SettingToggle.new()
+	pu.button_pressed = _powerups
 	pu.toggled.connect(func(v): _powerups = v)
-	right.add_child(UIKit.row(Loc.t("quick.powerups"), pu))
+	right.add_child(_setting_row("Powerups", Loc.t("quick.powerups"), pu, false, true))
 
 	right.add_child(UIKit.spacer(18))
 	var start := UIKit.button(Loc.t("quick.start"), UIKit.SIZE_HEADING)
-	start.custom_minimum_size = Vector2(0, 76)
+	start.name = "StartButton"
+	_style_form_button(start)
+	start.custom_minimum_size = Vector2(0, FORM_FIELD_HEIGHT * UIKit.scale())
 	start.pressed.connect(_start)
-	right.add_child(start)
-	first_focus = start
+	var start_margin := MarginContainer.new()
+	start_margin.add_theme_constant_override("margin_left", int(8 * UIKit.scale()))
+	start_margin.add_theme_constant_override("margin_right", int(8 * UIKit.scale()))
+	start_margin.add_child(start)
+	right.add_child(start_margin)
+	# The base screen grabs this focus after layout; keep it above the fold.
+	first_focus = _game_option
 
 	_refresh_game()
 	_refresh_character()
+
+
+func _setting_row(id: String, caption: String, control: Control, numeric := false, compact := false) -> MarginContainer:
+	var row := MarginContainer.new()
+	row.name = id + "Row"
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.layout_direction = Control.LAYOUT_DIRECTION_RTL if Loc.is_rtl() else Control.LAYOUT_DIRECTION_LTR
+	var padding := int(8 * UIKit.scale())
+	for edge in ["left", "top", "right", "bottom"]:
+		row.add_theme_constant_override("margin_" + edge, padding)
+	var content := BoxContainer.new()
+	content.name = "Content"
+	content.add_theme_constant_override("separation", int(16 * UIKit.scale()))
+	row.add_child(content)
+	var label := UIKit.label(caption)
+	label.name = id + "Label"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	label.layout_direction = row.layout_direction
+	label.text_direction = Control.TEXT_DIRECTION_RTL if Loc.is_rtl() else Control.TEXT_DIRECTION_LTR
+	# Godot mirrors leading alignment when the control layout is RTL.
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	content.add_child(label)
+	control.name = id + ("Toggle" if compact else "Option")
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	control.layout_direction = row.layout_direction
+	if control is OptionButton:
+		var option := control as OptionButton
+		option.fit_to_longest_item = false
+		option.clip_text = true
+		option.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		option.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_style_form_button(option)
+		option.text_direction = Control.TEXT_DIRECTION_LTR if numeric or not Loc.is_rtl() else Control.TEXT_DIRECTION_RTL
+		for item in option.item_count:
+			option.get_popup().set_item_text_direction(item, option.text_direction)
+		option.get_popup().add_theme_font_size_override("font_size", int(UIKit.SIZE_BODY * UIKit.scale()))
+		option.resized.connect(func(): _fit_option_text(option))
+		option.item_selected.connect(func(_index): _fit_option_text(option))
+	content.add_child(control)
+	# Use the allocated width too: landscape can still have a narrow settings column.
+	var fit := func():
+		var stacked := not compact and (row.get_viewport_rect().size.x < row.get_viewport_rect().size.y or row.size.x < 560 * UIKit.scale())
+		content.vertical = stacked
+		label.custom_minimum_size.x = 0 if stacked or compact else 180 * UIKit.scale()
+		if compact:
+			control.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		else:
+			control.custom_minimum_size = Vector2(0 if stacked else 300 * UIKit.scale(), FORM_FIELD_HEIGHT * UIKit.scale())
+			control.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_END
+	row.resized.connect(fit)
+	row.tree_entered.connect(func():
+		row.get_viewport().size_changed.connect(fit)
+		fit.call())
+	row.tree_exiting.connect(func(): row.get_viewport().size_changed.disconnect(fit))
+	return row
+
+
+func _fit_option_text(option: OptionButton) -> void:
+	if option.item_count == 0 or option.size.x <= 0:
+		return
+	var caption := option.get_item_text(option.selected)
+	option.tooltip_text = caption
+	var style := option.get_theme_stylebox("normal")
+	var arrow := option.get_theme_icon("arrow")
+	var inset := style.get_content_margin(SIDE_LEFT) + style.get_content_margin(SIDE_RIGHT)
+	var available := maxf(1.0, option.size.x - inset - arrow.get_width() - 12 * UIKit.scale())
+	var font := option.get_theme_font("font")
+	var maximum := int(UIKit.SIZE_BODY * UIKit.scale())
+	var minimum := int(UIKit.SIZE_TINY * UIKit.scale())
+	var fitted := maximum
+	while fitted > minimum and font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted).x > available:
+		fitted -= 1
+	option.add_theme_font_size_override("font_size", fitted)
+
+
+func _style_form_button(button: Button) -> void:
+	var styles := {
+		"normal": UIKit.liquid_glass_stylebox(UIKit.PANEL, 8),
+		"hover": UIKit.liquid_glass_stylebox(UIKit.PANEL_HI, 8, true),
+		"pressed": UIKit.stylebox(UIKit.PANEL_HI, 8),
+		"focus": UIKit.stylebox(UIKit.PANEL_HI, 8, 2, UIKit.ACCENT),
+		"disabled": UIKit.liquid_glass_stylebox(UIKit.PANEL, 8),
+	}
+	for state in styles:
+		var style: StyleBoxFlat = styles[state]
+		style.content_margin_left = 20 * UIKit.scale()
+		style.content_margin_right = 20 * UIKit.scale()
+		style.content_margin_top = 10 * UIKit.scale()
+		style.content_margin_bottom = 10 * UIKit.scale()
+		button.add_theme_stylebox_override(state, style)
+		if button is OptionButton and state in ["normal", "hover", "pressed", "disabled"]:
+			button.add_theme_stylebox_override(state + "_mirrored", style)
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		button.add_theme_color_override(state, UIKit.text_color())
 
 
 func _picker(parent: VBoxContainer, on_step: Callable) -> Control:
@@ -169,6 +283,8 @@ func _refresh_game() -> void:
 	_rounds = def.default_rounds
 	_laps_row.visible = def.id in ["kart_sprint", "sabaq_sawarikh"]
 	_tank_row.visible = def.id == "tank_arena"
+	_fit_option_text(_game_option)
+	_fit_option_text(_arena_option)
 
 
 func _refresh_character() -> void:
@@ -184,9 +300,14 @@ func _refresh_character() -> void:
 
 
 func _start() -> void:
+	var cfg := _build_match_config()
+	Progression.set_last_character(cfg.players[0].character_id)
+	SceneRouter.start_match(cfg)
+
+
+func _build_match_config() -> MatchConfig:
 	var def := _games[_game_index]
 	var me := _characters[_character_index]
-	Progression.set_last_character(me.id)
 
 	var cfg := MatchConfig.new()
 	cfg.minigame_id = def.id
@@ -224,4 +345,4 @@ func _start() -> void:
 		cfg.players.append(o)
 		pool.erase(o.character_id)
 
-	SceneRouter.start_match(cfg)
+	return cfg
