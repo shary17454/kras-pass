@@ -11,7 +11,7 @@ func configure(player: PlayerConfig) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	size = Vector2(56, 56)
 	tint = UIKit.adapt(player.color())
-	_symbol = UIKit.centered(player.symbol(), 26, Color.WHITE, true)
+	_symbol = UIKit.centered(player.symbol(), 26, UIKit.text_color(), true)
 	_symbol.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_symbol)
@@ -29,7 +29,7 @@ func place(cue: Dictionary) -> void:
 
 func _draw() -> void:
 	var centre := size * 0.5
-	draw_circle(centre, 22.0, Color(0.04, 0.07, 0.09, 0.94))
+	draw_circle(centre, 22.0, Color(UIKit.PANEL, 0.94))
 	draw_arc(centre, 22.0, 0.0, TAU, 24, tint, 3.0, true)
 	var tip := centre + direction * 28.0
 	var base := centre + direction * 20.0
@@ -54,12 +54,16 @@ static func project(camera: Camera3D, world: Vector3, bounds: Rect2) -> Dictiona
 	var clip: Vector4 = camera.get_camera_projection() * Vector4(local.x, local.y, local.z, 1.0)
 	if not clip.is_finite():
 		return {}
-	if local.z < -camera.near and clip.w > 0.0 and absf(clip.x) <= clip.w and absf(clip.y) <= clip.w and absf(clip.z) <= clip.w:
-		return {}
 	# abs(w) avoids mirrored arrows behind a perspective camera. Orthographic
 	# cameras also need local.z: their homogeneous w is always positive.
 	var vector := Vector2(clip.x, -clip.y) / maxf(absf(clip.w), 0.001)
 	vector *= camera.get_viewport().get_visible_rect().size * 0.5
+	if local.z < -camera.near and clip.w > 0.0 and absf(clip.x) <= clip.w and absf(clip.y) <= clip.w and absf(clip.z) <= clip.w:
+		var screen := camera.get_viewport().get_visible_rect().size * 0.5 + vector
+		if bounds.has_point(screen):
+			return {}
+		# A projected player can still be obscured by the HUD or touch controls.
+		vector = screen - bounds.get_center()
 	if vector.length_squared() < 0.001:
 		vector = Vector2.DOWN if local.z >= -camera.near else Vector2.UP
 	var half := bounds.size * 0.5

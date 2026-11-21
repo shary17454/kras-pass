@@ -1,0 +1,13 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":795,"phase":2,"running":true,"seed":1835939650,"snapshots":168,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":795,"phase":4,"running":true,"seed":1835939650,"snapshots":368,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":795,"phase":6,"running":true,"seed":1835939650,"snapshots":568,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":795,"phase":4,"running":true,"seed":1835939650,"snapshots":768,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":795,"phase":4,"running":true,"seed":1835939650,"snapshots":969,"state":"playing"}
+NETWORK_ROUND={"arena":"star_meadow","epoch":1,"game":"relic_hold","moved":true,"scores":[17,0,0,17],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":4,"matches":1,"moved":true,"reconnected":false,"scores":[17,0,0,17],"snapshots":1107,"tournament":{},"world_snapshots":1107}

@@ -1,0 +1,46 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+TEST_STORAGE_ROOT=user://test-runs/77885-591038
+
+── replay atomic storage and budgets ───────────────────────────
+[INF][Replay] saved replay storage_test (0.0s, 0.4 KB)
+WARNING: [WRN][Replay] cannot prepare replay storage_test for write
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _write_atomic (res://src/replay/replay_store.gd:228)
+         [3] save (res://src/replay/replay_store.gd:202)
+         [4] run (res://tests/suites/test_replay_storage.gd:22)
+         [5] _ready (res://tests/test_runner.gd:206)
+[INF][Replay] saved replay storage_test (0.0s, 0.4 KB)
+WARNING: [WRN][Replay] cannot commit replay storage_blocked_destination; previous recording retained
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _write_atomic (res://src/replay/replay_store.gd:239)
+         [3] run (res://tests/suites/test_replay_storage.gd:41)
+         [4] _ready (res://tests/test_runner.gd:206)
+WARNING: [WRN][Replay] replay storage_oversized exceeds the file read budget
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] load_replay (res://src/replay/replay_store.gd:288)
+         [3] run (res://tests/suites/test_replay_storage.gd:54)
+         [4] _ready (res://tests/test_runner.gd:206)
+[INF][Replay] saved replay storage_budget_0 (0.0s, 0.4 KB)
+[INF][Replay] saved replay storage_budget_1 (0.0s, 0.4 KB)
+[INF][Replay] saved replay storage_budget_2 (0.0s, 0.4 KB)
+
+finished in 0.0s
+
+════════════════════════════════════════════════════════════════
+ALL TESTS PASSED — 33 assertions
+════════════════════════════════════════════════════════════════

@@ -15,7 +15,7 @@ func _pick_target() -> int:
 	var best_margin := 4.0
 	if arena != null and rng.randf() < edge_awareness:
 		for i in ctx.fighters.size():
-			if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+			if i == slot or not can_target(i):
 				continue
 			if int(controller.call("team_of", i)) == team:
 				continue
@@ -31,7 +31,7 @@ func _pick_target() -> int:
 	var nearest := -1
 	var nearest_d := INF
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i) or not can_observe(ctx.fighter(i)):
+		if i == slot or not can_target(i):
 			continue
 		if int(controller.call("team_of", i)) == team:
 			continue

@@ -1,0 +1,291 @@
+{
+  "commit": "96c53f359cbb48663a9a99d3fec5ecf6e16d16af",
+  "fingerprint": "de4972e41b4346feeaaa1d8ba4583802fc9f2a5455d1dd43de90a8c43b6525e6",
+  "files": 272,
+  "gamesChecked": 39,
+  "sourceVerified": true,
+  "strictSimulationLogsVerified": true,
+  "games": [
+    {
+      "id": "base_siege",
+      "expertShare": 0.503067484662577,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.208333333333333,
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "id": "blast_ball",
+      "expertShare": 0.56875,
+      "characterBias": 0.0416666666666667,
+      "slotBias": 0.166666666666667,
+      "flags": []
+    },
+    {
+      "id": "boss_colossus",
+      "expertShare": 0.674698795180723,
+      "characterBias": 0.0535714285714286,
+      "slotBias": 0.0714285714285714,
+      "flags": []
+    },
+    {
+      "id": "boss_dreadnought",
+      "expertShare": 0.68944099378882,
+      "characterBias": 0.150862068965517,
+      "slotBias": 0.0948275862068965,
+      "flags": []
+    },
+    {
+      "id": "boss_forge",
+      "expertShare": 0.666666666666667,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.0833333333333333,
+      "flags": []
+    },
+    {
+      "id": "boss_sovereign",
+      "expertShare": 0.676829268292683,
+      "characterBias": 0.075,
+      "slotBias": 0.03,
+      "flags": []
+    },
+    {
+      "id": "bumper_bowl",
+      "expertShare": 0.676829268292683,
+      "characterBias": 0.134259259259259,
+      "slotBias": 0.157407407407407,
+      "flags": []
+    },
+    {
+      "id": "color_stand",
+      "expertShare": 0.696428571428571,
+      "characterBias": 0.166666666666667,
+      "slotBias": 0.125,
+      "flags": []
+    },
+    {
+      "id": "crate_relay",
+      "expertShare": 0.682926829268293,
+      "characterBias": 0.115,
+      "slotBias": 0.07,
+      "flags": []
+    },
+    {
+      "id": "crate_smash",
+      "expertShare": 0.695652173913043,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.0416666666666667,
+      "flags": []
+    },
+    {
+      "id": "crumble_court",
+      "expertShare": 0.56875,
+      "characterBias": 0.155,
+      "slotBias": 0.15,
+      "flags": []
+    },
+    {
+      "id": "drift_floes",
+      "expertShare": 0.585365853658537,
+      "characterBias": 0.0892857142857143,
+      "slotBias": 0.0714285714285714,
+      "flags": []
+    },
+    {
+      "id": "duel_pit",
+      "expertShare": 0.647058823529412,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.125,
+      "flags": []
+    },
+    {
+      "id": "duo_clash",
+      "expertShare": 0.55421686746988,
+      "characterBias": 0.0892857142857143,
+      "slotBias": 0.0714285714285714,
+      "flags": []
+    },
+    {
+      "id": "fawda",
+      "expertShare": 0.53125,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.0416666666666667,
+      "flags": []
+    },
+    {
+      "id": "gem_grab",
+      "expertShare": 0.64327485380117,
+      "characterBias": 0.0535714285714286,
+      "slotBias": 0.0357142857142857,
+      "flags": []
+    },
+    {
+      "id": "goal_guard",
+      "expertShare": 0.528846153846154,
+      "characterBias": 0.125,
+      "slotBias": 0.0416666666666667,
+      "flags": []
+    },
+    {
+      "id": "hurdle_dash",
+      "expertShare": 0.672839506172839,
+      "characterBias": 0.166666666666667,
+      "slotBias": 0.166666666666667,
+      "flags": []
+    },
+    {
+      "id": "kart_sprint",
+      "expertShare": 0.7,
+      "characterBias": 0.125,
+      "slotBias": 0.0833333333333333,
+      "flags": []
+    },
+    {
+      "id": "lab_crates",
+      "expertShare": 0.678787878787879,
+      "characterBias": 0.0416666666666667,
+      "slotBias": 0.333333333333333,
+      "flags": [
+        "spawn slot advantage"
+      ]
+    },
+    {
+      "id": "magnet_court",
+      "expertShare": 0.528846153846154,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.208333333333333,
+      "flags": []
+    },
+    {
+      "id": "mnatiq",
+      "expertShare": 0.6625,
+      "characterBias": 0.0416666666666667,
+      "slotBias": 0.166666666666667,
+      "flags": []
+    },
+    {
+      "id": "mukharrib",
+      "expertShare": 0.638036809815951,
+      "characterBias": 0.166666666666667,
+      "slotBias": 0.0833333333333333,
+      "flags": []
+    },
+    {
+      "id": "paint_grid",
+      "expertShare": 0.68125,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.125,
+      "flags": []
+    },
+    {
+      "id": "quick_draw",
+      "expertShare": 0.701863354037267,
+      "characterBias": 0.0601851851851852,
+      "slotBias": 0.12037037037037,
+      "flags": []
+    },
+    {
+      "id": "relic_hold",
+      "expertShare": 0.656626506024096,
+      "characterBias": 0.208333333333333,
+      "slotBias": 0.166666666666667,
+      "flags": []
+    },
+    {
+      "id": "ring_rumble",
+      "expertShare": 0.54375,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.0833333333333333,
+      "flags": []
+    },
+    {
+      "id": "rising_tide",
+      "expertShare": 0.708571428571429,
+      "characterBias": 0.0843023255813953,
+      "slotBias": 0.00581395348837209,
+      "flags": []
+    },
+    {
+      "id": "sabaq_sawarikh",
+      "expertShare": 0.7,
+      "characterBias": 0.25,
+      "slotBias": 0.125,
+      "flags": [
+        "character advantage"
+      ]
+    },
+    {
+      "id": "scrap_karts",
+      "expertShare": 0.506172839506173,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.0833333333333333,
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "id": "sky_court",
+      "expertShare": 0.528846153846154,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.166666666666667,
+      "flags": []
+    },
+    {
+      "id": "star_rush",
+      "expertShare": 0.691358024691358,
+      "characterBias": 0.195,
+      "slotBias": 0.19,
+      "flags": []
+    },
+    {
+      "id": "storm_heart",
+      "expertShare": 0.524038461538462,
+      "characterBias": 0.0833333333333333,
+      "slotBias": 0.0833333333333333,
+      "flags": []
+    },
+    {
+      "id": "sweeper_storm",
+      "expertShare": 0.55625,
+      "characterBias": 0.208333333333333,
+      "slotBias": 0.0416666666666667,
+      "flags": []
+    },
+    {
+      "id": "symbol_echo",
+      "expertShare": 0.701863354037267,
+      "characterBias": 0.115,
+      "slotBias": 0.11,
+      "flags": []
+    },
+    {
+      "id": "tag_hunt",
+      "expertShare": 0.582822085889571,
+      "characterBias": 0.0416666666666667,
+      "slotBias": 0.208333333333333,
+      "flags": []
+    },
+    {
+      "id": "tank_arena",
+      "expertShare": 0.54375,
+      "characterBias": 0.0416666666666667,
+      "slotBias": 0.0416666666666667,
+      "flags": []
+    },
+    {
+      "id": "turret_duel",
+      "expertShare": 0.630057803468208,
+      "characterBias": 0.108333333333333,
+      "slotBias": 0.05,
+      "flags": []
+    },
+    {
+      "id": "zone_hold",
+      "expertShare": 0.674698795180723,
+      "characterBias": 0.144230769230769,
+      "slotBias": 0.0192307692307692,
+      "flags": []
+    }
+  ]
+}

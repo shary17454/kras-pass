@@ -2,16 +2,34 @@
 """Bind a generated iOS export to the current inputs and verify cached outputs."""
 import hashlib
 import json
+import plistlib
 from pathlib import Path
 import subprocess
 import sys
+from xml.parsers.expat import ExpatError
 
-INPUT_ROOTS = ("src/", "data/", "assets/", "native/apple/", "tools/", "ci_scripts/")
+INPUT_ROOTS = ("src/", "scenes/", "addons/", "data/", "assets/", "native/apple/",
+               "tools/", "ci_scripts/")
 INPUT_FILES = {"project.godot", "export_presets.cfg"}
 STAMP = ".kras-source-export.json"
+PRIVACY_OUTPUTS = ("KrasPass/KrasPass-Info.plist", "PrivacyInfo.xcprivacy",
+                   "KrasPass/KrasPass.entitlements")
 REQUIRED_OUTPUTS = {"KrasPass.pck", "KrasPass.xcodeproj/project.pbxproj",
                     "KrasPass.xcframework/ios-arm64/libgodot.a",
-                    "KrasPass/dylibs/native/apple/bin/KrasApple.xcframework/ios-arm64/libKrasApple.a"}
+                    "KrasPass/dylibs/native/apple/bin/KrasApple.xcframework/ios-arm64/libKrasApple.a"} | set(PRIVACY_OUTPUTS)
+FORBIDDEN_PERMISSIONS = {
+    "NSCameraUsageDescription", "NSMicrophoneUsageDescription",
+    "NSPhotoLibraryUsageDescription", "NSPhotoLibraryAddUsageDescription",
+    "NSContactsUsageDescription", "NSLocationWhenInUseUsageDescription",
+    "NSLocationAlwaysUsageDescription", "NSLocationAlwaysAndWhenInUseUsageDescription",
+    "NSUserTrackingUsageDescription",
+}
+FORBIDDEN_ENTITLEMENTS = {
+    "com.apple.security.device.camera", "com.apple.security.device.audio-input",
+    "com.apple.security.personal-information.addressbook",
+    "com.apple.security.personal-information.location",
+    "com.apple.security.personal-information.photos-library",
+}
 
 
 def sha_file(path):
@@ -44,6 +62,38 @@ def outputs(root):
             and "lfs_parts" not in path.relative_to(root).parts}
 
 
+def privacy_valid(out):
+    """Enforce this project's permission/tracking policy, not Apple acceptance."""
+    try:
+        documents = []
+        for name in PRIVACY_OUTPUTS:
+            with (out / name).open("rb") as source:
+                documents.append(plistlib.load(source))
+        if any(not isinstance(document, dict) for document in documents):
+            return False
+        info, privacy, entitlements = documents
+        if FORBIDDEN_PERMISSIONS.intersection(info):
+            return False
+        if any(info.get(key, False) is not False for key in
+               ("UIFileSharingEnabled", "LSSupportsOpeningDocumentsInPlace")):
+            return False
+        if privacy.get("NSPrivacyTracking") is not False:
+            return False
+        domains = privacy.get("NSPrivacyTrackingDomains", [])
+        if not isinstance(domains, list) or domains:
+            return False
+        collected = privacy.get("NSPrivacyCollectedDataTypes", [])
+        if not isinstance(collected, list) or any(
+                not isinstance(entry, dict)
+                or entry.get("NSPrivacyCollectedDataTypeTracking") is not False
+                for entry in collected):
+            return False
+        return all(entitlements[key] is False for key in
+                   FORBIDDEN_ENTITLEMENTS.intersection(entitlements))
+    except (OSError, ValueError, TypeError, OverflowError, RecursionError, ExpatError):
+        return False
+
+
 def verify(root, out):
     try:
         evidence = json.loads((out / STAMP).read_text())
@@ -52,6 +102,7 @@ def verify(root, out):
                 and evidence["source"] == source_identity(root)
                 and isinstance(evidence["outputs"], dict)
                 and REQUIRED_OUTPUTS.issubset(evidence["outputs"])
+                and privacy_valid(out)
                 and evidence["outputs"] == outputs(out))
     except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.CalledProcessError):
         return False
@@ -71,7 +122,9 @@ def main():
             raise RuntimeError("Source inputs changed during iOS export")
         evidence = {"schema_version": 1, "source": current, "outputs": outputs(out)}
         if not REQUIRED_OUTPUTS.issubset(evidence["outputs"]):
-            raise RuntimeError("Missing fresh game pack, project or engine/bridge library")
+            raise RuntimeError("Missing fresh game pack, project, library or privacy output")
+        if not privacy_valid(out):
+            raise RuntimeError("iOS export violates the project's permission/tracking policy")
         (out / STAMP).write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")
     else:
         raise ValueError("Unknown evidence mode")

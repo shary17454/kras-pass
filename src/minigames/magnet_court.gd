@@ -73,17 +73,46 @@ func _tick_ball(ball: GameBall, delta: float) -> void:
 	# Catch before paddle interception, including a fast ball's swept path.
 	var start := Vector3(ball.global_position.x, 0, ball.global_position.z)
 	var finish := start + Vector3(ball.velocity.x, 0, ball.velocity.z) * delta
+	var earliest := INF
+	var candidates: Array[int] = []
 	for slot in ctx.player_count():
 		if not ctx.is_alive(slot) or _magnet_until[slot] <= 0:
 			continue
 		var f := ctx.fighter(slot)
 		var point := Vector3(f.global_position.x, 0, f.global_position.z)
-		if Geometry3D.get_closest_point_to_segment(point, start, finish).distance_to(point) <= CATCH_RADIUS:
-			_held[ball.get_instance_id()] = slot
-			ball.last_toucher = slot
-			_park_ball(ball, slot)
-			return
+		var contact := _capture_fraction(start, finish, point)
+		if not is_finite(contact):
+			continue
+		if contact < earliest - 0.000001:
+			earliest = contact
+			candidates.assign([slot])
+		elif absf(contact - earliest) <= 0.000001:
+			candidates.append(slot)
+	if not candidates.is_empty():
+		var slot := candidates[0] if candidates.size() == 1 else candidates[ctx.rng.randi_range(0, candidates.size() - 1)]
+		_held[ball.get_instance_id()] = slot
+		ball.last_toucher = slot
+		_park_ball(ball, slot)
+		return
 	super._tick_ball(ball, delta)
+
+
+func _capture_fraction(start: Vector3, finish: Vector3, centre: Vector3) -> float:
+	# Earliest segment/circle contact, not nearest approach or roster order.
+	var offset := start - centre
+	var c := offset.length_squared() - CATCH_RADIUS * CATCH_RADIUS
+	if c <= 0.0:
+		return 0.0
+	var motion := finish - start
+	var a := motion.length_squared()
+	if a <= 0.00000001:
+		return INF
+	var b := offset.dot(motion)
+	var discriminant := b * b - a * c
+	if b >= 0.0 or discriminant < 0.0:
+		return INF
+	var fraction := (-b - sqrt(discriminant)) / a
+	return fraction if fraction >= 0.0 and fraction <= 1.0 else INF
 
 
 func _park_ball(ball: GameBall, slot: int) -> void:
@@ -127,9 +156,6 @@ func _attract(slot: int, delta: float) -> void:
 
 func _release(slot: int) -> void:
 	var f := ctx.fighter(slot)
-	if f == null or not is_instance_valid(f):
-		_held.clear()
-		return
 	var away := _away_from_goal(slot)
 	var released := 0
 	for b in balls:
@@ -146,7 +172,8 @@ func _release(slot: int) -> void:
 			_held.erase(k)
 	if released > 0:
 		ctx.bump_detail(slot, "volleys", released)
-		AudioManager.play_sfx("shoot", f.global_position)
+		if f != null and is_instance_valid(f):
+			AudioManager.play_sfx("shoot", f.global_position)
 
 
 ## Straight back across the court, away from this keeper's own wall.

@@ -1,0 +1,20 @@
+test_changed_addon_requires_commit_and_new_export (test_ios_export_evidence.ExportEvidenceTests.test_changed_addon_requires_commit_and_new_export) ... ok
+test_changed_input_requires_commit_and_new_export (test_ios_export_evidence.ExportEvidenceTests.test_changed_input_requires_commit_and_new_export) ... ok
+test_changed_native_bridge_is_rejected (test_ios_export_evidence.ExportEvidenceTests.test_changed_native_bridge_is_rejected) ... ok
+test_changed_pack_is_rejected (test_ios_export_evidence.ExportEvidenceTests.test_changed_pack_is_rejected) ... ok
+test_changed_scene_requires_commit_and_new_export (test_ios_export_evidence.ExportEvidenceTests.test_changed_scene_requires_commit_and_new_export) ... ok
+test_current_export_is_reusable (test_ios_export_evidence.ExportEvidenceTests.test_current_export_is_reusable) ... ok
+test_extra_generated_file_invalidates_export (test_ios_export_evidence.ExportEvidenceTests.test_extra_generated_file_invalidates_export) ... ok
+test_generated_script_uid_must_be_committed (test_ios_export_evidence.ExportEvidenceTests.test_generated_script_uid_must_be_committed) ... ok
+test_malformed_stamp_is_rejected (test_ios_export_evidence.ExportEvidenceTests.test_malformed_stamp_is_rejected) ... ok
+test_missing_output_is_rejected (test_ios_export_evidence.ExportEvidenceTests.test_missing_output_is_rejected) ... ok
+test_missing_stamp_is_rejected (test_ios_export_evidence.ExportEvidenceTests.test_missing_stamp_is_rejected) ... ok
+test_untracked_game_cannot_enter_an_attested_pack (test_ios_export_evidence.ExportEvidenceTests.test_untracked_game_cannot_enter_an_attested_pack) ... ok
+test_untracked_scene_or_addon_cannot_enter_an_attested_pack (test_ios_export_evidence.ExportEvidenceTests.test_untracked_scene_or_addon_cannot_enter_an_attested_pack) ... ok
+test_verified_download_replaces_bad_cache (test_ios_export_evidence.ExportEvidenceTests.test_verified_download_replaces_bad_cache) ... ok
+test_wrong_checksum_cannot_promote_download (test_ios_export_evidence.ExportEvidenceTests.test_wrong_checksum_cannot_promote_download) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 5.756s
+
+OK

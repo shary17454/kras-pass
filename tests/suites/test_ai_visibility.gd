@@ -8,8 +8,8 @@ class PickupProbe extends Node3D:
 		return available
 
 class RaceCueProbe extends MiniGameController:
-	func rival_ahead(_slot: int) -> int:
-		return 1
+	func rival_ahead(_slot: int, targetable: Callable = Callable()) -> int:
+		return 1 if not targetable.is_valid() or targetable.call(1) else -1
 
 class MagnetCueProbe extends MiniGameController:
 	var charge_ready := true
@@ -45,6 +45,52 @@ class TagSteeringProbe extends "res://src/ai/brains/tag_brain.gd":
 	var destination := Vector3.ZERO
 	func steer_to(target: Vector3, _urgency: float = 1.0) -> void:
 		destination = target
+
+class PlatformAttackProbe extends "res://src/ai/brains/platform_brain.gd":
+	var attack_requests := 0
+	func maybe_attack(_target_slot: int, _range: float = 2.4) -> void:
+		attack_requests += 1
+
+
+func _test_rival_reacquisition(t: TestHarness, scene: Node) -> void:
+	var rival: Fighter = scene.ctx.fighter(1)
+	var original := rival.global_position
+	for difficulty in 4:
+		var observer := AIBrain.new()
+		observer.configure(0, scene.ctx, difficulty, 491)
+		observer._time = 10.0
+		rival.show()
+		rival.global_position = Vector3(2, 1, 0)
+		observer._record_history()
+		t.ok(not observer.can_target(1), "tier %d first sight waits for reaction" % difficulty)
+		observer._time += observer.reaction_time
+		observer._record_history()
+		t.ok(observer.can_target(1), "tier %d continuous sight becomes actionable" % difficulty)
+		rival.hide()
+		observer._time += 0.05
+		observer._record_history()
+		t.ok(not observer.can_target(1), "tier %d hidden rival is not targetable" % difficulty)
+		t.ok(observer.has_observed(1), "tier %d occlusion retains last-seen knowledge" % difficulty)
+		t.equal(observer.perceive(1), Vector3(2, 1, 0), "tier %d occlusion retains observed position" % difficulty)
+		rival.show()
+		rival.global_position = Vector3(3, 1, 0)
+		observer._time += 1.0
+		var reappeared := observer._time
+		observer._record_history()
+		t.ok(not observer.can_target(1), "tier %d reappearance cannot reuse old sight credit" % difficulty)
+		observer._time = reappeared + observer.reaction_time - 0.001
+		t.ok(not observer.can_target(1), "tier %d reacquisition waits until threshold" % difficulty)
+		observer._time = reappeared + observer.reaction_time
+		observer._record_history()
+		t.ok(observer.can_target(1), "tier %d reacquisition becomes actionable at threshold" % difficulty)
+		rival.hide()
+		t.ok(not observer.can_target(1), "tier %d visibility query catches occlusion between samples" % difficulty)
+		rival.show()
+		t.ok(not observer.can_target(1), "tier %d unsampled reappearance cannot retain targeting credit" % difficulty)
+		observer.on_round_start()
+		t.equal(observer._visible_since_times.size(), 0, "tier %d new round resets reacquisition history" % difficulty)
+	rival.global_position = original
+	rival.show()
 
 
 func run(t: TestHarness, host: Node) -> void:
@@ -125,6 +171,7 @@ func run(t: TestHarness, host: Node) -> void:
 	brain._time = 0.4
 	brain.reaction_time = 0.2
 	t.equal(brain.perceive(1), Vector3(9, 1, 0), "visible target retains configured reaction delay")
+	_test_rival_reacquisition(t, scene)
 	var parent := Node3D.new()
 	scene.add_child(parent)
 	parent.hide()
@@ -138,6 +185,8 @@ func run(t: TestHarness, host: Node) -> void:
 		probes.append(probe)
 	probes[0].hide()
 	probes[2].available = false
+	# Availability/visibility fixture; real pickup timing has its own suite.
+	brain.reaction_time = 0.0
 	t.equal(brain.nearest_in_group("test_ai_visible_pickups", host.get_tree()), probes[3], "hidden or unavailable pickups cannot become targets")
 	t.equal(probes[0].queries, 0, "hidden pickup availability is never queried")
 	t.equal(probes[1].queries, 0, "hidden parent suppresses child availability queries")
@@ -150,11 +199,14 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duo(t, scene)
 	_test_smasher(t, scene)
 	_test_duellist(t, scene)
+	_test_duellist_initialization(t, scene)
+	_test_duellist_ties(t, scene)
 	_test_duellist_delay(t, scene)
 	_test_ball(t, scene)
 	_test_courier(t, scene)
 	_test_platform(t, scene)
 	_test_remaining_rivals(t, scene)
+	_test_race_visible_alternative(t, scene)
 	_test_keeper_balls(t, scene)
 	_test_magnet_deadline(t, scene)
 	_test_bomb_states(t, scene)
@@ -165,9 +217,78 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_tag_strategy(t, scene)
 	_test_camera_bounds(t, scene)
 	_test_tied_leaders(t, scene)
+	_test_tied_nearest(t, scene)
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+	await _test_siege_cue_history(t, host)
+
+
+func _test_siege_cue_history(t: TestHarness, host: Node) -> void:
+	t.test("siege crystal cues retain profile delay and invalidate hidden or replaced targets")
+	for difficulty in 4:
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		host.add_child(scene)
+		scene.setup({"config": MatchConfig.build("base_siege", ["fanoos", "nabta", "ramla", "sakhra"], 0, difficulty, 853)})
+		scene.set_physics_process(false)
+		for fighter in scene.ctx.fighters:
+			fighter.set_physics_process(false)
+		scene.ctx.observation_camera = null
+		var brain = load("res://src/ai/brains/siege_brain.gd").new()
+		brain.controller = scene.controller
+		brain.configure(0, scene.ctx, difficulty, 853)
+		brain.on_round_start()
+		var base: Dictionary = scene.controller._bases[1]
+		var delay: float = brain.reaction_time
+		t.ok(delay > 0.0, "tier %d uses its actual nonzero profile delay" % difficulty)
+		brain._time = 10.0
+		t.ok(brain._base_cue(1).is_empty(), "tier %d first crystal sight is not immediately actionable" % difficulty)
+		brain._time = 10.0 + delay - 0.001
+		t.ok(brain._base_cue(1).is_empty(), "tier %d crystal cue waits until reaction threshold" % difficulty)
+		brain._time = 10.0 + delay
+		t.equal(brain._base_cue(1).get("health"), 100, "tier %d initial health becomes actionable at threshold" % difficulty)
+
+		var changed_at: float = brain._time + 0.01
+		brain._time = changed_at
+		base.health = 25.0
+		scene.controller._refresh_base(base)
+		t.equal(brain._base_cue(1).get("health"), 100, "tier %d changed health cannot leak through the old cue" % difficulty)
+		brain._time = changed_at + delay - 0.001
+		t.equal(brain._base_cue(1).get("health"), 100, "tier %d changed health is delayed for the full profile interval" % difficulty)
+		brain._time = changed_at + delay
+		t.equal(brain._base_cue(1).get("health"), 25, "tier %d observed health update becomes actionable" % difficulty)
+
+		base.crystal.hide()
+		base.health = 0.0
+		t.ok(brain._base_cue(1).is_empty(), "tier %d hidden destruction cannot return old actionable health" % difficulty)
+		t.ok(not brain._base_history.has(1), "tier %d occlusion discards crystal cue history" % difficulty)
+		base.health = 50.0
+		scene.controller._refresh_base(base)
+		base.crystal.show()
+		var appeared_at: float = brain._time + 1.0
+		brain._time = appeared_at
+		t.ok(brain._base_cue(1).is_empty(), "tier %d reappearance cannot reuse prior sight credit" % difficulty)
+		brain._time = appeared_at + delay - 0.001
+		t.ok(brain._base_cue(1).is_empty(), "tier %d reacquired crystal retains full reaction delay" % difficulty)
+		brain._time = appeared_at + delay
+		t.equal(brain._base_cue(1).get("health"), 50, "tier %d reacquired crystal exposes only delayed new health" % difficulty)
+
+		var old_crystal: Node3D = base.crystal
+		var replacement := MeshInstance3D.new()
+		replacement.mesh = BoxMesh.new()
+		base.node.add_child(replacement)
+		base.crystal = replacement
+		base.health = 75.0
+		old_crystal.queue_free()
+		t.ok(brain._base_cue(1).is_empty(), "tier %d replacement identity cannot inherit old crystal samples" % difficulty)
+		brain._time += delay
+		t.equal(brain._base_cue(1).get("health"), 75, "tier %d replacement is observed after its own delay" % difficulty)
+		brain.on_round_start()
+		t.equal(brain._base_history.size(), 0, "tier %d round restart clears crystal history" % difficulty)
+		t.ok(brain._base_cue(1).is_empty(), "tier %d restarted round cannot reuse actionable cues" % difficulty)
+		scene.teardown()
+		scene.queue_free()
+		await host.get_tree().process_frame
 
 
 func _test_camera_bounds(t: TestHarness, scene: Node) -> void:
@@ -238,6 +359,45 @@ func _test_camera_bounds(t: TestHarness, scene: Node) -> void:
 	camera.queue_free()
 
 
+func _test_tied_nearest(t: TestHarness, scene: Node) -> void:
+	t.test("equal nearby rivals do not always select the lowest player ID")
+	scene.ctx.alive.fill(true)
+	for fighter in scene.ctx.fighters:
+		fighter.show()
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	scene.ctx.fighter(1).global_position = Vector3(3, 1, 0)
+	scene.ctx.fighter(2).global_position = Vector3(-3, 1, 0)
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 3)
+	var brain := AIBrain.new()
+	var replay_brain := AIBrain.new()
+	brain.configure(0, scene.ctx, 3, 8341)
+	replay_brain.configure(0, scene.ctx, 3, 8341)
+	for observer in [brain, replay_brain]:
+		observer._record_history()
+		observer._time += observer.reaction_time
+	var counts := [0, 0, 0, 0]
+	for sample in 900:
+		var selected := brain.nearest_rival()
+		t.ok(selected in [1, 2, 3], "equal nearest candidates exclude self")
+		t.equal(selected, replay_brain.nearest_rival(), "same seed reproduces nearest tie selection")
+		if selected in [1, 2, 3]:
+			counts[selected] += 1
+	for rival in [1, 2, 3]:
+		t.ok(counts[rival] >= 220 and counts[rival] <= 380, "nearest tie distributes across all equally close rivals")
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 1)
+	brain._record_history()
+	brain._time += brain.reaction_time
+	var state := brain.rng.state
+	for sample in 30:
+		t.equal(brain.nearest_rival(), 3, "unique closer rival takes priority over earlier equal candidates")
+	t.equal(brain.rng.state, state, "unique nearest rival does not consume tie randomness")
+	scene.ctx.fighter(3).hide()
+	scene.ctx.alive[1] = false
+	t.equal(brain.nearest_rival(), 2, "hidden and eliminated nearest rivals are excluded")
+	scene.ctx.fighter(2).hide()
+	t.equal(brain.nearest_rival(), -1, "no visible eligible nearest rival has no target")
+
+
 func _test_tied_leaders(t: TestHarness, scene: Node) -> void:
 	t.test("equal visible leaders do not always target the lowest player ID")
 	scene.ctx.scores.fill(0)
@@ -248,6 +408,9 @@ func _test_tied_leaders(t: TestHarness, scene: Node) -> void:
 	var replay_brain := AIBrain.new()
 	brain.configure(0, scene.ctx, 3, 5319)
 	replay_brain.configure(0, scene.ctx, 3, 5319)
+	for observer in [brain, replay_brain]:
+		observer._record_history()
+		observer._time += observer.reaction_time
 	var counts := [0, 0, 0, 0]
 	for sample in 900:
 		var selected := brain.leader_rival()
@@ -495,6 +658,8 @@ func _test_duo(t: TestHarness, scene: Node) -> void:
 func _test_smasher(t: TestHarness, scene: Node) -> void:
 	var smasher = load("res://src/ai/brains/smasher_brain.gd").new()
 	smasher.configure(0, scene.ctx, 3, 119)
+	# This fixture isolates visible colour classification, not reaction timing.
+	smasher.reaction_time = 0.0
 	smasher.accuracy = 1.0
 	var controller = load("res://src/minigames/crate_smash.gd").new()
 	smasher.controller = controller
@@ -537,6 +702,23 @@ func _test_smasher(t: TestHarness, scene: Node) -> void:
 	controller.free()
 
 
+func _test_duellist_initialization(t: TestHarness, scene: Node) -> void:
+	for difficulty in 4:
+		for seed_value in [119, 821]:
+			for slot in 4:
+				var generic = load("res://src/ai/brains/generic_brain.gd").new()
+				generic.configure(slot, scene.ctx, difficulty, seed_value)
+				var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
+				duellist.configure(slot, scene.ctx, difficulty, seed_value)
+				t.equal(duellist._tree, scene.get_tree(), "duellist retains shared fallback pickup access")
+				t.near(duellist._idle_phase, generic._idle_phase, 0.000001,
+					"duellist retains seeded shared fallback direction instead of a fixed world bearing")
+				t.ok(duellist._tracks_damage, "specialized delayed damage perception remains enabled")
+				var repeated = load("res://src/ai/brains/duellist_brain.gd").new()
+				repeated.configure(slot, scene.ctx, difficulty, seed_value)
+				t.equal(repeated._idle_phase, duellist._idle_phase, "same seed and seat reproduce fallback direction")
+
+
 func _test_duellist(t: TestHarness, scene: Node) -> void:
 	var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
 	duellist.configure(0, scene.ctx, 3, 119)
@@ -559,6 +741,38 @@ func _test_duellist(t: TestHarness, scene: Node) -> void:
 	scene.ctx.fighter(1).show()
 	duellist._record_history()
 	t.equal(duellist._best_target(), 1, "duellist can target damaged rival after it reappears")
+
+
+func _test_duellist_ties(t: TestHarness, scene: Node) -> void:
+	var duellist = load("res://src/ai/brains/duellist_brain.gd").new()
+	duellist.configure(0, scene.ctx, 3, 119)
+	duellist.reaction_time = 0.0
+	duellist.strategy = 1.0
+	scene.ctx.fighter(0).global_position = Vector3(0, 1, 0)
+	for rival in range(1, 4):
+		scene.ctx.fighter(rival).show()
+		scene.ctx.fighter(rival).damage_percent = 0.0
+	scene.ctx.fighter(1).global_position = Vector3(2, 1, 0)
+	scene.ctx.fighter(2).global_position = Vector3(-2, 1, 0)
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 6)
+	duellist._record_history()
+	var choices := [0, 0, 0, 0]
+	for seed_value in 256:
+		duellist.rng.seed = seed_value + 12001
+		var selected: int = duellist._best_target()
+		t.ok(selected in [1, 2], "duellist tie selection excludes lower utility rivals")
+		if selected in [1, 2]:
+			choices[selected] += 1
+	t.ok(choices[1] >= 96 and choices[1] <= 160, "equal utility does not always prioritize the lower slot")
+	t.ok(choices[2] >= 96 and choices[2] <= 160, "equal utility gives both rivals a seeded selection opportunity")
+	duellist.rng.seed = 22001
+	var first: int = duellist._best_target()
+	duellist.rng.seed = 22001
+	t.equal(duellist._best_target(), first, "duellist tie selection is reproducible from its seed")
+	scene.ctx.fighter(2).hide()
+	var before: int = duellist.rng.state
+	t.equal(duellist._best_target(), 1, "a hidden co-leader cannot enter the final tie")
+	t.equal(duellist.rng.state, before, "a unique best target consumes no tie-breaking random draw")
 
 
 func _test_duellist_delay(t: TestHarness, scene: Node) -> void:
@@ -631,6 +845,30 @@ func _test_ball(t: TestHarness, scene: Node) -> void:
 	t.equal(brain._best_victim(Vector3(1, 1, 0)), -1, "blast bot has no victim when rivals are hidden")
 	scene.ctx.fighter(1).show()
 	t.equal(brain._best_victim(Vector3(1, 1, 0)), 1, "blast bot can select a rival after it reappears")
+	for index in 4:
+		scene.ctx.fighter(index).show()
+	scene.ctx.fighter(1).global_position = Vector3(5, 1, 0)
+	scene.ctx.fighter(2).global_position = Vector3(-5, 1, 0)
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 5)
+	brain._record_history()
+	brain.rng.seed = 211
+	var counts := [0, 0, 0, 0]
+	for attempt in 900:
+		counts[brain._best_victim(Vector3(0, 1, 0))] += 1
+	for index in [1, 2, 3]:
+		t.ok(counts[index] > 200 and counts[index] < 400, "equal-distance blast victims are not selected by seat order")
+	brain.rng.seed = 212
+	var sequence := []
+	for attempt in 30:
+		sequence.append(brain._best_victim(Vector3(0, 1, 0)))
+	brain.rng.seed = 212
+	for attempt in 30:
+		t.equal(brain._best_victim(Vector3(0, 1, 0)), sequence[attempt], "victim ties reproduce from the match seed")
+	scene.ctx.fighter(3).global_position = Vector3(0, 1, 1)
+	brain._record_history()
+	var rng_state: int = brain.rng.state
+	t.equal(brain._best_victim(Vector3(0, 1, 0)), 3, "unique nearest victim wins even after earlier equal candidates")
+	t.equal(brain.rng.state, rng_state, "unique victim selection does not consume random state")
 	for ball in balls:
 		ball.remove_from_group("balls")
 		if not ball.is_queued_for_deletion(): ball.queue_free()
@@ -702,6 +940,57 @@ func _test_platform(t: TestHarness, scene: Node) -> void:
 	other.show()
 	brain.decide(0.0)
 	t.equal(brain._target_tile, other, "platform bot resumes targeting visible solid ground")
+	var attacker := PlatformAttackProbe.new()
+	attacker.configure(0, scene.ctx, 3, 119)
+	attacker.reaction_time = 0.0
+	attacker.aggression = 0.0
+	scene.ctx.fighter(1).global_position = tile.global_position
+	tile.state = ArenaTile.State.WARNING
+	attacker._record_history()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 0, "hidden rival floor warning cannot trigger an opportunistic shove")
+	tile.show()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 1, "visible rival floor warning still permits a shove")
+	tile.hide()
+	attacker.decide(0.0)
+	t.equal(attacker.attack_requests, 1, "hiding the floor removes warning-based attack credit")
+	for difficulty in 4:
+		var delayed := PlatformAttackProbe.new()
+		delayed.configure(0, scene.ctx, difficulty, 119)
+		delayed.aggression = 0.0
+		delayed._record_history()
+		delayed._time = 10.0
+		tile.show()
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 0, "tier %d newly seen rival floor warning waits for reaction" % difficulty)
+		delayed._time = 10.0 + delayed.reaction_time - 0.001
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 0, "tier %d warning remains delayed before threshold" % difficulty)
+		delayed._time = 10.0 + delayed.reaction_time
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 1, "tier %d warning becomes actionable at threshold" % difficulty)
+		tile.hide()
+		delayed.decide(0.0)
+		tile.show()
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 1, "tier %d reappearing warning must earn fresh reaction credit" % difficulty)
+		delayed._time += delayed.reaction_time
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 2, "tier %d reappearing warning becomes actionable after delay" % difficulty)
+		tile.state = ArenaTile.State.SOLID
+		delayed.decide(0.0)
+		tile.state = ArenaTile.State.WARNING
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 2, "tier %d restored floor cannot retain warning credit" % difficulty)
+		delayed._time += delayed.reaction_time
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 3, "tier %d new floor warning becomes actionable after delay" % difficulty)
+		delayed.on_round_start()
+		delayed._record_history()
+		delayed._time += delayed.reaction_time + 1.0
+		delayed.decide(0.0)
+		t.equal(delayed.attack_requests, 3, "tier %d new round discards floor warning observations" % difficulty)
 	scene.arena.tiles = tiles
 	tile.queue_free()
 	other.queue_free()
@@ -752,7 +1041,10 @@ func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
 		scene.add_child(base)
 		base.global_position = Vector3(slot, 1, 0)
 		bases.append(base)
-		base_controller._bases.append({"slot": slot, "node": base, "health": [100, 1, 80, 0][slot]})
+		var crystal := MeshInstance3D.new()
+		crystal.mesh = BoxMesh.new()
+		base.add_child(crystal)
+		base_controller._bases.append({"slot": slot, "node": base, "crystal": crystal, "health": [100, 1, 80, 0][slot]})
 	scene.ctx.fighter(1).hide()
 	scene.ctx.fighter(2).show()
 	t.equal(siege._intruder_at_home(), 2, "siege bot ignores hidden home intruder")
@@ -770,19 +1062,58 @@ func _test_remaining_rivals(t: TestHarness, scene: Node) -> void:
 		static_root = Node3D.new()
 		static_root.name = "Static"
 		scene.arena.add_child(static_root)
-	var hidden_ledge := Node3D.new()
-	var visible_ledge := Node3D.new()
-	static_root.add_child(hidden_ledge)
-	static_root.add_child(visible_ledge)
-	hidden_ledge.global_position = Vector3(0, 104, 0)
-	visible_ledge.global_position = Vector3(1, 102, 0)
+	var hidden_ledge: StaticBody3D = scene.arena._add_static_box(Vector3(1, 0.5, 1), Vector3(0, 100.8, 0), Color.WHITE)
+	var visible_ledge: StaticBody3D = scene.arena._add_static_box(Vector3(1, 0.5, 1), Vector3(1, 100.6, 0), Color.WHITE)
 	hidden_ledge.hide()
 	var view: Transform3D = scene.camera.global_transform
 	scene.camera.global_position += Vector3.UP * 100.0
-	t.equal(climber._find_higher_ground(Vector3(0, 100, 0)), Vector3(1, 103, 0), "climber ignores hidden higher geometry")
+	var could_jump: bool = scene.ctx.fighter(0).can_jump
+	scene.ctx.fighter(0).can_jump = true
+	t.equal(climber._find_higher_ground(Vector3(0, 100, 0)), Vector3(1, 100.85, 0), "climber ignores hidden higher solid geometry")
+	scene.ctx.fighter(0).can_jump = could_jump
 	scene.camera.global_transform = view
 	hidden_ledge.queue_free()
 	visible_ledge.queue_free()
+
+
+func _test_race_visible_alternative(t: TestHarness, scene: Node) -> void:
+	var game = load("res://src/minigames/sabaq_sawarikh.gd").new()
+	game.ctx = scene.ctx
+	game.lap.assign([0, 0, 0, 0])
+	game._next_cp.assign([0, 1, 2, 3])
+	game._started.assign([false, false, false, false])
+	game.finish_times.resize(4)
+	game.finish_times.fill(game.UNFINISHED)
+	game._checkpoints.assign([Vector3.ZERO, Vector3.RIGHT, Vector3.FORWARD, Vector3.LEFT])
+	for difficulty in 4:
+		for slot in 4:
+			scene.ctx.fighter(slot).show()
+			scene.ctx.fighter(slot).global_position = Vector3(slot, 1, 0)
+		var brain = load("res://src/ai/brains/racer_armed_brain.gd").new()
+		brain.configure(0, scene.ctx, difficulty, 119)
+		brain.controller = game
+		brain.strategy = 1.0
+		brain._record_history()
+		brain._time = brain.reaction_time + 1.0
+		scene.ctx.fighter(1).hide()
+		scene.ctx.fighter(3).hide()
+		game._next_cp[0] = 0
+		t.equal(game.rival_ahead(0), 1, "unfiltered player missile selection remains unchanged")
+		t.ok(brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d visible racer ahead is not masked by a hidden nearer-ranked rival" % difficulty)
+		game._next_cp[0] = 3
+		t.ok(brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d leader can choose a visible trailing racer despite a hidden first slot" % difficulty)
+		game.finish_times[2] = 1234
+		t.ok(not brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d finished visible racers cannot become missile targets" % difficulty)
+		game.finish_times[2] = game.UNFINISHED
+		scene.ctx.fighter(2).hide()
+		t.ok(not brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d all hidden racers cannot trigger a missile" % difficulty)
+		scene.ctx.fighter(2).show()
+		brain._record_history()
+		t.ok(not brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d visible alternative still waits for reacquisition reaction delay" % difficulty)
+		brain._time += brain.reaction_time + 0.1
+		t.ok(brain._should_use(game.Item.MISSILE, scene.ctx.fighter(0)), "tier %d reacquired alternative is available after reaction delay" % difficulty)
+		brain.controller = null
+	game.free()
 
 
 func _test_keeper_balls(t: TestHarness, scene: Node) -> void:
@@ -988,6 +1319,9 @@ func _test_ball_delay(t: TestHarness, scene: Node) -> void:
 	t.equal(keeper._most_dangerous_ball(), balls[1], "keeper updates threat ranking after the observation delay")
 	balls[1].velocity = Vector3(999, 0, 0)
 	var observation: Dictionary = keeper.perceive_ball(balls[1])
+	t.near(float(observation.get("age", -1.0)), 0.3, 0.0001, "observation age uses the retained sample time, not merely the configured reaction delay")
+	observation["age"] = 999.0
+	t.near(float(keeper.perceive_ball(balls[1]).get("age", -1.0)), 0.3, 0.0001, "returned observation age cannot mutate retained history")
 	t.equal(observation.get("velocity"), Vector3(-10, 0, 0), "ball prediction infers motion instead of reading private velocity")
 	observation["position"] = Vector3(999, 0, 0)
 	t.equal(keeper.perceive_ball(balls[1]).get("position"), Vector3(4, 0, 0), "returned observation cannot mutate retained history")

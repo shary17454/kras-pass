@@ -2,9 +2,10 @@ import {performance} from 'node:perf_hooks';
 
 // Smoke diagnostics contain operation names and room phases, never payloads.
 export class NetworkTiming {
-  constructor({now = () => performance.now(), cpu = () => process.cpuUsage()} = {}) {
+  constructor({now = () => performance.now(), cpu = () => process.cpuUsage(), epochOriginMs = performance.timeOrigin} = {}) {
     this.now = now;
     this.cpu = cpu;
+    this.epochOriginMs = epochOriginMs;
     this.operations = new Map();
     this.stalls = [];
     this.worstStall = null;
@@ -35,12 +36,13 @@ export class NetworkTiming {
   sample(rooms, intervalMs = 100) {
     const time = this.now(), cpu = this.cpu();
     const elapsedMs = time - this.previousTime;
+    const startEpochMs = this.epochOriginMs + this.previousTime;
     const cpuMs = (cpu.user - this.previousCpu.user + cpu.system - this.previousCpu.system) / 1000;
     this.previousTime = time;
     this.previousCpu = cpu;
     const delayMs = Math.max(0, elapsedMs - intervalMs);
     if (delayMs < 100) return null;
-    const row = {delayMs, elapsedMs, cpuMs, rooms: Array.from(rooms, room => ({
+    const row = {startEpochMs, endEpochMs: this.epochOriginMs + time, delayMs, elapsedMs, cpuMs, rooms: Array.from(rooms, room => ({
       state: room.state, epoch: room.epoch, game: room.matchConfig?.game,
       arena: room.matchConfig?.arena}))};
     if (!this.worstStall || delayMs > this.worstStall.delayMs) this.worstStall = row;

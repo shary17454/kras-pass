@@ -18,6 +18,15 @@ func run(t: TestHarness, host: Node) -> void:
 	var source: Node = scenes[0]
 	var guest: Node = scenes[1]
 	var game: Node = source.controller
+	for scene in scenes:
+		var forge: Node = scene.controller
+		var collar: MeshInstance3D = forge.boss_node.get_node("IntakeCollar")
+		var ring := collar.mesh as TorusMesh
+		t.ok(ring != null and ring.inner_radius > 2.6, "feeding marker clears opaque furnace shell")
+		t.ok(ring != null and is_equal_approx(ring.outer_radius, 2.9), "marker matches existing cap silhouette")
+		t.equal(collar.position.y, 1.5, "feeding marker retains target height")
+		t.equal(forge._intake.position, Vector3(0, 1.5, 0), "visual polish does not move feeding anchor")
+		t.equal(collar.get_child_count(), 0, "feeding marker has no collision children")
 	game._lob_crate()
 	game._lob_crate()
 	var fighter: Fighter = source.ctx.fighter(0)

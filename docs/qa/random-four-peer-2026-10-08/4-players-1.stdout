@@ -1,0 +1,23 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":2099,"phase":2,"running":true,"seed":17,"snapshots":152,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":2099,"phase":6,"running":true,"seed":17,"snapshots":352,"state":"playing"}
+NETWORK_ROUND={"arena":"vortex_ring","epoch":1,"game":"ring_rumble","moved":true,"scores":[8,8,8,8],"spectator":false}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":2099,"phase":3,"running":true,"seed":17,"snapshots":526,"state":"playing"}
+NETWORK_ROUND={"arena":"storm_ring","epoch":2,"game":"ring_rumble","moved":true,"scores":[8,8,8,8],"spectator":false}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":2099,"phase":1,"running":true,"seed":17,"snapshots":727,"state":"playing"}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":2099,"phase":4,"running":true,"seed":17,"snapshots":927,"state":"playing"}
+NETWORK_ROUND={"arena":"vortex_ring","epoch":3,"game":"ring_rumble","moved":true,"scores":[8,8,8,8],"spectator":false}
+NETWORK_TIMING={"epoch":4,"max_frame_gap_ms":2099,"phase":2,"running":true,"seed":17,"snapshots":1124,"state":"playing"}
+NETWORK_TIMING={"epoch":4,"max_frame_gap_ms":2099,"phase":6,"running":true,"seed":17,"snapshots":1324,"state":"playing"}
+NETWORK_ROUND={"arena":"vortex_ring","epoch":4,"game":"ring_rumble","moved":true,"scores":[8,8,8,8],"spectator":false}
+NETWORK_TIMING={"epoch":5,"max_frame_gap_ms":2099,"phase":3,"running":true,"seed":17,"snapshots":1523,"state":"playing"}
+NETWORK_ROUND={"arena":"storm_ring","epoch":5,"game":"ring_rumble","moved":true,"scores":[8,8,8,8],"spectator":false}
+NETWORK_TIMING={"epoch":6,"max_frame_gap_ms":2099,"phase":1,"running":true,"seed":17,"snapshots":1722,"state":"playing"}
+NETWORK_TIMING={"epoch":6,"max_frame_gap_ms":2099,"phase":4,"running":true,"seed":17,"snapshots":1922,"state":"playing"}
+NETWORK_ROUND={"arena":"vortex_ring","epoch":6,"game":"ring_rumble","moved":true,"scores":[8,8,8,8],"spectator":false}
+NETWORK_FINISHED={"arena_history":["vortex_ring","storm_ring","vortex_ring","vortex_ring","storm_ring","vortex_ring"],"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":3,"matches":6,"moved":true,"reconnected":false,"scores":[8,8,8,8],"snapshots":1984,"tournament":{"awards":[0.0,0.0,0.0,0.0],"champions":[0.0,1.0,2.0,3.0],"complete":true,"contenders":[0.0,1.0,2.0,3.0],"cups":[3.0,3.0,3.0,3.0],"mode":"points","points":[9.0,9.0,9.0,9.0],"round":3.0,"target":3.0,"tie_attempts":3.0},"tournament_rotation":"random","world_snapshots":0}

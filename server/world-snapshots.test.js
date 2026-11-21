@@ -5,7 +5,7 @@ import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWor
 test('crumble requires every authored tile with bounded phases and event counters', () => {
   const make = () => ({tiles: Array.from({length: 113}, () => [0, 0, 0, 0])});
   assert.ok(validCrumbleWorld(make()));
-  for (const row of [[1, .5, 0, 1], [2, 1, -5, 1], [3, 5, -12, 1]]) {
+  for (const row of [[1, .5, 0, 1], [1, 2.4, 0, 1], [2, 1, -5, 1], [3, 5, -12, 1]]) {
     const data = make(); data.tiles[0] = row; assert.ok(validCrumbleWorld(data));
   }
   for (const value of [null, {}, [], {tiles: []}, {tiles: Array(114).fill([0, 0, 0, 0])}]) assert.equal(validCrumbleWorld(value), false);
@@ -15,7 +15,7 @@ test('crumble requires every authored tile with bounded phases and event counter
       assert.equal(validCrumbleWorld(data), false);
     }
   }
-  for (const row of [[0, 1, 0, 0], [0, 0, -1, 0], [1, 1, 0, 0], [1, .5, -1, 0], [1.5, 0, 0, 0], [2, 0, -1, .5]]) {
+  for (const row of [[0, 1, 0, 0], [0, 0, -1, 0], [1, 2.401, 0, 0], [1, .5, -1, 0], [1.5, 0, 0, 0], [2, 0, -1, .5]]) {
     const data = make(); data.tiles[0] = row; assert.equal(validCrumbleWorld(data), false);
   }
 });

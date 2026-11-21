@@ -12,6 +12,146 @@ func run(t: TestHarness, host: Node) -> void:
 	t.suite("lifecycle")
 	_background_flushes_and_is_idempotent(t)
 	await _match_pauses_on_real_background_signal(t)
+	await _background_before_live(t)
+	await _paused_pickup_overlap(t)
+	await _teardown_retires_live_match(t)
+	await _completion_owner_lifetime(t)
+
+
+func _paused_pickup_overlap(t: TestHarness) -> void:
+	t.test("physics overlap cannot grant a powerup while a local match is paused")
+	for ambient_enabled in [true, false]:
+		var cfg := MatchConfig.build("ring_rumble", _characters(), 1, PlayerConfig.Difficulty.EASY, 80)
+		cfg.players[0].device_type = 2
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		_host.add_child(scene)
+		scene.setup({"config": cfg})
+		for next in [MatchPhase.P.INSTRUCTIONS, MatchPhase.P.COUNTDOWN, MatchPhase.P.PLAYING]:
+			scene._set_phase(next)
+		scene.powerups.enabled = ambient_enabled
+		var fighter: Fighter = scene.ctx.fighter(0)
+		var events := [0]
+		var on_collected := func(slot, id):
+			if slot == 0 and id == "speed":
+				events[0] += 1
+		EventBus.powerup_collected.connect(on_collected)
+		scene.powerups.spawn_at("speed", fighter.global_position + Vector3.UP)
+		scene.powerups.spawn_at("shield", fighter.global_position + Vector3.UP)
+		scene._toggle_pause()
+		for tick in 4:
+			await _host.get_tree().physics_frame
+		t.equal(events[0], 0, "paused physics cannot emit a collection event")
+		t.near(float(fighter.mods["speed"]), 1.0, 0.001, "paused overlap cannot change player modifiers")
+		t.equal(scene.powerups._active_pickups.size(), 2, "paused overlaps cannot retire either pickup")
+		scene._toggle_pause()
+		for tick in 4:
+			await _host.get_tree().physics_frame
+		t.equal(events[0], 1, "resume collects the overlapping speed pickup exactly once")
+		t.near(float(fighter.mods["speed"]), Registry.powerup("speed").magnitude, 0.001,
+			"resumed simulation applies the ordinary powerup effect")
+		t.near(float(fighter.mods["shield"]), 1.0, 0.001, "retiring one overlap does not skip the other")
+		t.equal(scene.powerups._active_pickups.size(), 0, "both scripted pickups collect even with ambient spawning disabled")
+		EventBus.powerup_collected.disconnect(on_collected)
+		scene.teardown()
+		scene.queue_free()
+		await _host.get_tree().process_frame
+
+
+func _background_before_live(t: TestHarness) -> void:
+	t.test("background during preparation cannot start an unseen local round")
+	var was_backgrounded := Platform.is_backgrounded
+	var was_audio_suspended := AudioManager.is_suspended()
+	for background_phase in [-1, MatchPhase.P.INTRO, MatchPhase.P.INSTRUCTIONS, MatchPhase.P.COUNTDOWN]:
+		Platform._on_foreground()
+		if background_phase == -1:
+			Platform._on_background()
+		var cfg := MatchConfig.build("ring_rumble", _characters(), 1, PlayerConfig.Difficulty.EASY, 79)
+		cfg.players[0].device_type = 2
+		var scene: Node = load("res://src/match/match_scene.gd").new()
+		_host.add_child(scene)
+		scene.setup({"config": cfg})
+		for next in [MatchPhase.P.INTRO, MatchPhase.P.INSTRUCTIONS, MatchPhase.P.COUNTDOWN, MatchPhase.P.PLAYING]:
+			if scene.phase != next:
+				scene._set_phase(next)
+			if next == background_phase:
+				Platform._on_background()
+		t.ok(scene._paused, "already-backgrounded and preparation-backgrounded rounds pause at live entry")
+		t.ok(scene._pause_menu != null, "unseen local round offers an explicit resume action")
+		var remaining: float = scene.ctx.time_left
+		scene._physics_process(0.5)
+		t.equal(scene.ctx.time_left, remaining, "unseen round cannot spend playing time")
+		Platform._on_foreground()
+		t.ok(scene._paused, "foreground does not silently resume an unseen round")
+		if scene._paused:
+			scene._toggle_pause()
+			scene._physics_process(0.5)
+			t.ok(scene.ctx.time_left < remaining, "explicit resume restores ordinary round simulation")
+		scene.teardown()
+		scene.queue_free()
+		await _host.get_tree().process_frame
+	Platform.is_backgrounded = was_backgrounded
+	AudioManager.set_suspended(was_audio_suspended)
+
+
+func _completion_owner_lifetime(t: TestHarness) -> void:
+	t.test("completion targets survive their caller and are released at teardown")
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	_host.add_child(scene)
+	var target := _attach_completion_target(scene)
+	t.ok(target.get_ref() != null, "match retains its temporary RefCounted callback owner")
+	t.ok(scene._on_finished.is_valid(), "callback remains callable after launcher returns")
+	if scene._on_finished.is_valid():
+		scene._on_finished.call(null)
+		t.equal(target.get_ref().calls, 1, "retained callback receives completion")
+	scene.teardown()
+	t.equal(target.get_ref(), null, "teardown releases callback owner instead of leaking it")
+	t.ok(scene._on_finished.is_null(), "retired match has no completion callback")
+	scene.queue_free()
+	await _host.get_tree().process_frame
+
+
+func _attach_completion_target(scene: Node) -> WeakRef:
+	var target := CompletionTarget.new()
+	var config := MatchConfig.build("ring_rumble", _characters(), 0, PlayerConfig.Difficulty.EASY, 78)
+	scene.setup({"config": config, "on_finished": Callable(target, "accept")})
+	return weakref(target)
+
+
+class CompletionTarget extends RefCounted:
+	var calls := 0
+
+	func accept(_result: MatchResult) -> void:
+		calls += 1
+
+
+func _teardown_retires_live_match(t: TestHarness) -> void:
+	t.test("teardown stops live callbacks before draining pools and is idempotent")
+	var cfg := MatchConfig.build("ring_rumble", _characters(), 0, PlayerConfig.Difficulty.EASY, 78)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	_host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	for next in [MatchPhase.P.INSTRUCTIONS, MatchPhase.P.COUNTDOWN, MatchPhase.P.PLAYING]:
+		scene._set_phase(next)
+	scene.powerups.enabled = true
+	scene.powerups._spawn_timer = -1.0
+	var errors_before := Log.error_count()
+	var remaining: float = scene.ctx.time_left
+	var elapsed: float = scene._round_elapsed
+	scene.teardown()
+	t.equal(scene.process_mode, Node.PROCESS_MODE_DISABLED, "retired subtree cannot process while awaiting deletion")
+	t.ok(not Pool.has_pool(PowerUpSystem.POOL_KEY), "match pools are drained")
+	scene._physics_process(1.0)
+	scene._process(1.0)
+	await _host.get_tree().physics_frame
+	t.equal(scene.ctx.time_left, remaining, "retired match cannot advance its clock")
+	t.equal(scene._round_elapsed, elapsed, "retired match cannot simulate another tick")
+	t.equal(Log.error_count(), errors_before, "retired match cannot acquire from a drained pool")
+	Pool.define("teardown_successor_probe", func(): return Node.new())
+	scene.teardown()
+	t.ok(Pool.has_pool("teardown_successor_probe"), "repeated teardown cannot drain a successor's pools")
+	Pool.drain("teardown_successor_probe")
+	scene.queue_free()
+	await _host.get_tree().process_frame
 
 
 func _background_flushes_and_is_idempotent(t: TestHarness) -> void:

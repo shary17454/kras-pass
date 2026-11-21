@@ -38,6 +38,8 @@ var _attached_slot := -1
 var _ctx: MatchContext
 
 var _mesh: Node3D
+var _core: MeshInstance3D
+var _tail: MeshInstance3D
 
 
 func _init() -> void:
@@ -51,15 +53,17 @@ func _init() -> void:
 
 
 func configure(color: Color) -> void:
-	if _mesh != null and is_instance_valid(_mesh):
-		_mesh.queue_free()
-	_mesh = Node3D.new()
-	add_child(_mesh)
-	var core := MeshFactory.sphere(0.26, color, 2.0)
-	_mesh.add_child(core)
-	var tail := MeshFactory.box(Vector3(0.16, 0.16, 0.9), color, 1.4)
-	tail.position = Vector3(0, 0, 0.5)
-	_mesh.add_child(tail)
+	if not is_instance_valid(_mesh):
+		_mesh = Node3D.new()
+		add_child(_mesh)
+		_core = MeshFactory.sphere(0.26, color, 2.0)
+		_mesh.add_child(_core)
+		_tail = MeshFactory.box(Vector3(0.16, 0.16, 0.9), color, 1.4)
+		_tail.position = Vector3(0, 0, 0.5)
+		_mesh.add_child(_tail)
+	else:
+		_core.material_override = MeshFactory.toon(color, 2.0)
+		_tail.material_override = MeshFactory.toon(color, 1.4)
 
 
 func fire(from: Vector3, dir: Vector3, by_slot: int, shot_speed: float, shot_damage: float, max_range: float) -> void:

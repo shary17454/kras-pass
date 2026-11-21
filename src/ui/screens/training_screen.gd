@@ -13,8 +13,10 @@ var _holder: Control
 
 func build() -> void:
 	title(Loc.t("training.title"))
-	body.add_child(UIKit.label(Loc.t("training.pick"), UIKit.SIZE_SMALL, UIKit.dim_color()))
-	body.add_child(UIKit.label(Loc.t("training.hint"), UIKit.SIZE_TINY, UIKit.dim_color()))
+	for entry in [["training.pick", UIKit.SIZE_SMALL], ["training.hint", UIKit.SIZE_TINY]]:
+		var caption := UIKit.label(Loc.t(entry[0]), entry[1], UIKit.dim_color())
+		caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(caption)
 	_games = Progression.playable_games()
 	if _games.is_empty():
 		return

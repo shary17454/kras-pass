@@ -36,6 +36,12 @@ func boss_build() -> void:
 	_intake.position.y = 1.5
 	_intake.rotation.x = PI * 0.5
 	boss_node.add_child(_intake)
+	# The animated intake is inside the shell; expose its height without moving
+	# the authoritative feeding anchor or adding another collision surface.
+	var collar := MeshFactory.torus(2.62, 2.9, Color("#ff8a3d"), 2.4)
+	collar.name = "IntakeCollar"
+	collar.position.y = _intake.position.y
+	boss_node.add_child(collar)
 
 
 func boss_think(delta: float) -> void:

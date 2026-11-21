@@ -121,7 +121,7 @@ func _picker(parent: VBoxContainer, on_step: Callable) -> Control:
 	var row := UIKit.hbox(12)
 	var prev := UIKit.icon_button("‹", "")
 	prev.pressed.connect(func(): on_step.call(-1))
-	var holder := Control.new()
+	var holder := VBoxContainer.new()
 	holder.custom_minimum_size = Vector2(320, 160)
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var next := UIKit.icon_button("›", "")
@@ -153,7 +153,6 @@ func _refresh_game() -> void:
 		c.queue_free()
 	var def := _games[_game_index]
 	var card := Widgets.minigame_card(def, true)
-	card.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_game_card_holder.add_child(card)
 	_arena_option.clear()
 	for aid in def.arena_ids:
@@ -181,7 +180,6 @@ func _refresh_character() -> void:
 	card.add_child(details)
 	details.add_child(UIKit.centered(character.display_name(), UIKit.SIZE_HEADING, character.color, true))
 	details.add_child(UIKit.centered(Loc.t(character.realm_key), UIKit.SIZE_BODY))
-	card.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_character_card_holder.add_child(card)
 
 

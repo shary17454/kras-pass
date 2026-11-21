@@ -59,6 +59,7 @@ func render(game: Node, world: Dictionary, play_events: bool) -> void:
 		game._pillar.material_override = MeshFactory.toon(Color("#ffd23f"), 2.4) if int(world.stage) == 1 else MeshFactory.toon(UIKit.PANEL_HI)
 	for key in EVENTS:
 		var sequence := int(world[key])
+		game.set(key, sequence)
 		if play_events and sequences.has(key) and sequence > int(sequences[key]):
 			if key != "resolve_sequence" or not world.order.is_empty():
 				AudioManager.play_sfx(EVENTS[key])

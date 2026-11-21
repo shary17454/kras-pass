@@ -1,0 +1,8 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+BOSS_AI game=boss_forge time=30 health=394.333333333333 scores=[197, 114, 193, 0]
+BOSS_AI game=boss_forge seed=9614 difficulty=3 defeated=true health=0.0 scores=[283, 214, 290, 110]
+BOSS_AI: PASS

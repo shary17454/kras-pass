@@ -1,0 +1,310 @@
+WorkerThreadPool: 10 threads, 3 max low-priority.
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+TextServer: Added interface "Dummy"
+TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
+SDL: Init OK!
+Accessibility: AccessKit driver loaded.
+Text-to-Speech: AVSpeechSynthesizer initialized.
+Accessibility: window 0 adapter created.
+Devices:
+  #0: Apple Apple M5 (Apple9) - Supported, Integrated
+- Metal multiview supported:
+  max view count: 16
+  max instances: 4294967295
+Metal 4.0 - Forward Mobile - Using Device #0: Apple - Apple M5 (Apple9)
+Using "default" pen tablet driver...
+Shader 'CanvasSdfShaderRD' (group 0) SHA256: 54b47da3ce58bfeb483acea9e9e45b5de11793d45b2a38279aa17b08296ef514
+Loading cache for shader CanvasSdfShaderRD, variant 0
+Loading cache for shader CanvasSdfShaderRD, variant 1
+Loading cache for shader CanvasSdfShaderRD, variant 2
+Loading cache for shader CanvasSdfShaderRD, variant 3
+Loading cache for shader CanvasSdfShaderRD, variant 4
+Loading cache for shader CanvasSdfShaderRD, variant 5
+Shader 'SkeletonShaderRD' (group 0) SHA256: 08b4464d16133f4db97a8df4663b95b2b956ecd3e7addf44a16e644f488157c2
+Loading cache for shader SkeletonShaderRD, variant 0
+Loading cache for shader SkeletonShaderRD, variant 1
+Shader 'SortShaderRD' (group 0) SHA256: 8e4ebbbb19fcd734c6f15656afbe1bcd5eb3acdfdae9cab023ebd6f54c901ef8
+Loading cache for shader SortShaderRD, variant 0
+Loading cache for shader SortShaderRD, variant 1
+Loading cache for shader SortShaderRD, variant 2
+Shader 'ParticlesShaderRD' (group 0) SHA256: 8f4c25caa97a2f74d5fa5f299aabdd514f57d9737b8642ed65c20e846dad5db0
+Loading cache for shader ParticlesShaderRD, variant 0
+Shader 'ParticlesCopyShaderRD' (group 0) SHA256: 688d10aec3c2e17e8c578ba3e2db1ea2f054eedd511b1e1647952c0acaeeab72
+Loading cache for shader ParticlesCopyShaderRD, variant 0
+Loading cache for shader ParticlesCopyShaderRD, variant 1
+Loading cache for shader ParticlesCopyShaderRD, variant 2
+Loading cache for shader ParticlesCopyShaderRD, variant 3
+Loading cache for shader ParticlesCopyShaderRD, variant 4
+Loading cache for shader ParticlesCopyShaderRD, variant 5
+Loading cache for shader ParticlesCopyShaderRD, variant 6
+Loading cache for shader ParticlesCopyShaderRD, variant 7
+Loading cache for shader ParticlesCopyShaderRD, variant 8
+Loading cache for shader ParticlesCopyShaderRD, variant 9
+Loading cache for shader ParticlesCopyShaderRD, variant 10
+Loading cache for shader ParticlesCopyShaderRD, variant 11
+Loading cache for shader ParticlesCopyShaderRD, variant 12
+Loading cache for shader ParticlesCopyShaderRD, variant 13
+Loading cache for shader ParticlesCopyShaderRD, variant 14
+Loading cache for shader ParticlesCopyShaderRD, variant 15
+Loading cache for shader ParticlesCopyShaderRD, variant 16
+Loading cache for shader ParticlesCopyShaderRD, variant 17
+Loading cache for shader ParticlesCopyShaderRD, variant 18
+Loading cache for shader ParticlesCopyShaderRD, variant 19
+Loading cache for shader ParticlesCopyShaderRD, variant 20
+Shader 'CanvasShaderRD' (group 0) SHA256: 1ac5f6c8d534ebab572b3f886e38134784245fbd5fa01c7cbb6cc452e5400080
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Shader 'CanvasOcclusionShaderRD' (group 0) SHA256: 3b765d5624135f9fbf3199b6660b8387d5b904f48be0914a622e5da9b906b504
+Loading cache for shader CanvasOcclusionShaderRD, variant 0
+Loading cache for shader CanvasOcclusionShaderRD, variant 1
+Loading cache for shader CanvasOcclusionShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Shader 'TexBlitShaderRD' (group 0) SHA256: ce377a6d54cd54d45abdd915ec4cf3877fef3cbace94de3df4ed73ec0124ea0c
+Loading cache for shader TexBlitShaderRD, variant 0
+Loading cache for shader TexBlitShaderRD, variant 1
+Loading cache for shader TexBlitShaderRD, variant 2
+Loading cache for shader TexBlitShaderRD, variant 3
+Ubershaders: Enabled
+Shader 'SceneForwardMobileShaderRD' (group 0) SHA256: 34688661501bf8d3456dc67ebb9a159ba4fcc2484c5a0d80ef3a1a49064c0832
+Shader 'SceneForwardMobileShaderRD' (group 1) SHA256: 9455ad1d446fef51eb0552c7e523782169cfd1ef48749d60a394233a2747ee26
+Shader 'SceneForwardMobileShaderRD' (group 2) SHA256: 93c7c9e19baed68ba13cb6b3b6c803f036efbd994347ef022b44e0acfb385c82
+Shader 'SceneForwardMobileShaderRD' (group 3) SHA256: ee1de0deb960a58fd4a1e40a2c1ee60a420293303d391ac820a8b11576a9c40a
+Loading cache for shader SceneForwardMobileShaderRD, variant 0
+Loading cache for shader SceneForwardMobileShaderRD, variant 1
+Loading cache for shader SceneForwardMobileShaderRD, variant 2
+Loading cache for shader SceneForwardMobileShaderRD, variant 3
+Loading cache for shader SceneForwardMobileShaderRD, variant 4
+Loading cache for shader SceneForwardMobileShaderRD, variant 5
+Loading cache for shader SceneForwardMobileShaderRD, variant 6
+Loading cache for shader SceneForwardMobileShaderRD, variant 7
+Loading cache for shader SceneForwardMobileShaderRD, variant 8
+Loading cache for shader SceneForwardMobileShaderRD, variant 9
+Loading cache for shader SceneForwardMobileShaderRD, variant 0
+Loading cache for shader SceneForwardMobileShaderRD, variant 1
+Loading cache for shader SceneForwardMobileShaderRD, variant 2
+Loading cache for shader SceneForwardMobileShaderRD, variant 3
+Loading cache for shader SceneForwardMobileShaderRD, variant 4
+Loading cache for shader SceneForwardMobileShaderRD, variant 5
+Loading cache for shader SceneForwardMobileShaderRD, variant 6
+Loading cache for shader SceneForwardMobileShaderRD, variant 7
+Loading cache for shader SceneForwardMobileShaderRD, variant 8
+Loading cache for shader SceneForwardMobileShaderRD, variant 9
+Loading cache for shader SceneForwardMobileShaderRD, variant 0
+Loading cache for shader SceneForwardMobileShaderRD, variant 1
+Loading cache for shader SceneForwardMobileShaderRD, variant 2
+Loading cache for shader SceneForwardMobileShaderRD, variant 3
+Loading cache for shader SceneForwardMobileShaderRD, variant 4
+Loading cache for shader SceneForwardMobileShaderRD, variant 5
+Loading cache for shader SceneForwardMobileShaderRD, variant 6
+Loading cache for shader SceneForwardMobileShaderRD, variant 7
+Loading cache for shader SceneForwardMobileShaderRD, variant 8
+Loading cache for shader SceneForwardMobileShaderRD, variant 9
+Shader 'SkyShaderRD' (group 0) SHA256: 9be8c23dcd20154e4a1ab0bef919421f8c51853d47c2fe6dc91221f8cfc74997
+Loading cache for shader SkyShaderRD, variant 0
+Loading cache for shader SkyShaderRD, variant 1
+Loading cache for shader SkyShaderRD, variant 2
+Loading cache for shader SkyShaderRD, variant 3
+Loading cache for shader SkyShaderRD, variant 4
+Loading cache for shader SkyShaderRD, variant 5
+Loading cache for shader SkyShaderRD, variant 0
+Loading cache for shader SkyShaderRD, variant 1
+Loading cache for shader SkyShaderRD, variant 2
+Loading cache for shader SkyShaderRD, variant 3
+Loading cache for shader SkyShaderRD, variant 4
+Loading cache for shader SkyShaderRD, variant 5
+Shader 'BokehDofRasterShaderRD' (group 0) SHA256: 1f380e57658651c8d60ef77451714d9b94193105ebddfbdf453e7e81e0542a44
+Loading cache for shader BokehDofRasterShaderRD, variant 0
+Loading cache for shader BokehDofRasterShaderRD, variant 1
+Loading cache for shader BokehDofRasterShaderRD, variant 2
+Loading cache for shader BokehDofRasterShaderRD, variant 3
+Loading cache for shader BokehDofRasterShaderRD, variant 4
+Loading cache for shader BokehDofRasterShaderRD, variant 5
+Loading cache for shader BokehDofRasterShaderRD, variant 6
+Shader 'BlurRasterShaderRD' (group 0) SHA256: bf2535c6ce146bb6ed9a8594798f1e933ab97b1ad787d88c265e8409f6fee565
+Loading cache for shader BlurRasterShaderRD, variant 0
+Loading cache for shader BlurRasterShaderRD, variant 1
+Loading cache for shader BlurRasterShaderRD, variant 2
+Loading cache for shader BlurRasterShaderRD, variant 3
+Loading cache for shader BlurRasterShaderRD, variant 4
+Loading cache for shader BlurRasterShaderRD, variant 5
+Loading cache for shader BlurRasterShaderRD, variant 6
+Shader 'CopyShaderRD' (group 0) SHA256: 23f6cf7986b46c68792dfd3f087267f14eebc49382f0c0fd265b45462b58afcf
+Loading cache for shader CopyShaderRD, variant 0
+Loading cache for shader CopyShaderRD, variant 1
+Loading cache for shader CopyShaderRD, variant 2
+Loading cache for shader CopyShaderRD, variant 3
+Loading cache for shader CopyShaderRD, variant 4
+Loading cache for shader CopyShaderRD, variant 5
+Loading cache for shader CopyShaderRD, variant 6
+Loading cache for shader CopyShaderRD, variant 7
+Loading cache for shader CopyShaderRD, variant 8
+Loading cache for shader CopyShaderRD, variant 9
+Loading cache for shader CopyShaderRD, variant 10
+Loading cache for shader CopyShaderRD, variant 11
+Loading cache for shader CopyShaderRD, variant 12
+Shader 'CopyToFbShaderRD' (group 0) SHA256: d00e29e632391ed3791124b988da290d922da3d9e2083273523bd8173b24ff97
+Loading cache for shader CopyToFbShaderRD, variant 0
+Loading cache for shader CopyToFbShaderRD, variant 1
+Loading cache for shader CopyToFbShaderRD, variant 2
+Loading cache for shader CopyToFbShaderRD, variant 3
+Shader 'CubeToDpShaderRD' (group 0) SHA256: 9825f5ee942047b6912a1b6fe49935a8c928598f40d2cdfc64a0f61134deed27
+Loading cache for shader CubeToDpShaderRD, variant 0
+Shader 'CubeToOctmapShaderRD' (group 0) SHA256: 8bf32929c5b41445f085dd302ccba233028481a94d43ce1b531bc8e2e66677a4
+Loading cache for shader CubeToOctmapShaderRD, variant 0
+Shader 'OctmapDownsamplerShaderRD' (group 0) SHA256: c79c7ea0ebc9a0833c5f465f1c555216a15727d2c4e3a227e9d5cd1e80f0669e
+Loading cache for shader OctmapDownsamplerShaderRD, variant 0
+Loading cache for shader OctmapDownsamplerShaderRD, variant 1
+Shader 'OctmapFilterShaderRD' (group 0) SHA256: a511f5ad922f5d701a26f801b4f9c96406071103345fa83fd394f8954c1dd7ac
+Loading cache for shader OctmapFilterShaderRD, variant 0
+Loading cache for shader OctmapFilterShaderRD, variant 1
+Loading cache for shader OctmapFilterShaderRD, variant 2
+Loading cache for shader OctmapFilterShaderRD, variant 3
+Loading cache for shader OctmapFilterShaderRD, variant 4
+Loading cache for shader OctmapFilterShaderRD, variant 5
+Loading cache for shader OctmapFilterShaderRD, variant 6
+Loading cache for shader OctmapFilterShaderRD, variant 7
+Shader 'OctmapRoughnessShaderRD' (group 0) SHA256: 9f66b38742366834aef44d557fed0d0753432ffb2cf24eebb14792092fc26b83
+Loading cache for shader OctmapRoughnessShaderRD, variant 0
+Loading cache for shader OctmapRoughnessShaderRD, variant 1
+Shader 'SpecularMergeShaderRD' (group 0) SHA256: 38d1cf8969e8f223baa218cbcd7ad415e6e945247fdb8cefddabba66acaab0e4
+Loading cache for shader SpecularMergeShaderRD, variant 0
+Loading cache for shader SpecularMergeShaderRD, variant 1
+Loading cache for shader SpecularMergeShaderRD, variant 2
+Loading cache for shader SpecularMergeShaderRD, variant 3
+Shader 'ShadowFrustumShaderRD' (group 0) SHA256: 7aba7a73f7499f30591bb36c54f106926052cdc0048232d9054de723408b1ea2
+Loading cache for shader ShadowFrustumShaderRD, variant 0
+Shader 'MotionVectorsShaderRD' (group 0) SHA256: 21fe2ffffa991405f5c0b4bb35dd8789b4049f8e56d80a5aa61aa8233992e3c1
+Loading cache for shader MotionVectorsShaderRD, variant 0
+Shader 'LuminanceReduceRasterShaderRD' (group 0) SHA256: c30b2789782a74a245eb2c403712b700e22f0a331dbd7f20cdeaff4331481520
+Loading cache for shader LuminanceReduceRasterShaderRD, variant 0
+Loading cache for shader LuminanceReduceRasterShaderRD, variant 1
+Loading cache for shader LuminanceReduceRasterShaderRD, variant 2
+Shader 'SmaaEdgeDetectionShaderRD' (group 0) SHA256: 749ffc0281a6ab411cf5a66f2560a2f33f9a258f57c513c67047f363e5e7ab33
+Loading cache for shader SmaaEdgeDetectionShaderRD, variant 0
+Shader 'SmaaWeightCalculationShaderRD' (group 0) SHA256: 510ed0d4e978b1a21f4e459da4ee2516c38f4460931e2a5714dae17c8b5547c2
+Loading cache for shader SmaaWeightCalculationShaderRD, variant 0
+Shader 'SmaaBlendingShaderRD' (group 0) SHA256: daa696d3938d7aadbc85111a68936e774199a2ded78d364782d43ef580b5296d
+Loading cache for shader SmaaBlendingShaderRD, variant 0
+Shader 'TonemapMobileShaderRD' (group 0) SHA256: 2ec4e4112fe9380f41247c1f7000cbb8b341b42bd3843e4410e96b245445ed8c
+Loading cache for shader TonemapMobileShaderRD, variant 0
+Loading cache for shader TonemapMobileShaderRD, variant 1
+Loading cache for shader TonemapMobileShaderRD, variant 2
+Loading cache for shader TonemapMobileShaderRD, variant 3
+Shader 'ResolveRasterShaderRD' (group 0) SHA256: 919d2b60f5aa1b0320eec81a5e401ee189ede55df21d4174ce5f7c6e0b1a40e1
+Loading cache for shader ResolveRasterShaderRD, variant 0
+Shader 'BlitShaderRD' (group 0) SHA256: 29b32016e1c23e0db5906fbe9b87108e39e7f5965c0016eb53fc5e1c03293243
+
+Loading cache for shader BlitShaderRD, variant 0
+Loading cache for shader BlitShaderRD, variant 1
+Loading cache for shader BlitShaderRD, variant 2
+Loading cache for shader BlitShaderRD, variant 3
+TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Loading resource: res://assets/fonts/startup_theme.tres remapped: res://assets/fonts/startup_theme.tres
+Completed load for: 'res://assets/fonts/startup_theme.tres' remapped 'res://assets/fonts/startup_theme.tres' at thread -1
+CORE API HASH: 3769296884
+EDITOR API HASH: 3146738256
+SceneTreeFTI: traversal method DEFAULT
+Loading resource: res://src/ui/ui_theme_bootstrap.gd remapped: res://src/ui/ui_theme_bootstrap.gd
+Completed load for: 'res://src/ui/ui_theme_bootstrap.gd' remapped 'res://src/ui/ui_theme_bootstrap.gd' at thread -1
+Loading resource: res://src/core/logger.gd remapped: res://src/core/logger.gd
+Completed load for: 'res://src/core/logger.gd' remapped 'res://src/core/logger.gd' at thread -1
+Loading resource: res://src/core/balance.gd remapped: res://src/core/balance.gd
+Completed load for: 'res://src/core/balance.gd' remapped 'res://src/core/balance.gd' at thread -1
+Loading resource: res://src/localization/loc.gd remapped: res://src/localization/loc.gd
+Completed load for: 'res://src/localization/loc.gd' remapped 'res://src/localization/loc.gd' at thread -1
+Loading resource: res://src/save/save_system.gd remapped: res://src/save/save_system.gd
+Completed load for: 'res://src/save/save_system.gd' remapped 'res://src/save/save_system.gd' at thread -1
+Loading resource: res://src/net/apple_account.gd remapped: res://src/net/apple_account.gd
+Completed load for: 'res://src/net/apple_account.gd' remapped 'res://src/net/apple_account.gd' at thread -1
+Loading resource: res://src/settings/settings_service.gd remapped: res://src/settings/settings_service.gd
+Completed load for: 'res://src/settings/settings_service.gd' remapped 'res://src/settings/settings_service.gd' at thread -1
+Loading resource: res://src/core/event_bus.gd remapped: res://src/core/event_bus.gd
+Completed load for: 'res://src/core/event_bus.gd' remapped 'res://src/core/event_bus.gd' at thread -1
+Loading resource: res://src/input/input_router.gd remapped: res://src/input/input_router.gd
+Completed load for: 'res://src/input/input_router.gd' remapped 'res://src/input/input_router.gd' at thread -1
+Loading resource: res://src/input/haptic_director.gd remapped: res://src/input/haptic_director.gd
+Completed load for: 'res://src/input/haptic_director.gd' remapped 'res://src/input/haptic_director.gd' at thread -1
+Loading resource: res://src/replay/replay_store.gd remapped: res://src/replay/replay_store.gd
+Completed load for: 'res://src/replay/replay_store.gd' remapped 'res://src/replay/replay_store.gd' at thread -1
+Loaded system CA certificates
+Loading resource: res://tools/online_ui_check.tscn remapped: res://tools/online_ui_check.tscn
+Loading resource: res://tools/online_ui_check.gd remapped: res://tools/online_ui_check.gd
+Completed load for: 'res://tools/online_ui_check.gd' remapped 'res://tools/online_ui_check.gd' at thread -1
+Completed load for: 'res://tools/online_ui_check.tscn' remapped 'res://tools/online_ui_check.tscn' at thread -1
+Loading resource: res://assets/fonts/ui_theme.tres remapped: res://assets/fonts/ui_theme.tres
+Loading resource: res://assets/fonts/NotoSans.ttf remapped: res://assets/fonts/NotoSans.ttf
+Loading resource: res://.godot/imported/NotoSans.ttf-27eae6a86b17fcaacb38def985d59f4e.fontdata remapped: res://.godot/imported/NotoSans.ttf-27eae6a86b17fcaacb38def985d59f4e.fontdata
+Completed load for: 'res://assets/fonts/NotoSans.ttf' remapped 'res://assets/fonts/NotoSans.ttf' at thread -1
+Loading resource: res://assets/fonts/NotoSansArabic.ttf remapped: res://assets/fonts/NotoSansArabic.ttf
+Loading resource: res://.godot/imported/NotoSansArabic.ttf-8252d6f8f52729edbe389f806fc22a98.fontdata remapped: res://.godot/imported/NotoSansArabic.ttf-8252d6f8f52729edbe389f806fc22a98.fontdata
+Completed load for: 'res://assets/fonts/NotoSansArabic.ttf' remapped 'res://assets/fonts/NotoSansArabic.ttf' at thread -1
+Loading resource: res://assets/fonts/NotoSansSymbols.ttf remapped: res://assets/fonts/NotoSansSymbols.ttf
+Loading resource: res://.godot/imported/NotoSansSymbols.ttf-fd935a11b2ce20291becb0d8d7a6e57f.fontdata remapped: res://.godot/imported/NotoSansSymbols.ttf-fd935a11b2ce20291becb0d8d7a6e57f.fontdata
+Completed load for: 'res://assets/fonts/NotoSansSymbols.ttf' remapped 'res://assets/fonts/NotoSansSymbols.ttf' at thread -1
+Loading resource: res://assets/fonts/NotoSansSymbols2.ttf remapped: res://assets/fonts/NotoSansSymbols2.ttf
+Loading resource: res://.godot/imported/NotoSansSymbols2.ttf-e21ca4eeb369da14057f4f5767bca9bd.fontdata remapped: res://.godot/imported/NotoSansSymbols2.ttf-e21ca4eeb369da14057f4f5767bca9bd.fontdata
+Completed load for: 'res://assets/fonts/NotoSansSymbols2.ttf' remapped 'res://assets/fonts/NotoSansSymbols2.ttf' at thread -1
+Loading resource: res://assets/fonts/NotoEmoji.ttf remapped: res://assets/fonts/NotoEmoji.ttf
+Loading resource: res://.godot/imported/NotoEmoji.ttf-fb357b1be3b9b13fa82f384e13416206.fontdata remapped: res://.godot/imported/NotoEmoji.ttf-fb357b1be3b9b13fa82f384e13416206.fontdata
+Completed load for: 'res://assets/fonts/NotoEmoji.ttf' remapped 'res://assets/fonts/NotoEmoji.ttf' at thread -1
+Completed load for: 'res://assets/fonts/ui_theme.tres' remapped 'res://assets/fonts/ui_theme.tres' at thread -1
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (1920, 1080)]
+Loading resource: res://src/ui/screens/online_screen.gd remapped: res://src/ui/screens/online_screen.gd
+Completed load for: 'res://src/ui/screens/online_screen.gd' remapped 'res://src/ui/screens/online_screen.gd' at thread -1
+[DBG][Platform] app backgrounded
+Loading resource: res://assets/audio/sfx/ui_move.res remapped: res://assets/audio/sfx/ui_move.res
+Completed load for: 'res://assets/audio/sfx/ui_move.res' remapped 'res://assets/audio/sfx/ui_move.res' at thread -1
+[DBG][Platform] app foregrounded
+ONLINE_UI_SCREENSHOT=/tmp/kras-online-random-ui-ar-debug/online-ui-1920x1080.png
+ONLINE_UI_SCREENSHOT=/tmp/kras-online-random-ui-ar-debug/online-rotation-1920x1080.png
+Loading resource: res://src/ui/screens/results_screen.gd remapped: res://src/ui/screens/results_screen.gd
+Completed load for: 'res://src/ui/screens/results_screen.gd' remapped 'res://src/ui/screens/results_screen.gd' at thread -1
+Loading resource: res://assets/audio/music/victory.res remapped: res://assets/audio/music/victory.res
+Completed load for: 'res://assets/audio/music/victory.res' remapped 'res://assets/audio/music/victory.res' at thread -1
+ONLINE_UI_SCREENSHOT=/tmp/kras-online-random-ui-ar-debug/online-results-1920x1080.png
+ONLINE_UI_SCREENSHOT=/tmp/kras-online-random-ui-ar-debug/online-ui-1080x1920.png
+ONLINE_UI_SCREENSHOT=/tmp/kras-online-random-ui-ar-debug/online-rotation-1080x1920.png
+ONLINE_UI_SCREENSHOT=/tmp/kras-online-random-ui-ar-debug/online-results-1080x1920.png
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit.
+   at: clear (core/io/resource.cpp:817)
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
+Freeing Default Tex_Blit Shader
+MultiUmaBuffer 'SceneState::uniform_buffers' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_OPAQUE' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_ALPHA' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_SECONDARY' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'CANVAS_INSTANCE_DATA' used a total of 3 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+Accessibility: window 0 adapter destroyed.
+Leaked instance: AudioStreamPlaybackWAV:9223372176877422468 - Reference count: 1
+Leaked instance: AudioStreamWAV:9223372176827090822 - Reference count: 1
+Hint: Leaked instances typically happen when nodes are removed from the scene tree (with `remove_child()`) but not freed (with `free()` or `queue_free()`).
+Resource still in use: res://assets/audio/music/victory.res (AudioStreamWAV)
+Orphan StringName: Music (static: 0, total: 2)
+StringName: 1 unclaimed string names at exit.

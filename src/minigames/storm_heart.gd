@@ -27,14 +27,14 @@ func build() -> void:
 	_heart = Node3D.new()
 	_heart.position = arena.global_position
 	ctx.world_root.add_child(_heart)
-	var base := MeshFactory.cylinder(1.5, 0.8, UIKit.PANEL_HI, 0.4)
+	var base := MeshFactory.cylinder(1.5, 0.8, MeshFactory.WORLD_PANEL, 0.4)
 	base.position.y = 0.4
 	_heart.add_child(base)
 	_blades = Node3D.new()
 	_blades.position.y = 1.1
 	_heart.add_child(_blades)
 	for i in 3:
-		var blade := MeshFactory.box(Vector3(2.6, 0.18, 0.5), UIKit.ACCENT, 0.9)
+		var blade := MeshFactory.box(Vector3(2.6, 0.18, 0.5), MeshFactory.WORLD_GOLD, 0.9)
 		blade.rotation.y = TAU * i / 3.0
 		_blades.add_child(blade)
 

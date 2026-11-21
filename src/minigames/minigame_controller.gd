@@ -168,8 +168,26 @@ func compute_scores() -> Array[int]:
 		var out := ctx.survival_scores()
 		for i in out.size():
 			out[i] = out[i] * 2 + int(ctx.details[i].get("knockouts", 0)) * survival_knockout_weight
-		return out
+		return _prioritize_survivors(out)
 	return ctx.scores.duplicate()
+
+
+## Preserve knockout rewards without allowing an eliminated player to win.
+func _prioritize_survivors(scores: Array[int]) -> Array[int]:
+	var survivors := ctx.alive_slots()
+	if survivors.is_empty() or survivors.size() == scores.size():
+		return scores
+	var lowest_survivor := scores[survivors[0]]
+	var highest_eliminated := -2147483648
+	for slot in scores.size():
+		if ctx.is_alive(slot):
+			lowest_survivor = mini(lowest_survivor, scores[slot])
+		else:
+			highest_eliminated = maxi(highest_eliminated, scores[slot])
+	var lift := maxi(0, highest_eliminated - lowest_survivor + 1)
+	for slot in survivors:
+		scores[slot] += lift
+	return scores
 
 
 ## True when the round should end before the clock runs out.

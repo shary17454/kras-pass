@@ -1,5 +1,12 @@
 # QA scenarios
 
+> Historical QA narrative below: its 21-game counts and old balance findings
+> are not current release acceptance. The registry currently has 39 games.
+> Current-source complete local regression is recorded in
+> `blast-contact-full-regression-2026-10-08.md`; its headless/short-round and
+> device/network scope limits must be retained. Natural balance evidence is
+> source-bound and separate from assertion-suite success.
+
 Two lists: what the automated suite proves on every run, and what still needs a
 human. The second list is short by design — anything that could be automated
 was.

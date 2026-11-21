@@ -49,7 +49,7 @@ func decide(_delta: float) -> void:
 	if drone != null and machine_threatens_me():
 		# Sidestep, not retreat: running straight in or straight out keeps you
 		# under a beam that tracks. Cutting across it is what gets you clear.
-		var away: Vector3 = me.global_position - drone.global_position
+		var away: Vector3 = me.global_position - machine_origin_point()
 		away.y = 0.0
 		if away.length() > 0.1:
 			steer_to(me.global_position + away.normalized().cross(Vector3.UP) * 4.0)
@@ -65,7 +65,7 @@ func decide(_delta: float) -> void:
 			steer_to(predict(victim, 0.4))
 			maybe_dash(1.2)
 			return
-	elif marked >= 0 and rng.randf() < edge_awareness:
+	elif can_target(marked) and rng.randf() < edge_awareness:
 		# Somebody else is carrying it. Do not be the person they touch.
 		steer_away(perceive(marked))
 		keep_off_edge(panic_margin)
@@ -80,9 +80,10 @@ func decide(_delta: float) -> void:
 	#    to be worth the detour.
 	var pickup := nearest_in_group("powerups", _tree) if _tree != null else null
 	if pickup != null and rng.randf() < powerup_interest:
-		var d := distance_to(pickup.global_position)
+		var position := perceived_object_position(pickup)
+		var d := distance_to(position)
 		if d < 9.0:
-			steer_to(pickup.global_position)
+			steer_to(position)
 			if d > 4.0:
 				maybe_dash(0.6)
 			return
@@ -96,12 +97,12 @@ func decide(_delta: float) -> void:
 		steer_to(shove_dir)
 		maybe_attack(target, 2.5)
 		if to_target > 4.5 and to_target < 11.0:
-			var before := bits
+			var before := bits | _tap_bits
 			maybe_dash(0.9)
 			# A dash is a commitment; standing in the follow-through next to a
 			# rival is how a bot hands back the exchange it just won. Back off
 			# for a beat afterwards.
-			if bits != before:
+			if (bits | _tap_bits) != before:
 				_retreat = rng.randf_range(0.35, 0.75)
 		keep_off_edge(panic_margin)
 		return

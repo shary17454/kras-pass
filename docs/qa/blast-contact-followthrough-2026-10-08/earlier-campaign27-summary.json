@@ -1,0 +1,67 @@
+{
+  "commit": "f2dcfd32b8cda63d68c3a9ea7a52958b6fda3840",
+  "run": "37734724695",
+  "seedOffset": 2700000,
+  "complete": false,
+  "sourceFingerprint": "39854bc0220d9911c43a4fce98c0d35dcc562dae73d196c9475c213c06d98e93",
+  "engineVersion": "4.7.1-stable (official)",
+  "sourceConsistencyVerified": false,
+  "gamesCompleted": 27,
+  "gamesExpected": 39,
+  "matchesCompleted": 1134,
+  "difficultyPairingVerified": false,
+  "missing": [
+    "sweeper_storm",
+    "duel_pit",
+    "boss_forge",
+    "boss_colossus",
+    "boss_dreadnought",
+    "boss_sovereign",
+    "sabaq_sawarikh",
+    "relic_hold",
+    "tag_hunt",
+    "base_siege",
+    "drift_floes",
+    "duo_clash"
+  ],
+  "reviews": [
+    {
+      "game": "blast_ball",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    },
+    {
+      "game": "hurdle_dash",
+      "flags": [
+        "spawn slot advantage"
+      ]
+    },
+    {
+      "game": "rising_tide",
+      "flags": [
+        "ties 42% of the time"
+      ]
+    },
+    {
+      "game": "scrap_karts",
+      "flags": [
+        "expert bots no better than easy"
+      ]
+    }
+  ],
+  "characterWins": {
+    "barq": 91,
+    "fanoos": 74,
+    "ghaim": 90,
+    "mowja": 89,
+    "nabta": 100,
+    "ramla": 87,
+    "sakhra": 71,
+    "turs": 75
+  },
+  "bossBaseline": [],
+  "bossComparisons": [],
+  "balanceReviewComplete": false,
+  "releaseReady": false
+}

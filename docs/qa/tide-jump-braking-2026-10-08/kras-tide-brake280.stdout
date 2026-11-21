@@ -1,0 +1,12 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+balance simulation: 24 runs per game, 1 games
+  rising_tide      ties  29%  slot-bias   2%  char-bias   9%   16.6s  expert +71%
+
+mutator & chaos smoke pass:
+  rising_tide      mutated ok  chaos ok
+
+finished in 29.9s — /tmp/kras-tide-brake280/report.html

@@ -89,7 +89,11 @@ func run(t: TestHarness, host: Node) -> void:
 			row.id = str(index + 10)
 			invalid[group].append(row)
 		t.ok(not View.valid(invalid, 4), "object population is bounded")
-	for entry in [{"key": "exposed", "values": [-1, 2.41, true, NAN, INF, null]},
+	for exposure in [0.0, 2.4, 3.2]:
+		var compatible := world.duplicate(true)
+		compatible.exposed = exposure
+		t.ok(View.valid(compatible, 4), "old and longer authored exposures remain valid")
+	for entry in [{"key": "exposed", "values": [-1, 3.21, true, NAN, INF, null]},
 		{"key": "fist_scale", "values": [[0, 1, 1], [1.21, 1, 1], [NAN, 1, 1], [1, 1]]},
 		{"key": "arm_rotation", "values": [[0, PI + 0.1, 0], [INF, 0, 0]]}]:
 		for value in entry.values:

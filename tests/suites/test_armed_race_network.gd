@@ -4,6 +4,7 @@ const Replica = preload("res://src/net/match_replica.gd")
 
 
 func run(t: TestHarness, host: Node) -> void:
+	await _crate_claims(t, host)
 	t.suite("armed race network presentation")
 	var enabled: bool = AudioManager.enabled
 	AudioManager.enabled = false
@@ -121,6 +122,70 @@ func run(t: TestHarness, host: Node) -> void:
 	guest.queue_free()
 	AudioManager.enabled = enabled
 	await host.get_tree().process_frame
+
+
+func _crate_claims(t: TestHarness, host: Node) -> void:
+	t.suite("armed race simultaneous crate claims")
+	var enabled: bool = AudioManager.enabled
+	AudioManager.enabled = false
+	var scene := _scene(host)
+	var game: Node = scene.controller
+	var position: Vector3 = game._crates[0].pos
+	for nearest in 4:
+		_reset_claim(game)
+		for slot in 4:
+			scene.ctx.fighter(slot).global_position = position + Vector3.RIGHT * (0.1 if slot == nearest else 1.8)
+		var expected := RandomNumberGenerator.new()
+		expected.state = scene.ctx.rng.state
+		expected.randi_range(0, 5)
+		var sequence: int = game.weapon_events.pickup.sequence
+		game._tick_crates(0.01)
+		t.ok(game.held[nearest] != game.Item.NONE, "closest eligible racer wins regardless of seat")
+		t.equal(game.held.filter(func(item): return item != game.Item.NONE).size(), 1, "one crate awards exactly one weapon")
+		t.equal(game.weapon_events.pickup.sequence, sequence + 1, "one pickup emits one authoritative event")
+		t.equal(scene.ctx.rng.state, expected.state, "unique nearest claim consumes only the existing item roll")
+	var wins := [0, 0, 0, 0]
+	for seed_value in range(64):
+		var first := -1
+		for repeat in 2:
+			_reset_claim(game)
+			scene.ctx.rng.seed = 42000 + seed_value
+			for slot in 4:
+				scene.ctx.fighter(slot).global_position = position
+			game._tick_crates(0.01)
+			var winner: int = game.held.find_custom(func(item): return item != game.Item.NONE)
+			t.ok(winner >= 0, "equal-distance claim still awards an item")
+			t.equal(game.held.filter(func(item): return item != game.Item.NONE).size(), 1, "equal-distance claim cannot duplicate inventory")
+			if repeat == 0:
+				first = winner
+				if winner >= 0:
+					wins[winner] += 1
+			else:
+				t.equal(winner, first, "same seed resolves simultaneous claim deterministically")
+	for slot in 4:
+		t.greater(wins[slot], 0, "fixed seed set does not reserve tied pickups for any seat")
+	_reset_claim(game)
+	for slot in 4:
+		scene.ctx.fighter(slot).global_position = position + Vector3.RIGHT * (0.1 if slot == 0 else 1.0)
+	game.held[0] = game.Item.SHIELD
+	game.finish_times[1] = 1.0
+	game._tick_crates(0.01)
+	t.equal(game.held[0], game.Item.SHIELD, "occupied inventory remains unchanged")
+	t.equal(game.held[1], game.Item.NONE, "finished racer cannot steal a crate")
+	t.ok(game.held[2] != game.Item.NONE or game.held[3] != game.Item.NONE, "eligible remaining racer receives the crate")
+	scene.teardown()
+	scene.queue_free()
+	AudioManager.enabled = enabled
+	await host.get_tree().process_frame
+
+
+func _reset_claim(game: Node) -> void:
+	game.held.fill(game.Item.NONE)
+	game.finish_times.fill(game.UNFINISHED)
+	for crate in game._crates:
+		crate.cooldown = 999.0
+	game._crates[0].cooldown = 0.0
+	game._crates[0].node.show()
 
 
 func _events(t: TestHarness, source: Node, guest: Node, replica: RefCounted) -> void:

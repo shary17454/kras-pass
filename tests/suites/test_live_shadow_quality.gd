@@ -173,13 +173,24 @@ func _actual_pause_settings(t: TestHarness, host: Node) -> void:
 			t.ok(env.glow_enabled, "actual settings control restores paused match environment effects")
 			t.ok(scene._paused and scene.ctx == context and scene.arena == arena,
 				"settings preserve the paused match instead of opening a replacement")
-			t.equal(UserSettings.changed.get_connections().size(), connections,
+			t.equal(_arena_connections(arena), 1,
 				"opening in-match settings does not duplicate the arena listener")
 			screen.args.close_callback.call()
 			await host.get_tree().process_frame
 			t.ok(not is_instance_valid(sheet), "closing real settings removes its sheet")
+			t.equal(UserSettings.changed.get_connections().size(), connections,
+				"closing settings releases the appearance selector's live callback")
 	scene._toggle_pause()
 	t.ok(not scene._paused and scene.ctx == context, "actual resume keeps the same gameplay context")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _arena_connections(arena: Arena) -> int:
+	var count := 0
+	for connection in UserSettings.changed.get_connections():
+		var callback: Callable = connection.callable
+		if callback.get_object() == arena:
+			count += 1
+	return count

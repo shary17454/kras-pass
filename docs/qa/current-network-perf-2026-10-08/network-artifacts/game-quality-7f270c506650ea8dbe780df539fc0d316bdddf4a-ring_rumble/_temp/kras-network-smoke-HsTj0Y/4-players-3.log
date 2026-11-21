@@ -1,0 +1,11 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":2595,"phase":2,"running":true,"seed":212466427,"snapshots":133,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":2595,"phase":4,"running":true,"seed":212466427,"snapshots":333,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":2595,"phase":3,"running":true,"seed":212466427,"snapshots":534,"state":"playing"}
+NETWORK_ROUND={"arena":"vortex_ring","epoch":1,"game":"ring_rumble","moved":true,"scores":[16,16,16,16],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":4,"matches":1,"moved":true,"reconnected":false,"scores":[16,16,16,16],"snapshots":668,"tournament":{},"world_snapshots":0}

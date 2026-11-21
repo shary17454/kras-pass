@@ -1,0 +1,24 @@
+Evidence: /home/runner/work/_temp/kras-network-smoke-ppCGk6
+{"event":"transition","op":"start","state":"loading","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":20}
+{"event":"transition","op":"loaded","state":"loading","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":21}
+{"event":"transition","op":"loaded","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":21}
+{"event":"transition","op":"resume","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":21}
+{"event":"transition","op":"loaded","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":21}
+{"event":"transition","op":"resume","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":22}
+{"event":"transition","op":"loaded","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":22}
+{"event":"transition","op":"result","state":"results","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":22}
+{"event":"room_closed","state":"results","reason":"left","authorityAge":17}
+{"humans":2,"status":"PASS","results":[{"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":2,"id":1,"matches":1,"moved":true,"reconnected":true,"scores":[16,16,16,16],"snapshots":0,"tournament":{},"world_snapshots":0},{"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":2,"id":2,"matches":1,"moved":true,"reconnected":true,"scores":[16,16,16,16],"snapshots":649,"tournament":{},"world_snapshots":0}]}
+{"event":"transition","op":"start","state":"loading","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":22}
+{"event":"transition","op":"loaded","state":"loading","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":22}
+{"event":"transition","op":"loaded","state":"loading","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":22}
+{"event":"transition","op":"loaded","state":"loading","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":22}
+{"event":"transition","op":"loaded","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":22}
+{"event":"transition","op":"resume","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":23}
+{"event":"transition","op":"loaded","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":false,"serverLoopMaxMs":23}
+{"event":"transition","op":"resume","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":23}
+{"event":"transition","op":"loaded","state":"playing","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":23}
+{"event":"transition","op":"result","state":"results","epoch":1,"game":"ring_rumble","arena":"vortex_ring","host":true,"serverLoopMaxMs":23}
+{"event":"room_closed","state":"results","reason":"left","authorityAge":16}
+{"humans":4,"status":"PASS","results":[{"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":1,"matches":1,"moved":true,"reconnected":true,"scores":[16,16,16,16],"snapshots":0,"tournament":{},"world_snapshots":0},{"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":4,"matches":1,"moved":true,"reconnected":false,"scores":[16,16,16,16],"snapshots":668,"tournament":{},"world_snapshots":0},{"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":3,"matches":1,"moved":true,"reconnected":false,"scores":[16,16,16,16],"snapshots":668,"tournament":{},"world_snapshots":0},{"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":2,"matches":1,"moved":true,"reconnected":true,"scores":[16,16,16,16],"snapshots":649,"tournament":{},"world_snapshots":0}]}
+{"event":"server_timing","maxMs":23}

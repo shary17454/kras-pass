@@ -173,6 +173,8 @@ func _tick_crates(delta: float) -> void:
 			continue
 		if is_instance_valid(node):
 			node.rotation.y += delta * 1.6
+		var claimants: Array[int] = []
+		var nearest := 1.9
 		for i in ctx.fighters.size():
 			var f := ctx.fighter(i)
 			if f == null or not is_instance_valid(f) or not ctx.is_alive(i):
@@ -181,16 +183,26 @@ func _tick_crates(delta: float) -> void:
 				continue
 			var to: Vector3 = f.global_position - crate["pos"]
 			to.y = 0.0
-			if to.length() > 1.9:
+			var distance := to.length()
+			if distance > 1.9:
 				continue
-			held[i] = _roll_item(i)
-			crate["cooldown"] = CRATE_RESPAWN
-			if is_instance_valid(node):
-				node.visible = false
-			ctx.bump_detail(i, "crates")
-			_weapon_event("pickup", f.global_position)
-			AudioManager.play_sfx("pickup", f.global_position)
-			break
+			if claimants.is_empty() or (distance < nearest and not is_equal_approx(distance, nearest)):
+				nearest = distance
+				claimants.clear()
+				claimants.append(i)
+			elif is_equal_approx(distance, nearest):
+				claimants.append(i)
+		if claimants.is_empty():
+			continue
+		# Consume an extra seeded choice only for the final nearest-distance tie.
+		var winner := claimants[0] if claimants.size() == 1 else claimants[ctx.rng.randi_range(0, claimants.size() - 1)]
+		held[winner] = _roll_item(winner)
+		crate["cooldown"] = CRATE_RESPAWN
+		if is_instance_valid(node):
+			node.visible = false
+		ctx.bump_detail(winner, "crates")
+		_weapon_event("pickup", ctx.fighter(winner).global_position)
+		AudioManager.play_sfx("pickup", ctx.fighter(winner).global_position)
 
 
 ## Item odds by position. Last place gets the tools to close a gap; the leader
@@ -260,7 +272,7 @@ func _use(slot: int, f) -> void:
 ## live the instant it leaves the kart detonates on the kart that dropped it
 ## every time the road curves.
 func _drop_bomb(slot: int, f) -> void:
-	var mesh := MeshFactory.sphere(0.42, UIKit.DANGER, 0.9)
+	var mesh := MeshFactory.sphere(0.42, MeshFactory.WORLD_DANGER, 0.9)
 	var pos: Vector3 = f.global_position - f.facing.normalized() * 2.4 + Vector3(0, 0.45, 0)
 	mesh.position = pos
 	ctx.world_root.add_child(mesh)
@@ -315,7 +327,7 @@ func _detonate(bomb: Dictionary, owner: int) -> void:
 
 
 func present_bomb_explosion(pos: Vector3) -> void:
-	var burst := MeshFactory.burst(UIKit.DANGER, 16, 3.4, 0.6)
+	var burst := MeshFactory.burst(MeshFactory.WORLD_DANGER, 16, 3.4, 0.6)
 	ctx.world_root.add_child(burst)
 	burst.global_position = pos
 	EventBus.shake(0.4, 0.28)
@@ -348,12 +360,14 @@ func _launch_missile(slot: int, f) -> void:
 ## The kart directly ahead on the road, not the nearest one in space: on a
 ## circuit the nearest rival is often a lap behind and on the other side of a
 ## wall, and firing at them feels broken even when the maths is right.
-func rival_ahead(slot: int) -> int:
+func rival_ahead(slot: int, targetable: Callable = Callable()) -> int:
 	var mine := _progress_of(slot)
 	var best := -1
 	var best_gap := 1 << 30
 	for i in ctx.fighters.size():
 		if i == slot or not ctx.is_alive(i) or finish_times[i] != UNFINISHED:
+			continue
+		if targetable.is_valid() and not targetable.call(i):
 			continue
 		var gap := _progress_of(i) - mine
 		if gap > 0 and gap < best_gap:
@@ -364,6 +378,8 @@ func rival_ahead(slot: int) -> int:
 	# Nobody ahead: the leader's missile chases whoever is closest behind.
 	for i in ctx.fighters.size():
 		if i != slot and ctx.is_alive(i) and finish_times[i] == UNFINISHED:
+			if targetable.is_valid() and not targetable.call(i):
+				continue
 			return i
 	return -1
 
@@ -398,8 +414,13 @@ func _spin_out(slot: int, by_slot: int, push: Vector3) -> void:
 	var f := ctx.fighter(slot)
 	if f == null or not is_instance_valid(f):
 		return
-	f.stun(SPIN_SECONDS)
-	f.apply_impulse(push.normalized() * 7.0 + Vector3.UP * 2.0)
+	# Keep neutral hits unchanged while applying the character's effective weight.
+	var tuning: Dictionary = Balance.table("tuning").get("fighter", {})
+	var neutral_resist := float(tuning.get("resist_base", 0.7)) + float(tuning.get("resist_range", 0.75)) * 0.5
+	var resistance := neutral_resist / maxf(0.3, f.knock_resist)
+	var recovery := f.data.perk_factor("recovery") if f.data != null else 1.0
+	f.stun(SPIN_SECONDS * recovery)
+	f.apply_impulse((push.normalized() * 7.0 + Vector3.UP * 2.0) * resistance)
 	ctx.bump_detail(slot, "spun")
 	if by_slot >= 0 and by_slot != slot:
 		ctx.bump_detail(by_slot, "hits")

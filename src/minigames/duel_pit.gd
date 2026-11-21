@@ -17,6 +17,7 @@ func build() -> void:
 	for i in ctx.player_count():
 		var f := ctx.fighter(i)
 		if f != null and is_instance_valid(f):
+			f.health_defeat_enabled = false
 			f.reset_damage()
 
 

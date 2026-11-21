@@ -1,6 +1,8 @@
 #import <AuthenticationServices/AuthenticationServices.h>
 #import <Security/Security.h>
 #import <UIKit/UIKit.h>
+#import "glass_pause_menu.h"
+#include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/godot.hpp>
@@ -44,6 +46,8 @@ using namespace godot;
 class KrasAppleBridge : public RefCounted {
     GDCLASS(KrasAppleBridge, RefCounted);
     std::atomic_bool busy{false};
+    std::atomic<int64_t> menu_session{-1};
+    __strong KrasGlassPauseMenu *menu = nil;
     static NSDictionary *query(const String &profile) {
         NSString *account = [NSString stringWithUTF8String:profile.utf8().get_data()];
         return @{(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
@@ -56,9 +60,72 @@ protected:
         ClassDB::bind_method(D_METHOD("save_session", "profile", "token"), &KrasAppleBridge::save_session);
         ClassDB::bind_method(D_METHOD("load_session", "profile"), &KrasAppleBridge::load_session);
         ClassDB::bind_method(D_METHOD("clear_session", "profile"), &KrasAppleBridge::clear_session);
+        ClassDB::bind_method(D_METHOD("supports_glass_menu"), &KrasAppleBridge::supports_glass_menu);
+        ClassDB::bind_method(D_METHOD("present_glass_menu", "labels", "session", "rtl", "allows_restart"), &KrasAppleBridge::present_glass_menu);
+        ClassDB::bind_method(D_METHOD("dismiss_glass_menu"), &KrasAppleBridge::dismiss_glass_menu);
+        ClassDB::bind_method(D_METHOD("navigate_glass_menu", "session", "direction", "activate"), &KrasAppleBridge::navigate_glass_menu);
+        ADD_SIGNAL(MethodInfo("menu_action", PropertyInfo(Variant::INT, "session"), PropertyInfo(Variant::STRING, "action")));
         ADD_SIGNAL(MethodInfo("identity_received", PropertyInfo(Variant::STRING, "token"), PropertyInfo(Variant::STRING, "code"), PropertyInfo(Variant::STRING, "error")));
     }
 public:
+    bool supports_glass_menu() const {
+        if (@available(iOS 26.0, *)) return true;
+        return false;
+    }
+    void present_glass_menu(Dictionary labels, int64_t session, bool rtl, bool allows_restart) {
+        NSMutableDictionary *texts = [NSMutableDictionary new];
+        for (NSString *key in @[@"title", @"message", @"resume", @"restart", @"settings", @"quit", @"confirm", @"cancel"]) {
+            String field(key.UTF8String);
+            Variant value = labels.get(field, "");
+            if (value.get_type() != Variant::STRING || String(value).length() > 2000) {
+                call_deferred("emit_signal", "menu_action", session, "unavailable");
+                return;
+            }
+            texts[key] = [NSString stringWithUTF8String:String(value).utf8().get_data()];
+        }
+        menu_session = session;
+        Ref<KrasAppleBridge> keep(this);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (keep->menu_session != session) return;
+            UIWindow *window = nil;
+            for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+                if (scene.activationState != UISceneActivationStateForegroundActive || ![scene isKindOfClass:UIWindowScene.class]) continue;
+                for (UIWindow *candidate in ((UIWindowScene *)scene).windows) if (candidate.isKeyWindow) window = candidate;
+            }
+            UIViewController *root = window.rootViewController;
+            if (!keep->supports_glass_menu() || !root || root.presentedViewController || keep->menu) {
+                keep->call_deferred("emit_signal", "menu_action", session, "unavailable");
+                return;
+            }
+            KrasGlassPauseMenu *sheet = [KrasGlassPauseMenu new];
+            sheet.labels = texts;
+            sheet.rightToLeft = rtl;
+            sheet.allowsRestart = allows_restart;
+            sheet.modalPresentationStyle = UIModalPresentationOverFullScreen;
+            sheet.modalInPresentation = YES;
+            sheet.completion = ^(NSString *action) {
+                keep->menu = nil;
+                if (keep->menu_session == session) keep->call_deferred("emit_signal", "menu_action", session, String(action.UTF8String));
+            };
+            keep->menu = sheet;
+            [root presentViewController:sheet animated:!UIAccessibilityIsReduceMotionEnabled() completion:nil];
+        });
+    }
+    void dismiss_glass_menu() {
+        menu_session = -1;
+        Ref<KrasAppleBridge> keep(this);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            keep->menu.completion = nil;
+            [keep->menu dismissViewControllerAnimated:NO completion:nil];
+            keep->menu = nil;
+        });
+    }
+    void navigate_glass_menu(int64_t session, int64_t direction, bool activate) {
+        Ref<KrasAppleBridge> keep(this);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (keep->menu_session == session) [keep->menu navigate:direction activate:activate];
+        });
+    }
     void sign_in(String nonce) {
         if (nonce.length() != 43 || busy.exchange(true)) {
             call_deferred("emit_signal", "identity_received", "", "", "failed");

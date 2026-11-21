@@ -18,7 +18,10 @@ var _shots: Array = []
 
 
 func _spawn_crate() -> void:
+	var previous_count := _crates.size()
 	super._spawn_crate()
+	if _crates.size() == previous_count:
+		return
 	# Promote the crate the parent just placed, sometimes, if it is not rigged:
 	# specimen boxes read pale green and unmistakably not like the loot ones.
 	var entry = _crates[_crates.size() - 1]

@@ -32,29 +32,36 @@ func build() -> void:
 	_accum.fill(0.0)
 	_marker = Node3D.new()
 	ctx.world_root.add_child(_marker)
-	var disc := MeshFactory.cylinder(zone_radius, 0.1, UIKit.ACCENT_2, 0.7, 28)
+	var disc := MeshFactory.cylinder(zone_radius, 0.1, MeshFactory.WORLD_TEAL, 0.7, 28)
 	disc.position = Vector3(0, 0.08, 0)
 	_marker.add_child(disc)
-	_ring = MeshFactory.torus(zone_radius - 0.2, zone_radius + 0.15, UIKit.ACCENT_2, 1.4)
+	_ring = MeshFactory.torus(zone_radius - 0.2, zone_radius + 0.15, MeshFactory.WORLD_TEAL, 1.4)
 	_ring.position = Vector3(0, 0.14, 0)
 	_marker.add_child(_ring)
 	_pick_new_spot()
 	zone_position = _target
 	_marker.global_position = zone_position
-	_set_ring_color(UIKit.ACCENT_2)
+	_set_ring_color(MeshFactory.WORLD_TEAL)
 
 
 func on_round_start() -> void:
 	zone_radius = BASE_RADIUS
 	_accum.fill(0.0)
 	_sync_radius()
-	_set_ring_color(UIKit.ACCENT_2)
+	_set_ring_color(MeshFactory.WORLD_TEAL)
 
 
 func _sync_radius() -> void:
 	if is_instance_valid(_marker):
 		var ratio := zone_radius / BASE_RADIUS
 		_marker.scale = Vector3(ratio, 1.0, ratio)
+
+
+func zone_observation(observable: Callable) -> Dictionary:
+	if not observable.is_valid() or not is_instance_valid(_marker) or not observable.call(_marker):
+		return {}
+	return {"id": _marker.get_instance_id(), "position": _marker.global_position,
+		"radius": BASE_RADIUS * _marker.scale.x}
 
 
 func _set_ring_color(color: Color) -> void:
@@ -108,7 +115,7 @@ func tick(delta: float) -> void:
 	var contested := inside.size() != 1
 	if _ring != null and is_instance_valid(_ring):
 		var col := CONTESTED_COLOR if inside.size() > 1 else (
-			UIKit.adapt(ctx.config.players[inside[0]].color()) if inside.size() == 1 else UIKit.ACCENT_2)
+			UIKit.adapt(ctx.config.players[inside[0]].color()) if inside.size() == 1 else MeshFactory.WORLD_TEAL)
 		_set_ring_color(col)
 	if contested:
 		return

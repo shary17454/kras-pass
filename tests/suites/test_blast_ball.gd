@@ -6,6 +6,42 @@ class ContactProbe extends GameBall:
 		checks += 1
 
 
+class ApproachProbe extends "res://src/ai/brains/ball_brain.gd":
+	var observed := {}
+	var observed_ball: GameBall
+	var target := Vector3.INF
+	var escaped := false
+	var victim := -1
+	var victim_position := Vector3.ZERO
+	func _ball() -> GameBall:
+		return observed_ball
+	func perceive_ball(_ball: GameBall) -> Dictionary:
+		return observed
+	func _best_victim(_position: Vector3) -> int:
+		return victim
+	func perceive(_slot: int) -> Vector3:
+		return victim_position
+	func steer_to(point: Vector3, _urgency: float = 1.0) -> void:
+		target = point
+	func steer_away(_point: Vector3, _urgency: float = 1.0) -> void:
+		escaped = true
+	func maybe_dash(_scale: float = 1.0) -> void:
+		pass
+	func keep_off_edge(_threshold: float = 3.0) -> void:
+		pass
+
+
+class EscapeProbe extends "res://src/ai/brains/ball_brain.gd":
+	var observed := {}
+	var observed_ball: GameBall
+	func _ball() -> GameBall:
+		return observed_ball
+	func perceive_ball(_ball: GameBall) -> Dictionary:
+		return observed
+	func maybe_dash(_scale: float = 1.0) -> void:
+		pass
+
+
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("blast ball lifecycle")
 	var ball := GameBall.new()
@@ -50,6 +86,169 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	var game = scene.controller
+	_check_homing_ties(t, scene)
+	var brain := ApproachProbe.new()
+	brain.controller = game
+	brain.configure(0, scene.ctx, 3, 733)
+	brain.aggression = 1.0
+	brain.risk = 1.0
+	brain.reaction_time = 0.12
+	brain.observed_ball = game.ball
+	var trajectory := {"position": Vector3(2, 1, 0), "velocity": Vector3(8, 0, 0)}
+	var anticipated := brain._anticipated_position(trajectory)
+	t.ok(anticipated.x > 2.0, "planning uses observed ball motion rather than a stale position")
+	game.ball.velocity = Vector3(-999, 0, 0)
+	t.equal(brain._anticipated_position(trajectory), anticipated, "private ball momentum cannot change the visible trajectory estimate")
+	brain.prediction = 0.0
+	t.equal(brain._anticipated_position(trajectory), trajectory.position, "zero prediction uses only the delayed position")
+	brain.prediction = 0.85
+	t.equal(brain._anticipated_position({"position": Vector3(2, 1, 0)}), Vector3(2, 1, 0), "missing observed motion does not invent a velocity")
+	var me: Fighter = scene.ctx.fighter(0)
+	var original_position := me.global_position
+	var original_speed := me.top_speed
+	me.global_position = Vector3(0, 1.0, 0)
+	me.top_speed = 5.0
+	brain.observed = {"position": Vector3(8, 1.0, 0), "fuse": 1.8}
+	game.ball.fuse = 999.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "distant short-fuse ball is not approached when travel consumes the remaining commit window")
+	brain.escaped = false
+	brain.target = Vector3.INF
+	brain.observed["fuse"] = 5.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "full fuse still cannot fund distant contact plus the escape reserve")
+	brain.escaped = false
+	brain.observed["position"] = Vector3(4, 1.0, 0)
+	brain.observed["radius"] = 0.62
+	brain.decide(0.1)
+	t.equal(brain.target, brain.observed["position"], "long visible fuse still permits an offensive approach")
+	t.ok(not brain.escaped, "a viable approach is not replaced with unconditional retreat")
+	brain.escaped = false
+	brain.observed["position"] = Vector3(2.5, 1.0, 0)
+	brain.observed["fuse"] = 1.8
+	brain.decide(0.1)
+	t.ok(brain.escaped, "close contact still needs time to leave the blast radius")
+	brain.escaped = false
+	var walk_speed := me.top_speed * float(me.mods["speed"]) * float(me.mutator["speed"])
+	var escape_budget: float = lerp(2.4, 1.1, brain.risk * (1.0 - brain.strategy)) \
+		+ brain.reaction_time + brain.decision_interval \
+		+ Balance.num("tuning", "ball.explosive_radius", 5.0) / walk_speed
+	brain.observed["radius"] = 0.62
+	brain.observed["fuse"] = escape_budget + 0.05
+	brain.decide(0.1)
+	t.ok(brain.escaped, "being within attack range cannot remove the travel time required for ball contact")
+	brain.escaped = false
+	brain.observed["fuse"] = 5.0
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "early close contact retains an offensive opportunity")
+	brain.escaped = false
+	brain.observed["age"] = 4.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "elapsed time since the visible fuse sample cannot fund a late approach")
+	brain.observed.erase("age")
+	brain.victim = 1
+	brain.victim_position = Vector3(8, 1.0, 0)
+	brain.observed = {"position": Vector3(2.5, 1.0, 0), "fuse": 5.0}
+	me.global_position = Vector3(0, 1.0, 0)
+	brain.decide(0.1)
+	t.ok(brain.target.x < brain.observed["position"].x, "approach lines up behind the observed ball before contact")
+	me.global_position = Vector3(1.1, 1.0, 0)
+	brain.decide(0.1)
+	t.ok(brain.target.x > brain.observed["position"].x, "aligned approach follows through the ball rather than stopping outside contact range")
+	var planning_body := me.get_node("Body") as CollisionShape3D
+	var planning_scale := planning_body.global_basis.get_scale().abs()
+	var planning_radius: float = 0.62 + planning_body.shape.radius * maxf(planning_scale.x, planning_scale.z)
+	for direction in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
+		me.global_position = Vector3.UP
+		var ball_position: Vector3 = me.global_position + direction * 2.5
+		brain.victim_position = ball_position + direction.rotated(Vector3.UP, PI / 2.0) * 8.0
+		brain.observed = {"position": ball_position, "radius": 0.62,
+			"fuse": escape_budget + maxf(0.0, 2.5 - planning_radius) / walk_speed + 0.02}
+		brain.escaped = false
+		brain.decide(0.1)
+		t.ok(brain.escaped, "side alignment cannot spend only the shorter direct-contact travel budget")
+		brain.observed["fuse"] = 5.0
+		brain.escaped = false
+		brain.decide(0.1)
+		t.ok(not brain.escaped, "a funded side alignment still permits an offensive approach")
+	brain.victim = -1
+	me.global_position = Vector3(0, 1.0, 0)
+	brain.escaped = false
+	me.top_speed = 1.0
+	brain.decide(0.1)
+	t.ok(brain.escaped, "slow movement cannot borrow the escape budget of a faster character")
+	me.top_speed = 5.0
+	var original_stun := me._stun
+	var original_freeze: float = me.mods["frozen"]
+	for status in ["frozen", "stunned"]:
+		me.mods["frozen"] = 8.0 if status == "frozen" else 0.0
+		me._stun = 8.0 if status == "stunned" else 0.0
+		brain.escaped = false
+		brain.target = Vector3.INF
+		brain.decide(0.1)
+		t.ok(brain.escaped, "own " + status + " duration cannot be spent as available approach time")
+	var collision := me.get_node("Body") as CollisionShape3D
+	var body_scale := collision.global_basis.get_scale().abs()
+	var contact_radius: float = 0.62 + collision.shape.radius * maxf(body_scale.x, body_scale.z)
+	var approach_budget := maxf(0.0, 2.5 - contact_radius) / walk_speed
+	brain.observed["radius"] = 0.62
+	brain.observed["fuse"] = escape_budget + approach_budget + 0.05
+	me._stun = 0.0
+	me.mods["frozen"] = 0.3
+	brain.escaped = false
+	brain.decide(0.1)
+	t.ok(brain.escaped, "even a short freeze consumes a marginal approach budget")
+	brain.observed["fuse"] = escape_budget + approach_budget + 0.25
+	me._stun = 0.2
+	me.mods["frozen"] = 0.2
+	brain.escaped = false
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "overlapping movement blocks expire concurrently, not consecutively")
+	t.near(me._stun, 0.2, 0.00001, "planning cannot shorten the real stun timer")
+	t.near(float(me.mods["frozen"]), 0.2, 0.00001, "planning cannot shorten the real freeze timer")
+	brain.observed["fuse"] = 5.0
+	me._stun = original_stun
+	me.mods["frozen"] = original_freeze
+	brain.escaped = false
+	brain.decide(0.1)
+	t.ok(not brain.escaped, "clear movement status preserves a viable offensive approach")
+	brain.controller = null
+	me.global_position = original_position
+	me.top_speed = original_speed
+	var escape := EscapeProbe.new()
+	escape.controller = game
+	escape.configure(0, scene.ctx, 3, 733)
+	escape.edge_awareness = 1.0
+	escape.observed_ball = game.ball
+	var arena: Arena = scene.ctx.arena
+	me.global_position = arena.global_position + Vector3.UP
+	escape.prediction = 1.0
+	escape.reaction_time = 0.12
+	escape.decision_interval = 0.2
+	escape.observed = {"position": me.global_position + Vector3.LEFT * 4.0,
+		"velocity": Vector3.RIGHT * 18.0, "age": 0.13, "fuse": 0.2}
+	escape.decide(0.1)
+	t.ok(escape.move.x > 0.0, "escape does not run toward the incoming ball because its future forecast crosses the player")
+	var estimated := escape._estimated_position_now(escape.observed)
+	t.near(estimated.x - me.global_position.x, -1.66, 0.00001, "escape compensates only the elapsed visible-sample age")
+	game.ball.velocity = Vector3.LEFT * 999.0
+	t.equal(escape._estimated_position_now(escape.observed), estimated, "private live momentum cannot alter escape planning")
+	escape.observed["age"] = 0.3
+	escape.decide(0.1)
+	t.ok(escape.move.x < 0.0, "a ball estimated to have already crossed changes the escape side")
+	escape.prediction = 0.0
+	t.equal(escape._estimated_position_now(escape.observed), escape.observed["position"], "zero prediction retains the delayed visible cue")
+	escape.prediction = 1.0
+	for direction in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]:
+		me.global_position = arena.global_position + direction * (arena.current_radius - 0.2) + Vector3.UP
+		escape.observed = {"position": arena.global_position + direction * (arena.current_radius - 2.5), "fuse": 0.2}
+		escape.decide(0.1)
+		var step := Vector3(escape.move.x, 0, escape.move.y)
+		var tangent := Vector3(-direction.z, 0, direction.x)
+		t.ok(absf(step.dot(tangent)) > 0.5, "escape follows the rim rather than steering back toward the observed bomb")
+		t.ok(arena.is_inside(me.global_position + step, 0.15), "escape step remains on playable floor")
+	escape.controller = null
+	me.global_position = original_position
 	var baseline := Balance.num("tuning", "ball.explosive_fuse", 5.0)
 	game.on_sudden_death()
 	game.ball.fuse = 0.2
@@ -184,3 +383,43 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame
+
+
+func _check_homing_ties(t: TestHarness, scene: Node) -> void:
+	var game = scene.controller
+	var ctx: MatchContext = scene.ctx
+	var positions: Array[Vector3] = []
+	var living = ctx.alive.duplicate()
+	var saved_state := ctx.rng.state
+	var center: Vector3 = scene.arena.global_position + Vector3.UP
+	var directions := [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK]
+	for slot in 4:
+		positions.append(ctx.fighter(slot).global_position)
+		ctx.fighter(slot).global_position = center + directions[slot] * 4.0
+		ctx.alive[slot] = slot != 2
+	ctx.rng.seed = 82173
+	var sequence: Array[int] = []
+	var counts := [0, 0, 0, 0]
+	for attempt in 256:
+		var target: int = game._nearest_alive_to(center)
+		sequence.append(target)
+		counts[target] += 1
+	t.equal(counts[2], 0, "dead equally near competitor is never selected")
+	for slot in [0, 1, 3]:
+		t.ok(counts[slot] > 40 and counts[slot] < 130, "equally near live competitors do not inherit slot-order priority")
+	ctx.rng.seed = 82173
+	for expected in sequence:
+		t.equal(game._nearest_alive_to(center), expected, "tie selection repeats from the round seed")
+	ctx.alive[2] = true
+	ctx.fighter(2).global_position = center + Vector3.FORWARD
+	var unique_state := ctx.rng.state
+	t.equal(game._nearest_alive_to(center), 2, "a later unique nearest competitor replaces earlier tied candidates")
+	t.equal(ctx.rng.state, unique_state, "unique nearest selection does not consume random state")
+	for slot in 4:
+		ctx.alive[slot] = false
+	t.equal(game._nearest_alive_to(center), -1, "empty live set has no homing or blast victim")
+	t.equal(ctx.rng.state, unique_state, "empty live set does not consume random state")
+	for slot in 4:
+		ctx.fighter(slot).global_position = positions[slot]
+	ctx.alive = living
+	ctx.rng.state = saved_state

@@ -1,0 +1,1046 @@
+{
+  "source_commit": "b3ec09a0546dcb50217897e40b8fd254c008ff69",
+  "sample_count": 16,
+  "rows": [
+    {
+      "character": "nabta",
+      "duration": 40.9666666666656,
+      "finished_naturally": true,
+      "places": [
+        2,
+        3,
+        4,
+        1
+      ],
+      "players": [
+        {
+          "alive_ticks": 1712,
+          "backoff_ticks": 624,
+          "dash_ticks": 102,
+          "death": "ram",
+          "edge_ticks": 426,
+          "health_lost": 100,
+          "minimum_margin": 3.56693553924561,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 2458,
+          "backoff_ticks": 1006,
+          "dash_ticks": 98,
+          "death": "ram",
+          "edge_ticks": 329,
+          "health_lost": 100,
+          "minimum_margin": 3.76939010620117,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1067,
+          "backoff_ticks": 174,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 169,
+          "health_lost": 100,
+          "minimum_margin": 2.13062286376953,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 2458,
+          "backoff_ticks": 174,
+          "dash_ticks": 28,
+          "death": "survived",
+          "edge_ticks": 737,
+          "health_lost": 81.8037178546261,
+          "minimum_margin": 2.04366111755371,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 0,
+      "scores": [
+        8,
+        6,
+        2,
+        16
+      ],
+      "seed": 1204242
+    },
+    {
+      "character": "nabta",
+      "duration": 22.1666666666667,
+      "finished_naturally": true,
+      "places": [
+        4,
+        3,
+        1,
+        2
+      ],
+      "players": [
+        {
+          "alive_ticks": 832,
+          "backoff_ticks": 185,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 61,
+          "health_lost": 100,
+          "minimum_margin": 3.38081836700439,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1265,
+          "backoff_ticks": 111,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 278,
+          "health_lost": 100,
+          "minimum_margin": 3.17118263244629,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1330,
+          "backoff_ticks": 447,
+          "dash_ticks": 74,
+          "death": "survived",
+          "edge_ticks": 156,
+          "health_lost": 78.3033854214233,
+          "minimum_margin": 3.77507400512695,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1330,
+          "backoff_ticks": 491,
+          "dash_ticks": 84,
+          "death": "ram",
+          "edge_ticks": 223,
+          "health_lost": 100,
+          "minimum_margin": 1.12984371185303,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 1,
+      "scores": [
+        2,
+        4,
+        16,
+        10
+      ],
+      "seed": 1204242
+    },
+    {
+      "character": "sakhra",
+      "duration": 44.5333333333321,
+      "finished_naturally": true,
+      "places": [
+        2,
+        3,
+        4,
+        1
+      ],
+      "players": [
+        {
+          "alive_ticks": 2672,
+          "backoff_ticks": 862,
+          "dash_ticks": 84,
+          "death": "ram",
+          "edge_ticks": 416,
+          "health_lost": 100,
+          "minimum_margin": 2.64876651763916,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 976,
+          "backoff_ticks": 313,
+          "dash_ticks": 42,
+          "death": "ram",
+          "edge_ticks": 6,
+          "health_lost": 100,
+          "minimum_margin": 6.38750457763672,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 909,
+          "backoff_ticks": 97,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 10,
+          "health_lost": 100,
+          "minimum_margin": 5.15917873382568,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 2672,
+          "backoff_ticks": 318,
+          "dash_ticks": 42,
+          "death": "survived",
+          "edge_ticks": 293,
+          "health_lost": 98.9588066232441,
+          "minimum_margin": 2.29150009155273,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 2,
+      "scores": [
+        10,
+        4,
+        2,
+        16
+      ],
+      "seed": 1204339
+    },
+    {
+      "character": "sakhra",
+      "duration": 23.2,
+      "finished_naturally": true,
+      "places": [
+        3,
+        2,
+        4,
+        1
+      ],
+      "players": [
+        {
+          "alive_ticks": 1322,
+          "backoff_ticks": 228,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 122,
+          "health_lost": 100,
+          "minimum_margin": 3.9392786026001,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1392,
+          "backoff_ticks": 60,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 116,
+          "health_lost": 100,
+          "minimum_margin": 3.46617221832275,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 768,
+          "backoff_ticks": 316,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 80,
+          "health_lost": 100,
+          "minimum_margin": 3.94025421142578,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1392,
+          "backoff_ticks": 540,
+          "dash_ticks": 64,
+          "death": "survived",
+          "edge_ticks": 200,
+          "health_lost": 44.0087006252594,
+          "minimum_margin": 2.98129367828369,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 3,
+      "scores": [
+        8,
+        10,
+        2,
+        12
+      ],
+      "seed": 1204339
+    },
+    {
+      "character": "fanoos",
+      "duration": 33.6833333333327,
+      "finished_naturally": true,
+      "places": [
+        4,
+        1,
+        3,
+        2
+      ],
+      "players": [
+        {
+          "alive_ticks": 1482,
+          "backoff_ticks": 648,
+          "dash_ticks": 56,
+          "death": "ram",
+          "edge_ticks": 34,
+          "health_lost": 100,
+          "minimum_margin": 4.66149520874023,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 2021,
+          "backoff_ticks": 530,
+          "dash_ticks": 85,
+          "death": "survived",
+          "edge_ticks": 312,
+          "health_lost": 84.2346418482705,
+          "minimum_margin": 1.6240873336792,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1507,
+          "backoff_ticks": 226,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 333,
+          "health_lost": 100,
+          "minimum_margin": 0.420135498046875,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 2021,
+          "backoff_ticks": 143,
+          "dash_ticks": 56,
+          "death": "ram",
+          "edge_ticks": 157,
+          "health_lost": 100,
+          "minimum_margin": 3.91162014007568,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 4,
+      "scores": [
+        2,
+        16,
+        4,
+        10
+      ],
+      "seed": 1204436
+    },
+    {
+      "character": "fanoos",
+      "duration": 27.783333333333,
+      "finished_naturally": true,
+      "places": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "players": [
+        {
+          "alive_ticks": 1667,
+          "backoff_ticks": 407,
+          "dash_ticks": 54,
+          "death": "survived",
+          "edge_ticks": 93,
+          "health_lost": 95.4710549812338,
+          "minimum_margin": 4.00156497955322,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1667,
+          "backoff_ticks": 58,
+          "dash_ticks": 28,
+          "death": "ram",
+          "edge_ticks": 384,
+          "health_lost": 100,
+          "minimum_margin": 1.52290534973145,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1166,
+          "backoff_ticks": 473,
+          "dash_ticks": 56,
+          "death": "ram",
+          "edge_ticks": 370,
+          "health_lost": 100,
+          "minimum_margin": 2.15068054199219,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 972,
+          "backoff_ticks": 457,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 326,
+          "health_lost": 100,
+          "minimum_margin": 2.68463134765625,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 5,
+      "scores": [
+        16,
+        10,
+        4,
+        2
+      ],
+      "seed": 1204436
+    },
+    {
+      "character": "ramla",
+      "duration": 10.9666666666668,
+      "finished_naturally": true,
+      "places": [
+        1,
+        2,
+        4,
+        3
+      ],
+      "players": [
+        {
+          "alive_ticks": 658,
+          "backoff_ticks": 271,
+          "dash_ticks": 42,
+          "death": "ram",
+          "edge_ticks": 35,
+          "health_lost": 100,
+          "minimum_margin": 5.96997451782227,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 658,
+          "backoff_ticks": 346,
+          "dash_ticks": 42,
+          "death": "ram",
+          "edge_ticks": 149,
+          "health_lost": 100,
+          "minimum_margin": 2.96333980560303,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 418,
+          "backoff_ticks": 0,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 60,
+          "health_lost": 100,
+          "minimum_margin": 4.8756160736084,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 571,
+          "backoff_ticks": 62,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 181,
+          "health_lost": 100,
+          "minimum_margin": 2.80223274230957,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 6,
+      "scores": [
+        14,
+        12,
+        2,
+        8
+      ],
+      "seed": 1204533
+    },
+    {
+      "character": "ramla",
+      "duration": 26.9666666666664,
+      "finished_naturally": true,
+      "places": [
+        2,
+        3,
+        1,
+        4
+      ],
+      "players": [
+        {
+          "alive_ticks": 1319,
+          "backoff_ticks": 0,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 170,
+          "health_lost": 100,
+          "minimum_margin": 2.85970783233643,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1618,
+          "backoff_ticks": 110,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 286,
+          "health_lost": 100,
+          "minimum_margin": 3.33927440643311,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1618,
+          "backoff_ticks": 378,
+          "dash_ticks": 61,
+          "death": "survived",
+          "edge_ticks": 203,
+          "health_lost": 97.6654894855362,
+          "minimum_margin": 2.85915470123291,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 878,
+          "backoff_ticks": 420,
+          "dash_ticks": 56,
+          "death": "ram",
+          "edge_ticks": 212,
+          "health_lost": 100,
+          "minimum_margin": 3.8689603805542,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 7,
+      "scores": [
+        8,
+        6,
+        16,
+        2
+      ],
+      "seed": 1204533
+    },
+    {
+      "character": "barq",
+      "duration": 37.7666666666658,
+      "finished_naturally": true,
+      "places": [
+        2,
+        1,
+        3,
+        4
+      ],
+      "players": [
+        {
+          "alive_ticks": 1211,
+          "backoff_ticks": 254,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 136,
+          "health_lost": 100,
+          "minimum_margin": 4.19820117950439,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 2266,
+          "backoff_ticks": 673,
+          "dash_ticks": 56,
+          "death": "survived",
+          "edge_ticks": 490,
+          "health_lost": 66.7940517794049,
+          "minimum_margin": 3.29808902740479,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 2266,
+          "backoff_ticks": 186,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 863,
+          "health_lost": 100,
+          "minimum_margin": 0.411420822143555,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 578,
+          "backoff_ticks": 105,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 19,
+          "health_lost": 100,
+          "minimum_margin": 5.32511234283447,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 8,
+      "scores": [
+        8,
+        16,
+        6,
+        2
+      ],
+      "seed": 1204630
+    },
+    {
+      "character": "barq",
+      "duration": 24.5333333333332,
+      "finished_naturally": true,
+      "places": [
+        1,
+        3,
+        4,
+        2
+      ],
+      "players": [
+        {
+          "alive_ticks": 1472,
+          "backoff_ticks": 62,
+          "dash_ticks": 14,
+          "death": "survived",
+          "edge_ticks": 463,
+          "health_lost": 94.416984682127,
+          "minimum_margin": 1.53348731994629,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1472,
+          "backoff_ticks": 64,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 602,
+          "health_lost": 100,
+          "minimum_margin": 1.48971080780029,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 826,
+          "backoff_ticks": 317,
+          "dash_ticks": 56,
+          "death": "ram",
+          "edge_ticks": 279,
+          "health_lost": 100,
+          "minimum_margin": 3.2837963104248,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 971,
+          "backoff_ticks": 390,
+          "dash_ticks": 32,
+          "death": "ram",
+          "edge_ticks": 156,
+          "health_lost": 100,
+          "minimum_margin": 3.99666500091553,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 9,
+      "scores": [
+        16,
+        6,
+        2,
+        8
+      ],
+      "seed": 1204630
+    },
+    {
+      "character": "mowja",
+      "duration": 23.5666666666666,
+      "finished_naturally": true,
+      "places": [
+        2,
+        4,
+        1,
+        3
+      ],
+      "players": [
+        {
+          "alive_ticks": 1414,
+          "backoff_ticks": 462,
+          "dash_ticks": 46,
+          "death": "ram",
+          "edge_ticks": 84,
+          "health_lost": 100,
+          "minimum_margin": 4.50448036193848,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 572,
+          "backoff_ticks": 177,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 144,
+          "health_lost": 100,
+          "minimum_margin": 1.64548683166504,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1414,
+          "backoff_ticks": 0,
+          "dash_ticks": 14,
+          "death": "survived",
+          "edge_ticks": 224,
+          "health_lost": 33.1434117283563,
+          "minimum_margin": 1.64454460144043,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 949,
+          "backoff_ticks": 230,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 95,
+          "health_lost": 100,
+          "minimum_margin": 4.84566593170166,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 10,
+      "scores": [
+        10,
+        2,
+        16,
+        4
+      ],
+      "seed": 1204727
+    },
+    {
+      "character": "mowja",
+      "duration": 24.9999999999999,
+      "finished_naturally": true,
+      "places": [
+        3,
+        4,
+        2,
+        1
+      ],
+      "players": [
+        {
+          "alive_ticks": 1265,
+          "backoff_ticks": 0,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 292,
+          "health_lost": 100,
+          "minimum_margin": 2.26007270812988,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 553,
+          "backoff_ticks": 59,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 0,
+          "health_lost": 100,
+          "minimum_margin": 6.45315742492676,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1500,
+          "backoff_ticks": 568,
+          "dash_ticks": 56,
+          "death": "ram",
+          "edge_ticks": 203,
+          "health_lost": 100,
+          "minimum_margin": 3.84077453613281,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1500,
+          "backoff_ticks": 374,
+          "dash_ticks": 84,
+          "death": "survived",
+          "edge_ticks": 156,
+          "health_lost": 81.1111421546393,
+          "minimum_margin": 2.5551929473877,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 11,
+      "scores": [
+        8,
+        2,
+        10,
+        12
+      ],
+      "seed": 1204727
+    },
+    {
+      "character": "ghaim",
+      "duration": 23.4333333333333,
+      "finished_naturally": true,
+      "places": [
+        1,
+        4,
+        3,
+        2
+      ],
+      "players": [
+        {
+          "alive_ticks": 1406,
+          "backoff_ticks": 459,
+          "dash_ticks": 84,
+          "death": "survived",
+          "edge_ticks": 131,
+          "health_lost": 97.3030251079026,
+          "minimum_margin": 2.37444591522217,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 703,
+          "backoff_ticks": 274,
+          "dash_ticks": 31,
+          "death": "ram",
+          "edge_ticks": 90,
+          "health_lost": 100,
+          "minimum_margin": 3.99630069732666,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 1406,
+          "backoff_ticks": 207,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 379,
+          "health_lost": 100,
+          "minimum_margin": 2.89686012268066,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1406,
+          "backoff_ticks": 314,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 562,
+          "health_lost": 100,
+          "minimum_margin": 1.75771999359131,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 12,
+      "scores": [
+        12,
+        2,
+        8,
+        10
+      ],
+      "seed": 1204824
+    },
+    {
+      "character": "ghaim",
+      "duration": 22.8333333333333,
+      "finished_naturally": true,
+      "places": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "players": [
+        {
+          "alive_ticks": 1370,
+          "backoff_ticks": 21,
+          "dash_ticks": 0,
+          "death": "survived",
+          "edge_ticks": 145,
+          "health_lost": 68.8524022378831,
+          "minimum_margin": 3.16693878173828,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1262,
+          "backoff_ticks": 284,
+          "dash_ticks": 28,
+          "death": "ram",
+          "edge_ticks": 56,
+          "health_lost": 100,
+          "minimum_margin": 5.46139717102051,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 1370,
+          "backoff_ticks": 450,
+          "dash_ticks": 88,
+          "death": "ram",
+          "edge_ticks": 224,
+          "health_lost": 100,
+          "minimum_margin": 3.43103694915771,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 555,
+          "backoff_ticks": 293,
+          "dash_ticks": 14,
+          "death": "ram",
+          "edge_ticks": 78,
+          "health_lost": 100,
+          "minimum_margin": 5.14899253845215,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 13,
+      "scores": [
+        16,
+        8,
+        6,
+        2
+      ],
+      "seed": 1204824
+    },
+    {
+      "character": "turs",
+      "duration": 37.4166666666658,
+      "finished_naturally": true,
+      "places": [
+        1,
+        4,
+        2,
+        3
+      ],
+      "players": [
+        {
+          "alive_ticks": 2245,
+          "backoff_ticks": 890,
+          "dash_ticks": 144,
+          "death": "survived",
+          "edge_ticks": 243,
+          "health_lost": 74.8167517107388,
+          "minimum_margin": 3.18009948730469,
+          "slot": 0,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 691,
+          "backoff_ticks": 295,
+          "dash_ticks": 28,
+          "death": "ram",
+          "edge_ticks": 243,
+          "health_lost": 100,
+          "minimum_margin": 2.94673442840576,
+          "slot": 1,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 2245,
+          "backoff_ticks": 310,
+          "dash_ticks": 28,
+          "death": "ram",
+          "edge_ticks": 441,
+          "health_lost": 100,
+          "minimum_margin": 0.420923233032227,
+          "slot": 2,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 2207,
+          "backoff_ticks": 314,
+          "dash_ticks": 28,
+          "death": "ram",
+          "edge_ticks": 181,
+          "health_lost": 100,
+          "minimum_margin": 0.855907440185547,
+          "slot": 3,
+          "tier": 0
+        }
+      ],
+      "sample": 14,
+      "scores": [
+        12,
+        2,
+        10,
+        8
+      ],
+      "seed": 1204921
+    },
+    {
+      "character": "turs",
+      "duration": 34.966666666666,
+      "finished_naturally": true,
+      "places": [
+        3,
+        1,
+        4,
+        2
+      ],
+      "players": [
+        {
+          "alive_ticks": 933,
+          "backoff_ticks": 38,
+          "dash_ticks": 0,
+          "death": "ram",
+          "edge_ticks": 91,
+          "health_lost": 100,
+          "minimum_margin": 3.517991065979,
+          "slot": 0,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 2098,
+          "backoff_ticks": 0,
+          "dash_ticks": 28,
+          "death": "survived",
+          "edge_ticks": 587,
+          "health_lost": 94.0314449817754,
+          "minimum_margin": 2.46451091766357,
+          "slot": 1,
+          "tier": 0
+        },
+        {
+          "alive_ticks": 930,
+          "backoff_ticks": 305,
+          "dash_ticks": 46,
+          "death": "ram",
+          "edge_ticks": 121,
+          "health_lost": 100,
+          "minimum_margin": 2.59676647186279,
+          "slot": 2,
+          "tier": 3
+        },
+        {
+          "alive_ticks": 2098,
+          "backoff_ticks": 608,
+          "dash_ticks": 74,
+          "death": "ram",
+          "edge_ticks": 204,
+          "health_lost": 100,
+          "minimum_margin": 2.22904205322266,
+          "slot": 3,
+          "tier": 3
+        }
+      ],
+      "sample": 15,
+      "scores": [
+        8,
+        12,
+        2,
+        10
+      ],
+      "seed": 1204921
+    }
+  ]
+}

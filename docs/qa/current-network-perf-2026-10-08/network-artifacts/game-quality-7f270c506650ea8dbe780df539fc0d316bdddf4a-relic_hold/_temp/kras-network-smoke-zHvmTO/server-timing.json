@@ -1,0 +1,149 @@
+{
+  "operations": {
+    "create": {
+      "count": 2,
+      "totalMs": 1.6932169999879534,
+      "maxMs": 1.3589380000000801,
+      "cpu": {
+        "count": 2,
+        "totalMs": 1.661,
+        "maxMs": 1.329,
+        "atMaxWallMs": 1.329
+      }
+    },
+    "configure": {
+      "count": 2,
+      "totalMs": 0.4858949999943434,
+      "maxMs": 0.3219460000000254,
+      "cpu": {
+        "count": 2,
+        "totalMs": 0.485,
+        "maxMs": 0.322,
+        "atMaxWallMs": 0.322
+      }
+    },
+    "ready": {
+      "count": 22,
+      "totalMs": 2.739799000014841,
+      "maxMs": 0.2615419999929145,
+      "cpu": {
+        "count": 22,
+        "totalMs": 2.5940000000000007,
+        "maxMs": 0.193,
+        "atMaxWallMs": 0.093
+      }
+    },
+    "join": {
+      "count": 4,
+      "totalMs": 1.1359880000040903,
+      "maxMs": 0.43113099999982296,
+      "cpu": {
+        "count": 4,
+        "totalMs": 1.2149999999999999,
+        "maxMs": 0.512,
+        "atMaxWallMs": 0.512
+      }
+    },
+    "start": {
+      "count": 2,
+      "totalMs": 1.486749000005375,
+      "maxMs": 1.0372829999998885,
+      "cpu": {
+        "count": 2,
+        "totalMs": 1.547,
+        "maxMs": 1.097,
+        "atMaxWallMs": 1.097
+      }
+    },
+    "loaded": {
+      "count": 26,
+      "totalMs": 3.724819999956253,
+      "maxMs": 0.3637650000000576,
+      "cpu": {
+        "count": 26,
+        "totalMs": 3.81,
+        "maxMs": 0.539,
+        "atMaxWallMs": 0.539
+      }
+    },
+    "input": {
+      "count": 12608,
+      "totalMs": 721.114893999385,
+      "maxMs": 0.7508539999980712,
+      "cpu": {
+        "count": 12608,
+        "totalMs": 700.8869999999971,
+        "maxMs": 0.751,
+        "atMaxWallMs": 0.751
+      }
+    },
+    "snapshot": {
+      "count": 3906,
+      "totalMs": 592.7933049984467,
+      "maxMs": 1.1190160000001015,
+      "cpu": {
+        "count": 3906,
+        "totalMs": 584.6780000000001,
+        "maxMs": 1.12,
+        "atMaxWallMs": 1.12
+      }
+    },
+    "resume": {
+      "count": 4,
+      "totalMs": 1.4551480000081938,
+      "maxMs": 0.43975700000009965,
+      "cpu": {
+        "count": 4,
+        "totalMs": 1.4509999999999998,
+        "maxMs": 0.439,
+        "atMaxWallMs": 0.439
+      }
+    },
+    "ping": {
+      "count": 123,
+      "totalMs": 5.608188999917729,
+      "maxMs": 0.12885299999925337,
+      "cpu": {
+        "count": 123,
+        "totalMs": 5.405999999999999,
+        "maxMs": 0.127,
+        "atMaxWallMs": 0.127
+      }
+    },
+    "result": {
+      "count": 7,
+      "totalMs": 2.9764820000127656,
+      "maxMs": 0.6273000000001048,
+      "cpu": {
+        "count": 7,
+        "totalMs": 2.969,
+        "maxMs": 0.626,
+        "atMaxWallMs": 0.626
+      }
+    },
+    "next": {
+      "count": 5,
+      "totalMs": 1.8797279999926104,
+      "maxMs": 0.5417190000007395,
+      "cpu": {
+        "count": 5,
+        "totalMs": 2.257,
+        "maxMs": 0.789,
+        "atMaxWallMs": 0.789
+      }
+    },
+    "leave": {
+      "count": 2,
+      "totalMs": 0.7134530000039376,
+      "maxMs": 0.5310089999984484,
+      "cpu": {
+        "count": 2,
+        "totalMs": 1.079,
+        "maxMs": 0.896,
+        "atMaxWallMs": 0.896
+      }
+    }
+  },
+  "stalls": [],
+  "worstStall": null
+}

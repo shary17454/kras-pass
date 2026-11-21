@@ -1,0 +1,25 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+NETWORK_ROOM=HH9MNW
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":1052,"phase":4,"running":true,"seed":1551305325,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":1052,"phase":4,"running":true,"seed":1551305325,"snapshots":0,"state":"playing"}
+WARNING: [WRN][Net] online transport lost: socket_1000
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] _transport_lost (res://src/net/net_service.gd:482)
+         [3] _process (res://src/net/room_client.gd:88)
+NETWORK_ROUND={"arena":"glass_terrace","epoch":1,"game":"gem_grab","moved":true,"scores":[6,1,6,2],"spectator":false}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":1052,"phase":1,"running":true,"seed":1436264658,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":1052,"phase":4,"running":true,"seed":1436264658,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":1052,"phase":6,"running":true,"seed":1436264658,"snapshots":0,"state":"playing"}
+NETWORK_ROUND={"arena":"gem_hollow","epoch":2,"game":"gem_grab","moved":true,"scores":[4,6,3,2],"spectator":false}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":1052,"phase":4,"running":true,"seed":1485251643,"snapshots":0,"state":"playing"}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":1052,"phase":4,"running":true,"seed":1485251643,"snapshots":0,"state":"playing"}
+NETWORK_ROUND={"arena":"gem_hollow","epoch":3,"game":"gem_grab","moved":true,"scores":[7,2,2,5],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":false,"collection_scored":true,"fawda_event_coverage":{},"fawda_worlds":[],"humans":2,"id":1,"matches":3,"moved":true,"reconnected":true,"scores":[7,2,2,5],"snapshots":0,"tournament":{"awards":[5.0,2.0,2.0,3.0],"champions":[0.0],"complete":true,"contenders":[],"cups":[2.0,1.0,1.0,0.0],"mode":"points","points":[12.0,8.0,8.0,6.0],"round":3.0,"target":3.0,"tie_attempts":0.0},"world_snapshots":0}

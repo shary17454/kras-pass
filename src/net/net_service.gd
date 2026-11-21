@@ -1,7 +1,7 @@
 extends Node
 ## Online play abstraction. Autoload name: `Net`.
 ##
-## Local sessions and protocol-v1 hosted rooms. Online is gated on a configured
+## Local sessions and versioned hosted rooms. Online is gated on a configured
 ## endpoint; the lobby server, not a client, assigns identities and slots.
 
 signal session_state_changed(state: int)
@@ -31,6 +31,7 @@ var match_data := {}
 var epoch := 0
 var match_running := false
 var ping_ms := 0
+var failure_key := ""
 var local_device_type := 0
 var local_device_id := 0
 var _token := ""
@@ -80,6 +81,7 @@ func reset() -> void:
 	if transport != null:
 		transport.close()
 	_token = ""
+	failure_key = ""
 	_retry_until = 0
 	_retry_at = 0
 	room_state = ""
@@ -301,6 +303,8 @@ func _clear_input_state() -> void:
 
 func _receive_input(message: Dictionary) -> void:
 	var slot := int(message.slot)
+	if int(message.sequence) <= int(_inputs.get(slot, {}).get("sequence", -1)):
+		return
 	var packet := message.duplicate(true)
 	packet["time"] = Time.get_ticks_msec()
 	var previous := int(_inputs.get(slot, {}).get("bits", 0))
@@ -395,21 +399,37 @@ func make_match_config() -> MatchConfig:
 
 
 func _receive(m: Dictionary) -> void:
+	if not _valid_match_envelope(m):
+		online_error.emit("invalid_response")
+		return
 	match String(m.get("op", "")):
 		"welcome":
+			if not _protocol_integer(m.get("id"), 1, 9007199254740991) \
+					or not m.get("token") is String or m.token.is_empty() or m.token.length() > 128:
+				online_error.emit("invalid_response")
+				return
 			local_peer_id = int(m.id)
 			_token = String(m.token)
 			_retry_until = 0
-		"rooms": rooms_received.emit(m.get("rooms", []))
+		"rooms":
+			if not _valid_room_list(m.get("rooms")):
+				online_error.emit("invalid_response")
+				return
+			rooms_received.emit(m.rooms.duplicate(true))
 		"error":
 			var code := String(m.get("code", "invalid_request"))
-			if code == "session_expired":
+			if code == "version_mismatch":
+				_protocol_rejected()
+			elif code == "session_expired":
 				reset()
 				connection_lost.emit(code)
 			elif code != "session_active":
 				online_error.emit(code)
 		"pong": ping_ms = maxi(0, Time.get_ticks_msec() - int(m.get("stamp", 0)))
 		"room":
+			if not _valid_room_message(m):
+				online_error.emit("invalid_response")
+				return
 			tournament = m.tournament.duplicate(true) if m.get("tournament") is Dictionary else {}
 			room_code = String(m.code)
 			room_state = String(m.state)
@@ -421,12 +441,17 @@ func _receive(m: Dictionary) -> void:
 			mode = Mode.ONLINE_HOST if is_host else Mode.ONLINE_CLIENT
 			peers.clear()
 			for p in m.players:
-				peers[int(p.id)] = p
+				peers[int(p.id)] = p.duplicate(true)
 			lobby_config = m.config.duplicate(true)
 			lobby_config["max_players"] = int(m.capacity)
 			_set_state(State.LOBBY if room_state in ["lobby", "results"] else State.IN_MATCH)
 			room_updated.emit()
 		"start":
+			if not _valid_start_message(m):
+				online_error.emit("invalid_response")
+				return
+			if not match_data.is_empty() and int(m.epoch) < epoch:
+				return
 			var fresh := int(m.epoch) != epoch or match_data.is_empty()
 			epoch = int(m.epoch)
 			match_data = m.duplicate(true)
@@ -456,19 +481,252 @@ func _receive(m: Dictionary) -> void:
 				snapshot_received.emit(m.data)
 		"result":
 			if int(m.epoch) == epoch and room_state in ["loading", "playing", "results"] and _result_epoch != epoch:
+				if not _valid_result_message(m):
+					online_error.emit("invalid_response")
+					return
 				tournament = m.tournament.duplicate(true) if m.get("tournament") is Dictionary else {}
 				_result_epoch = epoch
 				_pending_result.clear()
 				match_running = false
-				online_result.emit(m.scores)
+				online_result.emit(m.scores.duplicate())
 		"closed":
 			var reason := String(m.get("reason", "disconnected"))
 			reset()
 			connection_lost.emit(reason)
 
 
+func _valid_match_envelope(message: Dictionary) -> bool:
+	var operation: Variant = message.get("op")
+	if not operation is String or operation.length() > 64:
+		return false
+	if operation in ["go", "input", "snapshot", "result"] \
+			and not _protocol_integer(message.get("epoch"), 1, 9007199254740991):
+		return false
+	match operation:
+		"snapshot":
+			return _protocol_integer(message.get("tick"), 0, 9007199254740991) and message.get("data") is Dictionary
+		"input":
+			if not _protocol_integer(message.get("slot"), 0, 3) \
+					or not _protocol_integer(message.get("sequence"), 0, 9007199254740991) \
+					or not _protocol_integer(message.get("bits"), 0, 31):
+				return false
+			var axes: Variant = message.get("axes")
+			if not axes is Array or axes.size() != 4:
+				return false
+			for axis in axes:
+				if not (axis is int or axis is float) or not is_finite(float(axis)) or absf(float(axis)) > 1.0:
+					return false
+		"pong":
+			return _protocol_integer(message.get("stamp"), 0, 9007199254740991)
+		"error", "closed":
+			var field := "code" if operation == "error" else "reason"
+			if message.has(field) and (not message[field] is String or message[field].length() > 64):
+				return false
+	return true
+
+
+func _valid_result_message(message: Dictionary) -> bool:
+	var config: Variant = match_data.get("config")
+	var players: Variant = match_data.get("players")
+	var scores: Variant = message.get("scores")
+	if not _valid_game_settings(config) or not players is Array or players.size() < 2 or players.size() > 4 \
+			or not scores is Array or scores.size() != players.size():
+		return false
+	var definition: MiniGameDef = Registry.minigame(config.game)
+	if definition == null:
+		return false
+	var minimum := -1000000 if definition.higher_is_better() else 0
+	var maximum := 1000000000 * int(config.rounds) if config.game in ["kart_sprint", "sabaq_sawarikh"] else 1000000
+	for score in scores:
+		if not _protocol_integer(score, minimum, maximum):
+			return false
+	var standings: Variant = message.get("tournament")
+	if not _valid_tournament_view(standings):
+		return false
+	if standings is Dictionary and standings.points.size() != scores.size():
+		return false
+	if config.get("tournament") is Dictionary and not standings is Dictionary:
+		return false
+	return true
+
+
+func _valid_start_message(message: Dictionary) -> bool:
+	if not _protocol_integer(message.get("epoch"), 1, 9007199254740991) \
+			or not _protocol_integer(message.get("seed"), 0, 2147483647):
+		return false
+	var config: Variant = message.get("config")
+	var players: Variant = message.get("players")
+	if not _valid_game_settings(config) or not players is Array or players.size() < 2 or players.size() > 4:
+		return false
+	var identities := {}
+	for index in players.size():
+		var player: Variant = players[index]
+		if not player is Dictionary or not _protocol_integer(player.get("id"), 0, 9007199254740991) \
+				or not _protocol_integer(player.get("slot"), index, index) \
+				or not _protocol_integer(player.get("character"), 0, Registry.characters().size() - 1) \
+				or not player.get("name") is String or player.name.length() > 24:
+			return false
+		var identity := int(player.id)
+		# Bot placeholders share ID zero; real peer identities must be unique.
+		if identity > 0:
+			if identities.has(identity):
+				return false
+			identities[identity] = true
+	if identities.is_empty() or not identities.has(local_peer_id):
+		return false
+	var standings: Variant = message.get("tournament")
+	if standings != null:
+		if not standings is Dictionary:
+			return false
+		var contenders: Variant = standings.get("contenders", [])
+		if not contenders is Array or contenders.size() > players.size():
+			return false
+		var seen := {}
+		for contender in contenders:
+			if not _protocol_integer(contender, 0, players.size() - 1) or seen.has(int(contender)):
+				return false
+			seen[int(contender)] = true
+	return true
+
+
+func _valid_game_entry(value: Variant) -> bool:
+	return value is Dictionary and value.get("game") is String and value.get("arena") is String \
+		and ONLINE_ARENAS.has(value.game) and value.arena in ONLINE_ARENAS[value.game]
+
+
+func _valid_game_settings(value: Variant) -> bool:
+	if not _valid_game_entry(value) or not _protocol_integer(value.get("rounds"), 1, 10) \
+			or not _protocol_integer(value.get("difficulty"), 0, 3):
+		return false
+	if value.has("bots") and not value.bots is bool:
+		return false
+	if value.has("race_laps") and not _protocol_integer(value.race_laps, 3, 10):
+		return false
+	var settings: Variant = value.get("tournament")
+	if settings == null:
+		return true
+	if not settings is Dictionary or settings.get("mode") not in ["points", "cups"] \
+			or not _protocol_integer(settings.get("target"), 3, 10) \
+			or settings.get("rotation") not in ["manual", "random", "random_no_repeat"] \
+			or not _valid_numbers(settings.get("points"), 4, 4, 100):
+		return false
+	for index in range(1, 4):
+		if settings.points[index] > settings.points[index - 1]:
+			return false
+	var entries: Variant = settings.get("entries")
+	if not entries is Array or entries.is_empty() or entries.size() > 39:
+		return false
+	var seen := {}
+	for entry in entries:
+		if not _valid_game_entry(entry):
+			return false
+		var key: String = entry.game + ":" + entry.arena
+		if seen.has(key):
+			return false
+		seen[key] = true
+	return true
+
+
+func _valid_room_message(message: Dictionary) -> bool:
+	if not _valid_room_code(message.get("code")) or message.get("state") not in ["lobby", "loading", "playing", "results"] \
+			or not _protocol_integer(message.get("capacity"), 2, 4) \
+			or not _protocol_integer(message.get("host"), 1, 9007199254740991) \
+			or not _valid_game_settings(message.get("config")) \
+			or not _valid_tournament_view(message.get("tournament")):
+		return false
+	var players: Variant = message.get("players")
+	if not players is Array or players.is_empty() or players.size() > int(message.capacity):
+		return false
+	var identities := {}
+	var slots := {}
+	for player in players:
+		if not player is Dictionary or not _protocol_integer(player.get("id"), 1, 9007199254740991) \
+				or not _protocol_integer(player.get("slot"), 0, int(message.capacity) - 1) \
+				or not _protocol_integer(player.get("character"), 0, Registry.characters().size() - 1) \
+				or not _valid_peer_name(player.get("name")) or not player.get("ready") is bool \
+				or not player.get("connected") is bool:
+			return false
+		if identities.has(int(player.id)) or slots.has(int(player.slot)):
+			return false
+		identities[int(player.id)] = true
+		slots[int(player.slot)] = true
+	return identities.has(int(message.host)) and identities.has(local_peer_id)
+
+
+func _valid_room_list(value: Variant) -> bool:
+	if not value is Array or value.size() > 100:
+		return false
+	var codes := {}
+	for room in value:
+		if not room is Dictionary or not _valid_room_code(room.get("code")) \
+				or not _valid_peer_name(room.get("host")) or not _protocol_integer(room.get("capacity"), 2, 4) \
+				or not _protocol_integer(room.get("count"), 1, int(room.capacity)):
+			return false
+		if codes.has(room.code):
+			return false
+		codes[room.code] = true
+	return true
+
+
+func _valid_tournament_view(value: Variant) -> bool:
+	if value == null:
+		return true
+	if not value is Dictionary or value.get("mode") not in ["points", "cups"] \
+			or not _protocol_integer(value.get("target"), 3, 10) or not _protocol_integer(value.get("round"), 0, 40) \
+			or not _protocol_integer(value.get("tie_attempts"), 0, 3) or not value.get("complete") is bool \
+			or not _valid_numbers(value.get("points"), 2, 4, 1000000):
+		return false
+	var count: int = value.points.size()
+	if not _valid_numbers(value.get("cups"), count, count, 1000000) \
+			or not _valid_numbers(value.get("awards"), count, count, 100):
+		return false
+	for field in ["contenders", "champions"]:
+		if not _valid_numbers(value.get(field), 0, count, count - 1):
+			return false
+		var seen := {}
+		for slot in value[field]:
+			if seen.has(int(slot)):
+				return false
+			seen[int(slot)] = true
+	return true
+
+
+static func _valid_numbers(value: Variant, minimum_size: int, maximum_size: int, maximum: int) -> bool:
+	return value is Array and value.size() >= minimum_size and value.size() <= maximum_size \
+		and value.all(func(number): return _protocol_integer(number, 0, maximum))
+
+
+static func _valid_peer_name(value: Variant) -> bool:
+	return value is String and value.length() <= 24
+
+
+static func _valid_room_code(value: Variant) -> bool:
+	if not value is String or value.length() != 6:
+		return false
+	for index in value.length():
+		var code: int = value.unicode_at(index)
+		if not ((code >= 65 and code <= 90) or (code >= 48 and code <= 57)):
+			return false
+	return true
+
+
+static func _protocol_integer(value: Variant, minimum: int, maximum: int) -> bool:
+	return (value is int or value is float) and is_finite(float(value)) \
+		and float(value) == floorf(float(value)) and value >= minimum and value <= maximum
+
+
+func _protocol_rejected() -> void:
+	reset()
+	failure_key = "online.version_mismatch"
+	online_error.emit("version_mismatch")
+	connection_lost.emit("version_mismatch")
+
+
 func _transport_lost(reason := "connect_failed") -> void:
 	Log.w("online transport lost: " + reason, "Net")
+	if reason == "protocol_mismatch":
+		_protocol_rejected()
+		return
 	_clear_input_state()
 	if not _token.is_empty():
 		if _retry_until == 0:

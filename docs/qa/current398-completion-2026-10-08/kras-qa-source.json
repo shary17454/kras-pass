@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "checkout_commit": "f2dcfd32b8cda63d68c3a9ea7a52958b6fda3840",
+  "checkout_tree": "21ee54e60e47adbec80dbdc3e23d44fada117aab",
+  "intended_head": "f2dcfd32b8cda63d68c3a9ea7a52958b6fda3840",
+  "event": "workflow_dispatch",
+  "ref": "refs/heads/feat/kras-first-response-tiebreak",
+  "scenario": "core",
+  "run_id": "37734706891",
+  "run_attempt": "1",
+  "tracked_changes": ""
+}

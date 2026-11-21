@@ -1,0 +1,2432 @@
+{
+  "schema_version": 1,
+  "base_commit": "66efebee5e8c68c2071a13b2a7a7d6c6c06b521e",
+  "candidate_commit": "0a65aa4d820fd5e04f4d4f3ac0581d19ac6ab6e8",
+  "branches": [
+    {
+      "branch": "origin/agent/graphics-and-rocket-rally-20260901",
+      "commit": "41188d7fac6692dddc8f61419763277cd0934218",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "Run three laps, and guard every finding the suite let through",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/agent/spec-machine-and-collisions-20260903",
+      "commit": "b990cbc99f0319f34fd2ebadf02ea43916a015dd",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "Stop the bots betraying their slot, and give the drone room to breathe",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/balance/kras-colossus-contestable-opening",
+      "commit": "7c2767edf09a03982940348ca11419c1d9319b74",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record Colossus opening qualification and release gates",
+      "commits_not_in_initial_main": 40
+    },
+    {
+      "branch": "origin/debug/kras-physics-contact-attribution",
+      "commit": "1d0af27ce90a395396b12df3bac9583383cb5b0b",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record contact attribution and reject box collider regression",
+      "commits_not_in_initial_main": 156
+    },
+    {
+      "branch": "origin/docs/kras-arabic-privacy",
+      "commit": "d53cd78bad4ecd68705428ffc30c8302ba8d2adc",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: add equivalent Arabic privacy policy",
+      "commits_not_in_initial_main": 68
+    },
+    {
+      "branch": "origin/docs/kras-current-core-and-signing",
+      "commit": "068c3ec7046246028b64da8037b328652a92a2ec",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "068c3ec7046246028b64da8037b328652a92a2ec docs: verify current core CI and local signing profile gates"
+      ],
+      "changed_paths": [
+        "docs/current-core-and-signing-qualification-20a1001.md"
+      ],
+      "decision": "exclude_historical_source_specific_report",
+      "tip_subject": "docs: verify current core CI and local signing profile gates",
+      "commits_not_in_initial_main": 1
+    },
+    {
+      "branch": "origin/docs/kras-delivery-balance-runtime-guide",
+      "commit": "d443c87d6adcfd400308397215cd1dbd43104135",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain 126 natural courier matches and independent slot evidence",
+      "commits_not_in_initial_main": 142
+    },
+    {
+      "branch": "origin/docs/kras-device-qa-build-421114d",
+      "commit": "419b73819b9f3d1fff042b0781a29ff933ca7292",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "419b73819b9f3d1fff042b0781a29ff933ca7292 docs: qualify exact-main core CI results",
+        "5524641557d0ac0c2cd31c0b52d835f39b31749a docs: qualify current-source signed device QA build"
+      ],
+      "changed_paths": [
+        "docs/device-qa-build-421114d-2026-10-04.md"
+      ],
+      "decision": "exclude_historical_source_specific_report",
+      "tip_subject": "docs: qualify exact-main core CI results",
+      "commits_not_in_initial_main": 2
+    },
+    {
+      "branch": "origin/docs/kras-independent-balance-review",
+      "commit": "4ee6877b85233e64043dcae9fdca6f3ec8f644aa",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "4ee6877b85233e64043dcae9fdca6f3ec8f644aa docs: qualify final-input boss dash natural campaign and deployment",
+        "d55125bfbd61514fa79ed40dbdae949b4d71e126 docs: record independent full campaign balance review"
+      ],
+      "changed_paths": [
+        "docs/boss-dash-natural-5da88fb.json",
+        "docs/boss-dash-natural-qualification.md",
+        "docs/independent-balance-campaign-37126402385-review.md"
+      ],
+      "decision": "exclude_historical_source_specific_report",
+      "tip_subject": "docs: qualify final-input boss dash natural campaign and deployment",
+      "commits_not_in_initial_main": 2
+    },
+    {
+      "branch": "origin/docs/kras-main-049e660-qualification",
+      "commit": "618cd2a5d385de39ad8885c3644052695cc31452",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "618cd2a5d385de39ad8885c3644052695cc31452 docs: qualify integrated main tests and pending production deployment"
+      ],
+      "changed_paths": [
+        "docs/main-049e660-qualification-2026-10-05.md"
+      ],
+      "decision": "exclude_historical_source_specific_report",
+      "tip_subject": "docs: qualify integrated main tests and pending production deployment",
+      "commits_not_in_initial_main": 1
+    },
+    {
+      "branch": "origin/docs/kras-replay-retention-production-qualification",
+      "commit": "1ce4aff80e9ea7e2b6045d9abd576612f16dff7d",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "1ce4aff80e9ea7e2b6045d9abd576612f16dff7d docs: qualify replay retention and exact-source production checks"
+      ],
+      "changed_paths": [
+        "docs/replay-newest-retention-2026-10-05.md"
+      ],
+      "decision": "exclude_historical_source_specific_report",
+      "tip_subject": "docs: qualify replay retention and exact-source production checks",
+      "commits_not_in_initial_main": 1
+    },
+    {
+      "branch": "origin/experiment/kras-crumble-route-commitment",
+      "commit": "72398c390aef506dda5ac9d47f0296240e5baa32",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "runtime_review": "tip records rejection and restores prior runtime; experimental policies are not reactivated",
+      "tip_subject": "test: reject unqualified Crumble route commitment",
+      "commits_not_in_initial_main": 238
+    },
+    {
+      "branch": "origin/experiment/kras-driver-facing-backoff",
+      "commit": "be03d53511503c1f4ddee90b7d2165f51fef5faf",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "runtime_review": "tip records rejection and restores prior runtime; experimental policies are not reactivated",
+      "tip_subject": "test: reject unqualified facing-backoff tactic and restore driver",
+      "commits_not_in_initial_main": 216
+    },
+    {
+      "branch": "origin/experiment/kras-driver-ram-alignment",
+      "commit": "61c1aec77aef12c5679f8f9906c6a60b9108d7de",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "runtime_review": "tip records rejection and restores prior runtime; experimental policies are not reactivated",
+      "tip_subject": "test: retain ram alignment evidence and restore qualified driver",
+      "commits_not_in_initial_main": 218
+    },
+    {
+      "branch": "origin/feat/kras-bounded-replay-input-chunks",
+      "commit": "6af4caf7e23288e0722ee42327724180cc1f87e9",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify bounded long replay capture and compatibility",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feat/kras-first-response-tiebreak",
+      "commit": "71fe2ae4fe726e87e80f012c6a595eeaa1653e19",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: verify four-player simultaneous movement and fire",
+      "commits_not_in_initial_main": 285
+    },
+    {
+      "branch": "origin/feat/kras-tag-score-aware-strategy",
+      "commit": "68933b4289f31406c05bc7c661f75975c125ecb1",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify tag strategy balance and rendered polish gaps",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feat/kras-threaded-match-preparation",
+      "commit": "b205f9727c319c0cd4e200a3218a74b961f9a0c3",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: retain failing core AI comparison and source qualification limits",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feat/kras-tournament-resource-prefetch",
+      "commit": "cfeec7197afd3e141c44187d96d0bd1a46778810",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify tournament resource prefetch lifecycle and cancellation",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-adventure-boss-objective",
+      "commit": "a881b2e726d3188a05f2bc69e726a07cb89889ee",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify boss objective progression and real result lifecycle",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-adventure-result-integrity",
+      "commit": "6da6affd87c5d6eec80c84d866aa5d4bb47c4673",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify adventure result integrity and remaining release gates",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-ai-custom-visible-targets",
+      "commit": "159d7738d81778d7d17fe55da52e36084eb3efeb",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: enforce visibility in collector and team AI selectors",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-ai-relic-cues",
+      "commit": "c8a3edd3c866806c2b9e2d15b8cb271bbfd997fe",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: restrict relic pursuit to visible carriers and prizes",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-ai-rendered-crate-cues",
+      "commit": "abc0662d5f280d1694843e910dcbf804d62d86c2",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: enforce observable rivals balls bombs and crystals in custom AI",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-ai-tag-cues",
+      "commit": "b7e1188805734c30d7092b47f59a8041b4a75722",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: distinguish unseen hunter positions from observed memory",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-ai-visible-targets",
+      "commit": "67620dd0dda04e288d649601bd2788c45e91fa75",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify shared AI visibility regression and limits",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-balance-campaign-dispatch",
+      "commit": "b0e1d13f2be85b1b906dd59eacbfe8392092277c",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record live balance campaign source and run",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-balance-natural-rounds",
+      "commit": "3716946b9bda64768df340ba2e492fbb8c966ee2",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify full-round balance campaigns across all minigames",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-balance-report-validation",
+      "commit": "66ba32aaaeb96c22e4bd8ce1ed70df7f5469dbaf",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: verify campaign provenance and aggregate complete balance evidence",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-boss-applied-damage",
+      "commit": "28c374eb83239138a78a3da303d8a0ad4ce61883",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: credit applied boss damage and reject invalid hit ownership",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-boss-balance-outcomes",
+      "commit": "d24b02ad28541834f520618b370261307f161a62",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify explicit boss outcome instrumentation",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-boss-carved-ground-steering",
+      "commit": "c27ef9d002c6378b6baac5fc1f9ea6fd183b0317",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record carved-ground regression and incomplete peer qualification",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-boss-outcomes-all-samples",
+      "commit": "b248562805cb2c6040bcf5e43d40182126064859",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify natural forge objective samples and test evidence",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-ci-source-evidence",
+      "commit": "53b8ba096128dbff8876462254948b1bf258850e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record siege spectator scoring regression evidence",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-current-source-cloud-export",
+      "commit": "d4ee1b4a4a85a5b6551871bffdf9e133874b65ea",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify current source export and matched balance campaign",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-independent-balance-seeds",
+      "commit": "d2f1c6af1e46dc578a2e501ec697e307d987a63a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify independent campaign seeds and actual instrument smoke",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-keeper-plane-intercept",
+      "commit": "0e992995df55b38b112dfdf1ff2afd5177d27d95",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: predict keeper interception on the reachable defense lane",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-local-vehicle-views",
+      "commit": "f69d559572992c4d9352ff5defaddbca72082cf1",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify local vehicle views and release gates",
+      "commits_not_in_initial_main": 144
+    },
+    {
+      "branch": "origin/feature/kras-local-xcode27-candidate-112",
+      "commit": "826d4ca39fc06ffdb70443c691f456336339a497",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "826d4ca39fc06ffdb70443c691f456336339a497 chore: prepare local Xcode 27 candidate build 112"
+      ],
+      "changed_paths": [
+        "export_presets.cfg"
+      ],
+      "decision": "exclude_historical_build_number_only",
+      "tip_subject": "chore: prepare local Xcode 27 candidate build 112",
+      "commits_not_in_initial_main": 234
+    },
+    {
+      "branch": "origin/feature/kras-magnet-urgent-defense",
+      "commit": "000d05bdb3d3854925ce3ccad6e7e1676a9cdf67",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify urgent magnet defense and matched balance sample",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-offscreen-player-cues",
+      "commit": "fa7f50d5ddb043426d5170984137043ff7e339f3",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: retain recovery cues for far-clipped players",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-online-random-rotation",
+      "commit": "0a65aa4d820fd5e04f4d4f3ac0581d19ac6ab6e8",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "Update project",
+      "commits_not_in_initial_main": 489
+    },
+    {
+      "branch": "origin/feature/kras-online-release",
+      "commit": "b1f0a7400f970c8a29f05144a052e2cf9fb21d53",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: cover colossus peers in full online CI matrix",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-paired-difficulty-samples",
+      "commit": "7b617be6394d32f4164d15fda21f2b11fa30f33c",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify paired samples and local signing identity",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-release-integration-2026-10-07",
+      "commit": "29431b415dc968aeecd01779150ef77b020ea54f",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record unified release source and open qualification gates",
+      "commits_not_in_initial_main": 76
+    },
+    {
+      "branch": "origin/feature/kras-release-qualification-2026-10-07",
+      "commit": "815570d136e8a69542ceeaba1ea8c5e14a8f1203",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: document unified release qualification and remaining gates",
+      "commits_not_in_initial_main": 83
+    },
+    {
+      "branch": "origin/feature/kras-round-reward-integrity",
+      "commit": "382d75b10074ab3df09a7f1e4ab7b29f4acfc4b7",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify round rewards and current production deployment",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-siege-active-guards",
+      "commit": "eefbf7c59da03a342d4e1e4a23c078bf4df2255a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record complete kart peer and previous CI seed qualification",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/feature/kras-tank-visible-ammo",
+      "commit": "a217b976607fa17c28a2f09e3e2415c7692d2b49",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record current-source matched balance campaign",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/game-library-touch-scroll",
+      "commit": "c880a5fd932a6bad4abd27a22f7a54e7e5f03088",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "c880a5fd932a6bad4abd27a22f7a54e7e5f03088 Fix touch scrolling in game library"
+      ],
+      "changed_paths": [
+        "src/ui/screens/game_library.gd"
+      ],
+      "decision": "already_present_by_equivalent_patch",
+      "patch_equivalence": [
+        "- c880a5fd932a6bad4abd27a22f7a54e7e5f03088"
+      ],
+      "tip_subject": "Fix touch scrolling in game library",
+      "commits_not_in_initial_main": 1
+    },
+    {
+      "branch": "origin/fix/kras-account-schema-versioning",
+      "commit": "59f4a134a0a5e53bee8c7e5d2f1126f591ba6244",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "feat: version account schema with transactional migrations",
+      "commits_not_in_initial_main": 68
+    },
+    {
+      "branch": "origin/fix/kras-adventure-durable-rewards",
+      "commit": "2759b89a04571cccd79fcd15ed31af3e88312184",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify durable adventure rewards and save roundtrips",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-ai-camera-frustum",
+      "commit": "8bd3f0ef8d7c294cf3f45cc236f8c0ca5d76129d",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: constrain AI observations to equivalent camera frames",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-ai-compound-visual-cues",
+      "commit": "2b5482fcea04e46502a67200448a235019a0286c",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify compound actor perception and rendered checks",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-ai-dash-tap-actions",
+      "commit": "8907f94fd4e0eb18182b90df9fb6a460a155d1fd",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify AI dash input repair and retain balance gaps",
+      "commits_not_in_initial_main": 220
+    },
+    {
+      "branch": "origin/fix/kras-ai-tap-actions",
+      "commit": "f68893be2fa7a487cb7b34f3228f4eaf074d58a2",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record draft delivery and verbose leak follow-up",
+      "commits_not_in_initial_main": 194
+    },
+    {
+      "branch": "origin/fix/kras-ai-transparent-visual-cues",
+      "commit": "349ab6a340794eb1c081b9e3677423067101581e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify transparent AI cues and production base",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-ai-world-occlusion-v2",
+      "commit": "9d70e97f17fee3bfa4d5fa623601d251ed46e0f0",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify ammo camera fixtures and occlusion evidence",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-armed-race-tap-actions",
+      "commit": "b624f29649eba22864b62aa0f22d6a0dfff14196",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify armed race item input and live release gates",
+      "commits_not_in_initial_main": 207
+    },
+    {
+      "branch": "origin/fix/kras-authored-tile-timing",
+      "commit": "3e4045cc83ca2145c8e31a6f8fdf6a66317f3658",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify authored floor timing and visible supporting contacts",
+      "commits_not_in_initial_main": 25
+    },
+    {
+      "branch": "origin/fix/kras-balance-evidence-provenance",
+      "commit": "16ba1cb2a1d7cb8e6d19f226b4d1d51145c98f1e",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record current minigame evidence and full campaign dispatch",
+      "commits_not_in_initial_main": 46
+    },
+    {
+      "branch": "origin/fix/kras-balance-save-isolation",
+      "commit": "36bd19b5711330cbbe02f28e1008be1883a2363a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: require isolated writable saves for balance simulation",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-balance-source-consistency",
+      "commit": "bd4f20977ec95e07fbaf5263056121e8feb78f4b",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain exact-source campaign rejection evidence",
+      "commits_not_in_initial_main": 254
+    },
+    {
+      "branch": "origin/fix/kras-blast-approach-budget",
+      "commit": "55160ae7817a0bb9d998529f3debcac7dd81205c",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: attest local Xcode 27 build of blast fixes",
+      "commits_not_in_initial_main": 57
+    },
+    {
+      "branch": "origin/fix/kras-blast-homing-ties",
+      "commit": "c45d304a12df3ad56ecff5eee922de91c0937eba",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain blast tie fairness and unresolved difficulty evidence",
+      "commits_not_in_initial_main": 85
+    },
+    {
+      "branch": "origin/fix/kras-blast-survival-margin",
+      "commit": "fd5d94f530eec9a1b0ce83864910db712dbf9809",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify current Colossus natural objectives",
+      "commits_not_in_initial_main": 167
+    },
+    {
+      "branch": "origin/fix/kras-blast-victim-ties",
+      "commit": "c7a34c5a8aa12ef89aa54c0dfe27aec42d2ef085",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "c7a34c5a8aa12ef89aa54c0dfe27aec42d2ef085 fix: randomize equally near visible blast victims"
+      ],
+      "changed_paths": [
+        "docs/blast-victim-ties-2026-10-07.md",
+        "src/ai/brains/ball_brain.gd",
+        "tests/suites/test_ai_visibility.gd"
+      ],
+      "decision": "already_present_by_equivalent_patch",
+      "patch_equivalence": [
+        "- c7a34c5a8aa12ef89aa54c0dfe27aec42d2ef085"
+      ],
+      "tip_subject": "fix: randomize equally near visible blast victims",
+      "commits_not_in_initial_main": 78
+    },
+    {
+      "branch": "origin/fix/kras-blast-visible-fuse-age",
+      "commit": "42b652ec226b9f7a2afb2c0ec799c516ddb12902",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain current network and four-view pacing evidence",
+      "commits_not_in_initial_main": 280
+    },
+    {
+      "branch": "origin/fix/kras-blast-visible-motion-evasion",
+      "commit": "e16b88ed3fa239fa3b762ba93f09c6cfc590bad1",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: reject linear blast escape after independent balance regression",
+      "commits_not_in_initial_main": 86
+    },
+    {
+      "branch": "origin/fix/kras-bomber-observed-cues",
+      "commit": "4e51a49655a065cce45bb4a29cbbe3ff91fe666b",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "Merge branch 'test/kras-network-single-tick-taps' into fix/kras-bomber-observed-cues",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-bomber-tap-throw",
+      "commit": "019ca2be8c84732f6bae4bcdbbd26dd47f09f0c8",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify bomb throw input and preserve remaining gates",
+      "commits_not_in_initial_main": 196
+    },
+    {
+      "branch": "origin/fix/kras-boss-plan-attack-actions",
+      "commit": "d46256f0a7f6690df7a270ac63e6b481a23df688",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify boss plan attack action repair",
+      "commits_not_in_initial_main": 231
+    },
+    {
+      "branch": "origin/fix/kras-boss-report-evidence",
+      "commit": "e4d6d147816875482b24fdc4b11b545cb3221548",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify seeded boss objective campaign evidence",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-boss-visible-warning-delay",
+      "commit": "f3e682c35311f52a8ad017e00d77119e67c4f673",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify visible boss warnings and matched AI samples",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-boss-weak-point-perception",
+      "commit": "6b7b51443e8a278ba6e94cc068651b1a4fda0a2a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify delayed boss weak point observations",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-boss-weakpoint-tap-actions",
+      "commit": "d5524b9c95f7122b598932ff1f84a07d19c26fb5",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain current scrap difficulty balance failure",
+      "commits_not_in_initial_main": 212
+    },
+    {
+      "branch": "origin/fix/kras-cancel-delayed-haptics",
+      "commit": "cc07d48df36dfd46e71fff2fa1359e7afeb45405",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify cancelled haptics and retain fresh-import CI blocker",
+      "commits_not_in_initial_main": 15
+    },
+    {
+      "branch": "origin/fix/kras-ci-checkout-fingerprint",
+      "commit": "bdbb5541e8216d4644aef0fb83b6a36b6b085e5c",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: identify final source-pin qualification commit",
+      "commits_not_in_initial_main": 263
+    },
+    {
+      "branch": "origin/fix/kras-climber-observation-delay",
+      "commit": "2e38decfde1894e71309e288286e18001836d694",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify climber observation and record inaccessible ledges",
+      "commits_not_in_initial_main": 124
+    },
+    {
+      "branch": "origin/fix/kras-collectible-arbitration",
+      "commit": "df4c67f8611b058e99dc9ee4b6ef86d81e42d89a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify deterministic pickup arbitration and release limits",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-color-safe-tile-arrival",
+      "commit": "854ef870983be928718ae88602fc79f2548e2aa3",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify color arrival and matched natural samples",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-colossus-camera-visibility",
+      "commit": "40f4516db60f567f8e49af7b75a5a2ed954da6fa",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify final gameplay HUD source and remaining release gates",
+      "commits_not_in_initial_main": 35
+    },
+    {
+      "branch": "origin/fix/kras-colossus-observed-attack-plan",
+      "commit": "8f3379500646e1de6ed3caeae7e66577e1925f28",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify observed colossus plans and successful production sync",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-compact-steering-layout",
+      "commit": "57507b70f9728430d6a0762275ccd3bc7ed4ad87",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record compact steering validation and release gaps",
+      "commits_not_in_initial_main": 256
+    },
+    {
+      "branch": "origin/fix/kras-courier-cargo-reaction",
+      "commit": "e717a594b6d6d234f14bdd00cc1ce68f5573f9c0",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify courier reaction tests and local release gates",
+      "commits_not_in_initial_main": 140
+    },
+    {
+      "branch": "origin/fix/kras-crate-event-replication",
+      "commit": "6c308b8ba29b2b2f18eb22b24ce3bbc236b546be",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: distinguish crate weapon coverage from volley replication",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-crate-swing-arbitration",
+      "commit": "afacd9c613bcb71bbfa8e6cfc7a91351127ed390",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify crate repair with full and four-client gates",
+      "commits_not_in_initial_main": 200
+    },
+    {
+      "branch": "origin/fix/kras-crater-route-progress",
+      "commit": "a23e0fba416d1d33d273a88d2c54fa35d0246ba1",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record crater navigation proof and unresolved boss balance",
+      "commits_not_in_initial_main": 37
+    },
+    {
+      "branch": "origin/fix/kras-derby-contact-closing",
+      "commit": "e5a11e65ead56f80d98c7562ce7a046ad633ccdd",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify derby contact regression and natural comparisons",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-direct-ball-attack-actions",
+      "commit": "384b5fb85025feea49fc1347c900109886498e59",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify direct ball attack input repair",
+      "commits_not_in_initial_main": 228
+    },
+    {
+      "branch": "origin/fix/kras-direct-crate-attack-actions",
+      "commit": "0e0b525b6b76810e86bd73a28594e065003d7256",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify crate attack repair and retain repeated lab seat warning",
+      "commits_not_in_initial_main": 224
+    },
+    {
+      "branch": "origin/fix/kras-direct-race-dash-actions",
+      "commit": "4d0538b6ee96644342f0a571c1ccf6f2529a4b32",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify direct race dash fixes with source-matched evidence",
+      "commits_not_in_initial_main": 222
+    },
+    {
+      "branch": "origin/fix/kras-dodger-observed-prediction",
+      "commit": "421114d9a4990597fb9629bf4f63a1865cf60df1",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: predict sweeper arrival from observed motion",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-dodger-own-jump-timing",
+      "commit": "0753d635b23b2393ae16626c6faa44c917f0b20e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify dodger timing and remaining balance issues",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-dodger-visible-motion",
+      "commit": "4dc5d397a44ed169b940afd532afb692716d0509",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: infer dodger hazards from delayed visible motion",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-drive-character-handling",
+      "commit": "69555a5007c8e2bc12d5f28a6f227829ec1ee212",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify vehicle networking and production release gaps",
+      "commits_not_in_initial_main": 61
+    },
+    {
+      "branch": "origin/fix/kras-driver-engagement-memory",
+      "commit": "8753f25da678625f552f518023fc7db7500e77dc",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain driver maneuver regression and failed balance samples",
+      "commits_not_in_initial_main": 181
+    },
+    {
+      "branch": "origin/fix/kras-duellist-damage-delay",
+      "commit": "a9d06b20832aa497b1c2b813c75024ec5ff12715",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: delay duellist damage perception with observed movement",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-effective-character-balance",
+      "commit": "e2545d48aa9e77aca70a9853541a6f0955bd3fa6",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify shared character tuning and full regression",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-fawda-pickup-arbitration",
+      "commit": "e111e6ff431e48c829c276decd4ebfc9579100fd",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain seeded fawda pursuit and four-peer regressions",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-forge-observed-feeding",
+      "commit": "eab53ddb06ceae7b5cb83b9274cdef11a76e913c",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify forge feeding observation and natural boss regression",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-fresh-font-theme-import",
+      "commit": "4a59039a20f619aed4338014d06f03110482900b",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify fresh font imports, inherited fonts and rendered limits",
+      "commits_not_in_initial_main": 17
+    },
+    {
+      "branch": "origin/fix/kras-gem-ground-placement",
+      "commit": "8a393da147c90eb0738440ffa25fa23dbfe580b0",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: place gems above actual island surfaces",
+      "commits_not_in_initial_main": 77
+    },
+    {
+      "branch": "origin/fix/kras-generic-dash-retreat-contract",
+      "commit": "cdaad4d8b163d5dc8f0cd86e2ffa6345b17bcbd1",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify generic retreat repair and record historical campaign limits",
+      "commits_not_in_initial_main": 226
+    },
+    {
+      "branch": "origin/fix/kras-hover-machine-cue-perception",
+      "commit": "650d79a8c2b1995e521b9703c8948605b0130013",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify rendered hover-machine cues and retain balance limits",
+      "commits_not_in_initial_main": 111
+    },
+    {
+      "branch": "origin/fix/kras-hud-value-text-fit",
+      "commit": "07a416258a8c3d9532b1a5c998dccf88e697e4e7",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify current HUD source and record production gaps",
+      "commits_not_in_initial_main": 92
+    },
+    {
+      "branch": "origin/fix/kras-ios-export-import-gate",
+      "commit": "41e025a7bb770fd7e846c6b6ab2181bd597fa4e2",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify fresh native iOS build and partial balance evidence",
+      "commits_not_in_initial_main": 49
+    },
+    {
+      "branch": "origin/fix/kras-ios-scene-source-evidence",
+      "commit": "2ac2079752b26ef288685a92e54190cc03bb4eb0",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify local Xcode 27 current-source compilation",
+      "commits_not_in_initial_main": 269
+    },
+    {
+      "branch": "origin/fix/kras-ios-source-uid-completeness",
+      "commit": "f9aed05d2e6d05d372f7bafd789140a05a6859be",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record attested Xcode export and full keeper regression",
+      "commits_not_in_initial_main": 53
+    },
+    {
+      "branch": "origin/fix/kras-island-ai-routing",
+      "commit": "a7dfcf78c4f62c484a0a5f9cb1a08d4bf3a66ab3",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: preserve independent all39 balance findings",
+      "commits_not_in_initial_main": 80
+    },
+    {
+      "branch": "origin/fix/kras-island-bridge-gradients",
+      "commit": "3ceca03b1380d6680b1942b829a46f9b225cd4b8",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: make island bridges walkable across floor heights",
+      "commits_not_in_initial_main": 78
+    },
+    {
+      "branch": "origin/fix/kras-keeper-arrival-priority",
+      "commit": "45340110464e762be05f8d362474bdbbfd86f44c",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record keeper arrival regression and matched balance cohorts",
+      "commits_not_in_initial_main": 51
+    },
+    {
+      "branch": "origin/fix/kras-keeper-visible-contact",
+      "commit": "99d1b00d155d00c6faa372780fe26f5a152b8c6e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: predict keeper contact from delayed visible sphere geometry",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-live-environment-quality",
+      "commit": "d776c78236e29e150b6e5ad37acf84e36163a99e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify live environment quality and complete regression source",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-live-memory-pressure-pools",
+      "commit": "b89836f896da159f5456a719c737e070297c01aa",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify live memory pressure pool recovery",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-live-role-toast-layout",
+      "commit": "54221d0b6db2819a32a2a70cbe1e9ece1431b77a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify live role toast layout and remaining release gates",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-live-shadow-quality",
+      "commit": "9cba0c27921e2df6416e6c0a3f351cf560bf9f81",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify live shadow controls and mobile rendering limits",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-local-xcode-release-resources",
+      "commit": "c04c5733f7f2c8be6e853fc5a1de3641151f56c4",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record local Xcode 27 qualification and release gates",
+      "commits_not_in_initial_main": 2
+    },
+    {
+      "branch": "origin/fix/kras-loopback-url-authority",
+      "commit": "fb8dacfa088b4169c53ac89be0473a71b674f65d",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify loopback authority rejection and live transport",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-magnet-owner-release",
+      "commit": "d1a5a31f1d6af113e7c91dcdfa45acc68f2d41a9",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: preserve magnet ownership when keeper disappears",
+      "commits_not_in_initial_main": 67
+    },
+    {
+      "branch": "origin/fix/kras-magnet-swept-capture-order",
+      "commit": "3ed6a7fbc10805b2055d339ba060c10177ada5ee",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify current server fixtures and verify production source gates",
+      "commits_not_in_initial_main": 244
+    },
+    {
+      "branch": "origin/fix/kras-main-menu-exit-confirmation",
+      "commit": "0a60b58f5937ae0f65ea47beb1cd95471a2f869b",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: confirm root menu back before exiting",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-main-qualification-continuity",
+      "commit": "07e19631536836aacabd0d3d4ab630ec28c10370",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "07e19631536836aacabd0d3d4ab630ec28c10370 docs: qualify Linux zone recovery and current production source",
+        "0c089c9a3a7c1274f966b03713e208ae80193304 ci: preserve immutable main source qualification runs"
+      ],
+      "changed_paths": [
+        ".github/workflows/game-quality.yml",
+        "docs/main-qualification-continuity-2026-10-05.md"
+      ],
+      "decision": "merged_into_integration",
+      "tip_subject": "docs: qualify Linux zone recovery and current production source",
+      "commits_not_in_initial_main": 2
+    },
+    {
+      "branch": "origin/fix/kras-match-teardown-quiescence",
+      "commit": "83f65131b64385cc359fa2dc0090e39a60b60123",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify current base siege across two seed sets",
+      "commits_not_in_initial_main": 174
+    },
+    {
+      "branch": "origin/fix/kras-meaningful-leader-target",
+      "commit": "ce1c5ae8b5fbdc15233f530caef5b0e93915c798",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify leader targeting and preserve held-out balance warning",
+      "commits_not_in_initial_main": 188
+    },
+    {
+      "branch": "origin/fix/kras-melee-tap-actions",
+      "commit": "dbb38388191a9d8e94ba00d27f3a56fe51e9133f",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: retain melee source qualification and siege warning",
+      "commits_not_in_initial_main": 203
+    },
+    {
+      "branch": "origin/fix/kras-nearest-rival-ties",
+      "commit": "a9189108e7ba94cc03e2b82f4dae519eb52d5849",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: seed nearest rival ties without player slot preference",
+      "commits_not_in_initial_main": 69
+    },
+    {
+      "branch": "origin/fix/kras-network-preparation-cleanup",
+      "commit": "72ca49b4aba72739af328926f23c64d91dc892ba",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: drain network smoke preparation before failed exit",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-network-protocol-compatibility",
+      "commit": "3d2d374525461eeae65444374ceabced2eb95f6d",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify multiplayer protocol revision and rollout limits",
+      "commits_not_in_initial_main": 42
+    },
+    {
+      "branch": "origin/fix/kras-network-update-required",
+      "commit": "c2093d041de8d3128bcacf5cb6ecd178d943bfaf",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify terminal version recovery and localized presentation",
+      "commits_not_in_initial_main": 44
+    },
+    {
+      "branch": "origin/fix/kras-online-loading-handoff",
+      "commit": "b6a45f7c10e4858566688cb561daaa151c845d9a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: retain current online start across resource transitions",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-paint-simultaneous-claims",
+      "commit": "4573085c41442c6e1ca4ae0c03a6a8c2bd76812d",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify paint fairness and complete natural campaign",
+      "commits_not_in_initial_main": 59
+    },
+    {
+      "branch": "origin/fix/kras-platform-arrival-control",
+      "commit": "aed4fe8dd9c3720195bdaa1df94c9fac2a6ee0a7",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify platform arrival and preserve balance and latency findings",
+      "commits_not_in_initial_main": 27
+    },
+    {
+      "branch": "origin/fix/kras-platform-ground-routing",
+      "commit": "c5bf74c5e7ff2b4afe1d9c0e2e06a47a7ebe8c79",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify platform routing and bounded perception work",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-platform-route-following",
+      "commit": "db1ccaca8f37bd93ace65307a12a669507dbad97",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify safe platform steps and current release limits",
+      "commits_not_in_initial_main": 22
+    },
+    {
+      "branch": "origin/fix/kras-platform-seeded-route-ties",
+      "commit": "868ebae24e4106c0a0c0f5e1877f3a56d4a46a2d",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: preserve route tie balance and network timing evidence",
+      "commits_not_in_initial_main": 101
+    },
+    {
+      "branch": "origin/fix/kras-platform-shortest-route-ties",
+      "commit": "50539cbe5ab83f1482700800ccc90bcf68d97254",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain platform route qualification and balance warning",
+      "commits_not_in_initial_main": 271
+    },
+    {
+      "branch": "origin/fix/kras-platform-visible-shove",
+      "commit": "4b9f67b1f2b081ceee0b39c4be744c54e300c54a",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify platform reaction delay and preserve balance findings",
+      "commits_not_in_initial_main": 99
+    },
+    {
+      "branch": "origin/fix/kras-platform-walk-before-jump",
+      "commit": "a87a4c88b57041eb636f842aea433c18b327d242",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify walk-first routing and record native visual findings",
+      "commits_not_in_initial_main": 29
+    },
+    {
+      "branch": "origin/fix/kras-platform-warning-jump",
+      "commit": "f03fc0f5de12dc94e8c436885ffa6666daebe058",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify delayed platform jumps and current release limits",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-player-name-hud-wrap",
+      "commit": "635081d985a94b4b4395dc4c7aa88eae66fc59f2",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify complete character names and bounded custom HUD labels",
+      "commits_not_in_initial_main": 118
+    },
+    {
+      "branch": "origin/fix/kras-player-status-full-width",
+      "commit": "a923b374c170509164901ae1d193c301bf5a703c",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify maximum-scale player status and record release limits",
+      "commits_not_in_initial_main": 122
+    },
+    {
+      "branch": "origin/fix/kras-podium-results-layout",
+      "commit": "de6b61c91d46cc2263d47af87df0048c7549bc52",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record tournament results layout qualification",
+      "commits_not_in_initial_main": 138
+    },
+    {
+      "branch": "origin/fix/kras-portrait-arena-framing",
+      "commit": "4f990aa97c22ee3d4d98dbc5e830252a00159f2e",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: record completed portrait camera integration gate",
+      "commits_not_in_initial_main": 259
+    },
+    {
+      "branch": "origin/fix/kras-race-impact-character-response",
+      "commit": "5870ddc56b72dba6d2636f866e54882042eea147",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: apply character resistance and recovery to race impacts",
+      "commits_not_in_initial_main": 62
+    },
+    {
+      "branch": "origin/fix/kras-railway-plan-integrity",
+      "commit": "6f498776e570eb8752a5bfb5b1596bf7eaf6926c",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "6f498776e570eb8752a5bfb5b1596bf7eaf6926c fix: reject unreported Railway infrastructure changes"
+      ],
+      "changed_paths": [
+        ".railway/check-plan.mjs",
+        ".railway/check-plan.test.mjs",
+        ".railway/railway.test.mjs",
+        ".railway/railway.ts",
+        "docs/keeper-visible-contact-balance-qualification.md",
+        "docs/railway-plan-integrity-qualification.md"
+      ],
+      "decision": "merged_into_integration",
+      "tip_subject": "fix: reject unreported Railway infrastructure changes",
+      "commits_not_in_initial_main": 1
+    },
+    {
+      "branch": "origin/fix/kras-replay-atomic-storage",
+      "commit": "493f1edd3580e0fad88af64b6c2ffe9a96076c16",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify atomic replay storage and byte policy",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-replay-future-save-protection",
+      "commit": "8c44a7c6f452b4c7d1acabacbb56cd2139c48ddb",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify replay downgrade protection and regressions",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-replay-orphan-recovery",
+      "commit": "e96f2cab5aacb0e64296faba460d6075dc8bee6e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify interrupted replay index recovery",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-replay-payload-integrity",
+      "commit": "d6d09c20ec5ffc67e68deae19e5a550c702d57bb",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify replay payload rejection and native-error checks",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-replay-schema-validation",
+      "commit": "9eda286655b7105ede7a3c50ebcd74307a8aa7a2",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify replay schema compatibility and malformed files",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-responsive-match-header",
+      "commit": "41a8be90ef32e69fe8659389e4feaeb6f53b03a2",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify responsive header and remaining render gates",
+      "commits_not_in_initial_main": 4
+    },
+    {
+      "branch": "origin/fix/kras-rival-first-observation-delay",
+      "commit": "5f591e6c0a992c447380e9640fff96db5bb0193a",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record first-rival acquisition full qualification",
+      "commits_not_in_initial_main": 109
+    },
+    {
+      "branch": "origin/fix/kras-rival-reacquisition-delay",
+      "commit": "ac51c096f712f2e6a47d3fab3428663d0e2c4530",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify full reacquisition regression and campaign source",
+      "commits_not_in_initial_main": 170
+    },
+    {
+      "branch": "origin/fix/kras-round-announcement-layout",
+      "commit": "87b30b847be1de6fd0fae7b66cbe8b7a0940946b",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record round announcement qualification and release limits",
+      "commits_not_in_initial_main": 120
+    },
+    {
+      "branch": "origin/fix/kras-round-label-clarity",
+      "commit": "300a6f5fbb92cdca5828a9c05047e325e0cc6797",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: record rendered catalogue checks and open radar overlap",
+      "commits_not_in_initial_main": 88
+    },
+    {
+      "branch": "origin/fix/kras-runner-jump-actions",
+      "commit": "82f3a7692b8f61b341fb26d69b3170c3a82496cd",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify hurdle jump recovery repair",
+      "commits_not_in_initial_main": 233
+    },
+    {
+      "branch": "origin/fix/kras-scrap-multi-contact-feedback",
+      "commit": "3869e4ad114daf951fe5bc0c421e4a76446366b7",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify kart multi-contact fix and retain timing warnings",
+      "commits_not_in_initial_main": 250
+    },
+    {
+      "branch": "origin/fix/kras-scrap-tactics-diagnosis",
+      "commit": "968aab7829e5a8484f540a710c67f96adfe68d19",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: diagnose scrap tactics without changing simulation",
+      "commits_not_in_initial_main": 213
+    },
+    {
+      "branch": "origin/fix/kras-scrap-wreck-contact-lifetime",
+      "commit": "a7839f4c32bf5af516e35bf19712b078795afd33",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain expanded Scrap seat warning and current paired trace",
+      "commits_not_in_initial_main": 248
+    },
+    {
+      "branch": "origin/fix/kras-screen-transition-rollback",
+      "commit": "3063d33569bcf5fcb785da1ea63c609f23fcb8fa",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: preserve screen and history when navigation fails",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-scrub-warning-perception",
+      "commit": "f6a0bd1b12fbd9fac9bd2233ed1689cd774c5ebc",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record scrub perception and natural match qualification",
+      "commits_not_in_initial_main": 105
+    },
+    {
+      "branch": "origin/fix/kras-shared-arena-framing",
+      "commit": "5b805d0f3de1b6f2e9905c0235f94daaaf37c07d",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record shared camera qualification and remaining release gates",
+      "commits_not_in_initial_main": 6
+    },
+    {
+      "branch": "origin/fix/kras-shared-pickup-observation",
+      "commit": "24f649923095dc38e935ca0c286d196f71b72eb9",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record simulator architecture and execution limits",
+      "commits_not_in_initial_main": 136
+    },
+    {
+      "branch": "origin/fix/kras-siege-health-hud-fit",
+      "commit": "d7a8eb491b6e883624814aed0cc634d4e7da2175",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify siege health HUD fit and record release limits",
+      "commits_not_in_initial_main": 115
+    },
+    {
+      "branch": "origin/fix/kras-siege-rendered-base-observation",
+      "commit": "05d21d37c9afa6c010d7b661a90adf35bd81f0f8",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record siege perception and network qualification",
+      "commits_not_in_initial_main": 113
+    },
+    {
+      "branch": "origin/fix/kras-siege-tap-actions",
+      "commit": "8805873f5875001000086aec966659dfaab43acb",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify siege tap repair and retain natural samples",
+      "commits_not_in_initial_main": 205
+    },
+    {
+      "branch": "origin/fix/kras-singular-object-leak-gate",
+      "commit": "94b6f680504f74af98c0a7af6635b7c952483c1e",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: reject singular ObjectDB leaks in release log gate",
+      "commits_not_in_initial_main": 13
+    },
+    {
+      "branch": "origin/fix/kras-storm-incoming-defense",
+      "commit": "450f5157225cfd0fb0206a6ef67349d5f5b57958",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify storm defense regression and natural samples",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-storm-warning-reaction",
+      "commit": "1d9b487ef4609f29265c26204df11a0bac61b9fa",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify delayed public warning and peer transport",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-survivor-winner-contract",
+      "commit": "42c852dcb870cf44daac407a770b41e78d2f6564",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify survivor winner repair and retain AI balance blockers",
+      "commits_not_in_initial_main": 186
+    },
+    {
+      "branch": "origin/fix/kras-sweeper-relative-arrival",
+      "commit": "879e3ac96277538fbaa4878a600726bdf8f80ae4",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: record sweeper full regression and local iOS qualification",
+      "commits_not_in_initial_main": 95
+    },
+    {
+      "branch": "origin/fix/kras-symmetric-ram-contact",
+      "commit": "dc2477cb46acc4ebad9eee3b5675b275b1fb4374",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: share equal kart contact damage without slot bias",
+      "commits_not_in_initial_main": 68
+    },
+    {
+      "branch": "origin/fix/kras-tag-contact-selection",
+      "commit": "70a781eb8c9ed529835d5899ea61ee2f984dc409",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify tag contact regression and remaining balance issue",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-tank-crate-reaction-delay",
+      "commit": "43c509960a1e9a1ce2dd094462efafa24064458b",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record tank crate fairness qualification and release gates",
+      "commits_not_in_initial_main": 131
+    },
+    {
+      "branch": "origin/fix/kras-tank-observation-steering",
+      "commit": "38dfeed7db512f18b4482fb7275fa4a6f1fa7cde",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: refresh tank routes from simulation time and clear stale steering",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-tank-radar-hud-clearance",
+      "commit": "4d52f7a13e69a694eddbb19a7d179e148072ec13",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify radar layout and retain enlarged text-fit finding",
+      "commits_not_in_initial_main": 90
+    },
+    {
+      "branch": "origin/fix/kras-tank-terrain-collision",
+      "commit": "55f6afa8f211d7fc4a261a82b2b73965e18f5c90",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: retain tank collider regression and failed four-peer qualification",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-tide-accessible-steps",
+      "commit": "b3224c5bebff7f4709149a2737f72d78b913ad83",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify tide access symmetry splash and independent samples",
+      "commits_not_in_initial_main": 128
+    },
+    {
+      "branch": "origin/fix/kras-tournament-save-validation",
+      "commit": "cc8ea9aaf353617e6aa910a66a5bd1c4fd6629ae",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "fix: protect optional tournament checkpoint fields and roster",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-vehicle-character-speed-budget",
+      "commit": "82017a7b7d914c8a9d059094b35a3628ce2aa379",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain vehicle-family natural balance failures and comparisons",
+      "commits_not_in_initial_main": 179
+    },
+    {
+      "branch": "origin/fix/kras-vehicle-dash-projection",
+      "commit": "a6e114b97bc695c4743bd0a3844e02d71b6bd066",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify dash projection and retain scoring and balance blockers",
+      "commits_not_in_initial_main": 184
+    },
+    {
+      "branch": "origin/fix/kras-visible-race-item-target",
+      "commit": "155fabe41431d2846fb798b70ce7e1cf5fc68054",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record race target full regression and release gates",
+      "commits_not_in_initial_main": 176
+    },
+    {
+      "branch": "origin/fix/kras-visible-tile-targets",
+      "commit": "fed8c36e90e690ba848468bd6e8da13e4d2bd2b8",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record visible tile qualification and balance evidence",
+      "commits_not_in_initial_main": 103
+    },
+    {
+      "branch": "origin/fix/kras-visual-transition-await",
+      "commit": "97dd8e3facb80dd9d2a2289e0b4c32dc2dfcec33",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: await rendered match transitions and record performance gaps",
+      "commits_not_in_initial_main": 63
+    },
+    {
+      "branch": "origin/fix/kras-world-camera-boundary",
+      "commit": "e66fa8c1c190e753c18dd21c82b94dbd26f1c330",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify world camera boundaries and current release gates",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-zone-ai-routing",
+      "commit": "20a100101e027f9faaa2811e070718bb70106448",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify annular bot routing and final input regressions",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/fix/kras-zone-observation-history",
+      "commit": "27e0f5b64ba8a68c69aaa4496e027c44849fc0d6",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record zone observation and latency qualification",
+      "commits_not_in_initial_main": 107
+    },
+    {
+      "branch": "origin/fix/kras-zone-ring-ground",
+      "commit": "814caa51e1902ac700577a81008ad76e95c5b1f1",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify annular regression and current production source",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/integration/kras-release-qualification-20261004",
+      "commit": "9ef106f39b993f82950338e2213c6ea535675752",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "merge: qualify offscreen player recovery HUD",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/main",
+      "commit": "66efebee5e8c68c2071a13b2a7a7d6c6c06b521e",
+      "included_in_main": true,
+      "included_in_candidate": false,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "Update project",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/perf/kras-baked-cover-hulls",
+      "commit": "6ad88fd79dbd30bfb98bc339223b4b7baf1411c8",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: record baked hull qualification and rendered comparisons",
+      "commits_not_in_initial_main": 159
+    },
+    {
+      "branch": "origin/perf/kras-burst-node-reuse",
+      "commit": "5391ecbd494356334adb70056b4d45173214e961",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify burst reuse lifecycle and remaining rendering spikes",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/perf/kras-cover-hull-budget",
+      "commit": "083acaf1f059e1c624b63d8105625826289a4dc5",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: validate rock hull subsets against actual physics coverage",
+      "commits_not_in_initial_main": 157
+    },
+    {
+      "branch": "origin/perf/kras-crater-clipping-bounds",
+      "commit": "71a519ba47b5d72b5eeeadbf3508bea0b608761e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify crater clipping geometry and performance",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/perf/kras-fighter-hud-suboperations",
+      "commit": "5032001de241c75d57aa3143a12ed31f964d37a9",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify prepared status visuals and remaining frame stalls",
+      "commits_not_in_initial_main": 12
+    },
+    {
+      "branch": "origin/perf/kras-prebaked-original-music",
+      "commit": "482f04d7ba7ae342cc5c8928d8063fe0db544096",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "perf: bake original music to avoid synchronous synthesis on match load",
+      "commits_not_in_initial_main": 65
+    },
+    {
+      "branch": "origin/perf/kras-prebaked-sfx",
+      "commit": "08362dc7f9d60c945d53bb4e0ce2c40b97171119",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "perf: load prebaked original sound effects and ambience",
+      "commits_not_in_initial_main": 68
+    },
+    {
+      "branch": "origin/perf/kras-prepared-impact-bursts",
+      "commit": "b3236c427b7ac0824e1db8990e917d9313a0d4e4",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify prepared impact geometry and retain frame limits",
+      "commits_not_in_initial_main": 20
+    },
+    {
+      "branch": "origin/perf/kras-projectile-visual-reuse",
+      "commit": "dde20a6a151fbb4de01869e2aac46ed554444c46",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "perf: retain pooled projectile visual instances",
+      "commits_not_in_initial_main": 66
+    },
+    {
+      "branch": "origin/perf/kras-rendered-frame-diagnostics",
+      "commit": "7a5914c6af66e7fc2d1cf86d6ebd4c1406b03490",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify rendered diagnostics without claiming hitch resolution",
+      "commits_not_in_initial_main": 8
+    },
+    {
+      "branch": "origin/perf/kras-road-distance-query",
+      "commit": "363c82116b69d41e7487ebf9a7d46534b604de12",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify exact road geometry and cache regression",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/perf/kras-tank-cover-shape-reuse",
+      "commit": "1c2ed9c0781d569a000fe8d01547a0afec7d05b2",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify tank hull reuse and rendered production checks",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/perf/kras-tank-terrain-collision-chunks",
+      "commit": "c120e1da648ee8f1ffa927e1c37b97cd4035c299",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain rejected terrain partition and traversal evidence",
+      "commits_not_in_initial_main": 150
+    },
+    {
+      "branch": "origin/release/kras-local-candidate-111",
+      "commit": "0f989d52c5dbc39ef7a143e61c1b830fddc49e17",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "0f989d52c5dbc39ef7a143e61c1b830fddc49e17 chore: reserve local iOS candidate build 111"
+      ],
+      "changed_paths": [
+        "export_presets.cfg"
+      ],
+      "decision": "exclude_historical_build_number_only",
+      "tip_subject": "chore: reserve local iOS candidate build 111",
+      "commits_not_in_initial_main": 171
+    },
+    {
+      "branch": "origin/release/kras-local-current-candidate-110",
+      "commit": "d0b40cb233662f0dc79fe914a40c6dcae416fa1e",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "build: prepare local iOS candidate 1.1.11 (110)",
+      "commits_not_in_initial_main": 160
+    },
+    {
+      "branch": "origin/release/kras-local-xcode27-candidate-109",
+      "commit": "80eb86ed956119bc5ca0e90469c41c0c84d78b0d",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "80eb86ed956119bc5ca0e90469c41c0c84d78b0d chore: prepare local Xcode 27 candidate 1.1.11 (109)"
+      ],
+      "changed_paths": [
+        "export_presets.cfg"
+      ],
+      "decision": "exclude_historical_build_number_only",
+      "tip_subject": "chore: prepare local Xcode 27 candidate 1.1.11 (109)",
+      "commits_not_in_initial_main": 143
+    },
+    {
+      "branch": "origin/test/kras-active-match-version-recovery",
+      "commit": "baa145e165dd9fa4c3d8ddae3c70009a9a35bfa7",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain independent Crumble balance evidence",
+      "commits_not_in_initial_main": 236
+    },
+    {
+      "branch": "origin/test/kras-colossus-exposure-diagnostics",
+      "commit": "7d3706fabb99e1ddcabc00946b3671df09ac6c99",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: measure eligible Colossus attack windows without altering play",
+      "commits_not_in_initial_main": 38
+    },
+    {
+      "branch": "origin/test/kras-colossus-opening-input",
+      "commit": "3997a91f4ab2321a0e5bdf0e0a4f38e3c1a6047a",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify natural colossus opening tournament",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-colossus-simulation-input",
+      "commit": "1e4eb5c751b988ade94f8e482f299b919dd73679",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: prepare online smoke resources through runtime loader",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-contact-lifetime-rival-fixture",
+      "commit": "d9a2b70fae4636e7cab3b5d026487601ad5bfe2f",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify full contact lifetime regression checks",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-crate-simulation-input",
+      "commit": "48b0589c11879a2454ed8f3a926e6507738608f1",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: drive crate attack pulses from physics time",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-current-ball-balance-evidence",
+      "commit": "2473f1b625abbf1a37c8bb4935d0ec5ed0780feb",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain current ball campaign and held-out balance evidence",
+      "commits_not_in_initial_main": 239
+    },
+    {
+      "branch": "origin/test/kras-fawda-final-checkpoint",
+      "commit": "56dc45e5c60215284cbc78fdeb1e3fae0306c628",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: verify natural fawda endings and authoritative bomb worlds",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-fawda-round-evidence",
+      "commit": "10aaa74c76c479af6d30047d1063dc7cd035be79",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain fawda terminal round and bomb evidence",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-lab-natural-network-rounds",
+      "commit": "d55edff975ca35ea3d72c540fb95b1a64680cdeb",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify lab networking at authored round duration",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-loading-performance-evidence",
+      "commit": "e67e88507692d73d8ecfbab40437ca3a652a713b",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: require live simulation time for rendered performance probes",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-local-roster-visual-qa",
+      "commit": "801a1db35256129cee74a750d94ef2759d436670",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain bilingual four-local-player QA evidence",
+      "commits_not_in_initial_main": 265
+    },
+    {
+      "branch": "origin/test/kras-local-vehicle-render-cost",
+      "commit": "47f27a989beab1d98904d731a7144ed9a3c06b81",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain local vehicle render cost and failed performance gate",
+      "commits_not_in_initial_main": 147
+    },
+    {
+      "branch": "origin/test/kras-memory-cache-attribution",
+      "commit": "0295e8015709dbca7f6cb37f96c083ad572cde0f",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify cache release and unresolved residual memory",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-network-scheduling-probe",
+      "commit": "2a252edc5a3c169aeaaacbd9f39723bcdbc26f66",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain correlated network measurements and current campaign handoff",
+      "commits_not_in_initial_main": 252
+    },
+    {
+      "branch": "origin/test/kras-network-single-tick-taps",
+      "commit": "7c9efe13483a07eb474bf04016cda4144e0697ac",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: qualify single-tick network taps across reconnect",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-paired-core-difficulty",
+      "commit": "fdd9329fa14bf7f12e0acbfa71ec93fa7ac30364",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: pair identical seeds in core AI difficulty comparison",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-performance-config-validation",
+      "commit": "3f2cb52a15f3aee14b5631f8d3da8c15e16d6068",
+      "included_in_main": false,
+      "included_in_candidate": false,
+      "classification": "requires_review",
+      "unique_commits": [
+        "3f2cb52a15f3aee14b5631f8d3da8c15e16d6068 test: reject invalid rendered performance configurations"
+      ],
+      "changed_paths": [
+        "docs/performance-config-validation-2026-10-07.md",
+        "tests/soak_perf.gd",
+        "tests/suites/test_perf_sampling.gd"
+      ],
+      "decision": "already_present_by_equivalent_patch",
+      "patch_equivalence": [
+        "- 3f2cb52a15f3aee14b5631f8d3da8c15e16d6068"
+      ],
+      "tip_subject": "test: reject invalid rendered performance configurations",
+      "commits_not_in_initial_main": 78
+    },
+    {
+      "branch": "origin/test/kras-race-recovery-observation",
+      "commit": "a07df0998a858d738b66de56cdca8b298de2e41d",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: exercise race recovery until observed and retain failing seed",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-rendered-frame-attribution",
+      "commit": "4749d3515f94653be050254f621add60e4194d7e",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: retain frame spike attribution and unpooled burst finding",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-renderer-performance-evidence",
+      "commit": "1961ef654312b9f0209703c4b44aec3113ca54c4",
+      "included_in_main": false,
+      "included_in_candidate": true,
+      "classification": "included_by_candidate",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: record renderer and frame pacing evidence",
+      "commits_not_in_initial_main": 64
+    },
+    {
+      "branch": "origin/test/kras-sqlite-backup-restore-audit",
+      "commit": "f8db231b26fdc97bdd83b681955ec5017613afb5",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "docs: qualify actual production SQLite restore rehearsal",
+      "commits_not_in_initial_main": 0
+    },
+    {
+      "branch": "origin/test/kras-zone-network-contest-input",
+      "commit": "cfb96a1096df647192a8d494628adc38cd77bf52",
+      "included_in_main": true,
+      "included_in_candidate": true,
+      "classification": "already_in_main",
+      "decision": "retain_existing_ancestry",
+      "tip_subject": "test: retain failing zone seed in Linux networking CI",
+      "commits_not_in_initial_main": 0
+    }
+  ],
+  "integration_merge_commit": "35b0f1cb693c64a2ca818e939318057dcc7c9081",
+  "local_checkout": {
+    "original_branch": "feature/kras-online-random-rotation",
+    "original_commit": "0a65aa4d820fd5e04f4d4f3ac0581d19ac6ab6e8",
+    "original_status": "clean, verified before isolation",
+    "original_modified": false,
+    "sibling_checkout": "kras-pass: refs exist but some metadata is dataless; no checkout or modifications attempted",
+    "unverified_sibling_refs": [
+      "main",
+      "feature/kras-online-release",
+      "feature/kras-pass-multiplayer-framework"
+    ]
+  },
+  "built_application_commit": "0251a2e9dcfde36821adbf678c2274b1b0cc7850",
+  "final_test_commit": "9596a2983e93936e2e4b2b1b158485aa6ec59514",
+  "comparison_commands": [
+    "git for-each-ref refs/remotes/origin",
+    "git merge-base --is-ancestor TIP BASE_OR_CANDIDATE",
+    "git cherry CANDIDATE TIP"
+  ]
+}

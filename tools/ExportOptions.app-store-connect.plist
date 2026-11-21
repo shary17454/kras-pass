@@ -6,13 +6,17 @@
 	<false/>
 	<key>method</key>
 	<string>app-store-connect</string>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.shary.kraspass</key>
 		<string>Kras Pass App Store Xcode 27 2026-09-20</string>
 	</dict>
 	<key>signingCertificate</key>
-	<string>Apple Distribution</string>
+	<string>Apple Distribution: Shary ALADHYANI (4HM66AD594)</string>
+	<key>signingStyle</key>
+	<string>manual</string>
 	<key>teamID</key>
 	<string>4HM66AD594</string>
 </dict>

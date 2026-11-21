@@ -1,0 +1,25 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+WARNING: [WRN][Net] online transport lost: socket_1000
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:75)
+       [1] w (res://src/core/logger.gd:34)
+       [2] _transport_lost (res://src/net/net_service.gd:482)
+       [3] _process (res://src/net/room_client.gd:88)
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":766,"phase":2,"running":true,"seed":1185747408,"snapshots":148,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":766,"phase":4,"running":true,"seed":1185747408,"snapshots":348,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":766,"phase":6,"running":true,"seed":1185747408,"snapshots":549,"state":"playing"}
+NETWORK_ROUND={"arena":"quad_court","epoch":1,"game":"goal_guard","moved":true,"scores":[6,7,7,9],"spectator":false}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":766,"phase":3,"running":true,"seed":1190237430,"snapshots":726,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":766,"phase":4,"running":true,"seed":1190237430,"snapshots":926,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":766,"phase":6,"running":true,"seed":1190237430,"snapshots":1126,"state":"playing"}
+NETWORK_ROUND={"arena":"quad_court","epoch":2,"game":"goal_guard","moved":true,"scores":[7,8,10,7],"spectator":false}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":766,"phase":4,"running":true,"seed":1499151624,"snapshots":1324,"state":"playing"}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":766,"phase":4,"running":true,"seed":1499151624,"snapshots":1525,"state":"playing"}
+NETWORK_ROUND={"arena":"quad_court","epoch":3,"game":"goal_guard","moved":true,"scores":[8,6,9,10],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":false,"collection_scored":false,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":2,"matches":3,"moved":true,"reconnected":true,"scores":[8,6,9,10],"snapshots":1665,"tournament":{"awards":[2.0,1.0,3.0,5.0],"champions":[3.0],"complete":true,"contenders":[],"cups":[0.0,0.0,1.0,2.0],"mode":"points","points":[5.0,7.0,11.0,12.0],"round":3.0,"target":3.0,"tie_attempts":0.0},"world_snapshots":1665}

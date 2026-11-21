@@ -45,6 +45,16 @@ func _spawn_crate() -> void:
 	if arena == null:
 		return
 	var is_bomb := ctx.rng.randf() < BOMB_RATIO
+	var spawn_position := Vector3.INF
+	for attempt in 20:
+		var ang := ctx.rng.randf() * TAU
+		var r := sqrt(ctx.rng.randf()) * arena.def.radius * 0.85
+		var p := arena.global_position + Vector3(cos(ang) * r, 0.75, sin(ang) * r)
+		if _spot_is_free(p):
+			spawn_position = p
+			break
+	if not spawn_position.is_finite():
+		return
 	var body := StaticBody3D.new()
 	body.collision_layer = 1
 	body.collision_mask = 0
@@ -57,14 +67,7 @@ func _spawn_crate() -> void:
 	cs.shape = box
 	body.add_child(cs)
 	ctx.world_root.add_child(body)
-	for attempt in 20:
-		var ang := ctx.rng.randf() * TAU
-		var r := sqrt(ctx.rng.randf()) * arena.def.radius * 0.85
-		var p := arena.global_position + Vector3(cos(ang) * r, 0.75, sin(ang) * r)
-		if _spot_is_free(p):
-			body.global_position = p
-			break
-		body.global_position = arena.global_position + Vector3(cos(ang) * r, 0.75, sin(ang) * r)
+	body.global_position = spawn_position
 	body.add_to_group("crates")
 	_crates.append({"node": body, "bomb": is_bomb})
 
@@ -73,6 +76,18 @@ func _spot_is_free(p: Vector3) -> bool:
 	for c in _crates:
 		var n = c["node"]
 		if is_instance_valid(n) and n.global_position.distance_to(p) < 2.2:
+			return false
+	for slot in ctx.fighters.size():
+		var fighter := ctx.fighter(slot)
+		if not ctx.is_alive(slot) or not is_instance_valid(fighter) or not fighter.alive:
+			continue
+		var shape := fighter.get_node_or_null("Body") as CollisionShape3D
+		var radius: float = shape.shape.radius if shape != null and shape.shape is CapsuleShape3D else 0.42
+		var offset := fighter.global_position - p
+		# Horizontal capsule-to-box clearance also protects an airborne landing.
+		var nearest := Vector2(maxf(0.0, absf(offset.x) - 0.75), maxf(0.0, absf(offset.z) - 0.75))
+		var clearance := radius + 0.1
+		if nearest.length_squared() < clearance * clearance:
 			return false
 	return true
 
@@ -88,26 +103,44 @@ func tick(delta: float) -> void:
 
 func _check_swings() -> void:
 	var reach := Balance.num("tuning", "fighter.attack_range", 2.15)
+	var served := {}
+	var idx := _crates.size() - 1
+	while idx >= 0:
+		var entry = _crates[idx]
+		var node = entry["node"]
+		if not is_instance_valid(node):
+			_crates.remove_at(idx)
+		else:
+			var winner := _swing_winner(node.global_position, reach + 0.6, served)
+			if winner >= 0:
+				served[winner] = true
+				_break_crate(idx, winner)
+		idx -= 1
+
+
+func _swing_winner(position: Vector3, reach: float, served: Dictionary) -> int:
+	var candidates: Array[int] = []
+	var nearest := INF
 	for i in ctx.fighters.size():
-		if not ctx.is_alive(i):
+		if served.has(i) or not ctx.is_alive(i):
 			continue
 		var f := ctx.fighter(i)
 		if f == null or not is_instance_valid(f) or not f.is_attacking():
 			continue
-		var idx := _crates.size() - 1
-		while idx >= 0:
-			var entry = _crates[idx]
-			var n = entry["node"]
-			if not is_instance_valid(n):
-				_crates.remove_at(idx)
-				idx -= 1
-				continue
-			var to: Vector3 = n.global_position - f.global_position
-			to.y = 0.0
-			if to.length() <= reach + 0.6:
-				_break_crate(idx, i)
-				break
-			idx -= 1
+		var to := position - f.global_position
+		to.y = 0.0
+		var distance := to.length_squared()
+		if distance > reach * reach:
+			continue
+		if candidates.is_empty() or distance < nearest:
+			nearest = distance
+			candidates.assign([i])
+		elif distance == nearest:
+			candidates.append(i)
+	if candidates.is_empty():
+		return -1
+	# Seat order is not swing priority. Only exact ties consume gameplay RNG.
+	return candidates[0] if candidates.size() == 1 else candidates[ctx.rng.randi_range(0, candidates.size() - 1)]
 
 
 func _break_crate(index: int, slot: int) -> void:

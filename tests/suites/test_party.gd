@@ -12,6 +12,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_characters(t)
 	_touch_geometry(t)
 	await _touch_players(t, host)
+	await _touch_move_and_fire(t, host)
 	await _weapons(t, host)
 	await _tank_variants_and_pause(t, host)
 	await _shared_cameras(t, host)
@@ -348,6 +349,68 @@ func _touch_players(t: TestHarness, host: Node) -> void:
 		touch.queue_free()
 	InputRouter.clear_all()
 	await host.get_tree().process_frame
+
+
+func _touch_move_and_fire(t: TestHarness, host: Node) -> void:
+	t.test("global touch events isolate four simultaneous movement and fire controls in both orientations")
+	for viewport_size in [Vector2(1280, 720), Vector2(540, 960)]:
+		var sources: Array[TouchSource] = []
+		for slot in 4:
+			var touch := TouchSource.new()
+			host.add_child(touch)
+			InputRouter.assign_touch(slot)
+			touch.setup(slot, Registry.minigame("tank_arena"), slot, 4)
+			touch.set_process_input(false)
+			touch.set_physics_process(false)
+			var region := TouchSource.party_region(viewport_size, slot, 4)
+			touch.position = region.position
+			touch.size = region.size
+			touch._read_settings()
+			touch._haptics = false
+			sources.append(touch)
+		# Every source receives the same global events, as in the input pipeline.
+		for slot in 4:
+			var press := InputEventScreenTouch.new()
+			press.index = slot
+			press.pressed = true
+			press.position = sources[slot].global_position + sources[slot]._stick_centre()
+			for source in sources:
+				source._input(press)
+			var drag := InputEventScreenDrag.new()
+			drag.index = slot
+			drag.position = press.position + Vector2(0, -20)
+			for source in sources:
+				source._input(drag)
+			press.index = 8 + slot
+			press.position = sources[slot].global_position + sources[slot]._button_centre(0)
+			for source in sources:
+				source._input(press)
+		for source in sources:
+			source._physics_process(0.016)
+		InputRouter._physics_process(0.016)
+		for slot in 4:
+			t.ok(InputRouter.frame(slot).move.y < 0, "each slot moves while firing")
+			t.ok(InputRouter.frame(slot).held(InputFrame.Btn.ATTACK), "each slot holds fire independently")
+			t.equal(sources[slot]._owners.size(), 2, "only its own two fingers are captured")
+		var release := InputEventScreenTouch.new()
+		release.pressed = false
+		for finger in [0, 9]:
+			release.index = finger
+			for source in sources:
+				source._input(release)
+		for source in sources:
+			source._physics_process(0.016)
+		InputRouter._physics_process(0.016)
+		t.equal(InputRouter.frame(0).move, Vector2.ZERO, "releasing P1 movement stops only P1")
+		t.ok(InputRouter.frame(0).held(InputFrame.Btn.ATTACK), "P1 fire survives releasing movement")
+		t.ok(InputRouter.frame(1).move.y < 0, "P2 movement survives releasing its fire")
+		t.ok(not InputRouter.frame(1).held(InputFrame.Btn.ATTACK), "releasing P2 fire stops only P2 fire")
+		for slot in [2, 3]:
+			t.ok(InputRouter.frame(slot).move.y < 0 and InputRouter.frame(slot).held(InputFrame.Btn.ATTACK), "other players continue both actions")
+		for source in sources:
+			source.queue_free()
+		InputRouter.clear_all()
+		await host.get_tree().process_frame
 
 
 func _weapons(t: TestHarness, host: Node) -> void:

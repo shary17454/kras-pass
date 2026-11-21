@@ -25,6 +25,7 @@ var ctx: MatchContext
 var controller: MiniGameController
 var arena: Arena
 var camera: ArenaCamera
+var vehicle_views: LocalVehicleViews
 var hud: MatchHUD
 var touch: TouchSource
 var touch_sources: Array[TouchSource] = []
@@ -55,7 +56,11 @@ var _fighters: Array[Fighter] = []
 var _countdown_value := 3
 var _paused := false
 var _pause_menu: CanvasLayer
+var _native_pause = preload("res://src/ui/native_pause_presenter.gd").new()
+var _native_pause_requested := false
+var _pause_message := ""
 var _on_finished: Callable = Callable()
+var _completion_owner: RefCounted
 var _next_match_config: MatchConfig
 var _tuning := {}
 const REPLAY_MAX_TICKS := 60 * 60 * 30
@@ -93,6 +98,7 @@ signal playback_finished()
 signal desync_detected(tick: int)
 var _tick_index := 0
 var _aborted := false
+var _torn_down := false
 var _sudden_death_used := false
 var _noted_leader := -1
 var _noted_last := -1
@@ -118,6 +124,10 @@ func setup(args: Dictionary) -> void:
 	if playback != null:
 		config = playback.to_config()
 	_on_finished = args.get("on_finished", Callable())
+	# A Callable does not retain its RefCounted target after the launching
+	# screen is freed. Keep session/reward ownership through match completion.
+	if _on_finished.is_valid():
+		_completion_owner = _on_finished.get_object() as RefCounted
 	_next_match_config = args.get("next_config")
 	if config == null:
 		Log.e("match started without a config", "Match")
@@ -156,6 +166,13 @@ func _build() -> void:
 		return
 
 	AudioManager.warm_match_bank()
+	if DisplayServer.get_name() != "headless":
+		var burst_colors: Array[Color] = []
+		for player in config.players:
+			var character := player.character_with_cosmetics()
+			if character != null:
+				burst_colors.append(character.accent)
+		MeshFactory.prepare_bursts(burst_colors)
 
 	Fighter.clear_impact_state()
 	ctx = MatchContext.new()
@@ -174,6 +191,8 @@ func _build() -> void:
 	arena.name = "Arena"
 	add_child(arena)
 	arena.build(arena_def)
+	if def.category == MiniGameDef.Category.RACE:
+		arena.assign_race_starts(config.seed)
 	arena.fighter_submerged.connect(_on_submerged)
 	# Heavy hits fracture the floor they land on. The arena has no idea who the
 	# players are, so the match layer resolves the victim and hands over a point.
@@ -240,13 +259,6 @@ func _build() -> void:
 		camera.mode = ArenaCamera.Mode.CHASE
 	camera.current = true
 	ctx.observation_camera = camera
-	if config.minigame_id == "tank_arena":
-		var radar_layer := CanvasLayer.new()
-		add_child(radar_layer)
-		var radar: Control = load("res://src/ui/tank_radar.gd").new()
-		radar.ctx = ctx
-		radar_layer.add_child(radar)
-
 	hud = MatchHUD.new()
 	hud.name = "HUD"
 	add_child(hud)
@@ -256,11 +268,26 @@ func _build() -> void:
 		if phase == P.INSTRUCTIONS and (not _online() or Net.is_host):
 			_set_phase(P.COUNTDOWN))
 	hud.set_round(_round_index, _total_rounds)
+	if config.minigame_id == "tank_arena":
+		if not camera.shared_world:
+			hud.reserve_auxiliary_overlay(120.0)
+		var radar_layer := CanvasLayer.new()
+		add_child(radar_layer)
+		var radar: Control = load("res://src/ui/tank_radar.gd").new()
+		radar.ctx = ctx
+		radar.hud = hud
+		radar_layer.add_child(radar)
+		radar.visible = not camera.shared_world
 
 	_create_brains()
 	_assign_inputs()
 	_create_touch_controls()
 	hud.touch_sources = touch_sources
+	if camera.shared_world and playback == null:
+		vehicle_views = LocalVehicleViews.new()
+		vehicle_views.name = "LocalVehicleViews"
+		add_child(vehicle_views)
+		vehicle_views.setup(ctx, hud, local_slots)
 	AudioManager.play_music(controller.music_track())
 	EventBus.match_started.emit(config)
 	_set_phase(P.INTRO)
@@ -358,6 +385,17 @@ func _create_touch_controls() -> void:
 
 
 func teardown() -> void:
+	if _torn_down:
+		return
+	_torn_down = true
+	_on_finished = Callable()
+	_completion_owner = null
+	_close_pause_menu()
+	_native_pause.dispose()
+	# queue_free is deferred; retire simulation before shared pools disappear.
+	process_mode = Node.PROCESS_MODE_DISABLED
+	if is_instance_valid(vehicle_views):
+		vehicle_views.stop()
 	AudioManager.stop_ambience()
 	InputRouter.playback_mode = false
 	if controller != null and is_instance_valid(controller):
@@ -383,6 +421,9 @@ func _set_phase(next: int) -> void:
 	EventBus.match_phase_changed.emit(next)
 	_enter_phase(next)
 	_phase_duration = _phase_timer
+	# Backgrounding during preparation predates the live-only pause signal.
+	if Platform.is_backgrounded and MatchPhase.is_live(phase):
+		_on_app_backgrounded()
 
 
 func _enter_phase(p: int) -> void:
@@ -426,7 +467,7 @@ func _enter_phase(p: int) -> void:
 			UserSettings.mark_tutorial_seen(ctx.definition.id)
 			_countdown_value = int(_tuning.get("countdown_seconds", 3))
 			_phase_timer = 1.0
-			hud.announce(str(_countdown_value), UIKit.TEXT, 0.4)
+			hud.announce(str(_countdown_value), UIKit.TEXT, 0.4, true)
 			AudioManager.play_sfx("countdown")
 			EventBus.countdown_tick.emit(_countdown_value)
 		P.PLAYING:
@@ -509,7 +550,7 @@ func _round_duration() -> float:
 # --- main loop -------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
-	if ctx == null or _aborted:
+	if ctx == null or _aborted or _torn_down:
 		return
 	if _online():
 		if not Net.match_running or Net.state == Net.State.DISCONNECTED:
@@ -549,8 +590,12 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if _torn_down:
+		return
 	if hud != null and is_instance_valid(hud) and ctx != null:
+		var started := DevTools.operations.begin()
 		hud.tick(delta)
+		DevTools.operations.finish("match.hud", started)
 
 
 ## Playback runs the same tick function, just more or fewer times per frame.
@@ -600,7 +645,7 @@ func _tick_countdown(delta: float) -> void:
 		_set_phase(P.PLAYING)
 		return
 	_phase_timer = 1.0
-	hud.announce(str(_countdown_value), UIKit.TEXT, 0.4)
+	hud.announce(str(_countdown_value), UIKit.TEXT, 0.4, true)
 	AudioManager.play_sfx("countdown", Vector3.ZERO, 1.0 + (3 - _countdown_value) * 0.1)
 	EventBus.countdown_tick.emit(_countdown_value)
 
@@ -624,7 +669,9 @@ func _tick_live(delta: float) -> void:
 			f.tick(InputRouter.frame(f.slot), delta)
 	# Body-to-body shoves are resolved here, after every body has moved, so the
 	# exchange does not depend on the order the fighters were ticked in.
+	var impacts_started := DevTools.operations.begin()
 	Fighter.resolve_impacts(delta)
+	DevTools.operations.finish("fighter.impacts", impacts_started)
 	DevTools.operations.finish("match.fighters", operation_started)
 	operation_started = DevTools.operations.begin()
 	_record_replay_tick()
@@ -1124,6 +1171,21 @@ func _abort() -> void:
 
 # --- pause -----------------------------------------------------------------
 
+func _input(event: InputEvent) -> void:
+	if _native_pause.active and (event is InputEventJoypadButton or event is InputEventJoypadMotion):
+		if event.is_action_pressed("ui_up"):
+			_native_pause.navigate(-1)
+		elif event.is_action_pressed("ui_down"):
+			_native_pause.navigate(1)
+		elif event.is_action_pressed("ui_accept") or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A):
+			_native_pause.navigate(0, true)
+		elif event.is_action_pressed("ui_back") or event.is_action_pressed("ui_cancel"):
+			_native_pause.navigate(0)
+		else:
+			return
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if ctx == null or phase == P.DONE:
 		return
@@ -1137,8 +1199,7 @@ func _toggle_pause() -> void:
 		if _pause_menu == null:
 			_show_pause_menu(Loc.t("online.no_pause"))
 		else:
-			_pause_menu.queue_free()
-			_pause_menu = null
+			_close_pause_menu()
 			for source in touch_sources:
 				source.set_process_input(true)
 		return
@@ -1150,9 +1211,70 @@ func _toggle_pause() -> void:
 		_show_pause_menu()
 		AudioManager.play_ui("ui_back")
 	else:
-		if _pause_menu != null and is_instance_valid(_pause_menu):
-			_pause_menu.queue_free()
-			_pause_menu = null
+		_close_pause_menu()
+
+
+func _close_pause_menu() -> void:
+	_native_pause_requested = false
+	_native_pause.dismiss()
+	if is_instance_valid(_pause_menu):
+		_pause_menu.queue_free()
+	_pause_menu = null
+
+
+func _present_native_pause_menu() -> bool:
+	if not _native_pause.action.is_connected(_on_native_pause_action):
+		_native_pause.action.connect(_on_native_pause_action)
+		_native_pause.unavailable.connect(_on_native_pause_unavailable)
+	return _native_pause.show({
+		"title": Loc.t("pause.title"), "message": _pause_message,
+		"resume": Loc.t("pause.resume"), "restart": Loc.t("pause.restart"),
+		"settings": Loc.t("pause.settings"), "quit": Loc.t("pause.quit_match"),
+		"confirm": Loc.t("party.restart_confirm"), "cancel": Loc.t("common.cancel"),
+	}, Loc.is_rtl(), not _online())
+
+
+func _on_native_pause_unavailable() -> void:
+	_native_pause_requested = false
+	if not _torn_down and is_instance_valid(_pause_menu) and _pause_menu.get_child_count() == 0:
+		_build_godot_pause_menu(_pause_menu, _pause_message)
+
+
+func _on_native_pause_action(command: String) -> void:
+	if _torn_down or not is_instance_valid(_pause_menu):
+		return
+	match command:
+		"resume": _toggle_pause()
+		"restart":
+			if _online():
+				_present_native_pause_menu()
+				return
+			_toggle_pause()
+			debug_restart_round()
+		"settings": _open_pause_settings()
+		"quit": _quit_paused_match()
+
+
+func _open_pause_settings() -> void:
+	var sheet := CanvasLayer.new()
+	sheet.layer = 50
+	add_child(sheet)
+	var screen := load("res://src/ui/screens/settings_screen.gd").new() as Screen
+	sheet.add_child(screen)
+	screen.setup({"close_callback": func():
+		sheet.queue_free()
+		if not _torn_down and _native_pause_requested and is_instance_valid(_pause_menu):
+			if not _present_native_pause_menu():
+				_on_native_pause_unavailable(), "in_match": true})
+
+
+func _quit_paused_match() -> void:
+	_close_pause_menu()
+	_paused = false
+	_aborted = true
+	if _online():
+		Net.leave()
+	SceneRouter.go_to("main_menu", {}, false)
 
 
 func _show_pause_menu(message: String = "") -> void:
@@ -1163,6 +1285,13 @@ func _show_pause_menu(message: String = "") -> void:
 	layer.layer = 40
 	add_child(layer)
 	_pause_menu = layer
+	_pause_message = message
+	_native_pause_requested = _present_native_pause_menu()
+	if not _native_pause_requested:
+		_build_godot_pause_menu(layer, message)
+
+
+func _build_godot_pause_menu(layer: CanvasLayer, message: String) -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.72)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1198,21 +1327,10 @@ func _show_pause_menu(message: String = "") -> void:
 		dialog.popup_centered())
 	v.add_child(restart)
 	var settings := UIKit.button(Loc.t("pause.settings"))
-	settings.pressed.connect(func():
-		var sheet := CanvasLayer.new()
-		sheet.layer = 50
-		add_child(sheet)
-		var screen := load("res://src/ui/screens/settings_screen.gd").new() as Screen
-		sheet.add_child(screen)
-		screen.setup({"close_callback": func(): sheet.queue_free(), "in_match": true}))
+	settings.pressed.connect(_open_pause_settings)
 	v.add_child(settings)
 	var quit := UIKit.button(Loc.t("pause.quit_match"))
-	quit.pressed.connect(func():
-		_paused = false
-		_aborted = true
-		if _online():
-			Net.leave()
-		SceneRouter.go_to("main_menu", {}, false))
+	quit.pressed.connect(_quit_paused_match)
 	v.add_child(quit)
 	resume.grab_focus()
 	UIKit.animate_in(card)

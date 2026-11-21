@@ -3,12 +3,19 @@ extends RefCounted
 
 func run(t: TestHarness, host: Node) -> void:
 	t.suite("race round reset")
+	await _check_circuit_start_grid(t, host)
+	await _check_oval_start_grid(t, host)
+	_check_seeded_start_allocation(t)
 	var cfg := MatchConfig.build("kart_sprint", ["fanoos", "mowja", "ramla", "nabta"], 0, 1, 117)
 	var scene: Node = load("res://src/match/match_scene.gd").new()
 	host.add_child(scene)
 	scene.setup({"config": cfg, "on_finished": func(_r): pass})
 	scene.set_physics_process(false)
 	for rider in scene.ctx.fighters: rider.set_physics_process(false)
+	scene.arena.assign_race_starts(cfg.seed)
+	for slot in 4:
+		t.ok(scene.ctx.fighter(slot).global_position.is_equal_approx(scene.arena.global_position + scene.arena.spawn_points[slot]),
+			"match setup uses its seeded lane allocation before spawning players")
 	var game: Node = scene.controller
 	var pad: Dictionary = game._boost_pads[0]
 	var rider: Fighter = scene.ctx.fighter(0)
@@ -59,6 +66,153 @@ func run(t: TestHarness, host: Node) -> void:
 	await host.get_tree().process_frame
 	await _check_finished_collision(t, host)
 	await _check_finished_weapons(t, host)
+	await _check_weapon_character_response(t, host)
+
+
+func _check_circuit_start_grid(t: TestHarness, host: Node) -> void:
+	var tested := 0
+	for definition: ArenaDef in Registry.arenas():
+		if definition.shape != "circuit":
+			continue
+		var arena := Arena.new()
+		host.add_child(arena)
+		arena.build(definition)
+		await host.get_tree().physics_frame
+		await host.get_tree().physics_frame
+		var start := arena.circuit_line[0]
+		var forward := (arena.circuit_line[1] - arena.circuit_line[-1]).normalized()
+		forward.y = 0.0
+		forward = forward.normalized()
+		var expected := (arena.spawn_points[0] - start).dot(forward)
+		var road := arena.get_node_or_null("FantasyWorld/RoadCollision")
+		t.ok(road != null, "%s exposes its authored physical road" % definition.id)
+		t.equal(arena.spawn_points.size(), 4, "%s has four circuit start positions" % definition.id)
+		for slot in 4:
+			var point := arena.spawn_points[slot]
+			t.near((point - start).dot(forward), expected, 0.0001,
+				"%s slot %d has equal distance behind the start" % [definition.id, slot])
+			t.ok(arena.is_inside(point, 0.6), "%s slot %d keeps chassis clearance on the road" % [definition.id, slot])
+			var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 2.0,
+				point + Vector3.DOWN * 4.0, 1)
+			var ground := arena.get_world_3d().direct_space_state.intersect_ray(query)
+			t.ok(not ground.is_empty() and ground.collider == road,
+				"%s slot %d starts over physical road collision (hit %s)" % [definition.id, slot,
+					"none" if ground.is_empty() else str(ground.collider.get_path())])
+			for other in range(slot):
+				t.ok(point.distance_to(arena.spawn_points[other]) >= 1.2,
+					"%s starting chassis cannot overlap" % definition.id)
+		tested += 1
+		arena.queue_free()
+		await host.get_tree().process_frame
+	t.ok(tested > 0, "authored racing circuits were checked")
+
+
+func _check_oval_start_grid(t: TestHarness, host: Node) -> void:
+	var arena := Arena.new()
+	host.add_child(arena)
+	arena.build(Registry.arena("circuit_loop"))
+	await host.get_tree().physics_frame
+	await host.get_tree().physics_frame
+	t.equal(arena.spawn_points.size(), 4, "oval has four start positions")
+	for slot in 4:
+		var point := arena.spawn_points[slot]
+		t.near(point.z, arena.spawn_points[0].z, 0.0001, "oval slot %d has equal start depth" % slot)
+		t.ok(arena.is_inside(point, 0.6), "oval chassis remains inside road edges")
+		var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 2.0,
+			point + Vector3.DOWN * 4.0, 1)
+		var ground := arena.get_world_3d().direct_space_state.intersect_ray(query)
+		t.ok(not ground.is_empty() and ground.collider.get_parent() == arena._static_root,
+			"oval starting chassis has physical road support")
+		for other in range(slot):
+			t.ok(point.distance_to(arena.spawn_points[other]) >= 1.2, "oval starting chassis cannot overlap")
+	arena.queue_free()
+	await host.get_tree().process_frame
+
+
+func _check_seeded_start_allocation(t: TestHarness) -> void:
+	var arena := Arena.new()
+	if not arena.has_method("assign_race_starts"):
+		t.ok(false, "racing starts have a seeded allocation API")
+		arena.free()
+		return
+	arena.def = Registry.arena("dune_circuit")
+	var authored: Array[Vector3] = [Vector3.ZERO, Vector3.RIGHT, Vector3.RIGHT * 2.0, Vector3.RIGHT * 3.0]
+	arena.spawn_points.assign(authored)
+	var counts := [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+	var orders := {}
+	for seed_value in range(1, 257):
+		arena.call("assign_race_starts", seed_value)
+		var first := arena.spawn_points.duplicate()
+		arena.call("assign_race_starts", seed_value)
+		t.equal(arena.spawn_points, first, "same seed remains idempotent without reshuffling the current grid")
+		var key := ""
+		var seen := {}
+		for slot in 4:
+			var index := authored.find(first[slot])
+			t.ok(index >= 0 and not seen.has(index), "seeded assignment preserves unique authored positions")
+			if index >= 0:
+				counts[slot][index] += 1
+			seen[index] = true
+			key += str(index)
+		orders[key] = true
+	t.equal(orders.size(), 24, "all four-position permutations occur in the fixed seed sample")
+	for slot in 4:
+		for lane in 4:
+			t.ok(counts[slot][lane] >= 40 and counts[slot][lane] <= 90,
+				"no slot owns a preferred lane in the fixed seed sample: %s" % [counts])
+	arena.def = Registry.arena("hurdle_track")
+	arena.spawn_points.assign(authored)
+	arena.call("assign_race_starts", 256)
+	t.equal(arena.spawn_points, authored, "straight-track lane controls retain their authored positions")
+	arena.free()
+
+
+func _check_weapon_character_response(t: TestHarness, host: Node) -> void:
+	var cfg := MatchConfig.build("sabaq_sawarikh", ["fanoos", "sakhra", "nabta", "barq"], 0, 1, 120)
+	var scene: Node = load("res://src/match/match_scene.gd").new()
+	host.add_child(scene)
+	scene.setup({"config": cfg, "on_finished": func(_r): pass})
+	scene.set_physics_process(false)
+	for rider in scene.ctx.fighters: rider.set_physics_process(false)
+	var game: Node = scene.controller
+	var neutral: Fighter = scene.ctx.fighter(0)
+	for slot in 4:
+		var rider: Fighter = scene.ctx.fighter(slot)
+		rider._stun = 0.0
+		rider._impulse = Vector3.ZERO
+		var health := rider.health
+		game._spin_out(slot, (slot + 1) % 4, Vector3.RIGHT)
+		t.near(rider._stun, game.SPIN_SECONDS * rider.data.perk_factor("recovery"), 0.00001, "race impact applies recovery for %s" % rider.data.id)
+		var expected := (Vector3.RIGHT * 7.0 + Vector3.UP * 2.0) * neutral.knock_resist / rider.knock_resist
+		t.ok(rider._impulse.is_equal_approx(expected), "race impulse applies character resistance for %s" % rider.data.id)
+		t.near(rider.health, health, 0.00001, "race impact retains no health damage")
+		t.equal(int(scene.ctx.details[slot].get("spun", 0)), 1, "race impact records one spin")
+	t.ok(scene.ctx.fighter(1)._impulse.length() < neutral._impulse.length(), "heavy racer receives less knockback than neutral")
+	t.ok(scene.ctx.fighter(3)._impulse.length() > neutral._impulse.length(), "light racer receives more knockback than neutral")
+	t.near(neutral._stun, game.SPIN_SECONDS, 0.00001, "neutral race stun remains unchanged")
+	t.ok(neutral._impulse.is_equal_approx(Vector3.RIGHT * 7.0 + Vector3.UP * 2.0), "neutral race impulse remains unchanged")
+	var light: Fighter = scene.ctx.fighter(3)
+	light._impulse = Vector3.ZERO
+	light._stun = 0.0
+	game.shielded[3] = 6.0
+	game._spin_out(3, 0, Vector3.RIGHT)
+	t.equal(light._impulse, Vector3.ZERO, "shield blocks all character-scaled knockback")
+	t.near(light._stun, 0.0, 0.00001, "shield blocks character-scaled stun")
+	t.near(game.shielded[3], 0.0, 0.00001, "shield is consumed once")
+	var neutral_resist := neutral.knock_resist
+	for character in Registry.characters():
+		neutral.data = character
+		neutral._apply_character()
+		neutral._impulse = Vector3.ZERO
+		neutral._stun = 0.0
+		game._spin_out(0, 1, Vector3.RIGHT)
+		var ratio := neutral_resist / neutral.knock_resist
+		t.ok(neutral._impulse.is_equal_approx((Vector3.RIGHT * 7.0 + Vector3.UP * 2.0) * ratio), "%s uses effective resistance including its perk" % character.id)
+		t.near(neutral._stun, game.SPIN_SECONDS * character.perk_factor("recovery"), 0.00001, "%s uses recovery without changing unrelated passives" % character.id)
+		t.ok(ratio >= 0.85 and ratio <= 1.15, "%s race knockback stays within the effective response budget" % character.id)
+	scene.teardown()
+	scene.queue_free()
+	await host.get_tree().process_frame
 
 
 func _check_finished_weapons(t: TestHarness, host: Node) -> void:

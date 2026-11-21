@@ -1,0 +1,12 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+balance simulation: 24 runs per game, 1 games
+  blast_ball       ties   0%  slot-bias  21%  char-bias  17%   20.4s  expert +54%
+
+mutator & chaos smoke pass:
+  blast_ball       mutated ok  chaos ok
+
+finished in 43.8s — /tmp/kras-blast-followthrough-balance270/report.html

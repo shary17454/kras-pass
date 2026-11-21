@@ -21,7 +21,7 @@ func run(t: TestHarness, host: Node) -> void:
 	brain._time = 10.0
 	crate.hide()
 	brain.decide(0.1)
-	t.ok((brain.bits & InputFrame.Btn.ATTACK) == 0, "actual decision cannot feed a hidden crate")
+	t.ok(not _attack_requested(brain), "actual decision cannot feed a hidden crate")
 	t.ok(brain.has_method("perceived_feeding_targets"), "feeding targets have an observation interface")
 	if brain.has_method("perceived_feeding_targets"):
 		crate.show()
@@ -32,7 +32,7 @@ func run(t: TestHarness, host: Node) -> void:
 		t.equal(brain.perceived_feeding_targets().crates, [crate.global_position], "crate is actionable at the threshold")
 		brain.bits = 0
 		brain.decide(0.1)
-		t.ok((brain.bits & InputFrame.Btn.ATTACK) != 0, "observed aligned crate can be fed by actual decision")
+		t.ok(_attack_requested(brain), "observed aligned crate can be fed by actual decision")
 		crate.global_position = Vector3(6, 0.7, 0)
 		brain._time += 0.1
 		t.equal(brain.perceived_feeding_targets().crates, [Vector3(4, 0.7, 0)], "crate movement uses a delayed position")
@@ -67,3 +67,9 @@ func run(t: TestHarness, host: Node) -> void:
 	scene.queue_free()
 	await host.get_tree().process_frame
 	await host.get_tree().process_frame
+
+
+func _attack_requested(brain: AIBrain) -> bool:
+	brain._publish_output(brain.move)
+	InputRouter._physics_process(0.0)
+	return InputRouter.frame(brain.slot).held(InputFrame.Btn.ATTACK)

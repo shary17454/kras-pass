@@ -39,7 +39,7 @@ func build() -> void:
 	var r := arena.def.radius * 0.82
 	for i in 4:
 		var corner := Vector3(r * (1 if i % 2 == 0 else -1), -0.9, r * (1 if i < 2 else -1))
-		var engine := MeshFactory.cylinder(0.9, 1.4, UIKit.ACCENT_2, 0.7)
+		var engine := MeshFactory.cylinder(0.9, 1.4, MeshFactory.WORLD_TEAL, 0.7)
 		engine.position = arena.global_position + corner
 		engine.rotation.x = PI
 		ctx.world_root.add_child(engine)

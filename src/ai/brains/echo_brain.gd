@@ -81,6 +81,10 @@ func decide(_delta: float) -> void:
 		steer_to(ctx.arena_center())
 		return
 	var pos: Vector3 = controller.call("pad_position", believed) if controller.has_method("pad_position") else ctx.arena_center()
+	# Pads admit a body anywhere inside their visible radius. Separate the
+	# approach points so four observers do not all occupy the same target.
+	var angle := TAU * float(slot) / float(maxi(1, ctx.player_count()))
+	pos += Vector3(cos(angle), 0, sin(angle)) * 0.9
 	steer_to(pos)
 	if distance_to(pos) > 5.0:
 		maybe_dash(0.7)

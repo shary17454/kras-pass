@@ -74,10 +74,21 @@ func perceived_dangers() -> Array:
 		if not cue is Node3D or not can_observe(cue):
 			continue
 		var id: int = cue.get_instance_id()
-		var first_seen: float = _danger_seen.get(id, _time)
-		observed[id] = first_seen
-		if _time - first_seen + 0.000001 >= reaction_time:
-			ready.append(zone)
+		var samples: Array = _danger_seen.get(id, [])
+		if samples.is_empty() or float(samples.back().time) < _time:
+			samples.append({"time": _time, "zone": zone.duplicate(true)})
+		while samples.size() > HISTORY_CAP:
+			samples.pop_front()
+		observed[id] = samples
+		# Mature cues still use delayed geometry, not live controller updates.
+		for index in range(samples.size() - 1, -1, -1):
+			var sample: Dictionary = samples[index]
+			if float(sample.time) <= _time - reaction_time + 0.000001:
+				var danger: Dictionary = sample.zone.duplicate(true)
+				if not bool(danger.get("persistent", false)):
+					danger.left = maxf(0.0, float(danger.left) - maxf(0.0, _time - float(sample.time)))
+				ready.append(danger)
+				break
 	# A removed or hidden cue cannot carry reaction credit into a new warning.
 	_danger_seen = observed
 	return ready
@@ -119,7 +130,7 @@ func decide(delta: float) -> void:
 			var target: Vector3 = plan.target
 			_steer_on_ground(target, clampf(_flat(target) * 0.8, 0.0, 1.0))
 			if plan.attack and rng.randf() < attack_chance:
-				press(Btn.ATTACK)
+				tap(Btn.ATTACK)
 			return
 		if controller.has_method("staging_point"):
 			_steer_on_ground(controller.call("staging_point", _idle_phase + _time * 0.2), 0.6)
@@ -136,7 +147,7 @@ func decide(delta: float) -> void:
 		else:
 			steer_to(plan.target, 0.65 if plan.hot else 1.0)
 			if plan.attack and rng.randf() < attack_chance:
-				press(Btn.ATTACK)
+				tap(Btn.ATTACK)
 		keep_off_edge(1.2)
 		return
 
@@ -160,7 +171,7 @@ func decide(delta: float) -> void:
 	var d := _flat(best)
 	if d < Balance.num("tuning", "fighter.attack_range", 2.15) + 0.6:
 		if rng.randf() < attack_chance:
-			press(Btn.ATTACK)
+			tap(Btn.ATTACK)
 	elif d < 9.0:
 		maybe_dash(0.8)
 	keep_off_edge(3.0)
@@ -185,7 +196,7 @@ func _steer_on_ground(target: Vector3, urgency := 1.0) -> void:
 
 
 func _publish_output(movement: Vector2) -> void:
-	var actions := bits
+	var actions := _take_actions()
 	var me := self_body()
 	var arena := ctx.arena as Arena
 	if (actions & Btn.DASH) != 0 and me != null and arena != null and is_instance_valid(arena._crater_floor):

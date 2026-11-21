@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "checkout_commit": "babcf829532f7882fcbe2f8dc81fa01299ede065",
+  "checkout_tree": "adc63c4dfb05c4a051ba76cab5e551d79b818434",
+  "intended_head": "babcf829532f7882fcbe2f8dc81fa01299ede065",
+  "event": "workflow_dispatch",
+  "ref": "refs/heads/feature/kras-online-random-rotation",
+  "scenario": "core",
+  "run_id": "37768869605",
+  "run_attempt": "1",
+  "tracked_changes": ""
+}

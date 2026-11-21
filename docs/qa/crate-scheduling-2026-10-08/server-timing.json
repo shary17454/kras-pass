@@ -1,0 +1,483 @@
+{
+  "operations": {
+    "create": {
+      "count": 1,
+      "totalMs": 5.945499999999811,
+      "maxMs": 5.945499999999811,
+      "cpu": {
+        "count": 1,
+        "totalMs": 3.936,
+        "maxMs": 3.936,
+        "atMaxWallMs": 3.936
+      }
+    },
+    "configure": {
+      "count": 1,
+      "totalMs": 0.6067910000001575,
+      "maxMs": 0.6067910000001575,
+      "cpu": {
+        "count": 1,
+        "totalMs": 0.46,
+        "maxMs": 0.46,
+        "atMaxWallMs": 0.46
+      }
+    },
+    "ready": {
+      "count": 4,
+      "totalMs": 1.7692089999982272,
+      "maxMs": 0.939834000000701,
+      "cpu": {
+        "count": 4,
+        "totalMs": 1.169,
+        "maxMs": 0.439,
+        "atMaxWallMs": 0.439
+      }
+    },
+    "ping": {
+      "count": 160,
+      "totalMs": 71.7312930001026,
+      "maxMs": 43.224207999999635,
+      "cpu": {
+        "count": 160,
+        "totalMs": 15.223999999999995,
+        "maxMs": 1.511,
+        "atMaxWallMs": 1.511
+      }
+    },
+    "join": {
+      "count": 3,
+      "totalMs": 8.401834000003873,
+      "maxMs": 7.421417000001384,
+      "cpu": {
+        "count": 3,
+        "totalMs": 2.803,
+        "maxMs": 1.93,
+        "atMaxWallMs": 1.93
+      }
+    },
+    "start": {
+      "count": 1,
+      "totalMs": 593.937458999997,
+      "maxMs": 593.937458999997,
+      "cpu": {
+        "count": 1,
+        "totalMs": 3.887,
+        "maxMs": 3.887,
+        "atMaxWallMs": 3.887
+      }
+    },
+    "loaded": {
+      "count": 6,
+      "totalMs": 3.9308339999843156,
+      "maxMs": 1.8564579999983835,
+      "cpu": {
+        "count": 6,
+        "totalMs": 3.223,
+        "maxMs": 1.26,
+        "atMaxWallMs": 1.26
+      }
+    },
+    "input": {
+      "count": 12876,
+      "totalMs": 2239.096644001187,
+      "maxMs": 191.0732080000016,
+      "cpu": {
+        "count": 12876,
+        "totalMs": 1144.97200000001,
+        "maxMs": 0.538,
+        "atMaxWallMs": 0.239
+      }
+    },
+    "snapshot": {
+      "count": 3508,
+      "totalMs": 2498.0998600000894,
+      "maxMs": 521.635500000004,
+      "cpu": {
+        "count": 3508,
+        "totalMs": 911.6419999999976,
+        "maxMs": 2.9,
+        "atMaxWallMs": 2.9
+      }
+    },
+    "resume": {
+      "count": 2,
+      "totalMs": 2.6687500000043656,
+      "maxMs": 1.810750000004191,
+      "cpu": {
+        "count": 2,
+        "totalMs": 1.787,
+        "maxMs": 1.063,
+        "atMaxWallMs": 1.063
+      }
+    },
+    "result": {
+      "count": 1,
+      "totalMs": 1.7351250000065193,
+      "maxMs": 1.7351250000065193,
+      "cpu": {
+        "count": 1,
+        "totalMs": 1.369,
+        "maxMs": 1.369,
+        "atMaxWallMs": 1.369
+      }
+    },
+    "leave": {
+      "count": 2,
+      "totalMs": 0.7777080000087153,
+      "maxMs": 0.7616249999846332,
+      "cpu": {
+        "count": 2,
+        "totalMs": 0.77,
+        "maxMs": 0.757,
+        "atMaxWallMs": 0.757
+      }
+    }
+  },
+  "stalls": [
+    {
+      "startEpochMs": 1791458521641.6682,
+      "endEpochMs": 1791458522317.744,
+      "delayMs": 576.0757079999967,
+      "elapsedMs": 676.0757079999967,
+      "cpuMs": 4.975,
+      "rooms": [
+        {
+          "state": "loading",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458560595.2021,
+      "endEpochMs": 1791458560919.5645,
+      "delayMs": 224.36212499999965,
+      "elapsedMs": 324.36212499999965,
+      "cpuMs": 0.132,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458585774.351,
+      "endEpochMs": 1791458585976.0408,
+      "delayMs": 101.68962500001362,
+      "elapsedMs": 201.68962500001362,
+      "cpuMs": 0.147,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458585976.0408,
+      "endEpochMs": 1791458586211.9373,
+      "delayMs": 135.8966669999936,
+      "elapsedMs": 235.8966669999936,
+      "cpuMs": 0.464,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458586211.9373,
+      "endEpochMs": 1791458586855.3313,
+      "delayMs": 543.3939580000006,
+      "elapsedMs": 643.3939580000006,
+      "cpuMs": 5.173,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458586855.3313,
+      "endEpochMs": 1791458587095.0857,
+      "delayMs": 139.75441700000374,
+      "elapsedMs": 239.75441700000374,
+      "cpuMs": 0.951,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458588654.5542,
+      "endEpochMs": 1791458588934.9807,
+      "delayMs": 180.42641699999513,
+      "elapsedMs": 280.4264169999951,
+      "cpuMs": 0.134,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458597958.6006,
+      "endEpochMs": 1791458598506.0315,
+      "delayMs": 447.4308749999909,
+      "elapsedMs": 547.4308749999909,
+      "cpuMs": 1.188,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458609956.076,
+      "endEpochMs": 1791458610164.2222,
+      "delayMs": 108.1462920000049,
+      "elapsedMs": 208.1462920000049,
+      "cpuMs": 0.634,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458610164.2222,
+      "endEpochMs": 1791458610438.5352,
+      "delayMs": 174.31316700000025,
+      "elapsedMs": 274.31316700000025,
+      "cpuMs": 0.781,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458619687.5364,
+      "endEpochMs": 1791458619891.2822,
+      "delayMs": 103.74579200000153,
+      "elapsedMs": 203.74579200000153,
+      "cpuMs": 0.341,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458619891.2822,
+      "endEpochMs": 1791458620140.7285,
+      "delayMs": 149.44633299999987,
+      "elapsedMs": 249.44633299999987,
+      "cpuMs": 0.746,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458630090.6287,
+      "endEpochMs": 1791458630323.3225,
+      "delayMs": 132.69362499999988,
+      "elapsedMs": 232.69362499999988,
+      "cpuMs": 1.139,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458641588.287,
+      "endEpochMs": 1791458641940.2168,
+      "delayMs": 251.9297919999808,
+      "elapsedMs": 351.9297919999808,
+      "cpuMs": 1.929,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458650628.7327,
+      "endEpochMs": 1791458650970.7393,
+      "delayMs": 242.0064999999886,
+      "elapsedMs": 342.0064999999886,
+      "cpuMs": 1.373,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458660457.7598,
+      "endEpochMs": 1791458660716.2314,
+      "delayMs": 158.47158300000592,
+      "elapsedMs": 258.4715830000059,
+      "cpuMs": 1.165,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458671406.2908,
+      "endEpochMs": 1791458671959.6545,
+      "delayMs": 453.3637500000186,
+      "elapsedMs": 553.3637500000186,
+      "cpuMs": 0.769,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458682269.8157,
+      "endEpochMs": 1791458682542.2937,
+      "delayMs": 172.47804200000246,
+      "elapsedMs": 272.47804200000246,
+      "cpuMs": 0.119,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458692134.883,
+      "endEpochMs": 1791458692531.0627,
+      "delayMs": 296.17975000001024,
+      "elapsedMs": 396.17975000001024,
+      "cpuMs": 0.564,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458692661.0056,
+      "endEpochMs": 1791458693051.5386,
+      "delayMs": 290.5330000000249,
+      "elapsedMs": 390.5330000000249,
+      "cpuMs": 0.173,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458700377.6504,
+      "endEpochMs": 1791458700586.5776,
+      "delayMs": 108.92708399999538,
+      "elapsedMs": 208.92708399999538,
+      "cpuMs": 3.035,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    },
+    {
+      "startEpochMs": 1791458724149.175,
+      "endEpochMs": 1791458724432.525,
+      "delayMs": 183.3500420000055,
+      "elapsedMs": 283.3500420000055,
+      "cpuMs": 3.02,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "crate_smash",
+          "arena": "crate_yard"
+        }
+      ]
+    }
+  ],
+  "worstStall": {
+    "startEpochMs": 1791458521641.6682,
+    "endEpochMs": 1791458522317.744,
+    "delayMs": 576.0757079999967,
+    "elapsedMs": 676.0757079999967,
+    "cpuMs": 4.975,
+    "rooms": [
+      {
+        "state": "loading",
+        "epoch": 1,
+        "game": "crate_smash",
+        "arena": "crate_yard"
+      }
+    ]
+  }
+}

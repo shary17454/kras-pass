@@ -1,0 +1,164 @@
+{
+  "operations": {
+    "create": {
+      "count": 1,
+      "totalMs": 2.92837499999996,
+      "maxMs": 2.92837499999996,
+      "cpu": {
+        "count": 1,
+        "totalMs": 2.286,
+        "maxMs": 2.286,
+        "atMaxWallMs": 2.286
+      }
+    },
+    "configure": {
+      "count": 1,
+      "totalMs": 0.24825000000009823,
+      "maxMs": 0.24825000000009823,
+      "cpu": {
+        "count": 1,
+        "totalMs": 0.53,
+        "maxMs": 0.53,
+        "atMaxWallMs": 0.53
+      }
+    },
+    "ready": {
+      "count": 4,
+      "totalMs": 0.8481659999997646,
+      "maxMs": 0.42895899999984977,
+      "cpu": {
+        "count": 4,
+        "totalMs": 0.845,
+        "maxMs": 0.368,
+        "atMaxWallMs": 0.368
+      }
+    },
+    "join": {
+      "count": 3,
+      "totalMs": 0.7048749999999018,
+      "maxMs": 0.3813749999999345,
+      "cpu": {
+        "count": 3,
+        "totalMs": 0.9359999999999999,
+        "maxMs": 0.431,
+        "atMaxWallMs": 0.431
+      }
+    },
+    "start": {
+      "count": 1,
+      "totalMs": 0.8138749999998254,
+      "maxMs": 0.8138749999998254,
+      "cpu": {
+        "count": 1,
+        "totalMs": 0.891,
+        "maxMs": 0.891,
+        "atMaxWallMs": 0.891
+      }
+    },
+    "loaded": {
+      "count": 6,
+      "totalMs": 1.3511659999990115,
+      "maxMs": 0.42750000000023647,
+      "cpu": {
+        "count": 6,
+        "totalMs": 1.657,
+        "maxMs": 0.587,
+        "atMaxWallMs": 0.412
+      }
+    },
+    "input": {
+      "count": 6459,
+      "totalMs": 577.4774240001907,
+      "maxMs": 12.121125000001484,
+      "cpu": {
+        "count": 6459,
+        "totalMs": 424.4969999999989,
+        "maxMs": 0.319,
+        "atMaxWallMs": 0.23
+      }
+    },
+    "snapshot": {
+      "count": 1436,
+      "totalMs": 330.1233570001541,
+      "maxMs": 8.050917000000481,
+      "cpu": {
+        "count": 1436,
+        "totalMs": 252.31899999999936,
+        "maxMs": 0.86,
+        "atMaxWallMs": 0.86
+      }
+    },
+    "resume": {
+      "count": 2,
+      "totalMs": 0.9536260000086259,
+      "maxMs": 0.5168340000091121,
+      "cpu": {
+        "count": 2,
+        "totalMs": 1.213,
+        "maxMs": 0.714,
+        "atMaxWallMs": 0.499
+      }
+    },
+    "ping": {
+      "count": 56,
+      "totalMs": 3.329541000009158,
+      "maxMs": 0.3919590000004973,
+      "cpu": {
+        "count": 56,
+        "totalMs": 2.882999999999999,
+        "maxMs": 0.175,
+        "atMaxWallMs": 0.175
+      }
+    },
+    "result": {
+      "count": 1,
+      "totalMs": 0.4867920000106096,
+      "maxMs": 0.4867920000106096,
+      "cpu": {
+        "count": 1,
+        "totalMs": 0.487,
+        "maxMs": 0.487,
+        "atMaxWallMs": 0.487
+      }
+    },
+    "leave": {
+      "count": 2,
+      "totalMs": 0.6637920000066515,
+      "maxMs": 0.6552499999961583,
+      "cpu": {
+        "count": 2,
+        "totalMs": 0.545,
+        "maxMs": 0.538,
+        "atMaxWallMs": 0.538
+      }
+    }
+  },
+  "stalls": [
+    {
+      "delayMs": 346.93904199999815,
+      "elapsedMs": 446.93904199999815,
+      "cpuMs": 0.144,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "scrap_karts",
+          "arena": "scrap_yard"
+        }
+      ]
+    }
+  ],
+  "worstStall": {
+    "delayMs": 346.93904199999815,
+    "elapsedMs": 446.93904199999815,
+    "cpuMs": 0.144,
+    "rooms": [
+      {
+        "state": "playing",
+        "epoch": 1,
+        "game": "scrap_karts",
+        "arena": "scrap_yard"
+      }
+    ]
+  }
+}

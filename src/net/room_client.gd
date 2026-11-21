@@ -3,6 +3,8 @@ extends Node
 signal message_received(message: Dictionary)
 signal transport_lost(reason: String)
 
+const PROTOCOL_VERSION := 2
+
 var socket: WebSocketPeer
 var endpoint := ""
 var _pending: Dictionary = {}
@@ -48,7 +50,7 @@ func send(message: Dictionary) -> bool:
 	if socket == null or socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
 		return false
 	var packet := message.duplicate(true)
-	packet["v"] = 1
+	packet["v"] = PROTOCOL_VERSION
 	return socket.send_text(JSON.stringify(packet)) == OK
 
 
@@ -70,7 +72,7 @@ func _process(_delta: float) -> void:
 			if not parsed is Dictionary:
 				continue
 			if parsed.get("op") == "hello":
-				if int(parsed.get("v", 0)) != 1:
+				if not compatible_hello(parsed):
 					close()
 					transport_lost.emit("protocol_mismatch")
 					return
@@ -84,6 +86,12 @@ func _process(_delta: float) -> void:
 		var reason := "socket_%d" % socket.get_close_code() if _opened else "connect_timeout"
 		close()
 		transport_lost.emit(reason)
+
+
+static func compatible_hello(message: Dictionary) -> bool:
+	var version: Variant = message.get("v")
+	return message.get("op") == "hello" and (version is int or version is float) \
+		and version == PROTOCOL_VERSION
 
 
 func close() -> void:

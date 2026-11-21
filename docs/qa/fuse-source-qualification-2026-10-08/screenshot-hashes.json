@@ -1,0 +1,1409 @@
+{
+  "source": "7f270c506650ea8dbe780df539fc0d316bdddf4a",
+  "shots": [
+    {
+      "locale": "ar",
+      "id": "tank_arena",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/tank_arena-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "26820df5b5795a684af599e733580a2231e1c7410561f716cdf2c5adc98850c7"
+    },
+    {
+      "locale": "ar",
+      "id": "ring_rumble",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/ring_rumble-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "7e3fb1a3c0ed52686323fc3bbe09d18ba25f641dda26af163329c60015a5d878"
+    },
+    {
+      "locale": "ar",
+      "id": "crumble_court",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/crumble_court-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "e5773a1e5dbb961315e054144e6e407926a79c5d31b275287d10f31e1702ad35"
+    },
+    {
+      "locale": "ar",
+      "id": "bumper_bowl",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/bumper_bowl-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "bc6d6cb2cb3319a9900f178cf7300ff8fcafcf85fc0d875df923cc5ad7331dd6"
+    },
+    {
+      "locale": "ar",
+      "id": "fawda",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/fawda-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "e6e1f74f2aa9c3ba180f75fa3b9f477336e3af120ec5112b483490d5a2c066c5"
+    },
+    {
+      "locale": "ar",
+      "id": "goal_guard",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/goal_guard-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "d6be021b5345c95e99debd58352da6d395c5d91999192eabf2032014809f0834"
+    },
+    {
+      "locale": "ar",
+      "id": "magnet_court",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/magnet_court-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "fb581a35873edf10ced5d0bb33929aaa0edb16cdf6127990d4ca1a79fc5514aa"
+    },
+    {
+      "locale": "ar",
+      "id": "storm_heart",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/storm_heart-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "b09ee842354a34e78003e9af19bbc4b3ff95d51755c7bd7bd716a580c70b2b58"
+    },
+    {
+      "locale": "ar",
+      "id": "sky_court",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/sky_court-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "0f562cf4ee79f8198351d7c8cbe7a78ecc708a783bfb8288225e81a8135756c9"
+    },
+    {
+      "locale": "ar",
+      "id": "blast_ball",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/blast_ball-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "ab018f4029e6902975d329bab38d6254a7745ce4d4c45614f70ca39f180b2fda"
+    },
+    {
+      "locale": "ar",
+      "id": "scrap_karts",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/scrap_karts-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "534f170801f82e89a6a051d8f58ecc724318ce3549e6e38be5f09d1572d328e1"
+    },
+    {
+      "locale": "ar",
+      "id": "turret_duel",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/turret_duel-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "cff717ec0281e50f312a22d2f8e46f17fd71e0d47cdae488ea9fd407a7fdf6e4"
+    },
+    {
+      "locale": "ar",
+      "id": "gem_grab",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/gem_grab-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f4153e62c0ad7161dcc1826bc15f7857ccb9ecf6529847c0c7efa6c5a771e3bf"
+    },
+    {
+      "locale": "ar",
+      "id": "star_rush",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/star_rush-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "79adcbd00da766c463bcebcb1cfaf6760343bf4506cd26b175f8f585785e1430"
+    },
+    {
+      "locale": "ar",
+      "id": "paint_grid",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/paint_grid-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "dc2a69b47cd0e60996c6966d1901ea6741c3cb54c526b6544d379e36a9359091"
+    },
+    {
+      "locale": "ar",
+      "id": "mnatiq",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/mnatiq-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "fa9a4c589f427a523be9a26017283926b748ad611b5aa5afabe418b93d333a5f"
+    },
+    {
+      "locale": "ar",
+      "id": "mukharrib",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/mukharrib-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "1dbd8b93bac976a57fa77b8abc520736e29b7b85df7f927408a5fc50beb9e641"
+    },
+    {
+      "locale": "ar",
+      "id": "zone_hold",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/zone_hold-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "bc7509547821d5ecc30acade64d5192e8c15c6818a1bd70b89fe68d65f552154"
+    },
+    {
+      "locale": "ar",
+      "id": "crate_smash",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/crate_smash-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "6b064743ed82e68a47aec0c97465f6f85850e2e2f6954992f061468b1215b1cd"
+    },
+    {
+      "locale": "ar",
+      "id": "lab_crates",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/lab_crates-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "2fd054e5e875b99dc271880a586021cfa2cb2d1244c7ff7321ebaea6ba8f487f"
+    },
+    {
+      "locale": "ar",
+      "id": "crate_relay",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/crate_relay-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "c3d3a27a264d784b3f851ede03bbb225e1469a2c957fe32e3424b38029818c4f"
+    },
+    {
+      "locale": "ar",
+      "id": "hurdle_dash",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/hurdle_dash-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "7346bc489759c36cd8656073faaad619517781dd4d3bf27fe1ce1ccc3998d825"
+    },
+    {
+      "locale": "ar",
+      "id": "kart_sprint",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/kart_sprint-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5d530c83b0c86a90783b4ccfeb044b2e934b44dd28749717a5b133690f3af982"
+    },
+    {
+      "locale": "ar",
+      "id": "color_stand",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/color_stand-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "6d1b38f1195844a208224957267bc9948b3f14b208a4c03ebb7685bd4d2a7529"
+    },
+    {
+      "locale": "ar",
+      "id": "symbol_echo",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/symbol_echo-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "31bfca64cb94a38c6be2ce60abfc293f77ad5aa83e654cdc0f650496a4894ced"
+    },
+    {
+      "locale": "ar",
+      "id": "quick_draw",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/quick_draw-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "1d022eddc127177f9e1f5a45fc1242be1e40353ebfa8f1588d257a65ca6659b3"
+    },
+    {
+      "locale": "ar",
+      "id": "rising_tide",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/rising_tide-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "2c9b6535b358758fc69dac625c03808d9e31976b40ccbe65a7b6a489aef5f2fc"
+    },
+    {
+      "locale": "ar",
+      "id": "sweeper_storm",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/sweeper_storm-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "24c3f5405026bdfe2aabf8879f5268c9237929c0d81df8a9c063b09a6ff7f6b1"
+    },
+    {
+      "locale": "ar",
+      "id": "duel_pit",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/duel_pit-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "611ed2604a1d07386a3122e45fcbc8f830d1dc3a0eaeb6cdbb51b2b5ef2b9b0c"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_forge",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_forge-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "abf457385d77597e24c4059d8a8c4826a5b84154b21191c876389c63c0592da4"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_colossus",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_colossus-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "25aa6b9e80898d243e865c67c24347949c74bbbdc108c23fdeeed4885012e2ff"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_dreadnought",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_dreadnought-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "10f8fec1908f18aeb5654ec06b2c471951dd08119af594d62da5da47b32d3545"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_sovereign",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_sovereign-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "95f57b7e3dd64a12dd663fe7ec15a9933c1d49dde923141d5575aec8af8b4ddc"
+    },
+    {
+      "locale": "ar",
+      "id": "sabaq_sawarikh",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/sabaq_sawarikh-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "943fcc3981cf1d4562f00aa35da73b45467adef9a52f005858fb1c97b3d1cd0b"
+    },
+    {
+      "locale": "ar",
+      "id": "relic_hold",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/relic_hold-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "a57cb240c24e8db597176f0f88ac0a3f8066d97de77b456a3a98d413d48a8dd0"
+    },
+    {
+      "locale": "ar",
+      "id": "tag_hunt",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/tag_hunt-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "ba99f16eab693d6955abcc22c875d709e2e43a11bdb96ffe00f4b635d28fcee1"
+    },
+    {
+      "locale": "ar",
+      "id": "base_siege",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/base_siege-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "66f361a8e95a69283af117601c7172f16db53c0e034e6d21fff6f68deb244e97"
+    },
+    {
+      "locale": "ar",
+      "id": "drift_floes",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/drift_floes-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "45453d846444336436085cf2fdb5be78319da9be86f3e458ca6771aaec0df383"
+    },
+    {
+      "locale": "ar",
+      "id": "duo_clash",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/duo_clash-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "846ad3fd2b53b54a7e8e8167f8a1cb9383bec12ea740116cbd8824e212444ffd"
+    },
+    {
+      "locale": "ar",
+      "id": "tank_arena",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/tank_arena-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "65c698202f8ca2ce5e99a4adaff8c124f43f08c31f3d21cc4599edfc3cd4c47e"
+    },
+    {
+      "locale": "ar",
+      "id": "ring_rumble",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/ring_rumble-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "ca18ee8ed95e162dedb877bb6f03bd03e39f44969cb8e64c01f07465bdf76d62"
+    },
+    {
+      "locale": "ar",
+      "id": "crumble_court",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/crumble_court-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "48717fd1376e9ef769127dc691cfa63bdd9cbc619c14c92ac3791a69ff7aa2db"
+    },
+    {
+      "locale": "ar",
+      "id": "bumper_bowl",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/bumper_bowl-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "01375e8d7bb236ba530c68982a7eae9ebddf84d9f4404726e3ac8dd1086efe93"
+    },
+    {
+      "locale": "ar",
+      "id": "fawda",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/fawda-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "67437d0a4f92c07412ba54f3967b36ea771ce4da1abfeec63ced499f67c3f367"
+    },
+    {
+      "locale": "ar",
+      "id": "goal_guard",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/goal_guard-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "b4d62b78f788784632a76ba1b1b680f7a8f04f187ceb2d61f2fdf0a14520d076"
+    },
+    {
+      "locale": "ar",
+      "id": "magnet_court",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/magnet_court-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "c8d38a85219ff6af4bc29b2394b4f9736465d8e56b91e8ed144d0cbde938c94b"
+    },
+    {
+      "locale": "ar",
+      "id": "storm_heart",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/storm_heart-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "ed92e61e218442c4bf1b00b40676a0d6e830df4b19c50998b5dadfc5f2f379f4"
+    },
+    {
+      "locale": "ar",
+      "id": "sky_court",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/sky_court-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "f9d3d320ce320e112674902503e1d4e240b00603ac50f9c3144eb7a9b4a05957"
+    },
+    {
+      "locale": "ar",
+      "id": "blast_ball",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/blast_ball-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "3688ae4ba90125658a05bd7e7edf5523e86ddeb6984f812d9522fb5f5e7cf86c"
+    },
+    {
+      "locale": "ar",
+      "id": "scrap_karts",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/scrap_karts-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "b164d3bd87c1cfc97a54b13ec52097d4ae9f642a10b861e83dfa2eba1249dcda"
+    },
+    {
+      "locale": "ar",
+      "id": "turret_duel",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/turret_duel-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "9eb4c676a1dc13aed97a6cc03e971b41ec0f438080e566ade0f2266437e59f5b"
+    },
+    {
+      "locale": "ar",
+      "id": "gem_grab",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/gem_grab-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "d2eee7759fb99bbd32a0159a17cdfc8513ff6bbb3f18478f63a1e1de886c4ce7"
+    },
+    {
+      "locale": "ar",
+      "id": "star_rush",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/star_rush-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "8be704a47167d9ce3a73fde589bcfdd43a8369055ad7cbfe70fb446e61a35475"
+    },
+    {
+      "locale": "ar",
+      "id": "paint_grid",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/paint_grid-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "8fadf6a3f159add8ed8cc8f0fd6025ca76a13100f6e7d6a21d98dce5bb76deee"
+    },
+    {
+      "locale": "ar",
+      "id": "mnatiq",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/mnatiq-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "2aa097cb4f4e1b1bd6ccd605a792266b11004ecbe283659b6ef7fdb33156f4f2"
+    },
+    {
+      "locale": "ar",
+      "id": "mukharrib",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/mukharrib-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "283ab29ed91626d9fe9d9e8139b5b4ce3b9da14dd57b296526ed44dcbde25009"
+    },
+    {
+      "locale": "ar",
+      "id": "zone_hold",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/zone_hold-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "5e9dded2ca2ca90a5235b68f6d0818ef8bdf3ef67f5bd301bcc9358f6241779d"
+    },
+    {
+      "locale": "ar",
+      "id": "crate_smash",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/crate_smash-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "3d17fc74b4d21bb56d002e74b308cdd824aa3e967d677e90943e9f011b4eee8d"
+    },
+    {
+      "locale": "ar",
+      "id": "lab_crates",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/lab_crates-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "6d0440c020cddc05faa453ccca591b02de9d5b64219e2b7d05df0955ddf817d9"
+    },
+    {
+      "locale": "ar",
+      "id": "crate_relay",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/crate_relay-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "6e7550350dc88791bc428ab816c4f7678b000962e57b79b7611b9c5352934fb4"
+    },
+    {
+      "locale": "ar",
+      "id": "hurdle_dash",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/hurdle_dash-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "2c72a52a4754d3e3229becb2a821912530fbc2cc4f801906d11b8a8d6b49d43c"
+    },
+    {
+      "locale": "ar",
+      "id": "kart_sprint",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/kart_sprint-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "30771132f83979028f9f0b720dabf90c134251d628453e1de66f62d4dbfcbfed"
+    },
+    {
+      "locale": "ar",
+      "id": "color_stand",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/color_stand-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "a5630a3231cfe9c0bee6b3231bd4cc0bea051ebedfe0256f8f1ed6f9421a8177"
+    },
+    {
+      "locale": "ar",
+      "id": "symbol_echo",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/symbol_echo-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "3c7007318600b625851d9faafa2362ec17b363bb49e957c6f172c2c4304389f5"
+    },
+    {
+      "locale": "ar",
+      "id": "quick_draw",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/quick_draw-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "67b7212e716f613d2a2b4f12f8501113e071ec70c91ebcf22260beafc74b272d"
+    },
+    {
+      "locale": "ar",
+      "id": "rising_tide",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/rising_tide-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "e6991f5bf4c7bdb462bc4807e224b16d23eb6856b5a23552b8f380b49a5a02fc"
+    },
+    {
+      "locale": "ar",
+      "id": "sweeper_storm",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/sweeper_storm-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "fbef185ccb280aced9b56c48c2b445db75e8362c521005067b6a5d0d60ab289d"
+    },
+    {
+      "locale": "ar",
+      "id": "duel_pit",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/duel_pit-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "6915c75fabfeb8cf52a4ce75ede84d914f43d72aa5c8405cf8a9e78bd150d012"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_forge",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_forge-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "7922920993a7c2ccf0d5bc217158fe37ae4bbbb174355f1266d6c8d0079671ac"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_colossus",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_colossus-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "88df0d5d1b0ce6406336d3c94601d6e9bb28d54327732e3dcc7910488a9981ba"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_dreadnought",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_dreadnought-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "15a2210499ff7057803d7117d9680be6105409e6f63885fcb9ad4e2c30ba22bb"
+    },
+    {
+      "locale": "ar",
+      "id": "boss_sovereign",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/boss_sovereign-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "3b6b575f14c19c1258b54649286b5577459b630c317cd4ea0939ae4baad9b1c8"
+    },
+    {
+      "locale": "ar",
+      "id": "sabaq_sawarikh",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/sabaq_sawarikh-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "6dc0d9bbfb9051c3214294d109995fb93f690e95e30b29fa0b3b748891628789"
+    },
+    {
+      "locale": "ar",
+      "id": "relic_hold",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/relic_hold-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "e0bca43d3c329ccadfafc2ea330d248c260b34b21341b70a6aed1cf570baf568"
+    },
+    {
+      "locale": "ar",
+      "id": "tag_hunt",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/tag_hunt-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "ce12af11ba23b4e48258680671371047969a5939d677f8a8b811efb5f7ca8be3"
+    },
+    {
+      "locale": "ar",
+      "id": "base_siege",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/base_siege-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "b20be75ee80ff3cb59e18731004962274d1f7e0ba4e729028d6ecd4d7fcb2671"
+    },
+    {
+      "locale": "ar",
+      "id": "drift_floes",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/drift_floes-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "532b464f679db28dd63265615133563cd0c9f39a9e586b8f6d9e860e3bef2597"
+    },
+    {
+      "locale": "ar",
+      "id": "duo_clash",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-ar-save/screenshots/duo_clash-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "238b59336752a76752ca8de3ced53058417d6216337c0c5ee5ac2022acd7fb6b"
+    },
+    {
+      "locale": "en",
+      "id": "tank_arena",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/tank_arena-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "8181da1ae238ea656e8187fe9e27541a1dd8e20d1cdf7793f34a907f9a209491"
+    },
+    {
+      "locale": "en",
+      "id": "ring_rumble",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/ring_rumble-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "2c361d5ac62502e6364ffdf616f085ab69bfb8033ab2b0e1579a98ad7a52540c"
+    },
+    {
+      "locale": "en",
+      "id": "crumble_court",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/crumble_court-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f5389f73e28daf667de4d35395c206f1f9b1fe4d3344c1a9ed3ceb2ff8360680"
+    },
+    {
+      "locale": "en",
+      "id": "bumper_bowl",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/bumper_bowl-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "e70b38205e95c59680032db7e2c53aa8b5da1456ff3747629be409760f7a1cd2"
+    },
+    {
+      "locale": "en",
+      "id": "fawda",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/fawda-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "b74ae519763e8a7e76458704e7ec71577e172ebb432bbcd27d7a35071e38c168"
+    },
+    {
+      "locale": "en",
+      "id": "goal_guard",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/goal_guard-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "122405c0f8f03a7c39007e285cd122fc30366e7c166cde46081fec0eda852394"
+    },
+    {
+      "locale": "en",
+      "id": "magnet_court",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/magnet_court-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "18cd994f22586e90064d5d35048371b750532ec7db84a14e19553ef0c976a157"
+    },
+    {
+      "locale": "en",
+      "id": "storm_heart",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/storm_heart-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f7c1d8538beb1b06b9b86753b3989a3d4dbf1cd32e133de82258f59adb7e44a3"
+    },
+    {
+      "locale": "en",
+      "id": "sky_court",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/sky_court-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "c29b2d3a4774966d17cc53a8c1b07d4ef9ceb0a812912f1576645b37c93a4e27"
+    },
+    {
+      "locale": "en",
+      "id": "blast_ball",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/blast_ball-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "4f98235d528df8967ad5f6b9acf22fc440a050c3832ce9f2d910f493aede1414"
+    },
+    {
+      "locale": "en",
+      "id": "scrap_karts",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/scrap_karts-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "ae6800a2a4202eac2bdfa292466a43d4159b725913880e4ee8276756b4a57c03"
+    },
+    {
+      "locale": "en",
+      "id": "turret_duel",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/turret_duel-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "24dfde34748a3a91c3aeb706339240c465e8e902804010acab2ae1a5a069edc0"
+    },
+    {
+      "locale": "en",
+      "id": "gem_grab",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/gem_grab-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5f62e79ad9f0eb30cfda85cb5d710aad87ae5f66c115cb3118efd7acf395849a"
+    },
+    {
+      "locale": "en",
+      "id": "star_rush",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/star_rush-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5295e45144ade38b7948bdd366d7f0acc394211331ffa6f29a7f8b17f298db1f"
+    },
+    {
+      "locale": "en",
+      "id": "paint_grid",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/paint_grid-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "d822bfb167d067f0ae5cbcb9c8ea68c2ef8e17869f9fda71d4f1ba0c8c4e0828"
+    },
+    {
+      "locale": "en",
+      "id": "mnatiq",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/mnatiq-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "bad7fe47adaad8a96a61f87b3ae2e6b7a2ba161224e6a13d1c81d6deb48b270e"
+    },
+    {
+      "locale": "en",
+      "id": "mukharrib",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/mukharrib-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "76839cf9627a77abfbc2e3090abe8e2f32000119c59936c61a4dedbe641d7b79"
+    },
+    {
+      "locale": "en",
+      "id": "zone_hold",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/zone_hold-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "3c0f7e15f92cb8cef81da776b298c2fc520029c0efddd0fef82a376cccbab73f"
+    },
+    {
+      "locale": "en",
+      "id": "crate_smash",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/crate_smash-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "fbbb9a51e693a741b9500095febcb5fc01d401d81e202a42f41f4e02ed6910da"
+    },
+    {
+      "locale": "en",
+      "id": "lab_crates",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/lab_crates-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "0c2ac9fd19799095b87de3318201ef3d8a7b502dd9880c27191c26c7208a3757"
+    },
+    {
+      "locale": "en",
+      "id": "crate_relay",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/crate_relay-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5cd211a397a8aef21cc3d08de7604d73a3cffff988a033f9c0f0b547200b76eb"
+    },
+    {
+      "locale": "en",
+      "id": "hurdle_dash",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/hurdle_dash-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "11e4381dcd4411b5b051690e9ffcaddbbbdb81821fb33295005f16486faffa5c"
+    },
+    {
+      "locale": "en",
+      "id": "kart_sprint",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/kart_sprint-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "6122528f586a40487b25e96770afbb1f7f171b38725d9f711a5eb7a01333b140"
+    },
+    {
+      "locale": "en",
+      "id": "color_stand",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/color_stand-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "cea43e4df4dbc5b8c82f639f4168f51ef64581e944eabfff281fbecdc34af572"
+    },
+    {
+      "locale": "en",
+      "id": "symbol_echo",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/symbol_echo-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "04d96b4ab9a0b2956a417374d3fe2e65b191f7bdd058b32e9770a0e581665ffc"
+    },
+    {
+      "locale": "en",
+      "id": "quick_draw",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/quick_draw-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "52ee50d2f8856c67b7211c71777b21d86dfb6a15449aa4b7efae0491a46753a0"
+    },
+    {
+      "locale": "en",
+      "id": "rising_tide",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/rising_tide-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "41c2c6e376bf9a718d89cd81a9265ea70ef3927ac943625a15f4a535ba0f8d4c"
+    },
+    {
+      "locale": "en",
+      "id": "sweeper_storm",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/sweeper_storm-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "a5bb9e59edb70dbc58c85a623f34da944226a0d26d2bc6d5ea8051f2eb6d4e36"
+    },
+    {
+      "locale": "en",
+      "id": "duel_pit",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/duel_pit-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5a87a3ec6c24110e87a353dafbb3176d622336ab9c86be80eb25721d8ffe25e4"
+    },
+    {
+      "locale": "en",
+      "id": "boss_forge",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_forge-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "2888e232a239832d21bbfb5bd461cccaa81a5cb14bbad841ccda5d73ed67c0b1"
+    },
+    {
+      "locale": "en",
+      "id": "boss_colossus",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_colossus-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "b501413d8c942213da908d41e4362e1181b18c642f1718460c4685aaffdde9f6"
+    },
+    {
+      "locale": "en",
+      "id": "boss_dreadnought",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_dreadnought-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "bd4dc925a957cb3bf5371ab01588de5ee843dc237849a6cefd012a3dd54f46cf"
+    },
+    {
+      "locale": "en",
+      "id": "boss_sovereign",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_sovereign-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f86aa39561f7a877e44bdb092dbe5dcd5c4fd82a59b2da28290352a35bdfb625"
+    },
+    {
+      "locale": "en",
+      "id": "sabaq_sawarikh",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/sabaq_sawarikh-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "feae52355a08397698fa3ffae7b2750191ce608e18fe2abe4e2766ff9849b514"
+    },
+    {
+      "locale": "en",
+      "id": "relic_hold",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/relic_hold-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "602a4f19d12d8720ce8bccf6725506dc07599313436a8eff386b3dcaa22fac5c"
+    },
+    {
+      "locale": "en",
+      "id": "tag_hunt",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/tag_hunt-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "ab756eaeab9bb47df796b98da66cea0163800b5390449c7e49fbaf63daa93d9e"
+    },
+    {
+      "locale": "en",
+      "id": "base_siege",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/base_siege-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "1929ae128e0c2b264189b0260329cf90860dda8882290d1a5ed66812681c1ede"
+    },
+    {
+      "locale": "en",
+      "id": "drift_floes",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/drift_floes-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "8538a9201589f6a8c07804f45a7c56f5391f9dca9cdb9477acf6d46cbb33784e"
+    },
+    {
+      "locale": "en",
+      "id": "duo_clash",
+      "orientation": "landscape",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/duo_clash-landscape.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "b8f7709d5e87e3c7654002a3d01a0112542d7a94ac84366dbe5d598d4548e2e3"
+    },
+    {
+      "locale": "en",
+      "id": "tank_arena",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/tank_arena-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "7ee4bc9e69ec8e32c79c517be074c62cee056fb6a9802072fd9f472c00df50a2"
+    },
+    {
+      "locale": "en",
+      "id": "ring_rumble",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/ring_rumble-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "9bec10c2e8d35fea912f5a90fa88d6d7a4c5b6ad693fa632433e68269de75ad5"
+    },
+    {
+      "locale": "en",
+      "id": "crumble_court",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/crumble_court-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "1f3ae8b5eeede51db73a253262233a6afb38d71ba56effcf8571ea3c6fe07cda"
+    },
+    {
+      "locale": "en",
+      "id": "bumper_bowl",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/bumper_bowl-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "705589408bba1c0b8977194ebd4fee7a708c321b3fd22d987f0ef33f009ce8d4"
+    },
+    {
+      "locale": "en",
+      "id": "fawda",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/fawda-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "d2ae8cfd814d6cd555d1b6365851d05cbd76d4c76bee38d1ff169d290add41d2"
+    },
+    {
+      "locale": "en",
+      "id": "goal_guard",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/goal_guard-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "fd6080d77ddf708b6fd21d1a049448785e59e6c90892bfc2630c9759945a711b"
+    },
+    {
+      "locale": "en",
+      "id": "magnet_court",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/magnet_court-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "bc971a7b9fc6764222200e008cfdd1b0c6a971b23e60922c52170c6f8bdb909c"
+    },
+    {
+      "locale": "en",
+      "id": "storm_heart",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/storm_heart-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "d2884c73d4067e3b5c1f31dcb44df42e5d594f30a2d15a83ebeeb37e0c85b43e"
+    },
+    {
+      "locale": "en",
+      "id": "sky_court",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/sky_court-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "678a2cbf299d2e60be6a5eaa7f0731125f254fb40965afdf9cd6b29a66fad05d"
+    },
+    {
+      "locale": "en",
+      "id": "blast_ball",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/blast_ball-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "83cb08138cce34ff9d69e99231d038bafb31ac749b7e6e46d597ab9958083b94"
+    },
+    {
+      "locale": "en",
+      "id": "scrap_karts",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/scrap_karts-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "2ccab7365be9d229e410a3f9701b0a565815feed1b75276a51da0433258db037"
+    },
+    {
+      "locale": "en",
+      "id": "turret_duel",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/turret_duel-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "a264596949fec02f9452485d91f401a2565093632531b25bbb6549385b15e1d3"
+    },
+    {
+      "locale": "en",
+      "id": "gem_grab",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/gem_grab-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "08279414c73bd43bd760da1344f057a6bf0edc1e7f4d35dc6a3734e6e6a34729"
+    },
+    {
+      "locale": "en",
+      "id": "star_rush",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/star_rush-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "5155186077e21e61e4e9ad8a70745ad6d4aa557a9900a65e0800560f7cbafec3"
+    },
+    {
+      "locale": "en",
+      "id": "paint_grid",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/paint_grid-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "2fd9454d86e775e75159adc594e3c5284701359e6ef88797016b81fef9403a0a"
+    },
+    {
+      "locale": "en",
+      "id": "mnatiq",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/mnatiq-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "ff34b3fb19fd37c3ae75e6a9c207099b4de89bdb6871b93e3b01fa2c618c761d"
+    },
+    {
+      "locale": "en",
+      "id": "mukharrib",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/mukharrib-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "d0b15aad51d505d71212f98dd1c3c3b0f6384e5444e1c34b37ef451d77d9d2c9"
+    },
+    {
+      "locale": "en",
+      "id": "zone_hold",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/zone_hold-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "959a2d647f4ad9254cd5424a08e32834a63cc7b69ec62571ea16b2e089ec9ae9"
+    },
+    {
+      "locale": "en",
+      "id": "crate_smash",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/crate_smash-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "a564f412debcfa3aaa2b873517da26865ea35290e8ecb4b5471dc9d805acdd27"
+    },
+    {
+      "locale": "en",
+      "id": "lab_crates",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/lab_crates-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "7c349c3a69210f7e508b4a31b6510d4b3f675343f1f4d67bfb74d583e42fbb18"
+    },
+    {
+      "locale": "en",
+      "id": "crate_relay",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/crate_relay-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "13aaf6c2adc15f7883f1f21f51b0559b7c5b2cf52e23fb62181c30441dac082f"
+    },
+    {
+      "locale": "en",
+      "id": "hurdle_dash",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/hurdle_dash-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "434e9245c84c9d0bd21eb2f15fcf220520c251847f756c8ea836eaa68693c761"
+    },
+    {
+      "locale": "en",
+      "id": "kart_sprint",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/kart_sprint-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "c1d25f246fd8b304f5a799b72331a5809a6b0fd59cdcf2a978a493a5ee41b8b1"
+    },
+    {
+      "locale": "en",
+      "id": "color_stand",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/color_stand-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "35831c2dfe3209ae540fc875f30a483b37b501b6f0d0629bd5cfb15377d77bd1"
+    },
+    {
+      "locale": "en",
+      "id": "symbol_echo",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/symbol_echo-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "22dc02054e9ff3a77bd3c86c0d6f57f99cba6c6aaef593d12e28ecf55aadda3f"
+    },
+    {
+      "locale": "en",
+      "id": "quick_draw",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/quick_draw-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "b92c4bac5bb3212a497cbead1430d847edd50ff4c64d27db67171a1efad8046f"
+    },
+    {
+      "locale": "en",
+      "id": "rising_tide",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/rising_tide-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "a2376fd8ee13cbe1eed0b082609a802e6869402f4c9fd6756ed9bc21bd620f51"
+    },
+    {
+      "locale": "en",
+      "id": "sweeper_storm",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/sweeper_storm-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "3f40a5dd7edd992e7f2146c081bf0481642178dd72a24a4e4570de566303e834"
+    },
+    {
+      "locale": "en",
+      "id": "duel_pit",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/duel_pit-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "834da9c99f249461550278060291f64a36ae85b12aaef35ebb93af6446b3de65"
+    },
+    {
+      "locale": "en",
+      "id": "boss_forge",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_forge-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "ac5e7f749a8b1caefeb16eb5862b97971fad3355ff47512f55759a5037999a17"
+    },
+    {
+      "locale": "en",
+      "id": "boss_colossus",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_colossus-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "d459efaacf6ca987edf12c419b9892674d3def77d5ad308ab7dc64ba0761a7f8"
+    },
+    {
+      "locale": "en",
+      "id": "boss_dreadnought",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_dreadnought-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "5096eb046f6495dc9c6a767db89dc32302da1fa0dcf60f9b79b92628e94b443d"
+    },
+    {
+      "locale": "en",
+      "id": "boss_sovereign",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/boss_sovereign-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "7136468ee0c7087cfabdeffc45549117bcba453e82d659ccda51bc021e2021be"
+    },
+    {
+      "locale": "en",
+      "id": "sabaq_sawarikh",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/sabaq_sawarikh-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "d7d46231fe9452c1e6e1b498d41d660e6347a16e9fd5fca8315c99d8fcc6c6d5"
+    },
+    {
+      "locale": "en",
+      "id": "relic_hold",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/relic_hold-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "b53ab0d8e2609f8e892a9e971178bec0258bcd033ecc593bfc30c699dfe14a4b"
+    },
+    {
+      "locale": "en",
+      "id": "tag_hunt",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/tag_hunt-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "2cac0b814da6cc0417bcbaf7065a9296e09b231c8d372c429973f1be2766bc5a"
+    },
+    {
+      "locale": "en",
+      "id": "base_siege",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/base_siege-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "50122e8f608b8a1d5962a32ccf737015ba794c423fe52e1ef7a521ec35a32415"
+    },
+    {
+      "locale": "en",
+      "id": "drift_floes",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/drift_floes-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "76372ea13947a60e5b0629a5303faadce0e6d5a446a2ab3ff1be09aef9fc4500"
+    },
+    {
+      "locale": "en",
+      "id": "duo_clash",
+      "orientation": "portrait",
+      "image": "/tmp/kras-fuse-current-all39-en-save/screenshots/duo_clash-portrait.png",
+      "width": 540,
+      "height": 960,
+      "sha256": "72e487fe2ede61a9fb3d248eeaad4c3a65b36b16ea7bf7f457cde57933ada945"
+    }
+  ]
+}

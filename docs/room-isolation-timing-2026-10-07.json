@@ -1,0 +1,111 @@
+{
+  "source": "dffeb06dc1c82ff57be9c7889e2f728f9d9df2f3",
+  "scope": "loopback, one room, four synthetic Node clients, no Godot; not production or device acceptance",
+  "duration_ms": 30204.015125,
+  "cpu_ms": 697.404,
+  "input_hz_per_guest": 30,
+  "snapshot_hz": 20,
+  "snapshot_bytes": 627,
+  "inputs_sent": 2688,
+  "snapshots_sent": 593,
+  "input_latency": {
+    "count": 2688,
+    "p50_ms": 0.2540840000001481,
+    "p95_ms": 0.6488329999992857,
+    "p99_ms": 1.182542000000467,
+    "max_ms": 2.8695000000000164
+  },
+  "snapshot_latency": {
+    "count": 1779,
+    "p50_ms": 0.31049999999959255,
+    "p95_ms": 0.6717909999999847,
+    "p99_ms": 1.3471250000002328,
+    "max_ms": 4.2057500000009895
+  },
+  "event_loop_max_ms": 31.178751,
+  "event_loop_p99_ms": 11.714559,
+  "errors": [],
+  "timing": {
+    "operations": {
+      "create": {
+        "count": 1,
+        "totalMs": 1.460958000000005,
+        "maxMs": 1.460958000000005,
+        "cpu": {
+          "count": 1,
+          "totalMs": 1.313,
+          "maxMs": 1.313,
+          "atMaxWallMs": 1.313
+        }
+      },
+      "join": {
+        "count": 3,
+        "totalMs": 0.9678339999999821,
+        "maxMs": 0.4136249999999677,
+        "cpu": {
+          "count": 3,
+          "totalMs": 1.3760000000000001,
+          "maxMs": 0.681,
+          "atMaxWallMs": 0.681
+        }
+      },
+      "ready": {
+        "count": 4,
+        "totalMs": 1.263625999999988,
+        "maxMs": 0.7045840000000112,
+        "cpu": {
+          "count": 4,
+          "totalMs": 0.561,
+          "maxMs": 0.206,
+          "atMaxWallMs": 0.162
+        }
+      },
+      "start": {
+        "count": 1,
+        "totalMs": 0.6834999999999809,
+        "maxMs": 0.6834999999999809,
+        "cpu": {
+          "count": 1,
+          "totalMs": 0.515,
+          "maxMs": 0.515,
+          "atMaxWallMs": 0.515
+        }
+      },
+      "loaded": {
+        "count": 4,
+        "totalMs": 0.19625000000002046,
+        "maxMs": 0.135249999999985,
+        "cpu": {
+          "count": 4,
+          "totalMs": 0.247,
+          "maxMs": 0.198,
+          "atMaxWallMs": 0.198
+        }
+      },
+      "input": {
+        "count": 2688,
+        "totalMs": 69.8677800000304,
+        "maxMs": 0.5133329999989655,
+        "cpu": {
+          "count": 2688,
+          "totalMs": 60.189000000000554,
+          "maxMs": 0.477,
+          "atMaxWallMs": 0.112
+        }
+      },
+      "snapshot": {
+        "count": 593,
+        "totalMs": 63.91788299998109,
+        "maxMs": 2.8789160000014817,
+        "cpu": {
+          "count": 593,
+          "totalMs": 55.44200000000009,
+          "maxMs": 0.759,
+          "atMaxWallMs": 0.235
+        }
+      }
+    },
+    "stalls": [],
+    "worstStall": null
+  }
+}

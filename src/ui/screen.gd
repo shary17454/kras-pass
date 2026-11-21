@@ -49,15 +49,25 @@ func build() -> void:
 
 
 func title(text: String, show_back := true) -> void:
-	var label := UIKit.label(text, UIKit.SIZE_TITLE, UIKit.ACCENT, true)
+	var label := UIKit.label(text, UIKit.SIZE_HEADING, UIKit.ACCENT, true)
+	label.name = "ScreenTitle"
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if show_back:
 		var back := UIKit.button("←" if not Loc.is_rtl() else "→", UIKit.SIZE_HEADING)
 		back.custom_minimum_size = Vector2(84, 64)
+		back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		back.pressed.connect(go_back)
 		header.add_child(back)
 	header.add_child(label)
+
+
+func add_header_detail(control: Control) -> void:
+	# Supplementary content must not compete with the title for phone width.
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if control is Label:
+		control.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(control)
 
 
 func go_back() -> void:

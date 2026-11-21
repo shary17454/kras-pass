@@ -41,7 +41,7 @@ func build() -> void:
 	var arena := ctx.arena as Arena
 	if arena == null:
 		return
-	_pillar = MeshFactory.cylinder(1.6, 5.0, UIKit.PANEL_HI, 0.0, 20)
+	_pillar = MeshFactory.cylinder(1.6, 5.0, MeshFactory.WORLD_PANEL, 0.0, 20)
 	_pillar.position = arena.global_position + Vector3(0, 2.5, 0)
 	ctx.world_root.add_child(_pillar)
 	# Everyone stands on their own mark; movement is irrelevant here, so the
@@ -72,7 +72,7 @@ func _begin_wait() -> void:
 	_locked.clear()
 	_timer = ctx.rng.randf_range(1.6, 4.5)
 	if _pillar != null and is_instance_valid(_pillar):
-		_pillar.material_override = MeshFactory.toon(UIKit.PANEL_HI)
+		_pillar.material_override = MeshFactory.toon(MeshFactory.WORLD_PANEL)
 
 
 func tick(delta: float) -> void:
@@ -147,8 +147,11 @@ func _resolve() -> void:
 			ctx.bump_detail(slot, "correct")
 	if _order.size() > 0:
 		AudioManager.play_sfx("score")
+		if bool(ctx.config.rule("party_tiebreak", false)):
+			# Keep same-tick winners tied; the tournament remaps the contenders.
+			ctx.early_finish = true
 	if _pillar != null and is_instance_valid(_pillar):
-		_pillar.material_override = MeshFactory.toon(UIKit.PANEL_HI)
+		_pillar.material_override = MeshFactory.toon(MeshFactory.WORLD_PANEL)
 
 
 func is_signalled() -> bool:

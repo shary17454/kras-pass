@@ -14,11 +14,13 @@ func setup(a: Dictionary) -> void:
 func build() -> void:
 	title(Loc.t("replay.title"))
 	var entries := Replays.index()
-	header.add_child(UIKit.label("%d · %.1f MB" % [entries.size(), Replays.total_bytes() / 1048576.0],
+	add_header_detail(UIKit.label("%d · %.1f MB" % [entries.size(), Replays.total_bytes() / 1048576.0],
 		UIKit.SIZE_SMALL, UIKit.dim_color()))
 
 	if entries.is_empty():
-		body.add_child(UIKit.centered(Loc.t("replay.empty"), UIKit.SIZE_BODY, UIKit.dim_color()))
+		var empty := UIKit.centered(Loc.t("replay.empty"), UIKit.SIZE_BODY, UIKit.dim_color())
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(empty)
 		return
 
 	var pair := Widgets.scroll_grid(1)

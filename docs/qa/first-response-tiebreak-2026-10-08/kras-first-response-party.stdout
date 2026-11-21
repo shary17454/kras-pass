@@ -1,0 +1,56 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── local party core ────────────────────────────────────────────
+TEST_START: local party core / unconfigured online endpoint cannot masquerade as a room
+WARNING: [WRN][Net] online endpoint is not configured
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] host_online (res://src/net/net_service.gd:123)
+         [3] _network_boundary (res://tests/suites/test_party.gd:41)
+         [4] run (res://tests/suites/test_party.gd:6)
+         [5] _ready (res://tests/test_runner.gd:202)
+WARNING: [WRN][Net] online endpoint is not configured
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _write (res://src/core/logger.gd:75)
+         [1] w (res://src/core/logger.gd:34)
+         [2] join_online (res://src/net/net_service.gd:133)
+         [3] _network_boundary (res://tests/suites/test_party.gd:42)
+         [4] run (res://tests/suites/test_party.gd:6)
+         [5] _ready (res://tests/test_runner.gd:202)
+TEST_START: local party core / local lobby enforces capacity, readiness and match roster
+TEST_START: local party core / one short cup, one optional double final, no duplicate rewards
+TEST_START: local party core / tied leaders play a separate remapped reaction round
+TEST_START: local party core / repeated true draws terminate fairly
+TEST_START: local party core / aborted and malformed results never advance the cup
+TEST_START: local party core / short party races explicitly opt in without changing ordinary races
+TEST_START: local party core / first-to-cups ends early and ranks by cups, not points
+TEST_START: local party core / simultaneous cup target launches a deciding round
+TEST_START: local party core / legacy tournament save restores as fixed-points mode
+TEST_START: local party core / JSON round trip resumes the exact next game and rules
+TEST_START: local party core / favorites are unique, local, and exclude bosses
+TEST_START: local party core / battery saver is a reversible effective override
+TEST_START: local party core / every named human earns their own stats; guests earn no host stats
+TEST_START: local party core / eight recognizable archetypes with bounded perks and equal budgets
+TEST_START: local party core / all game controls fit separate local regions in both orientations
+TEST_START: local party core / four touch sources keep fingers and input frames independent
+TEST_START: local party core / pooled shells reset variant state
+TEST_START: local party core / tank ammo variants use the same match and bounded projectile pool
+TEST_START: local party core / background pause releases every finger and settings preserve the match
+TEST_START: local party core / wide local arenas frame every competitor outside touch and score strips
+TEST_START: local party core / collector skill chooses less-contested visible loot without hidden buffs
+TEST_START: local party core / base default methods do not count as a game's scoring implementation
+
+finished in 3.0s
+
+════════════════════════════════════════════════════════════════
+ALL TESTS PASSED — 4171 assertions
+════════════════════════════════════════════════════════════════

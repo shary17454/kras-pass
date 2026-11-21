@@ -75,6 +75,7 @@ static var _contacts := {}
 static var _pair_cooldown := {}
 var health := 100.0
 var max_health := 100.0
+var health_defeat_enabled := true
 var damage_percent := 0.0    ## combat games: higher = flies further
 var lives := 1
 var carrying := 0            ## generic "carried items" counter for crate/gem games
@@ -104,7 +105,7 @@ var _rig := CharacterRig.new()   ## limbs and face, when this body has them
 var _markers: Node3D             ## ground ring + overhead pip, in player colour
 var _is_local := false
 var _shocked := 0.0         ## sparks + lost control from an electric hit
-var _state_fx: Node3D       ## persistent status visuals, built on first need
+var _state_fx: Node3D       ## persistent status visuals, prepared before play
 var _size_mutator := 1.0
 var _size_power := 1.0
 var _size_game := 1.0        ## per-mini-game baseline, independent of mutators/power-ups
@@ -154,6 +155,8 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 		friction *= 0.58
 		acceleration *= 0.9
 	_build_visual()
+	if DisplayServer.get_name() != "headless":
+		_build_state_fx()
 
 
 func _build_collision() -> void:
@@ -199,6 +202,10 @@ func _apply_character() -> void:
 	air_control *= d.perk_factor("air_control")
 	knock_resist *= d.perk_factor("resistance")
 	if locomotion == Locomotion.DRIVE:
+		# Preserve neutral pace while leaving handling and weapon counters room
+		# to matter over several laps; all input sources use the same budget.
+		var speed_scale := clampf(float(t.get("drive_speed_stat_scale", 1.0)), 0.0, 1.0)
+		top_speed = base_speed + speed_range * lerpf(0.5, d.speed, speed_scale)
 		top_speed *= float(t.get("drive_speed_mult", 1.5))
 		acceleration *= float(t.get("drive_accel_mult", 0.55))
 	max_health = float(t.get("base_health", 100.0))
@@ -268,6 +275,18 @@ func _build_markers() -> void:
 	collar.name = "PipCollar"
 	collar.position = Vector3(0, 2.62, 0)
 	_markers.add_child(collar)
+	var identity := Label3D.new()
+	identity.name = "PlayerSymbol"
+	identity.text = PlayerConfig.SYMBOLS[clampi(slot, 0, 3)]
+	identity.font = UIKit.font_bold()
+	identity.font_size = 64
+	# Personal vehicle cameras are much closer than shared arena cameras.
+	identity.pixel_size = 0.005 if locomotion == Locomotion.DRIVE else 0.025
+	identity.outline_size = 16
+	identity.outline_modulate = Color(0.02, 0.02, 0.02, 1.0)
+	identity.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	identity.position = Vector3(0, 3.25, 0)
+	_markers.add_child(identity)
 
 
 ## The local player's own pip is larger, because "where am I" is a different
@@ -297,8 +316,11 @@ func tick(frame: InputFrame, delta: float) -> void:
 	if _hitstop > 0.0:
 		_hitstop -= delta
 		velocity = Vector3.ZERO
+		var collision_started := DevTools.operations.begin()
 		move_and_slide()
+		DevTools.operations.finish_physics(self, slot, collision_started)
 		return
+	var operation_started := DevTools.operations.begin()
 	_pre_vel = velocity
 	_advance_timers(delta)
 
@@ -320,14 +342,23 @@ func tick(frame: InputFrame, delta: float) -> void:
 
 	_apply_impulse(delta)
 	impact_speed = Vector2(velocity.x, velocity.z).length()
+	DevTools.operations.finish("fighter.integrate", operation_started)
+	operation_started = DevTools.operations.begin()
 	move_and_slide()
+	DevTools.operations.finish_physics(self, slot, operation_started)
+	operation_started = DevTools.operations.begin()
 	_collect_body_contacts()
 	if not _was_on_floor and is_on_floor():
 		_squash = Vector3(1.22, 0.74, 1.22)
 		landed.emit()
 	_was_on_floor = is_on_floor()
+	DevTools.operations.finish("fighter.contacts", operation_started)
+	operation_started = DevTools.operations.begin()
 	_update_visual(delta, wish)
+	DevTools.operations.finish("fighter.visual", operation_started)
+	operation_started = DevTools.operations.begin()
 	_emit_ground_spray(delta)
+	DevTools.operations.finish("fighter.ground_fx", operation_started)
 
 
 func _advance_timers(delta: float) -> void:
@@ -356,6 +387,7 @@ func _handle_buttons(frame: InputFrame) -> void:
 	if can_jump and frame.just_pressed(InputFrame.Btn.JUMP) and is_on_floor():
 		velocity.y = jump_velocity * float(mods["jump"])
 		_squash = Vector3(0.78, 1.3, 0.78)
+		EventBus.player_jumped.emit(slot)
 	if can_dash and frame.just_pressed(InputFrame.Btn.DASH) and _dash_cd <= 0.0:
 		_do_dash(frame)
 	if can_attack and frame.just_pressed(InputFrame.Btn.ATTACK) and _attack_cd <= 0.0:
@@ -370,6 +402,13 @@ func can_afford_dash() -> bool:
 	return charge >= float(_tuning.get("dash_cost", 0.34))
 
 
+func dash_direction(input_move: Vector2) -> Vector3:
+	var dir := Vector3(input_move.x, 0, input_move.y)
+	if locomotion == Locomotion.DRIVE or dir.length_squared() < 0.05:
+		dir = facing
+	return dir.normalized()
+
+
 func _do_dash(frame: InputFrame) -> void:
 	if not can_afford_dash():
 		return
@@ -380,10 +419,7 @@ func _do_dash(frame: InputFrame) -> void:
 	# every kart boost toward world -Z regardless of heading — half the lap the
 	# boost was a brake, and the tiers that boost most paid the most for it. A
 	# vehicle boost goes where the nose points.
-	var dir := Vector3(frame.move.x, 0, frame.move.y)
-	if locomotion == Locomotion.DRIVE or dir.length_squared() < 0.05:
-		dir = facing
-	dir = dir.normalized()
+	var dir := dash_direction(frame.move)
 	var t := _tuning
 	_impulse += dir * float(t.get("dash_impulse", 15.0)) * float(mods["speed"])
 	_dash_cd = float(t.get("dash_cooldown", 0.85)) / maxf(0.2, float(mods["dash"]))
@@ -424,7 +460,18 @@ func _do_attack() -> void:
 ## melee, explosions, hazards, karts, balls — goes through here so shields,
 ## invulnerability and weight are applied exactly once.
 func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float = 0.0, ignore_shield: bool = false) -> bool:
-	if not alive or _invuln > 0.0:
+	if _invuln > 0.0:
+		return false
+	return _apply_hit(from_slot, direction, strength, damage, ignore_shield)
+
+
+## Ram damage is resolved by the controller's per-pair cooldown, not hit immunity.
+func take_ram_hit(from_slot: int, direction: Vector3, strength: float) -> bool:
+	return _apply_hit(from_slot, direction, strength, 0.0, true)
+
+
+func _apply_hit(from_slot: int, direction: Vector3, strength: float, damage: float, ignore_shield: bool) -> bool:
+	if not alive:
 		return false
 	if from_slot >= 0 and teammates.has(from_slot):
 		return false
@@ -445,7 +492,8 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	_impulse += direction * push
 	_impulse.y += push * float(_tuning.get("knock_lift", 0.22))
 	damage_percent += damage
-	health -= damage
+	if health_defeat_enabled:
+		health -= damage
 	_stun = maxf(_stun, float(_tuning.get("hit_stun", 0.16)) * (data.perk_factor("recovery") if data != null else 1.0))
 	_invuln = maxf(_invuln, float(_tuning.get("hit_invuln", 0.12)) * (data.perk_factor("invulnerability") if data != null else 1.0))
 	_hitstop = float(_tuning.get("hitstop", 0.05))
@@ -470,7 +518,7 @@ func take_hit(from_slot: int, direction: Vector3, strength: float, damage: float
 	InputRouter.rumble(slot, clampf(push * 0.035, 0.15, 0.95), 0.16)
 	AudioManager.play_sfx("hit", global_position, _voice())
 	_spawn_burst(data.accent if data != null else Color.WHITE, 7)
-	if health <= 0.0:
+	if health_defeat_enabled and health <= 0.0:
 		_on_defeated(from_slot)
 	return true
 
@@ -670,14 +718,20 @@ func _integrate_drive(wish: Vector3, delta: float) -> void:
 	# what makes a vehicle arena feel different from a walking one even though
 	# both use the same actor.
 	var t := _tuning
-	var steer_rate := float(t.get("drive_steer", 3.0)) * (0.35 + 0.65 * clampf(speed_ratio(), 0.0, 1.0))
+	# Normalize against the neutral character to preserve established kart handling.
+	var neutral_turn := float(t.get("turn_base", 7.0)) + float(t.get("turn_range", 10.0)) * 0.5
+	var handling := turn_rate / maxf(neutral_turn, 0.0001)
+	var steer_rate := float(t.get("drive_steer", 3.0)) * handling * (0.35 + 0.65 * clampf(speed_ratio(), 0.0, 1.0))
 	_steer -= wish.x * steer_rate * delta
 	var forward := Vector3(sin(_steer), 0.0, cos(_steer))
 	var throttle := -wish.z
 	var target := forward * throttle * top_speed * float(mods["speed"]) * float(mutator["speed"])
 	var a := acceleration * delta
-	velocity.x = move_toward(velocity.x, target.x, a if absf(throttle) > 0.05 else friction * 0.7 * delta)
-	velocity.z = move_toward(velocity.z, target.z, a if absf(throttle) > 0.05 else friction * 0.7 * delta)
+	# One planar budget keeps acceleration and braking independent of road yaw.
+	var planar := Vector2(velocity.x, velocity.z).move_toward(Vector2(target.x, target.z),
+		a if absf(throttle) > 0.05 else friction * 0.7 * delta)
+	velocity.x = planar.x
+	velocity.z = planar.y
 	if not is_on_floor():
 		velocity.y -= _gravity() * delta
 	elif velocity.y < 0.0:
@@ -802,7 +856,10 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 	else:
 		_visual.rotation.z = lerp(_visual.rotation.z, 0.0, clampf(10.0 * delta, 0.0, 1.0))
 	_update_markers(delta)
+	var operation_started := DevTools.operations.begin()
 	_update_state_fx(delta)
+	DevTools.operations.finish("fighter.state_fx", operation_started)
+	operation_started = DevTools.operations.begin()
 	_rig.tick(delta, {
 		"speed": speed_ratio(),
 		"on_floor": is_on_floor(),
@@ -812,6 +869,7 @@ func _update_visual(delta: float, wish: Vector3) -> void:
 		"frozen": float(mods["frozen"]) > 0.0 or _shocked > 0.0,
 		"panic": clampf(1.0 - _edge_margin / 2.6, 0.0, 1.0) if is_on_floor() else 0.0,
 	})
+	DevTools.operations.finish("fighter.rig", operation_started)
 
 
 ## What is happening to this body, made visible. A power-up the player cannot
@@ -838,6 +896,7 @@ func _update_markers(delta: float) -> void:
 	var ring := _markers.get_node_or_null("Ring") as Node3D
 	if ring != null and is_instance_valid(ring):
 		var pulse := 1.0 + sin(_fx_time * 4.0) * (0.06 if _is_local else 0.03)
+		pulse *= 1.18 if _is_local else 1.0
 		ring.scale = Vector3(pulse, 1.0, pulse)
 
 
@@ -879,6 +938,8 @@ func _update_state_fx(delta: float) -> void:
 
 
 func _build_state_fx() -> void:
+	if is_instance_valid(_state_fx):
+		return
 	_state_fx = Node3D.new()
 	_state_fx.name = "StateFX"
 	add_child(_state_fx)

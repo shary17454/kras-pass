@@ -22,7 +22,6 @@ func _init() -> void:
 	sphere.radius = 1.05
 	cs.shape = sphere
 	add_child(cs)
-	body_entered.connect(_on_body_entered)
 
 
 func configure(d: PowerUpDef) -> void:
@@ -75,9 +74,12 @@ func place(p: Vector3) -> void:
 	_bob = float(_base_y * 7.13) + float(p.x * 1.31 + p.z * 2.17)
 
 
-func _on_body_entered(body: Node) -> void:
-	if not active or not (body is Fighter) or not body.alive:
+func collect_overlaps() -> void:
+	if not active or not is_monitoring():
 		return
-	active = false
-	set_deferred("monitoring", false)
-	collected.emit(self, body.slot)
+	for body in get_overlapping_bodies():
+		if body is Fighter and body.alive:
+			active = false
+			set_deferred("monitoring", false)
+			collected.emit(self, body.slot)
+			return

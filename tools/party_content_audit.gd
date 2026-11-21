@@ -1,5 +1,6 @@
 extends Node
 ## Structural validation is necessary, but never sufficient for READY.
+const Evidence = preload("res://tools/balance_evidence.gd")
 
 
 func _ready() -> void:
@@ -11,10 +12,12 @@ func _ready() -> void:
 			balance = parsed
 	var measured := {}
 	var sources := {}
+	var reports := {}
 	for row in balance.get("games", []):
 		var id := String(row.get("id", row.get("game_id", "")))
 		measured[id] = row
 		sources[id] = balance_path
+		reports[id] = balance
 	var rechecks: Array[String] = []
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--recheck="):
@@ -27,8 +30,10 @@ func _ready() -> void:
 			for row in parsed.get("games", []):
 				measured[String(row.get("id", ""))] = row
 				sources[String(row.get("id", ""))] = path
+				reports[String(row.get("id", ""))] = parsed
 			rechecks.append(path)
 	var original_locale := Loc.locale
+	var source_fingerprint := Evidence.capture()
 	var rows: Array = []
 	var counts := {"READY": 0, "NEEDS_POLISH": 0, "NEEDS_BALANCE": 0, "REWORK": 0, "BROKEN": 0}
 	for game in Registry.all_minigames():
@@ -38,8 +43,9 @@ func _ready() -> void:
 			for problem in MiniGameValidator.validate(game):
 				errors.append(locale + ": " + problem)
 		var sample: Dictionary = measured.get(game.id, {})
-		var flags: Array = sample.get("flags", [])
-		var status := "NEEDS_BALANCE" if not flags.is_empty() else "NEEDS_POLISH"
+		var flags: Array = sample.get("flags", []) if sample.get("flags", []) is Array else []
+		var evidence_issues := Evidence.problems(reports.get(game.id, {}), sample, source_fingerprint)
+		var status := "NEEDS_BALANCE" if not flags.is_empty() or not evidence_issues.is_empty() else "NEEDS_POLISH"
 		if int(sample.get("severity", 0)) >= 2:
 			status = "REWORK"
 		if not errors.is_empty():
@@ -60,9 +66,11 @@ func _ready() -> void:
 			"players": [game.min_players, game.max_players], "duration": game.duration,
 			"input": ControlProfile.NAMES.get(game.control_profile, "unknown"),
 			"status": status, "validation_errors": errors, "balance_flags": flags,
+			"balance_evidence_issues": evidence_issues,
 			"code": code, "balance_source": sources.get(game.id, "not measured"),
 			"balance_evidence": sample,
 			"reason": "Structural validation failed" if status == "BROKEN" else
+				"Balance evidence is missing, stale or incomplete: " + "; ".join(evidence_issues) if not evidence_issues.is_empty() else
 				"Balance simulation flagged this game; confirm on a representative sample" if not flags.is_empty() else
 				"Automated structure valid; game-specific playability and device QA not signed off",
 			"release_gate": "Real-device portrait/landscape playtest, fair-AI review, representative balance sample and sustained frame-time/thermal capture remain required."})
@@ -75,6 +83,7 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	file.store_string(JSON.stringify({"generated": Time.get_datetime_string_from_system(),
+		"simulation_source_fingerprint": source_fingerprint,
 		"balance_generated": balance.get("generated", "not measured"),
 		"balance_runs_per_game": balance.get("runs_per_game", 0),
 		"rechecks": rechecks,

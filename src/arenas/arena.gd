@@ -16,10 +16,12 @@ signal fighter_submerged(fighter)
 const TILE_SIZE := 2.0
 const CraterFloor = preload("res://src/arenas/crater_floor.gd")
 var _crater_floor
+var _island_routes := AStar3D.new()
 
 var def: ArenaDef
 var tiles: Array[ArenaTile] = []
 var spawn_points: Array[Vector3] = []
+var _race_start_points: Array[Vector3] = []
 var fall_y := -14.0
 var current_radius := 12.0
 
@@ -66,6 +68,7 @@ var _sky_dome: SkyDome
 
 func build(arena_def: ArenaDef) -> void:
 	def = arena_def
+	_race_start_points.clear()
 	fall_y = def.fall_y
 	current_radius = def.radius
 	_static_root = Node3D.new()
@@ -100,6 +103,25 @@ func build(arena_def: ArenaDef) -> void:
 		var structures: Node3D = load("res://src/arenas/race_structures.gd").new()
 		add_child(structures)
 		structures.build(self)
+
+
+func assign_race_starts(match_seed: int) -> void:
+	if def == null or def.shape not in ["oval", "circuit"] or spawn_points.size() != 4:
+		return
+	if _race_start_points.is_empty():
+		_race_start_points.assign(spawn_points)
+	# Keep lane allocation independent of the shared AI/item random stream.
+	var random := RandomNumberGenerator.new()
+	random.seed = match_seed ^ 0x4b525347
+	var order := [0, 1, 2, 3]
+	for index in range(3, 0, -1):
+		var other := random.randi_range(0, index)
+		var previous: int = order[index]
+		order[index] = order[other]
+		order[other] = previous
+	spawn_points.clear()
+	for index in order:
+		spawn_points.append(_race_start_points[index])
 
 
 static func scenery_script(arena_def: ArenaDef) -> String:
@@ -257,11 +279,11 @@ func splash_at(pos: Vector3) -> void:
 	add_child(burst)
 	burst.global_position = at
 	var ring := MeshFactory.torus(0.5, 1.15, Color(0.75, 0.93, 1.0), 0.9)
-	ring.global_position = at + Vector3(0, 0.06, 0)
 	add_child(ring)
+	ring.global_position = at + Vector3(0, 0.06, 0)
 	var tween := ring.create_tween().set_parallel(true)
 	tween.tween_property(ring, "scale", Vector3(3.4, 1.0, 3.4), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(ring, "modulate:a", 0.0, 0.7)
+	tween.tween_property(ring, "transparency", 1.0, 0.7)
 	tween.chain().tween_callback(ring.queue_free)
 
 
@@ -295,6 +317,60 @@ func annular_path_clear(from: Vector3, to: Vector3, margin: float = 0.6) -> bool
 	var inner := current_radius * (0.55 if def.shape == "oval" else 0.45)
 	var nearest := Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b)
 	return maxf(a.length(), b.length()) <= current_radius - margin and nearest.length() >= inner + margin
+
+
+## Public, static floor topology only; no opponent or pickup state is read.
+func walking_waypoint(from: Vector3, target: Vector3) -> Vector3:
+	if _island_routes.get_point_count() == 0 or def == null or def.shape != "islands":
+		return target
+	var start := from - global_position
+	var finish := target - global_position
+	if _island_path_clear(start, finish):
+		return target
+	var path := _island_routes.get_point_path(_island_nearest_node(start), _island_nearest_node(finish))
+	# Skip only waypoints with a supported straight approach, never cut a gap.
+	for index in range(path.size() - 1, -1, -1):
+		if _island_path_clear(start, path[index]):
+			return global_position + path[index]
+	return global_position + path[0] if not path.is_empty() else from
+
+
+func _island_nearest_node(point: Vector3) -> int:
+	var closest := 0
+	var distance := INF
+	for id in _island_routes.get_point_ids():
+		var offset := _island_routes.get_point_position(id) - point
+		var candidate := Vector2(offset.x, offset.z).length_squared()
+		if candidate < distance:
+			distance = candidate
+			closest = id
+	return closest
+
+
+func _island_path_clear(from: Vector3, target: Vector3) -> bool:
+	if not _island_floor_supported(Vector2(from.x, from.z)) or not _island_floor_supported(Vector2(target.x, target.z)):
+		return false
+	var count := maxi(1, ceili(Vector2(target.x - from.x, target.z - from.z).length() / 0.2))
+	for step in count + 1:
+		var point := from.lerp(target, float(step) / count)
+		if not _island_floor_supported(Vector2(point.x, point.z)):
+			return false
+	return true
+
+
+func _island_floor_supported(point: Vector2) -> bool:
+	if point.length() <= def.radius * 0.42:
+		return true
+	for island in 5:
+		var angle := TAU * island / 5.0
+		var direction := Vector2(cos(angle), sin(angle))
+		if point.distance_to(direction * def.radius * 0.78) <= def.radius * 0.26:
+			return true
+		var along := point.dot(direction)
+		var across := absf(point.cross(direction))
+		if along >= def.radius * 0.36 and along <= def.radius * 0.52 + 0.001 and across <= 0.6:
+			return true
+	return false
 
 
 func annular_waypoint(from: Vector3, target: Vector3, margin: float = 0.6) -> Vector3:
@@ -639,6 +715,14 @@ func _build_cross() -> void:
 func _build_tiles(crumbling: bool) -> void:
 	var span := int(ceil(def.radius / TILE_SIZE))
 	var t := Balance.table("tuning").get("arena", {})
+	var delay := float(t.get("tile_break_delay", 0.9))
+	var respawn := float(t.get("tile_respawn", 6.0)) if crumbling else 0.0
+	if crumbling:
+		for hazard in def.hazards:
+			if String(hazard.get("type", "")) == "crumble":
+				delay = clampf(float(hazard.get("delay", delay)), 0.1, ArenaTile.MAX_CRUMBLE_DELAY)
+				respawn = clampf(float(hazard.get("respawn", respawn)), 0.0, 10.0)
+				break
 	for gx in range(-span, span + 1):
 		for gz in range(-span, span + 1):
 			var pos := Vector3(gx * TILE_SIZE, 0.0, gz * TILE_SIZE)
@@ -650,8 +734,8 @@ func _build_tiles(crumbling: bool) -> void:
 			tile.grid_x = gx
 			tile.grid_z = gz
 			tile.crumbles = crumbling
-			tile.crumble_delay = float(t.get("tile_break_delay", 0.9))
-			tile.respawn_time = float(t.get("tile_respawn", 6.0)) if crumbling else 0.0
+			tile.crumble_delay = delay
+			tile.respawn_time = respawn
 			tile.position = pos
 			_static_root.add_child(tile)
 			var shade := def.floor_color.lightened(0.07) if (gx + gz) % 2 == 0 else def.floor_color
@@ -705,8 +789,9 @@ func _build_oval() -> void:
 	line.rotation.y = PI * 0.5
 	_static_root.add_child(line)
 	spawn_points.clear()
+	var lane_spacing := minf((def.radius - inner) * 0.22, 1.6)
 	for i in 4:
-		spawn_points.append(Vector3(ring_mid + (i % 2) * 1.8 - 0.9, 1.3, -1.4 - float(i / 2) * 2.6))
+		spawn_points.append(Vector3(ring_mid + (float(i) - 1.5) * lane_spacing, 1.3, -1.4))
 
 
 ## Authored centre lines are shared by road geometry, checkpoints and the AI.
@@ -747,12 +832,11 @@ func _build_circuit() -> void:
 
 	var side := Vector3(-fwd.z, 0.0, fwd.x)
 	spawn_points.clear()
+	var lane_spacing := minf(track_width * 0.22, 1.6)
 	for i in 4:
-		# Two-by-two grid behind the line. The row gap is deliberately small:
-		# it only has to read as a grid, and every metre of it is a head start
-		# handed to the same two slots in every match.
-		spawn_points.append(start - fwd * (2.2 + float(i / 2) * 1.6)
-			+ side * (float(i % 2) * 3.0 - 1.5) + Vector3(0, 1.3, 0))
+		# A shared start depth avoids a permanent head start for the front row.
+		spawn_points.append(start - fwd * 2.2
+			+ side * (float(i) - 1.5) * lane_spacing + Vector3(0, 1.3, 0))
 
 
 func _circuit_walls(h: float) -> void:
@@ -837,9 +921,11 @@ func _build_pit() -> void:
 	_add_static_cylinder(def.radius, def.thickness, Vector3(0, -def.thickness * 0.5, 0), def.floor_color)
 	# Three tiers of ledges so a climbing game has real vertical structure.
 	var tiers := 3
+	var step_height := def.param("step_height", 2.3)
+	var summit_gap := def.param("summit_gap", 2.2)
 	for tier in range(1, tiers + 1):
-		var y := float(tier) * 2.3
-		var count := 6 + tier
+		var y := float(tier) * step_height
+		var count := clampi(roundi(def.param("ledge_count", float(6 + tier))), 4, 16)
 		var r := def.radius * (0.85 - 0.16 * tier)
 		for i in count:
 			var ang := TAU * i / count + tier * 0.4
@@ -848,7 +934,7 @@ func _build_pit() -> void:
 				Vector3(cos(ang) * r, y, sin(ang) * r),
 				def.floor_color.lightened(0.06 * tier))
 			body.rotation.y = -ang
-	var top := _add_static_cylinder(2.2, 0.5, Vector3(0, float(tiers) * 2.3 + 2.2, 0), def.accent_color.darkened(0.2))
+	var top := _add_static_cylinder(2.2, 0.5, Vector3(0, float(tiers) * step_height + summit_gap, 0), def.accent_color.darkened(0.2))
 	top.name = "Summit"
 	var rim := MeshFactory.torus(def.radius - 0.35, def.radius + 0.1, def.accent_color, 0.7)
 	rim.position = Vector3(0, 0.06, 0)
@@ -856,6 +942,8 @@ func _build_pit() -> void:
 
 
 func _build_islands() -> void:
+	_island_routes.clear()
+	_island_routes.add_point(0, Vector3.ZERO)
 	_add_static_cylinder(def.radius * 0.42, def.thickness, Vector3(0, -def.thickness * 0.5, 0), def.floor_color)
 	var satellites := 5
 	spawn_points.clear()
@@ -872,10 +960,33 @@ func _build_islands() -> void:
 	# collection games readable for newcomers.
 	for i in satellites:
 		var ang := TAU * i / satellites
-		var body := _add_static_box(Vector3(1.6, def.thickness * 0.6, def.radius * 0.42),
-			Vector3(cos(ang) * def.radius * 0.5, -0.35, sin(ang) * def.radius * 0.5),
+		var direction := Vector3(cos(ang), 0, sin(ang))
+		# Start inside the central island so the highest ramp stays below
+		# the walking slope limit even for the heavier characters.
+		var start := direction * def.radius * 0.36
+		var finish := direction * def.radius * 0.52
+		finish.y = -0.2 + float(i % 3) * 0.9
+		var along := (finish - start).normalized()
+		var normal := (Vector3.UP - along * along.y).normalized()
+		var thickness := def.thickness * 0.6
+		# Align the top face with the floors, not the box center.
+		var body := _add_static_box(
+			Vector3(1.6, thickness, start.distance_to(finish) + 0.002),
+			(start + finish) * 0.5 - normal * thickness * 0.5,
 			def.accent_color.darkened(0.45))
-		body.rotation.y = -ang + PI * 0.5
+		body.basis = Basis(normal.cross(along), normal, along)
+		var first := i * 3 + 1
+		var inner := direction * def.radius * 0.32
+		var outer := direction * def.radius * 0.62
+		outer.y = finish.y
+		var island_center := direction * def.radius * 0.78
+		island_center.y = finish.y
+		_island_routes.add_point(first, inner)
+		_island_routes.add_point(first + 1, outer)
+		_island_routes.add_point(first + 2, island_center)
+		_island_routes.connect_points(0, first)
+		_island_routes.connect_points(first, first + 1)
+		_island_routes.connect_points(first + 1, first + 2)
 
 
 func _build_walls() -> void:
@@ -1076,6 +1187,23 @@ func _add_weather() -> void:
 
 
 func _add_ice_surface_marks() -> void:
+	for batch in _ice_surface_mark_batches().values():
+		var instances := MultiMesh.new()
+		instances.transform_format = MultiMesh.TRANSFORM_3D
+		instances.mesh = batch.mesh
+		instances.instance_count = batch.transforms.size()
+		for index in instances.instance_count:
+			instances.set_instance_transform(index, batch.transforms[index])
+		var node := MultiMeshInstance3D.new()
+		node.name = "IceSurfaceMarks"
+		node.multimesh = instances
+		node.material_override = batch.material
+		node.cast_shadow = batch.shadow
+		_static_root.add_child(node)
+
+
+func _ice_surface_mark_batches() -> Dictionary:
+	var batches := {}
 	var crack_color := Color(0.42, 0.70, 0.82, 0.55)
 	for i in 26:
 		var strip := MeshFactory.box(Vector3(1.2 + 0.55 * float(i % 4), 0.026, 0.045), crack_color)
@@ -1084,7 +1212,7 @@ func _add_ice_surface_marks() -> void:
 		strip.position = Vector3(cos(ang) * r, 0.08, sin(ang) * r)
 		strip.rotation.y = -ang + 0.35 * sin(float(i))
 		strip.material_override = MeshFactory.transparent(Color(0.25, 0.66, 0.82), 0.5)
-		_static_root.add_child(strip)
+		_collect_ice_mark(batches, strip)
 	for i in 16:
 		var patch := MeshFactory.box(Vector3(1.8 + 0.35 * float(i % 3), 0.028, 0.42 + 0.08 * float(i % 2)), Color(0.98, 1.0, 0.98))
 		var r := def.radius * (0.24 + 0.06 * float(i % 6))
@@ -1092,7 +1220,7 @@ func _add_ice_surface_marks() -> void:
 		patch.position = Vector3(cos(ang) * r, 0.105, sin(ang) * r)
 		patch.rotation.y = -ang + 0.6
 		patch.material_override = MeshFactory.transparent(Color(0.98, 1.0, 0.98), 0.36)
-		_static_root.add_child(patch)
+		_collect_ice_mark(batches, patch)
 	for i in 18:
 		var scratch := MeshFactory.box(Vector3(0.9 + 0.18 * float(i % 4), 0.018, 0.026), Color(0.78, 0.93, 0.98))
 		var r := def.radius * (0.16 + 0.04 * float(i % 10))
@@ -1100,7 +1228,18 @@ func _add_ice_surface_marks() -> void:
 		scratch.position = Vector3(cos(ang) * r, 0.13, sin(ang) * r)
 		scratch.rotation.y = -ang + 1.1
 		scratch.material_override = MeshFactory.transparent(Color(0.86, 0.98, 1.0), 0.5)
-		_static_root.add_child(scratch)
+		_collect_ice_mark(batches, scratch)
+	return batches
+
+
+func _collect_ice_mark(batches: Dictionary, mark: MeshInstance3D) -> void:
+	# Batch identical authored meshes, not scaled unit boxes: keep the bevels.
+	var key := "%d:%d" % [mark.mesh.get_instance_id(), mark.material_override.get_instance_id()]
+	if not batches.has(key):
+		batches[key] = {"mesh": mark.mesh, "material": mark.material_override,
+			"shadow": mark.cast_shadow, "transforms": []}
+	batches[key].transforms.append(mark.transform)
+	mark.free()
 
 
 # --- hazards ---------------------------------------------------------------
@@ -1145,8 +1284,10 @@ func _build_hazards() -> void:
 				for row in range(1, rows + 1):
 					var z := start_z - track_length * (float(row) / float(rows + 1))
 					for lane in lane_count:
-						if (row + lane) % 4 == 0:
-							continue  # a gap per row keeps lanes non-identical
+						# Equal jump and recovery windows for every starting lane;
+						# staggered gaps otherwise make a fixed slot a faster route.
+						if row % lane_count == 0:
+							continue
 						_add_static_box(Vector3(def.radius * 0.3, float(h.get("height", 0.85)), 0.35),
 							Vector3(lane_x(lane), float(h.get("height", 0.85)) * 0.5, z),
 							def.accent_color)

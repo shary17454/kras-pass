@@ -1,0 +1,214 @@
+{
+  "operations": {
+    "create": {
+      "count": 2,
+      "totalMs": 5.269499999995787,
+      "maxMs": 2.920916999995825,
+      "cpu": {
+        "count": 2,
+        "totalMs": 3.246,
+        "maxMs": 1.946,
+        "atMaxWallMs": 1.3
+      }
+    },
+    "configure": {
+      "count": 2,
+      "totalMs": 0.7505830000031892,
+      "maxMs": 0.4533329999999296,
+      "cpu": {
+        "count": 2,
+        "totalMs": 0.658,
+        "maxMs": 0.389,
+        "atMaxWallMs": 0.389
+      }
+    },
+    "ready": {
+      "count": 20,
+      "totalMs": 3.9465429999736443,
+      "maxMs": 0.9062080000003334,
+      "cpu": {
+        "count": 20,
+        "totalMs": 2.5500000000000003,
+        "maxMs": 0.413,
+        "atMaxWallMs": 0.413
+      }
+    },
+    "join": {
+      "count": 4,
+      "totalMs": 6.401750000009088,
+      "maxMs": 5.5289579999953276,
+      "cpu": {
+        "count": 4,
+        "totalMs": 1.927,
+        "maxMs": 1.11,
+        "atMaxWallMs": 1.11
+      }
+    },
+    "start": {
+      "count": 2,
+      "totalMs": 5.647666999997,
+      "maxMs": 4.73399999999674,
+      "cpu": {
+        "count": 2,
+        "totalMs": 2.713,
+        "maxMs": 1.856,
+        "atMaxWallMs": 1.856
+      }
+    },
+    "loaded": {
+      "count": 24,
+      "totalMs": 13.558790999994926,
+      "maxMs": 4.583250000010594,
+      "cpu": {
+        "count": 24,
+        "totalMs": 5.395999999999998,
+        "maxMs": 1.143,
+        "atMaxWallMs": 1.143
+      }
+    },
+    "input": {
+      "count": 9936,
+      "totalMs": 1360.7847779996491,
+      "maxMs": 27.978125000023283,
+      "cpu": {
+        "count": 9936,
+        "totalMs": 608.2939999999993,
+        "maxMs": 2.479,
+        "atMaxWallMs": 0.1
+      }
+    },
+    "snapshot": {
+      "count": 3768,
+      "totalMs": 1396.4709330001815,
+      "maxMs": 106.34008299998823,
+      "cpu": {
+        "count": 3768,
+        "totalMs": 488.989,
+        "maxMs": 2.424,
+        "atMaxWallMs": 2.424
+      }
+    },
+    "resume": {
+      "count": 4,
+      "totalMs": 222.4279569999835,
+      "maxMs": 217.91345799999544,
+      "cpu": {
+        "count": 4,
+        "totalMs": 5.139,
+        "maxMs": 3.879,
+        "atMaxWallMs": 3.879
+      }
+    },
+    "ping": {
+      "count": 116,
+      "totalMs": 27.447248999956173,
+      "maxMs": 16.649915999994846,
+      "cpu": {
+        "count": 116,
+        "totalMs": 6.685000000000002,
+        "maxMs": 0.718,
+        "atMaxWallMs": 0.718
+      }
+    },
+    "result": {
+      "count": 7,
+      "totalMs": 85.75808399998641,
+      "maxMs": 61.992416999986744,
+      "cpu": {
+        "count": 7,
+        "totalMs": 18.049000000000003,
+        "maxMs": 6.474,
+        "atMaxWallMs": 6.474
+      }
+    },
+    "next": {
+      "count": 5,
+      "totalMs": 4.820042000028479,
+      "maxMs": 1.4729170000064187,
+      "cpu": {
+        "count": 5,
+        "totalMs": 3.356,
+        "maxMs": 1.015,
+        "atMaxWallMs": 0.963
+      }
+    },
+    "leave": {
+      "count": 3,
+      "totalMs": 3.0349159999750555,
+      "maxMs": 2.729124999998021,
+      "cpu": {
+        "count": 3,
+        "totalMs": 1.3299999999999998,
+        "maxMs": 1.172,
+        "atMaxWallMs": 1.172
+      }
+    }
+  },
+  "stalls": [
+    {
+      "delayMs": 135.97983399999794,
+      "elapsedMs": 235.97983399999794,
+      "cpuMs": 9.894,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "blast_ball",
+          "arena": "ember_pit"
+        }
+      ]
+    },
+    {
+      "delayMs": 125.33383299999696,
+      "elapsedMs": 225.33383299999696,
+      "cpuMs": 14.613,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "blast_ball",
+          "arena": "ember_pit"
+        }
+      ]
+    },
+    {
+      "delayMs": 198.88874999999825,
+      "elapsedMs": 298.88874999999825,
+      "cpuMs": 7.239,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 1,
+          "game": "blast_ball",
+          "arena": "ember_pit"
+        }
+      ]
+    },
+    {
+      "delayMs": 290.2729999999865,
+      "elapsedMs": 390.2729999999865,
+      "cpuMs": 0.622,
+      "rooms": [
+        {
+          "state": "playing",
+          "epoch": 2,
+          "game": "blast_ball",
+          "arena": "ember_pit"
+        }
+      ]
+    }
+  ],
+  "worstStall": {
+    "delayMs": 290.2729999999865,
+    "elapsedMs": 390.2729999999865,
+    "cpuMs": 0.622,
+    "rooms": [
+      {
+        "state": "playing",
+        "epoch": 2,
+        "game": "blast_ball",
+        "arena": "ember_pit"
+      }
+    ]
+  }
+}

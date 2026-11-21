@@ -215,12 +215,24 @@ func _tank_battle_rules(t: TestHarness) -> void:
 			if not ground.is_empty():
 				t.ok(absf(ground.position.y) < 0.3, "navigation stays on the trail surface")
 		t.ok(scene.arena.def.radius >= 46, "tank district is a full road map")
-		t.ok(game.world.route(Vector3(-36, 0, -36), Vector3(36, 0, 36)).size() >= 9, "roads connect across the district")
+		var route: PackedVector3Array = game.world.route(Vector3(-36, 0, -36), Vector3(36, 0, 36))
+		t.ok(route.size() >= 2, "roads connect across the district, including authored shortcuts")
+		if route.size() >= 2:
+			for index in range(1, route.size()):
+				var first: int = game.world.roads.get_closest_point(route[index - 1])
+				var second: int = game.world.roads.get_closest_point(route[index])
+				t.ok(game.world.roads.are_points_connected(first, second), "every cross-district route step is a real navigation edge")
 		t.equal(scene.camera.mode, ArenaCamera.Mode.WORLD, "tank battle uses a follow camera")
 		scene.camera.local_target = scene.ctx.fighter(0)
 		t.ok(scene.camera._wanted_focus().is_equal_approx(scene.ctx.fighter(0).global_position), "camera follows the selected tank without centre bias")
 		var barrier: StaticBody3D = game.cover[0]
-		shot.fire(barrier.global_position + Vector3(0, 0, -7), Vector3.BACK, 0, 30, 25, 30)
+		var rock_visual: MeshInstance3D = barrier.get_child(0)
+		var rock_centre := rock_visual.to_global(rock_visual.mesh.get_aabb().get_center())
+		var shell_origin := rock_centre + Vector3.FORWARD * 7.0
+		var cover_ray := PhysicsRayQueryParameters3D.create(shell_origin, rock_centre, 1)
+		var cover_hit: Dictionary = scene.arena.get_world_3d().direct_space_state.intersect_ray(cover_ray)
+		t.equal(cover_hit.get("collider"), barrier, "the sweep crosses the actual raised rock, not terrain underneath it")
+		shot.fire(shell_origin, Vector3.BACK, 0, 30, 25, 30)
 		shot.tick(0.4)
 		t.ok(not shot.active, "cover stops a shell swept through it")
 		shot.damage = 25.0

@@ -1,0 +1,17 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+
+KRAS PASS test suite — Godot 4.7.1-stable (official), macOS
+
+── quick draw lifecycle ────────────────────────────────────────
+TEST_START: quick draw lifecycle / tournament decider ends on the first scored signal, without slot bias
+TEST_START: quick draw lifecycle / first-response result completes the remapped tournament through the match lifecycle
+
+finished in 2.0s
+
+════════════════════════════════════════════════════════════════
+ALL TESTS PASSED — 82 assertions
+════════════════════════════════════════════════════════════════

@@ -1,5 +1,10 @@
 # SQLite Backup Restore Audit
 
+Later implementation: [encrypted backup and operator restore rehearsal](encrypted-account-backup-2026-10-08.md).
+Its fixture tests do not update or replace the historical production evidence
+below. Production encryption, off-host retention and restore qualification
+still require authorized execution.
+
 Auditor source: `452a513786c8204b77827f60f1af077e22d5b5a4`.
 Production repository/branch: `shary17454/kras-pass`, `main`.
 Deployment inspected: `79d21f7c-65f3-4ca8-a322-85d1f38c3692`, `SUCCESS`, exact

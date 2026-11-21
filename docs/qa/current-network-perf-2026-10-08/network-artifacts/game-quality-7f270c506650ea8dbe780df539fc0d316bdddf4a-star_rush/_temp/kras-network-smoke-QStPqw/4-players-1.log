@@ -1,0 +1,25 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[INF][Balance] loaded 10 balance tables
+[INF][Registry] registry: 8 characters, 39 games, 34 arenas, 22 powerups
+[INF][Platform] platform: desktop, mobile=false, safe=[P: (0, 0), S: (0, 0)]
+NETWORK_TIMING={"epoch":0,"max_frame_gap_ms":0,"phase":-1,"running":false,"seed":0,"snapshots":0,"state":""}
+WARNING: [WRN][Net] online transport lost: socket_1000
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _write (res://src/core/logger.gd:75)
+       [1] w (res://src/core/logger.gd:34)
+       [2] _transport_lost (res://src/net/net_service.gd:482)
+       [3] _process (res://src/net/room_client.gd:88)
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":726,"phase":2,"running":true,"seed":1661448728,"snapshots":145,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":726,"phase":4,"running":true,"seed":1661448728,"snapshots":345,"state":"playing"}
+NETWORK_TIMING={"epoch":1,"max_frame_gap_ms":726,"phase":4,"running":true,"seed":1661448728,"snapshots":545,"state":"playing"}
+NETWORK_ROUND={"arena":"star_meadow","epoch":1,"game":"star_rush","moved":true,"scores":[4,5,3,5],"spectator":false}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":726,"phase":2,"running":true,"seed":815870951,"snapshots":722,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":726,"phase":4,"running":true,"seed":815870951,"snapshots":922,"state":"playing"}
+NETWORK_TIMING={"epoch":2,"max_frame_gap_ms":726,"phase":6,"running":true,"seed":815870951,"snapshots":1122,"state":"playing"}
+NETWORK_ROUND={"arena":"star_meadow","epoch":2,"game":"star_rush","moved":true,"scores":[4,4,4,5],"spectator":false}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":726,"phase":3,"running":true,"seed":1506722320,"snapshots":1320,"state":"playing"}
+NETWORK_TIMING={"epoch":3,"max_frame_gap_ms":726,"phase":4,"running":true,"seed":1506722320,"snapshots":1520,"state":"playing"}
+NETWORK_ROUND={"arena":"star_meadow","epoch":3,"game":"star_rush","moved":true,"scores":[5,6,4,2],"spectator":false}
+NETWORK_FINISHED={"carrying_seen":true,"collection_scored":true,"fawda_event_coverage":{},"fawda_worlds":[],"humans":4,"id":2,"matches":3,"moved":true,"reconnected":true,"scores":[5,6,4,2],"snapshots":1665,"tournament":{"awards":[3.0,5.0,2.0,1.0],"champions":[1.0],"complete":true,"contenders":[],"cups":[0.0,2.0,0.0,2.0],"mode":"points","points":[7.0,11.0,5.0,10.0],"round":3.0,"target":3.0,"tie_attempts":0.0},"world_snapshots":1665}

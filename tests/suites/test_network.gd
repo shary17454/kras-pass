@@ -13,6 +13,12 @@ class QuietReplica extends RefCounted:
 		pass
 
 
+class ClosingTransport extends RecordingTransport:
+	var closed := 0
+	func close() -> void:
+		closed += 1
+
+
 func _endpoint_policy(t: TestHarness) -> void:
 	t.suite("Network endpoint policy")
 	var transport = load("res://src/net/room_client.gd").new()
@@ -35,6 +41,12 @@ func _endpoint_policy(t: TestHarness) -> void:
 
 
 func run(t: TestHarness, host: Node) -> void:
+	_tank_smoke_pilot(t)
+	await _rotation_menu(t, host)
+	await _mixed_playlist_menu(t, host)
+	_protocol_policy(t)
+	await _protocol_terminal_state(t, host)
+	await _active_protocol_recovery(t, host)
 	_endpoint_policy(t)
 	_input_edges(t)
 	_input_buffer_limits(t)
@@ -94,6 +106,205 @@ func run(t: TestHarness, host: Node) -> void:
 	await _quick_draw_edges(t, host)
 
 
+func _tank_smoke_pilot(t: TestHarness) -> void:
+	t.suite("Tank smoke pilot reachable engagement")
+	var pilot: Script = load("res://tests/tank_smoke_pilot.gd")
+	var origin := Vector3(28, 0, 0)
+	var rival := Vector3(-28, 0, 0)
+	t.equal(pilot.approach(origin, rival, Vector3.ZERO, true), rival, "distant rivals remain pursuit targets instead of stranding at center")
+	t.equal(pilot.approach(Vector3.ZERO, Vector3(10, 0, 0), Vector3.ONE, false), Vector3(10, 0, 0), "blocked rival remains destination for the road waypoint planner")
+	t.equal(pilot.approach(Vector3.ZERO, Vector3(10, 0, 0), Vector3.ONE, true), Vector3(10, 0, 0), "clear nearby rival remains combat target")
+	t.equal(pilot.throttle(10, 1.0, true), 0.0, "aligned shot can hold position in effective range")
+	t.equal(pilot.throttle(10, 1.0, false), 1.0, "cover prevents stationary firing")
+	t.equal(pilot.throttle(30, 1.0, true), 1.0, "distant target needs approach")
+	t.equal(pilot.throttle(10, 0.5, true), 1.0, "turning vehicle still moves to turn")
+	var supports_fire: bool = pilot.get_script_method_list().any(func(method): return method.name == "can_fire")
+	t.ok(supports_fire, "tank smoke pilot verifies firing-line geometry")
+	if not supports_fire:
+		return
+	t.ok(pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 10), Vector3.BACK, true), "aligned clear rival can be fired at")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(3, 0, 10), Vector3.BACK, true), "old broad cone misses a rival despite dot product above 0.9")
+	t.ok(pilot.call("can_fire", Vector3.ZERO, Vector3(0.3, 0, 10), Vector3.BACK, true), "small lateral error remains in firing corridor")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 10), Vector3.BACK, false), "blocked firing corridor cannot shoot")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, -10), Vector3.BACK, true), "rival behind the muzzle cannot be hit")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 30), Vector3.BACK, true), "smoke pilot approaches distant rivals before shooting")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 1), Vector3.BACK, true), "rival before projectile spawn requires repositioning")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 0, 10), Vector3.ZERO, true), "zero facing cannot authorize a shot")
+	t.ok(not pilot.call("can_fire", Vector3.ZERO, Vector3(0, 4, 10), Vector3.BACK, true), "rival on a different level cannot be hit by a horizontal shell")
+
+
+func _protocol_terminal_state(t: TestHarness, host: Node) -> void:
+	t.suite("Network incompatible version recovery")
+	for transport_failure in [true, false]:
+		var service = load("res://src/net/net_service.gd").new()
+		var recorder := ClosingTransport.new()
+		service.transport = recorder
+		service._token = "test-only-resume-token"
+		service._retry_until = Time.get_ticks_msec() + 30000
+		service._retry_at = 1
+		service.room_code = "ABCDEF"
+		service.match_running = true
+		service.state = service.State.DISCONNECTED
+		service.mode = service.Mode.ONLINE_CLIENT
+		service.peers = {1: {"id": 1}}
+		var errors: Array = []
+		var closed: Array = []
+		service.online_error.connect(func(code): errors.append(code))
+		service.connection_lost.connect(func(reason): closed.append(reason))
+		if transport_failure:
+			service._transport_lost("protocol_mismatch")
+		else:
+			service._receive({"op": "error", "code": "version_mismatch"})
+		t.equal(recorder.closed, 1, "incompatible transport is closed")
+		t.equal(service._token, "", "resume token is cleared")
+		t.equal(service._retry_until, 0, "reconnect deadline is cancelled")
+		t.equal(service._retry_at, 0, "reconnect attempt is cancelled")
+		t.equal(service.state, service.State.OFFLINE, "terminal mismatch returns offline")
+		t.equal(service.mode, service.Mode.LOCAL, "local play is available")
+		t.equal(service.room_code, "", "stale room identity is cleared")
+		t.ok(service.peers.is_empty(), "stale roster is cleared")
+		t.ok(not service.match_running, "no phantom active match")
+		t.equal(errors, ["version_mismatch"], "specific error is emitted once")
+		t.equal(closed, ["version_mismatch"], "active match gets terminal closure")
+		t.equal(service.failure_key, "online.version_mismatch", "error persists for rebuilt room UI")
+		service.host_local(4)
+		t.equal(service.failure_key, "", "fresh local session clears previous error")
+		t.equal(service.state, service.State.LOBBY, "local lobby still starts")
+		service.free()
+		recorder.free()
+	var available := Net.online_available
+	var locale := Loc.locale
+	Net.reset()
+	Net.online_available = true
+	Net.failure_key = "online.version_mismatch"
+	var screen = load("res://src/ui/screens/online_screen.gd").new()
+	host.add_child(screen)
+	for code in ["ar", "en"]:
+		Loc.set_locale(code)
+		screen.setup({}) if screen.body == null else screen._refresh()
+		t.equal(screen._status.text, Loc.t("online.version_mismatch"), "rebuilt browser retains localized mismatch")
+		t.ok(not screen._status.text.contains("online.version_mismatch"), "message resolves localization key")
+	screen.queue_free()
+	await host.get_tree().process_frame
+	Net.reset()
+	Net.online_available = available
+	Loc.set_locale(locale)
+
+
+func _rotation_menu(t: TestHarness, host: Node) -> void:
+	t.suite("Online tournament rotation menu")
+	var locale := Loc.locale
+	var config := Net.lobby_config.duplicate(true)
+	var mode := Net.mode
+	Net.mode = Net.Mode.LOCAL
+	for language in ["ar", "en"]:
+		Loc.set_locale(language)
+		for rotation in ["manual", "random", "random_no_repeat"]:
+			Net.lobby_config = {"game": "ring_rumble", "arena": "storm_ring", "rounds": 3,
+				"bots": true, "difficulty": 1, "tournament": {"mode": "points", "target": 3,
+				"rotation": rotation, "points": [5, 3, 2, 1], "entries": [
+					{"game": "ring_rumble", "arena": "vortex_ring"},
+					{"game": "ring_rumble", "arena": "storm_ring"}]}}
+			var screen = load("res://src/ui/screens/online_screen.gd").new()
+			host.add_child(screen)
+			screen.body = VBoxContainer.new()
+			screen.add_child(screen.body)
+			screen._host_settings()
+			var select: OptionButton = screen.find_child("OnlineRotationSelect", true, false)
+			t.ok(select != null, "rotation choice is exposed")
+			t.equal(select.item_count, 3, "all three policies remain available")
+			t.equal(select.selected, ["manual", "random", "random_no_repeat"].find(rotation), "server policy selects matching option")
+			for index in 3:
+				t.ok(not select.get_item_text(index).contains("online."), "rotation label resolves in both languages")
+				select.item_selected.emit(index)
+				t.equal(Net.lobby_config.tournament.rotation, ["manual", "random", "random_no_repeat"][index], "choice sends matching policy")
+				t.equal(Net.lobby_config.tournament.entries.size(), 2, "changing rotation never discards selected entries")
+				t.equal(Net.lobby_config.tournament.entries[0].arena, "vortex_ring", "playlist order is preserved")
+			screen.queue_free()
+			await host.get_tree().process_frame
+	Net.lobby_config = config
+	Net.mode = mode
+	Loc.set_locale(locale)
+
+
+func _mixed_playlist_menu(t: TestHarness, host: Node) -> void:
+	t.suite("Online mixed minigame playlist editor")
+	var locale := Loc.locale
+	var config := Net.lobby_config.duplicate(true)
+	var mode := Net.mode
+	Net.mode = Net.Mode.LOCAL
+	for language in ["ar", "en"]:
+		Loc.set_locale(language)
+		var cfg := {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 3,
+			"bots": true, "difficulty": 1, "tournament": {"mode": "points", "target": 3,
+			"rotation": "manual", "points": [5, 3, 2, 1], "entries": [
+				{"game": "ring_rumble", "arena": "vortex_ring"},
+				{"game": "goal_guard", "arena": "quad_court"}]}}
+		Net.lobby_config = cfg.duplicate(true)
+		var screen = load("res://src/ui/screens/online_screen.gd").new()
+		host.add_child(screen)
+		screen.body = VBoxContainer.new()
+		screen.add_child(screen.body)
+		screen._host_settings()
+		var select: OptionButton = screen.find_child("OnlinePlaylistGame1", true, false)
+		t.equal(select.item_count, Net.ONLINE_GAMES.size(), "all registered online games are selectable")
+		select.item_selected.emit(Net.ONLINE_GAMES.find("tank_arena"))
+		t.equal(Net.lobby_config.tournament.entries[1].game, "tank_arena", "game selector changes only its playlist entry")
+		t.equal(Net.lobby_config.tournament.entries[0], cfg.tournament.entries[0], "other entries are retained")
+		var up: Button = screen.find_child("OnlinePlaylistUp1", true, false)
+		up.pressed.emit()
+		t.equal(Net.lobby_config.tournament.entries[0].game, "tank_arena", "move earlier preserves the preceding game edit")
+		t.equal(Net.lobby_config.game, "tank_arena", "first entry and lobby game stay consistent")
+		var remove: Button = screen.find_child("OnlinePlaylistRemove1", true, false)
+		remove.pressed.emit()
+		t.equal(Net.lobby_config.tournament.entries.size(), 1, "remove sends a shorter valid playlist")
+		var add: Button = screen.find_child("OnlinePlaylistAdd", true, false)
+		t.ok(not add.text.contains("online."), "add label is localized")
+		add.pressed.emit()
+		t.equal(Net.lobby_config.tournament.entries.size(), 2, "add preserves preceding removal and finds an unused pair")
+		var selected_entries: Array = Net.lobby_config.tournament.entries.duplicate(true)
+		var tournament_mode: OptionButton = screen.find_child("OnlineTournamentMode", true, false)
+		for choice in [2, 1]:
+			tournament_mode.item_selected.emit(choice)
+			t.equal(Net.lobby_config.tournament.entries, selected_entries, "switching cups and points retains custom games")
+			t.equal(Net.lobby_config.tournament.mode, "cups" if choice == 2 else "points", "scoring mode changes independently")
+		var baseline: Dictionary = Net.lobby_config.duplicate(true)
+		for invalid in [[], [cfg.tournament.entries[0], cfg.tournament.entries[0]],
+				[{"game": "goal_guard", "arena": "vortex_ring"}], [{"game": "missing", "arena": "missing"}]]:
+			t.ok(not screen._replace_playlist(cfg, invalid), "invalid or duplicate playlist rejected before publication")
+			t.equal(Net.lobby_config, baseline, "rejection preserves room settings")
+		var all: Array = []
+		for id in Net.ONLINE_GAMES:
+			all.append({"game": id, "arena": Net.ONLINE_ARENAS[id][0]})
+		t.equal(all.size(), 39, "registry supports 39 different tournament games")
+		t.ok(screen._replace_playlist(cfg, all), "39-game playlist accepted")
+		all.append({"game": "ring_rumble", "arena": "storm_ring"})
+		t.ok(not screen._replace_playlist(cfg, all), "server entry budget enforced locally")
+		tournament_mode.item_selected.emit(0)
+		select.item_selected.emit(0)
+		add.pressed.emit()
+		up.pressed.emit()
+		remove.pressed.emit()
+		t.equal(Net.lobby_config.tournament, null, "old editor callbacks cannot resurrect a disabled tournament")
+		screen.queue_free()
+		await host.get_tree().process_frame
+	Net.lobby_config = config
+	Net.mode = mode
+	Loc.set_locale(locale)
+
+
+func _protocol_policy(t: TestHarness) -> void:
+	t.suite("Network protocol compatibility")
+	var transport = load("res://src/net/room_client.gd").new()
+	t.equal(transport.PROTOCOL_VERSION, 2, "snapshot revision uses protocol two")
+	t.ok(transport.compatible_hello({"op": "hello", "v": 2}), "accept current server")
+	t.ok(transport.compatible_hello(JSON.parse_string('{"op":"hello","v":2}')), "accept JSON numeric version")
+	for version in [null, 0, 1, 3, 2.1, "2", true, false, NAN, INF]:
+		t.ok(not transport.compatible_hello({"op": "hello", "v": version}), "reject incompatible or malformed version")
+	t.ok(not transport.compatible_hello({"op": "welcome", "v": 2}), "require hello operation")
+	transport.free()
+
+
 func _input_edges(t: TestHarness) -> void:
 	t.suite("Network input edges")
 	t.test("a press and release received before a host tick remain distinct")
@@ -148,6 +359,67 @@ func _input_edges(t: TestHarness) -> void:
 	Net.transport = saved_transport
 	recorder.free()
 	Net.leave()
+
+
+func _active_protocol_recovery(t: TestHarness, host: Node) -> void:
+	t.suite("Active online match incompatible version recovery")
+	var available := Net.online_available
+	for transport_failure in [true, false]:
+		Net.reset()
+		Net.online_available = true
+		Net.mode = Net.Mode.ONLINE_CLIENT
+		Net.is_host = false
+		Net.local_peer_id = 8
+		Net.peers = {8: {"slot": 1}}
+		Net.room_code = "ABCDEF"
+		Net.epoch = 1
+		Net.room_state = "playing"
+		Net.state = Net.State.IN_MATCH
+		Net.match_running = true
+		Net.match_data = {"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
+			"seed": 2345, "players": [
+				{"id": 1, "slot": 0, "name": "Host", "character": 0},
+				{"id": 8, "slot": 1, "name": "Guest", "character": 1}]}
+		var stats_before: Dictionary = Stats._s.duplicate(true)
+		var replay_before := Replays.index().duplicate(true)
+		var profile_before: Dictionary = SaveSystem.profile().duplicate(true)
+		t.ok(await SceneRouter.go_to("match", {"config": Net.make_match_config()}, false, 0), "actual online route mounts")
+		var match_node: Node = SceneRouter.current_node
+		var match_ref := weakref(match_node)
+		var world_ref := weakref(match_node.ctx.world_root)
+		# Drive the mounted guest through the real snapshot/render pipeline.
+		var snapshot: Dictionary = match_node._network_replica.capture(match_node)
+		snapshot.phase = MatchPhase.P.PLAYING
+		Net._receive({"op": "snapshot", "epoch": 1, "tick": 1, "data": snapshot})
+		await host.get_tree().physics_frame
+		await host.get_tree().process_frame
+		t.equal(match_node.phase, MatchPhase.P.PLAYING, "guest is actually playing before mismatch")
+		Net._token = "test-only-active-resume-token"
+		Net._retry_until = Time.get_ticks_msec() + 30000
+		if transport_failure:
+			Net._transport_lost("protocol_mismatch")
+		else:
+			Net._receive({"op": "error", "code": "version_mismatch"})
+		for frame in 120:
+			await host.get_tree().process_frame
+			if SceneRouter.current_id == "online" and not SceneRouter._busy and match_ref.get_ref() == null:
+				break
+		t.equal(SceneRouter.current_id, "online", "active failure returns to room browser")
+		t.ok(match_ref.get_ref() == null, "previous match is actually freed")
+		t.ok(world_ref.get_ref() == null, "previous world is actually freed")
+		t.equal(SceneRouter.holder.get_child_count(), 1, "one replacement screen, no duplicate nodes")
+		t.equal(SceneRouter.current_node._status.text, Loc.t("online.version_mismatch"), "replacement screen retains specific error")
+		t.equal(Net._retry_until, 0, "active failure cancels reconnect deadline")
+		t.equal(Net._token, "", "active failure clears resume token")
+		t.equal(Stats._s, stats_before, "aborted match awards no statistics")
+		t.equal(Replays.index(), replay_before, "aborted match stores no replay")
+		t.equal(SaveSystem.profile(), profile_before, "aborted match awards no progression")
+		Net.host_local(4)
+		t.ok(await SceneRouter.go_to("local_play", {}, false, 0), "local play remains reachable after online failure")
+		t.equal(Net.failure_key, "", "fresh local session clears failure")
+		await SceneRouter.go_to("main_menu", {}, false, 0)
+	Net.reset()
+	Net.online_available = available
 
 
 func _player_mapping(t: TestHarness) -> void:
@@ -246,6 +518,17 @@ func _player_mapping(t: TestHarness) -> void:
 		t.equal(smoke_config.duration_override, 20.0, "actual boss final smoke preserves short final")
 		Net.match_data.erase("tournament")
 	Net._inputs[0] = {"time": Time.get_ticks_msec() - 300, "axes": [1, 0, 0, 0], "bits": 4}
+	Net.match_data.config.game = "tank_arena"
+	Net.match_data.config.arena = "tank_foundry"
+	var tank_smoke := Net.make_match_config()
+	preload("res://tests/network_smoke_config.gd").configure_tank(tank_smoke)
+	t.equal(tank_smoke.duration_override, 30.0, "ordinary tank smoke retains shortened fixture")
+	Net.match_data["tournament"] = {"contenders": [0, 2, 3]}
+	tank_smoke = Net.make_match_config()
+	preload("res://tests/network_smoke_config.gd").configure_tank(tank_smoke)
+	t.equal(tank_smoke.duration_override, 20.0, "tank final smoke preserves production final duration")
+	t.ok(tank_smoke.duration_override < float(tank_smoke.rule("maximum_duration", 0)), "tank final clock finishes before watchdog")
+	Net.match_data.erase("tournament")
 	var frame := InputFrame.new()
 	frame.bits = 4
 	t.ok(not Net.consume_input(0, frame, 10), "stale inputs expire instead of moving forever")
@@ -259,9 +542,12 @@ func _player_mapping(t: TestHarness) -> void:
 	Net.online_result.connect(on_result)
 	Net.epoch = 3
 	Net.room_state = "playing"
+	Net.match_data = _result_context()
 	Net._receive({"op": "result", "epoch": 2, "scores": [1, 0]})
 	t.equal(results.size(), 0, "ignore another match's result")
-	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3], "tournament": {"points": [5, 3], "complete": false}})
+	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3], "tournament": {
+		"mode": "points", "target": 3, "round": 1, "points": [5, 3], "cups": [1, 0],
+		"awards": [5, 3], "contenders": [], "champions": [], "tie_attempts": 0, "complete": false}})
 	t.equal(Net.tournament.points, [5, 3], "standings arrive before the result UI")
 	Net._receive({"op": "result", "epoch": 3, "scores": [5, 3]})
 	t.equal(results.size(), 1, "reconnect does not apply the same result twice")
@@ -282,6 +568,7 @@ func _player_mapping(t: TestHarness) -> void:
 	Net.is_host = true
 	Net.epoch = 8
 	Net.room_state = "playing"
+	Net.match_data = _result_context()
 	var scores: Array[int] = [5, 3]
 	Net.match_running = true
 	Net.publish_result(scores)
@@ -303,6 +590,12 @@ func _player_mapping(t: TestHarness) -> void:
 	Net.transport = transport
 	recorder.free()
 	Net.leave()
+
+
+func _result_context() -> Dictionary:
+	return {"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
+		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0},
+			{"id": 2, "slot": 1, "name": "Guest", "character": 1}]}
 
 
 func _packet(slot: int, bits: int, sequence := 1, epoch := 3) -> Dictionary:

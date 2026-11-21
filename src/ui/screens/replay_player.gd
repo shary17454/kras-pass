@@ -51,10 +51,14 @@ func _transport() -> Control:
 	var v := UIKit.vbox(8)
 	card.add_child(v)
 
-	var header := UIKit.hbox(14)
-	header.add_child(UIKit.label("%s · %s" % [replay.display_name(), replay.date_string()],
-		UIKit.SIZE_SMALL, UIKit.ACCENT, true))
+	var header := UIKit.vbox(4)
+	var caption := UIKit.label("%s · %s" % [replay.display_name(), replay.date_string()],
+		UIKit.SIZE_SMALL, UIKit.ACCENT, true)
+	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(caption)
 	_status = UIKit.label("", UIKit.SIZE_TINY, UIKit.dim_color())
+	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_status)
 	v.add_child(header)
@@ -68,7 +72,9 @@ func _transport() -> Control:
 			match_scene.pb_seek(int(_scrub.value)))
 	v.add_child(_scrub)
 
-	var row := UIKit.hbox(10)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 10)
+	row.add_theme_constant_override("v_separation", 10)
 	_play_button = UIKit.button("⏸", UIKit.SIZE_BODY)
 	_play_button.pressed.connect(_toggle_play)
 	row.add_child(_play_button)

@@ -1,11 +1,17 @@
 extends Node
 
 var _errors: Array[String] = []
+var _capture_dir := ""
 
 
 func _ready() -> void:
 	if SaveSystem.storage_root == SaveSystem.DIR or DisplayServer.get_name() == "headless":
 		push_error("Party visual QA requires a renderer and isolated --test-data-dir")
+		get_tree().quit(1)
+		return
+	_capture_dir = SaveSystem.storage_root.path_join("screenshots")
+	if DirAccess.make_dir_recursive_absolute(_capture_dir) != OK:
+		push_error("Party visual QA could not create screenshot directory")
 		get_tree().quit(1)
 		return
 	UserSettings.set_value("replay_capture", false)
@@ -18,12 +24,12 @@ func _ready() -> void:
 		for locale in ["ar", "en"]:
 			Loc.set_locale(locale)
 			for id in ["main_menu", "tournament", "playlist_builder", "local_play", "profile", "touch_layout", "settings", "stats"]:
-				SceneRouter.go_to(id, {}, false, 0)
+				await SceneRouter.go_to(id, {}, false, 0)
 				await _settle()
 				_scan(SceneRouter.current_node, orientation + "/" + locale + "/" + id)
 				_capture("%s-%s-%s" % [orientation, locale, id])
 			SaveSystem._read_only_paths[SaveSystem._path(SaveSystem.PROFILE)] = true
-			SceneRouter.go_to("main_menu", {}, false, 0)
+			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/save-compatibility")
 			var notice := SceneRouter.current_node.find_child("SaveCompatibilityNotice", true, false) as Label
@@ -34,9 +40,10 @@ func _ready() -> void:
 			_capture("%s-%s-save-compatibility" % [orientation, locale])
 			SaveSystem._read_only_paths.erase(SaveSystem._path(SaveSystem.PROFILE))
 			var s := TournamentSession.from_preset("long", PartyRoster.last_players(), 22)
-			SceneRouter.go_to("standings", {"session": s}, false, 0)
+			await SceneRouter.go_to("standings", {"session": s}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/standings")
+			_check_standings_layout(orientation, false)
 			_capture("%s-%s-standings" % [orientation, locale])
 			var final := TournamentSession.new()
 			final.setup(PartyRoster.last_players(), ["ring_rumble"] as Array[String], 43)
@@ -45,15 +52,19 @@ func _ready() -> void:
 			final.resolved_champion = 0
 			final.performance[0] = {"knockouts": 4, "collected": 8}
 			final.performance[1] = {"falls": 3}
-			SceneRouter.go_to("standings", {"session": final}, false, 0)
+			await SceneRouter.go_to("standings", {"session": final}, false, 0)
 			await _settle()
 			_scan(SceneRouter.current_node, orientation + "/" + locale + "/podium")
+			_check_standings_layout(orientation, true)
 			_capture("%s-%s-podium" % [orientation, locale])
 		Loc.set_locale("ar")
 		var cfg := MatchConfig.build("ring_rumble", ["nabta", "sakhra", "fanoos", "ramla"], 4, 1, 742)
 		for p in cfg.players:
 			p.device_type = 2
-		SceneRouter.start_match(cfg)
+		await SceneRouter.start_match(cfg)
+		if not _match_loaded("ring_rumble"):
+			get_tree().quit(1)
+			return
 		await _settle()
 		var scene: Node = SceneRouter.current_node
 		if scene.phase == MatchPhase.P.INTRO:
@@ -67,13 +78,16 @@ func _ready() -> void:
 		for source in scene.touch_sources:
 			if scene.hud._hint_label.get_global_rect().intersects(source.get_global_rect()):
 				_errors.append(orientation + ": objective overlaps the touch regions")
-		SceneRouter.go_to("main_menu", {}, false, 0)
+		await SceneRouter.go_to("main_menu", {}, false, 0)
 		await _settle()
 		for game_id in ["tank_arena", "sabaq_sawarikh"]:
 			var shared := MatchConfig.build(game_id, ["nabta", "sakhra", "fanoos", "ramla"], 4, 1, 188)
 			for p in shared.players:
 				p.device_type = 2
-			SceneRouter.start_match(shared)
+			await SceneRouter.start_match(shared)
+			if not _match_loaded(game_id):
+				get_tree().quit(1)
+				return
 			await _settle()
 			var match_scene: Node = SceneRouter.current_node
 			match_scene._set_phase(MatchPhase.P.INSTRUCTIONS)
@@ -83,10 +97,16 @@ func _ready() -> void:
 			_capture(orientation + "-four-touch-" + game_id)
 			var controls_top := TouchSource.party_region(get_viewport().get_visible_rect().size, 0, 4).position.y
 			for fighter in match_scene.ctx.fighters:
-				var pixel: Vector2 = match_scene.camera.unproject_position(fighter.global_position)
-				if pixel.y <= match_scene.hud.occupied_top() or pixel.y >= controls_top:
+				var views: LocalVehicleViews = match_scene.vehicle_views
+				if views == null:
+					_errors.append(orientation + ": local world vehicles did not create personal views")
+					break
+				var index := views.slots.find(fighter.slot)
+				var panel: Control = views.panels[index]
+				var pixel: Vector2 = panel.position + views.cameras[index].unproject_position(fighter.global_position)
+				if not panel.get_global_rect().has_point(pixel) or pixel.y <= match_scene.hud.occupied_top() or pixel.y >= controls_top:
 					_errors.append(orientation + ": world player is hidden behind the HUD or controls")
-			SceneRouter.go_to("main_menu", {}, false, 0)
+			await SceneRouter.go_to("main_menu", {}, false, 0)
 			await _settle()
 	if SceneRouter.current_node != null:
 		SceneRouter.current_node.queue_free()
@@ -98,6 +118,43 @@ func _ready() -> void:
 	get_tree().quit(0 if _errors.is_empty() else 1)
 
 
+func _match_loaded(game_id: String) -> bool:
+	var scene: Node = SceneRouter.current_node
+	if SceneRouter.current_id != "match" or not is_instance_valid(scene) or not scene.has_method("_set_phase"):
+		push_error("Party visual QA did not load match: " + game_id)
+		return false
+	if scene.ctx == null or scene.ctx.config.minigame_id != game_id:
+		push_error("Party visual QA loaded the wrong match: " + game_id)
+		return false
+	return true
+
+
+func _check_standings_layout(orientation: String, champion: bool) -> void:
+	var screen: Node = SceneRouter.current_node
+	var rows := screen.find_child("StandingsRows", true, false) as VBoxContainer
+	var actions := screen.find_child("StandingsActions", true, false) as Control
+	if rows == null or rows.get_child_count() != 4:
+		_errors.append(orientation + ": standings must retain all four ranks")
+		return
+	if rows.get_parent() is ScrollContainer:
+		_errors.append(orientation + ": standings have a nested scrolling region")
+	if actions == null or actions.get_parent() == screen.body:
+		_errors.append(orientation + ": standings actions are not pinned outside scrolling content")
+		return
+	var visible := get_viewport().get_visible_rect()
+	if not visible.encloses(actions.get_global_rect()):
+		_errors.append(orientation + ": standings actions are outside the viewport")
+	if champion:
+		var columns := screen.find_child("ChampionColumns", true, false) as BoxContainer
+		if columns == null or columns.vertical != (orientation == "portrait"):
+			_errors.append(orientation + ": champion layout does not adapt to orientation")
+		if orientation == "landscape":
+			var scroll := screen.body.get_parent() as ScrollContainer
+			for row in rows.get_children():
+				if not scroll.get_global_rect().encloses(row.get_global_rect()):
+					_errors.append("landscape: complete standings row is clipped")
+
+
 func _settle() -> void:
 	for i in 40:
 		await get_tree().process_frame
@@ -107,7 +164,9 @@ func _capture(name: String) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var image := get_viewport().get_texture().get_image()
-	image.save_png("/tmp/kras-party-" + name + ".png")
+	var path := _capture_dir.path_join(name + ".png")
+	if image.save_png(path) != OK:
+		_errors.append(name + " screenshot could not be saved")
 	var colors := {}
 	for x in range(0, image.get_width(), 7):
 		for y in range(0, image.get_height(), 7):

@@ -6,7 +6,7 @@ func decide(_delta: float) -> void:
 	var me := self_body()
 	if me == null or controller == null:
 		return
-	var tile = controller.call("unclaimed_tile_near", me.global_position, slot) \
+	var tile = controller.call("unclaimed_tile_near", me.global_position, slot, can_observe) \
 		if controller.has_method("unclaimed_tile_near") else null
 	if tile == null or not is_instance_valid(tile):
 		super.decide(_delta)

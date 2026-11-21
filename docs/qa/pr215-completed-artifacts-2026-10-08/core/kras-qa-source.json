@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "checkout_commit": "ecb6715f181009a84272b89372705baf42df8f2b",
+  "checkout_tree": "8d5720c25b6bfdff9efa22eae7c707708afd05ac",
+  "intended_head": "50539cbe5ab83f1482700800ccc90bcf68d97254",
+  "event": "pull_request",
+  "ref": "refs/pull/215/merge",
+  "scenario": "core",
+  "run_id": "37720872761",
+  "run_attempt": "1",
+  "tracked_changes": ""
+}

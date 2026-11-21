@@ -1,0 +1,714 @@
+{
+  "engine_version": "4.7.1-stable (official)",
+  "games": [
+    {
+      "attempted_runs": 24,
+      "avg_duration": 35.4187499999993,
+      "avg_score": 3256.51041666667,
+      "baseline_seeds": [
+        1209001,
+        1209614,
+        1210227,
+        1210840,
+        1211453,
+        1212066,
+        1212679,
+        1213292,
+        1213905,
+        1214518,
+        1215131,
+        1215744,
+        1216357,
+        1216970,
+        1217583,
+        1218196,
+        1218809,
+        1219422,
+        1220035,
+        1220648,
+        1221261,
+        1221874,
+        1222487,
+        1223100
+      ],
+      "category": "race",
+      "character_bias": 0.115,
+      "character_buckets": 8,
+      "difficulty_attempted": 16,
+      "difficulty_completed": 16,
+      "difficulty_pairing": "matched_seed_character",
+      "difficulty_samples": [
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2417
+            },
+            {
+              "laps": 3,
+              "time": 2542
+            },
+            {
+              "laps": 3,
+              "time": 3368
+            },
+            {
+              "laps": 3,
+              "time": 3487
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "scores": [
+            2417,
+            2542,
+            3368,
+            3487
+          ],
+          "seed": 1204242
+        },
+        {
+          "character": "nabta",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 4202
+            },
+            {
+              "laps": 3,
+              "time": 3507
+            },
+            {
+              "laps": 3,
+              "time": 2468
+            },
+            {
+              "laps": 3,
+              "time": 2528
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            4202,
+            3507,
+            2468,
+            2528
+          ],
+          "seed": 1204242
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2497
+            },
+            {
+              "laps": 3,
+              "time": 2673
+            },
+            {
+              "laps": 3,
+              "time": 4793
+            },
+            {
+              "laps": 3,
+              "time": 3870
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            2497,
+            2673,
+            4793,
+            3870
+          ],
+          "seed": 1204339
+        },
+        {
+          "character": "sakhra",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 4005
+            },
+            {
+              "laps": 3,
+              "time": 4020
+            },
+            {
+              "laps": 3,
+              "time": 2772
+            },
+            {
+              "laps": 3,
+              "time": 2462
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            2,
+            1
+          ],
+          "scores": [
+            4005,
+            4020,
+            2772,
+            2462
+          ],
+          "seed": 1204339
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2477
+            },
+            {
+              "laps": 3,
+              "time": 2330
+            },
+            {
+              "laps": 3,
+              "time": 3308
+            },
+            {
+              "laps": 3,
+              "time": 4452
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            2477,
+            2330,
+            3308,
+            4452
+          ],
+          "seed": 1204436
+        },
+        {
+          "character": "fanoos",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 3722
+            },
+            {
+              "laps": 3,
+              "time": 3113
+            },
+            {
+              "laps": 3,
+              "time": 2445
+            },
+            {
+              "laps": 3,
+              "time": 2527
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            3722,
+            3113,
+            2445,
+            2527
+          ],
+          "seed": 1204436
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2590
+            },
+            {
+              "laps": 3,
+              "time": 2388
+            },
+            {
+              "laps": 3,
+              "time": 3978
+            },
+            {
+              "laps": 3,
+              "time": 4022
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "scores": [
+            2590,
+            2388,
+            3978,
+            4022
+          ],
+          "seed": 1204533
+        },
+        {
+          "character": "ramla",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 4180
+            },
+            {
+              "laps": 3,
+              "time": 3072
+            },
+            {
+              "laps": 3,
+              "time": 2685
+            },
+            {
+              "laps": 3,
+              "time": 2548
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "scores": [
+            4180,
+            3072,
+            2685,
+            2548
+          ],
+          "seed": 1204533
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2310
+            },
+            {
+              "laps": 3,
+              "time": 2443
+            },
+            {
+              "laps": 3,
+              "time": 4002
+            },
+            {
+              "laps": 3,
+              "time": 3988
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            2310,
+            2443,
+            4002,
+            3988
+          ],
+          "seed": 1204630
+        },
+        {
+          "character": "barq",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 3993
+            },
+            {
+              "laps": 3,
+              "time": 4342
+            },
+            {
+              "laps": 3,
+              "time": 2492
+            },
+            {
+              "laps": 3,
+              "time": 2752
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            3993,
+            4342,
+            2492,
+            2752
+          ],
+          "seed": 1204630
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2460
+            },
+            {
+              "laps": 3,
+              "time": 2585
+            },
+            {
+              "laps": 3,
+              "time": 4168
+            },
+            {
+              "laps": 3,
+              "time": 3972
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            2460,
+            2585,
+            4168,
+            3972
+          ],
+          "seed": 1204727
+        },
+        {
+          "character": "mowja",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 3600
+            },
+            {
+              "laps": 3,
+              "time": 5038
+            },
+            {
+              "laps": 3,
+              "time": 2418
+            },
+            {
+              "laps": 3,
+              "time": 2498
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "scores": [
+            3600,
+            5038,
+            2418,
+            2498
+          ],
+          "seed": 1204727
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2498
+            },
+            {
+              "laps": 3,
+              "time": 2477
+            },
+            {
+              "laps": 3,
+              "time": 4735
+            },
+            {
+              "laps": 3,
+              "time": 4232
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            2,
+            1,
+            4,
+            3
+          ],
+          "scores": [
+            2498,
+            2477,
+            4735,
+            4232
+          ],
+          "seed": 1204824
+        },
+        {
+          "character": "ghaim",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 4285
+            },
+            {
+              "laps": 3,
+              "time": 3547
+            },
+            {
+              "laps": 3,
+              "time": 2432
+            },
+            {
+              "laps": 3,
+              "time": 2670
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            4285,
+            3547,
+            2432,
+            2670
+          ],
+          "seed": 1204824
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 2472
+            },
+            {
+              "laps": 3,
+              "time": 2598
+            },
+            {
+              "laps": 3,
+              "time": 4552
+            },
+            {
+              "laps": 3,
+              "time": 4500
+            }
+          ],
+          "expert_slots": [
+            0,
+            1
+          ],
+          "places": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "scores": [
+            2472,
+            2598,
+            4552,
+            4500
+          ],
+          "seed": 1204921
+        },
+        {
+          "character": "turs",
+          "completed": true,
+          "details": [
+            {
+              "laps": 3,
+              "time": 3870
+            },
+            {
+              "laps": 3,
+              "time": 3482
+            },
+            {
+              "laps": 3,
+              "time": 2573
+            },
+            {
+              "laps": 3,
+              "time": 2630
+            }
+          ],
+          "expert_slots": [
+            2,
+            3
+          ],
+          "places": [
+            4,
+            3,
+            1,
+            2
+          ],
+          "scores": [
+            3870,
+            3482,
+            2573,
+            2630
+          ],
+          "seed": 1204921
+        }
+      ],
+      "expert_edge": 0.7,
+      "flags": [],
+      "id": "kart_sprint",
+      "name": "سباق العربات",
+      "round_window": 120.0,
+      "runs": 24,
+      "sample_mode": "natural",
+      "seed_offset": 1200000,
+      "severity": 0,
+      "slot_bias": 0.07,
+      "tie_rate": 0.0416666666666667,
+      "wins_by_character": {
+        "barq": 5,
+        "fanoos": 1,
+        "ghaim": 4,
+        "mowja": 3,
+        "nabta": 6,
+        "ramla": 5,
+        "turs": 1
+      },
+      "wins_by_slot": [
+        8,
+        7,
+        2,
+        8
+      ],
+      "zero_score_runs": 0
+    }
+  ],
+  "generated": "2026-10-07T23:33:22",
+  "mutator_smoke": [
+    {
+      "chaos_ok": true,
+      "chaos_seed": 1205502,
+      "flags": [],
+      "id": "kart_sprint",
+      "mutated_ok": true,
+      "mutated_seed": 1205501,
+      "name": "سباق العربات",
+      "severity": 0
+    }
+  ],
+  "round_seconds": 14.0,
+  "runs_per_game": 24,
+  "sample_mode": "natural",
+  "seed_offset": 1200000,
+  "simulation_source_end": "9c1818bac02eaad006dab6728529db8a84e36dc880b4c31556855e04bdac4ed1",
+  "simulation_source_start": "9c1818bac02eaad006dab6728529db8a84e36dc880b4c31556855e04bdac4ed1"
+}

@@ -18,6 +18,13 @@ export class Tournament {
     this.champions = [];
     this.complete = false;
     this.bag = [];
+    this.gameEntries = new Map();
+    this.arenaBags = new Map();
+    this.lastArena = new Map();
+    for (const entry of this.entries) {
+      if (!this.gameEntries.has(entry.game)) this.gameEntries.set(entry.game, []);
+      this.gameEntries.get(entry.game).push(entry);
+    }
     this.lastEpoch = -1;
     this.current = null;
     this.tiebreakEntry = null;
@@ -31,18 +38,37 @@ export class Tournament {
     }
     if (this.rotation === 'manual') {
       this.current = this.entries[this.round % this.entries.length];
+    } else if (this.rotation === 'random') {
+      this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
+      this.current = this.entries[Math.floor(this.seed / 0x100000000 * this.entries.length)];
     } else {
       if (!this.bag.length) {
-        this.bag = [...this.entries];
-        for (let i = this.bag.length - 1; i > 0; i--) {
-          this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
-          const j = this.seed % (i + 1);
-          [this.bag[i], this.bag[j]] = [this.bag[j], this.bag[i]];
-        }
+        this.bag = this.shuffledBag([...this.gameEntries.keys()], this.current?.game);
       }
-      this.current = this.bag.pop();
+      // Games rotate independently of their map count; each game's maps rotate too.
+      const game = this.bag.pop();
+      let arenas = this.arenaBags.get(game);
+      if (!arenas?.length) {
+        arenas = this.shuffledBag(this.gameEntries.get(game), this.lastArena.get(game));
+        this.arenaBags.set(game, arenas);
+      }
+      this.current = arenas.pop();
+      this.lastArena.set(game, this.current);
     }
     return {...this.current};
+  }
+
+  shuffledBag(values, previous) {
+    const bag = [...values];
+    for (let i = bag.length - 1; i > 0; i--) {
+      this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
+      const j = this.seed % (i + 1);
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    if (bag.length > 1 && bag[bag.length - 1] === previous) {
+      [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+    }
+    return bag;
   }
 
   record(epoch, scores) {

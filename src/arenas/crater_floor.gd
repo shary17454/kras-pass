@@ -2,12 +2,16 @@ extends Node3D
 ## Thin sectors let Geometry2D carve circular cuts without interior-hole polygons.
 const SECTORS := 128
 const RADIUS_STEP := 0.125
+const ROUTE_CELL := 0.5
 var radius := 16.0
 var thickness := 1.0
 var holes: Array = []
 var _body: StaticBody3D
 var _shape: CollisionShape3D
 var _mesh: MeshInstance3D
+var _route_grid: AStarGrid2D
+var _route_dirty := true
+var _route_margin := -1.0
 
 func build(initial_radius: float, depth: float, material: Material) -> void:
 	radius = initial_radius
@@ -82,6 +86,10 @@ func path_clear(from: Vector3, to: Vector3, margin := 0.42) -> bool:
 	return true
 
 func steering_direction(from: Vector3, target: Vector3, lookahead := 1.2, margin := 0.5) -> Vector3:
+	if not path_clear(from, target, margin):
+		var waypoint := _route_waypoint(from, target, margin)
+		if waypoint != Vector3.INF:
+			target = waypoint
 	var to := target - from
 	to.y = 0.0
 	if to.length() < 0.15 or lookahead <= 0.0:
@@ -111,6 +119,51 @@ func steering_direction(from: Vector3, target: Vector3, lookahead := 1.2, margin
 	return best
 
 
+func _route_waypoint(from: Vector3, target: Vector3, margin: float) -> Vector3:
+	if not has_ground(from, margin) or not has_ground(target, margin):
+		return Vector3.INF
+	if _route_dirty or not is_equal_approx(_route_margin, margin):
+		_route_grid = AStarGrid2D.new()
+		var extent := ceili(radius / ROUTE_CELL)
+		_route_grid.region = Rect2i(-extent, -extent, extent * 2 + 1, extent * 2 + 1)
+		_route_grid.cell_size = Vector2.ONE * ROUTE_CELL
+		_route_grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+		_route_grid.update()
+		# Padding covers the furthest point along an adjacent grid segment.
+		for x in range(-extent, extent + 1):
+			for z in range(-extent, extent + 1):
+				_route_grid.set_point_solid(Vector2i(x, z), not has_ground(Vector3(x, 0, z) * ROUTE_CELL, margin + ROUTE_CELL * sqrt(0.5)))
+		_route_margin = margin
+		_route_dirty = false
+	var start := _route_connection(from, margin)
+	var end := _route_connection(target, margin)
+	if start == Vector2i.MAX or end == Vector2i.MAX:
+		return Vector3.INF
+	var path := _route_grid.get_point_path(start, end)
+	for index in range(path.size() - 1, -1, -1):
+		var point := Vector3(path[index].x, from.y, path[index].y)
+		if point.distance_to(from) > 0.15 and path_clear(from, point, margin):
+			return point
+	return Vector3.INF
+
+
+func _route_connection(point: Vector3, margin: float) -> Vector2i:
+	var center := Vector2i(roundi(point.x / ROUTE_CELL), roundi(point.z / ROUTE_CELL))
+	var best := Vector2i.MAX
+	var cost := INF
+	for x in range(center.x - 2, center.x + 3):
+		for z in range(center.y - 2, center.y + 3):
+			var id := Vector2i(x, z)
+			if not _route_grid.is_in_boundsv(id) or _route_grid.is_point_solid(id):
+				continue
+			var candidate := Vector3(x * ROUTE_CELL, point.y, z * ROUTE_CELL)
+			var distance := point.distance_squared_to(candidate)
+			if distance < cost and path_clear(point, candidate, margin):
+				cost = distance
+				best = id
+	return best
+
+
 func retreat_point(point: Vector3) -> Vector3:
 	var margin := minf(3.0, radius * 0.25)
 	if has_ground(point, margin):
@@ -136,6 +189,7 @@ func retreat_point(point: Vector3) -> Vector3:
 	return best
 
 func _rebuild() -> void:
+	_route_dirty = true
 	var cuts: Array[PackedVector2Array] = []
 	var cut_bounds: Array[Rect2] = []
 	for hole in holes:

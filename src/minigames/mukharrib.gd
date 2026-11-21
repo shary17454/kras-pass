@@ -18,6 +18,7 @@ var _target: ArenaTile
 var _mark := 0.0
 var _cycle := SCRUB_PERIOD
 var _markers: Array = []
+var _centre_marker: Node3D
 var _warning_sequence := 0
 var _scrub_sequence := 0
 var _last_scrub := Vector3.ZERO
@@ -100,6 +101,8 @@ func _show_markers(centre: ArenaTile) -> void:
 		m.position = t.global_position + Vector3(0, 0.35, 0)
 		ctx.world_root.add_child(m)
 		_markers.append(m)
+		if t == centre:
+			_centre_marker = m
 
 
 func _scrub_set(centre: ArenaTile) -> Array[ArenaTile]:
@@ -150,18 +153,26 @@ func present_scrub(position: Vector3) -> void:
 
 
 func _clear_markers() -> void:
+	_centre_marker = null
 	for m in _markers:
 		if is_instance_valid(m):
 			m.queue_free()
 	_markers.clear()
 
 
-## Where the drone is about to strike, for brains that plan around it. It is
-## marked on the floor in white, so this is public information.
+## Authoritative target for presentation/tooling. AI reads the rendered cue
+## through scrub_warning instead of accessing the logical target.
 func scrub_target() -> Vector3:
 	if _target == null or not is_instance_valid(_target):
 		return Vector3.INF
 	return _target.global_position
+
+
+func scrub_warning(observable: Callable) -> Dictionary:
+	if not observable.is_valid() or not is_instance_valid(_centre_marker) \
+			or not observable.call(_centre_marker):
+		return {}
+	return {"serial": _warning_sequence, "position": _centre_marker.global_position - Vector3(0, 0.35, 0)}
 
 
 func ai_script() -> Script:

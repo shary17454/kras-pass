@@ -32,6 +32,7 @@ const DEFAULTS := {
 	"battery_saver": false,
 	"language": "",  # "" = no explicit choice yet -> Arabic, the primary
 	"text_scale": 1.0,
+	"appearance": "system",  # system | light | dark
 	"high_contrast": false,
 	"reduce_flashes": false,
 	"reduce_effects": false,
@@ -62,6 +63,8 @@ func _ready() -> void:
 	for k in stored.keys():
 		if DEFAULTS.has(k):
 			_values[k] = stored[k]
+	if _values["appearance"] not in ["system", "light", "dark"]:
+		_values["appearance"] = "system"
 	if String(_values["language"]) == "":
 		_values["language"] = Loc.locale
 	Loc.set_locale(String(_values["language"]))
@@ -80,6 +83,8 @@ func get_value(key: String):
 
 
 func set_value(key: String, value) -> void:
+	if key == "appearance" and value not in ["system", "light", "dark"]:
+		return
 	if not DEFAULTS.has(key):
 		Log.w("unknown setting '%s'" % key, "Settings")
 		return

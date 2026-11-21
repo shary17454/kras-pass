@@ -98,7 +98,7 @@ func _build_boost_pads(arena: Arena) -> void:
 		if fwd.length_squared() > 0.0001:
 			pad.basis = Basis.looking_at(fwd, Vector3.UP)
 		ctx.world_root.add_child(pad)
-		_boost_pads.append({"pos": pos, "radius": 2.0, "cooldown": {}})
+		_boost_pads.append({"pos": pos, "node": pad, "radius": 2.0, "cooldown": {}})
 
 
 func locomotion() -> int:
@@ -345,6 +345,22 @@ func boost_pad_positions(for_slot: int) -> Array:
 		if not pad["cooldown"].has(for_slot):
 			out.append(pad["pos"])
 	return out
+
+
+func boost_pad_nodes() -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	for pad in _boost_pads:
+		var node: Node3D = pad.get("node")
+		if is_instance_valid(node):
+			out.append(node)
+	return out
+
+
+func boost_pad_available(for_slot: int, node: Node3D) -> bool:
+	for pad in _boost_pads:
+		if pad.get("node") == node:
+			return not pad["cooldown"].has(for_slot)
+	return false
 
 
 func hud_value(slot: int) -> String:

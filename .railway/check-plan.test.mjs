@@ -11,8 +11,8 @@ function fixture() {
   const target = { projectId: "eb193205-199c-4aab-8aff-1bb532dfb4a3", environmentId: "cb3cc392-8240-49a9-aeb6-e3894cace30b", environment: "production", environmentName: "production", configEtag: "reviewed-revision" };
   const desired = { resources: JSON.parse(JSON.stringify(define(createRailwayContext(target)).resources)) };
   const current = structuredClone(desired);
-  api(current).build = { builder: "RAILPACK" };
-  api(current).deploy = { multiRegionConfig: { ams: { numReplicas: 1 } } };
+  api(current).build = { builder: "RAILPACK", buildEnvironment: "V3" };
+  api(current).deploy = { multiRegionConfig: { ams: { numReplicas: 1 } }, runtime: "V2", ipv6EgressEnabled: false, useLegacyStacker: false };
   return { ok: true, command: "plan", currentEnvironment: target, currentGraph: current, desiredGraph: desired, diagnostics: [], changeSet: { changes: [{ kind: "resource.update", severity: "safe", summary: "Update kras-pass deploy.healthcheckPath", details: ["deploy.healthcheckPath (null → \"/health\")"] }] } };
 }
 
@@ -37,6 +37,12 @@ for (const [name, mutate] of [
   ["resource removal", p => { p.changeSet.changes[0].kind = "resource.delete"; }],
   ["unrelated update", p => { p.changeSet.changes[0].summary = "Update other-service deploy.healthcheckPath"; }],
   ["variable update", p => { p.changeSet.changes[0].details = ["variables.OWNER_EMAIL (changed)"]; }],
+  ["unreported network edit", p => { api(p.desiredGraph).networking = { serviceDomains: { "other.example": { port: 80 } } }; }],
+  ["unreported tracing edit", p => { api(p.desiredGraph).tracing = { enabled: true }; }],
+  ["unreported service rename", p => { api(p.desiredGraph).name = "other"; }],
+  ["unreported grouping edit", p => { api(p.desiredGraph).groupId = "other"; }],
+  ["unreported runtime edit", p => { api(p.desiredGraph).deploy.runtime = "other"; }],
+  ["unreported build environment edit", p => { api(p.desiredGraph).build.buildEnvironment = "V2"; }],
 ]) {
   test(`rejects ${name}`, () => {
     const plan = fixture();
