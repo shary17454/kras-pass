@@ -576,6 +576,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _tick_phase(delta: float, seeking := false) -> void:
+	# Pause the entire recording lifecycle, not just live input playback.
+	if playback != null and playback_paused and not seeking:
+		return
 	match phase:
 		P.INTRO, P.INSTRUCTIONS, P.NEXT_ROUND:
 			_advance_timed_phase(delta)
@@ -1063,6 +1066,9 @@ func _complete_match() -> void:
 		_set_phase(P.DONE)
 		return
 	if playback == null:
+		# Owner callbacks record checkpoints/rewards synchronously before routing.
+		# Keep their nested flushes atomic with the match stats and receipts.
+		SaveSystem.begin_batch()
 		Stats.record_match(config, aggregate)
 		Achievements.evaluate_all()
 		_store_replay(aggregate)
@@ -1083,6 +1089,7 @@ func _complete_match() -> void:
 			"config": config,
 			"replay": _replay if _replay_enabled else null,
 		}, false)
+	SaveSystem.end_batch()
 
 
 ## Turn the recording into a stored replay, with its highlights already found.
