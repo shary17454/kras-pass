@@ -16,7 +16,8 @@ extends RefCounted
 ## Four-player raw inputs cost 2160 bytes/s and keyframes 600 bytes/s at 60 Hz,
 ## excluding events, hashes, container overhead and JSON/base64 encoding.
 
-const VERSION := 5
+const VERSION := 6
+const COMBAT_REVISION := 1
 const HASH_INTERVAL := 30    # ticks between state checkpoints
 const KEYFRAME_INTERVAL := 6 # ticks between position corrections (10 Hz)
 ## Position, liveness, score — and velocity, which is the half that was
@@ -31,6 +32,8 @@ var id := ""
 var version := VERSION
 var created_at := 0
 var engine_build := ""
+## Independent of the container schema: old recordings retain ordered combat.
+var combat_revision := COMBAT_REVISION
 
 # --- what to replay --------------------------------------------------------
 var minigame_id := ""
@@ -264,6 +267,7 @@ func to_dict() -> Dictionary:
 		"id": id,
 		"created_at": created_at,
 		"engine_build": engine_build,
+		"combat_revision": combat_revision,
 		"minigame_id": minigame_id,
 		"arena_id": arena_id,
 		"seed": seed_value,
@@ -306,6 +310,7 @@ static func from_dict(d: Dictionary) -> ReplayData:
 	r.id = String(d.get("id", ""))
 	r.created_at = int(d.get("created_at", 0))
 	r.engine_build = String(d.get("engine_build", ""))
+	r.combat_revision = int(d.get("combat_revision", 0))
 	r.minigame_id = String(d.get("minigame_id", ""))
 	r.arena_id = String(d.get("arena_id", ""))
 	r.seed_value = int(d.get("seed", 0))
@@ -388,7 +393,7 @@ static func _valid_schema(d: Dictionary) -> bool:
 	for key in ["id", "engine_build", "minigame_id", "arena_id", "frames_b64", "keyframes_b64"]:
 		if d.has(key) and not d[key] is String:
 			return false
-	for key in ["version", "created_at", "seed", "rounds", "tick_rate", "tick_count"]:
+	for key in ["version", "created_at", "seed", "rounds", "tick_rate", "tick_count", "combat_revision"]:
 		if d.has(key) and not _integer_value(d[key]):
 			return false
 	for key in ["duration", "duration_override"]:
@@ -404,6 +409,10 @@ static func _valid_schema(d: Dictionary) -> bool:
 		if d.has(key) and not d[key] is Array:
 			return false
 	if int(d.get("version", 1)) < 1 or int(d.get("tick_rate", 60)) <= 0:
+		return false
+	if int(d.get("version", 1)) >= 6 and not d.has("combat_revision"):
+		return false
+	if int(d.get("combat_revision", 0)) < 0 or int(d.get("combat_revision", 0)) > COMBAT_REVISION:
 		return false
 	if int(d.get("tick_count", 0)) < 0 or int(d.get("rounds", 1)) < 1:
 		return false

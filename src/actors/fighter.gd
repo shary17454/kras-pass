@@ -111,6 +111,10 @@ var _size_power := 1.0
 var _size_game := 1.0        ## per-mini-game baseline, independent of mutators/power-ups
 var _wish_smooth := Vector3.ZERO
 var _snow_timer := 0.0
+var _tick_prepared := false
+var _prepared_hitstop := false
+var _prepared_wish := Vector3.ZERO
+var _prepared_attack := false
 
 ## Multiplicative modifiers owned by PowerUpSystem. Fighters never write these.
 ## `resist_taken` multiplies incoming knockback (tough < 1, frail > 1),
@@ -332,6 +336,47 @@ func tick(frame: InputFrame, delta: float) -> void:
 		wish = _condition_wish(wish, delta)
 		_handle_buttons(frame)
 
+	_integrate_motion(wish, delta, operation_started)
+
+
+## MatchScene prepares every body before any melee hit can change eligibility.
+func prepare_tick(frame: InputFrame, delta: float) -> void:
+	_tick_prepared = alive
+	_prepared_attack = false
+	_prepared_wish = Vector3.ZERO
+	_prepared_hitstop = _hitstop > 0.0
+	if not _tick_prepared or _prepared_hitstop:
+		return
+	_pre_vel = velocity
+	_advance_timers(delta)
+	if control_enabled and _stun <= 0.0 and mods["frozen"] <= 0.0:
+		_prepared_wish = Vector3(frame.move.x, 0.0, frame.move.y).limit_length(1.0)
+		_prepared_wish = _condition_wish(_prepared_wish, delta)
+		_handle_buttons(frame, true)
+
+
+func integrate_prepared_tick(delta: float) -> void:
+	if not _tick_prepared:
+		return
+	_tick_prepared = false
+	_prepared_attack = false
+	if not alive:
+		return
+	# Old and newly received hitstop both consume exactly one shared tick here.
+	if _prepared_hitstop or _hitstop > 0.0:
+		_hitstop -= delta
+		velocity = Vector3.ZERO
+		var collision_started := DevTools.operations.begin()
+		move_and_slide()
+		DevTools.operations.finish_physics(self, slot, collision_started)
+		return
+	var wish := _prepared_wish
+	if not control_enabled or _stun > 0.0 or mods["frozen"] > 0.0:
+		wish = Vector3.ZERO
+	_integrate_motion(wish, delta, DevTools.operations.begin())
+
+
+func _integrate_motion(wish: Vector3, delta: float, operation_started: int) -> void:
 	match locomotion:
 		Locomotion.DRIVE:
 			_integrate_drive(wish, delta)
@@ -383,7 +428,7 @@ func _advance_timers(delta: float) -> void:
 		_last_hit_by = -1
 
 
-func _handle_buttons(frame: InputFrame) -> void:
+func _handle_buttons(frame: InputFrame, prepare_melee := false) -> void:
 	if can_jump and frame.just_pressed(InputFrame.Btn.JUMP) and is_on_floor():
 		velocity.y = jump_velocity * float(mods["jump"])
 		_squash = Vector3(0.78, 1.3, 0.78)
@@ -391,7 +436,10 @@ func _handle_buttons(frame: InputFrame) -> void:
 	if can_dash and frame.just_pressed(InputFrame.Btn.DASH) and _dash_cd <= 0.0:
 		_do_dash(frame)
 	if can_attack and frame.just_pressed(InputFrame.Btn.ATTACK) and _attack_cd <= 0.0:
-		_do_attack()
+		if prepare_melee:
+			_prepared_attack = true
+		else:
+			_do_attack()
 
 
 ## True when there is enough meter left to dash. The AI asks before pressing so
@@ -434,12 +482,17 @@ func _do_dash(frame: InputFrame) -> void:
 	AudioManager.play_sfx("dash", global_position, _voice())
 
 
-func _do_attack() -> void:
+func _start_attack() -> void:
 	var t := _tuning
 	_attack_cd = float(t.get("attack_cooldown", 0.55))
 	_attack_time = float(t.get("attack_duration", 0.2))
 	attacked.emit(slot)
 	AudioManager.play_sfx("swing", global_position, _voice())
+
+
+func _do_attack() -> void:
+	_start_attack()
+	var t := _tuning
 	var range_ := float(t.get("attack_range", 2.1))
 	var arc := cos(deg_to_rad(float(t.get("attack_arc_deg", 100.0)) * 0.5))
 	var strength := float(t.get("attack_knockback", 11.0)) * knock_power * float(mods["push"])
@@ -454,6 +507,55 @@ func _do_attack() -> void:
 		if facing.normalized().dot(to / dist) < arc:
 			continue
 		other.take_hit(slot, to.normalized(), strength, float(t.get("attack_damage", 9.0)))
+
+
+## Freeze outgoing commands before applying hits, but retain normal one-hit
+## immunity on each victim. Nearest contender wins; exact ties use stable slots.
+static func resolve_prepared_melee(fighters: Array[Fighter]) -> void:
+	var attacks: Array[Fighter] = []
+	var hits: Array[Dictionary] = []
+	for attacker in fighters:
+		if not is_instance_valid(attacker) or not attacker._tick_prepared or not attacker._prepared_attack:
+			continue
+		attacker._prepared_attack = false
+		attacks.append(attacker)
+		var t := attacker._tuning
+		var range_ := float(t.get("attack_range", 2.1))
+		var arc := cos(deg_to_rad(float(t.get("attack_arc_deg", 100.0)) * 0.5))
+		var strength := float(t.get("attack_knockback", 11.0)) * attacker.knock_power * float(attacker.mods["push"])
+		for victim in fighters:
+			if not is_instance_valid(victim) or victim == attacker or not victim.alive:
+				continue
+			if victim.teammates.has(attacker.slot):
+				continue
+			var to := victim.global_position - attacker.global_position
+			to.y = 0.0
+			var distance := to.length()
+			if distance > range_ or distance < 0.01:
+				continue
+			if attacker.facing.normalized().dot(to / distance) < arc:
+				continue
+			hits.append({"victim": victim, "from": attacker.slot, "direction": to / distance,
+				"strength": strength, "damage": float(t.get("attack_damage", 9.0)), "distance": distance})
+	for attacker in attacks:
+		if is_instance_valid(attacker) and attacker.alive:
+			attacker._start_attack()
+	# Synchronous game callbacks (crystal destruction) may eliminate an owner.
+	# Freeze survivors now, so melee stun/defeat later cannot cancel a trade.
+	var live_commands := {}
+	for attacker in attacks:
+		if is_instance_valid(attacker) and attacker.alive:
+			live_commands[attacker.slot] = true
+	hits.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a.distance != b.distance:
+			return a.distance < b.distance
+		if a.from != b.from:
+			return a.from < b.from
+		return a.victim.slot < b.victim.slot)
+	for hit in hits:
+		var victim: Fighter = hit.victim
+		if live_commands.has(int(hit.from)) and is_instance_valid(victim):
+			victim.take_hit(int(hit.from), hit.direction, float(hit.strength), float(hit.damage))
 
 
 ## Central damage/knockback entry point. Everything that pushes a player —

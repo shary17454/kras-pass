@@ -670,10 +670,19 @@ func _tick_live(delta: float) -> void:
 				b.tick(delta)
 	DevTools.operations.finish("match.ai", operation_started)
 	operation_started = DevTools.operations.begin()
-	# 2. fighters integrate (InputRouter has already refreshed frames)
-	for f in _fighters:
-		if is_instance_valid(f):
-			f.tick(InputRouter.frame(f.slot), delta)
+	# 2. Preserve recorded combat semantics; new matches resolve melee before movement.
+	if playback != null and playback.combat_revision == 0:
+		for f in _fighters:
+			if is_instance_valid(f):
+				f.tick(InputRouter.frame(f.slot), delta)
+	else:
+		for f in _fighters:
+			if is_instance_valid(f):
+				f.prepare_tick(InputRouter.frame(f.slot), delta)
+		Fighter.resolve_prepared_melee(_fighters)
+		for f in _fighters:
+			if is_instance_valid(f):
+				f.integrate_prepared_tick(delta)
 	# Body-to-body shoves are resolved here, after every body has moved, so the
 	# exchange does not depend on the order the fighters were ticked in.
 	var impacts_started := DevTools.operations.begin()
