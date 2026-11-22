@@ -408,6 +408,9 @@ func _receive(m: Dictionary) -> void:
 					or not m.get("token") is String or m.token.is_empty() or m.token.length() > 128:
 				online_error.emit("invalid_response")
 				return
+			if not RoomClient.compatible_ruleset(m):
+				_protocol_rejected()
+				return
 			local_peer_id = int(m.id)
 			_token = String(m.token)
 			_retry_until = 0
@@ -427,6 +430,9 @@ func _receive(m: Dictionary) -> void:
 				online_error.emit(code)
 		"pong": ping_ms = maxi(0, Time.get_ticks_msec() - int(m.get("stamp", 0)))
 		"room":
+			if not RoomClient.compatible_ruleset(m):
+				_protocol_rejected()
+				return
 			if not _valid_room_message(m):
 				online_error.emit("invalid_response")
 				return
@@ -447,6 +453,9 @@ func _receive(m: Dictionary) -> void:
 			_set_state(State.LOBBY if room_state in ["lobby", "results"] else State.IN_MATCH)
 			room_updated.emit()
 		"start":
+			if not RoomClient.compatible_ruleset(m):
+				_protocol_rejected()
+				return
 			if not _valid_start_message(m):
 				online_error.emit("invalid_response")
 				return
@@ -551,7 +560,8 @@ func _valid_result_message(message: Dictionary) -> bool:
 
 
 func _valid_start_message(message: Dictionary) -> bool:
-	if not _protocol_integer(message.get("epoch"), 1, 9007199254740991) \
+	if not RoomClient.compatible_ruleset(message) \
+			or not _protocol_integer(message.get("epoch"), 1, 9007199254740991) \
 			or not _protocol_integer(message.get("seed"), 0, 2147483647):
 		return false
 	var config: Variant = message.get("config")
@@ -628,7 +638,8 @@ func _valid_game_settings(value: Variant) -> bool:
 
 
 func _valid_room_message(message: Dictionary) -> bool:
-	if not _valid_room_code(message.get("code")) or message.get("state") not in ["lobby", "loading", "playing", "results"] \
+	if not RoomClient.compatible_ruleset(message) \
+			or not _valid_room_code(message.get("code")) or message.get("state") not in ["lobby", "loading", "playing", "results"] \
 			or not _protocol_integer(message.get("capacity"), 2, 4) \
 			or not _protocol_integer(message.get("host"), 1, 9007199254740991) \
 			or not _valid_game_settings(message.get("config")) \
@@ -658,7 +669,7 @@ func _valid_room_list(value: Variant) -> bool:
 		return false
 	var codes := {}
 	for room in value:
-		if not room is Dictionary or not _valid_room_code(room.get("code")) \
+		if not room is Dictionary or not RoomClient.compatible_ruleset(room) or not _valid_room_code(room.get("code")) \
 				or not _valid_peer_name(room.get("host")) or not _protocol_integer(room.get("capacity"), 2, 4) \
 				or not _protocol_integer(room.get("count"), 1, int(room.capacity)):
 			return false

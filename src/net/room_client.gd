@@ -4,6 +4,9 @@ signal message_received(message: Dictionary)
 signal transport_lost(reason: String)
 
 const PROTOCOL_VERSION := 2
+## Session compatibility identity, independent of replay/container revisions.
+const ONLINE_RULESET_ID := "atomic-v2"
+const RULESET_VERSION := 1
 
 var socket: WebSocketPeer
 var endpoint := ""
@@ -51,6 +54,8 @@ func send(message: Dictionary) -> bool:
 		return false
 	var packet := message.duplicate(true)
 	packet["v"] = PROTOCOL_VERSION
+	# Never accept a per-message override, including during token reconnect.
+	packet["ruleset"] = ONLINE_RULESET_ID
 	return socket.send_text(JSON.stringify(packet)) == OK
 
 
@@ -91,7 +96,16 @@ func _process(_delta: float) -> void:
 static func compatible_hello(message: Dictionary) -> bool:
 	var version: Variant = message.get("v")
 	return message.get("op") == "hello" and (version is int or version is float) \
-		and version == PROTOCOL_VERSION
+		and version == PROTOCOL_VERSION and compatible_ruleset_server(message)
+
+
+static func compatible_ruleset_server(message: Dictionary) -> bool:
+	var version: Variant = message.get("ruleset_version")
+	return (version is int or version is float) and version == RULESET_VERSION
+
+
+static func compatible_ruleset(message: Dictionary) -> bool:
+	return message.get("ruleset") is String and message.ruleset == ONLINE_RULESET_ID
 
 
 func close() -> void:

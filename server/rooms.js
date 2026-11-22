@@ -7,6 +7,8 @@ import {validGoalGuardWorld, validCollectionWorld, validZoneWorld, validRelicWor
 
 // Version 2 includes the expanded Colossus exposure snapshot contract.
 export const PROTOCOL = 2;
+export const LEGACY_RULESET_ID = 'legacy';
+export const RULESET_VERSION = 1;
 export const ONLINE_ARENAS = Object.freeze({sabaq_sawarikh: ['dune_circuit', 'neon_spiral', 'frost_hairpin', 'magma_ring', 'sky_causeway', 'alula_rain', 'sinbad_coast', 'pharaoh_valley'], kart_sprint: ['circuit_loop'], fawda: ['vortex_ring', 'storm_ring'], scrap_karts: ['scrap_yard'], tank_arena: ['tank_foundry', 'tank_oasis', 'tank_frost'], ring_rumble: ['vortex_ring', 'storm_ring'], goal_guard: ['quad_court'],
   boss_colossus: ['vortex_ring'], boss_sovereign: ['vortex_ring'], boss_dreadnought: ['iron_flats'], boss_forge: ['crate_yard'], base_siege: ['iron_flats', 'crate_yard'], gem_grab: ['gem_hollow', 'glass_terrace'], star_rush: ['star_meadow'], zone_hold: ['dune_ring'],
   relic_hold: ['star_meadow', 'gem_hollow'], tag_hunt: ['star_meadow', 'paint_grid'],
@@ -20,6 +22,17 @@ const validInput = m => integer(m.sequence, 0, Number.MAX_SAFE_INTEGER)
   && Array.isArray(m.axes) && m.axes.length === 4
   && m.axes.every(v => Number.isFinite(v) && Math.abs(v) <= 1) && integer(m.bits, 0, 31);
 const cleanName = v => typeof v === 'string' ? v.replace(/[\p{C}<>]/gu, '').trim().slice(0, 24) : '';
+
+function declareRuleset(connection, message, protocol) {
+  const ruleset = protocol === 1 || !Object.hasOwn(message, 'ruleset') ? LEGACY_RULESET_ID : message.ruleset;
+  if (typeof ruleset !== 'string' || !/^[a-z][a-z0-9-]{0,63}$/.test(ruleset)) fail('invalid_ruleset');
+  if (Object.hasOwn(connection, 'ruleset')) {
+    if (connection.ruleset !== ruleset) fail('version_mismatch');
+  } else {
+    Object.defineProperty(connection, 'ruleset', {value: ruleset, enumerable: true});
+  }
+  return ruleset;
+}
 
 function tournamentSettings(value) {
   if (value == null) return null;
@@ -109,10 +122,12 @@ export class Rooms {
     if (!message || typeof message !== 'object' || Array.isArray(message)) fail('invalid_request');
     const c = connection, m = message;
     if (m.v !== this.protocol) fail('version_mismatch');
+    const ruleset = declareRuleset(c, m, this.protocol);
     if (m.op === 'list') {
       c.send({op: 'rooms', rooms: [...this.rooms.values()]
-        .filter(r => r.public && r.state === 'lobby' && r.players.size < r.capacity && r.players.get(r.host)?.connection)
-        .slice(0, 100).map(r => ({code: r.code, host: r.players.get(r.host).name, count: r.players.size, capacity: r.capacity}))});
+        .filter(r => r.ruleset === ruleset && r.public && r.state === 'lobby' && r.players.size < r.capacity && r.players.get(r.host)?.connection)
+        .slice(0, 100).map(r => ({code: r.code, host: r.players.get(r.host).name, count: r.players.size, capacity: r.capacity,
+          ...this.rulesetFields(r)}))});
       return;
     }
     if (m.op === 'ping') { c.send({op: 'pong', stamp: m.stamp}); return; }
@@ -126,12 +141,13 @@ export class Rooms {
       const r = {code, public: m.public, capacity: m.capacity, host: 1, next: 1, players: new Map(),
         state: 'lobby', touched: this.now(), epoch: 0, snapshot: null, result: null, tournament: null,
         config: {game: 'ring_rumble', arena: 'vortex_ring', rounds: 3, bots: true, difficulty: 1}};
+      Object.defineProperty(r, 'ruleset', {value: ruleset, enumerable: true});
       this.rooms.set(code, r); this.join(c, r, m.name); return;
     }
     if (m.op === 'join') {
       if (c.room) fail('already_joined');
       const r = this.rooms.get(m.code);
-      if (!r || r.state !== 'lobby' || !r.players.get(r.host)?.connection) fail('room_unavailable');
+      if (!r || r.ruleset !== ruleset || r.state !== 'lobby' || !r.players.get(r.host)?.connection) fail('room_unavailable');
       if (r.players.size >= r.capacity) fail('room_full');
       this.join(c, r, m.name); return;
     }
@@ -143,6 +159,7 @@ export class Rooms {
       && this.now() < c.retiredMatch.until && integer(m.epoch, 1, c.retiredMatch.epoch)
       && validInput(m)) return;
     if (!r || !p || p.connection !== c) fail('not_joined');
+    if (r.ruleset !== ruleset || p.ruleset !== ruleset) fail('version_mismatch');
     r.touched = this.now();
     if (m.op === 'leave') { this.remove(r, p, 'left'); return; }
     if (m.op === 'ready') {
@@ -174,6 +191,7 @@ export class Rooms {
     if (m.op === 'start') {
       this.host(c);
       if (r.state !== 'lobby' || [...r.players.values()].some(p => !p.ready || !p.connection)) fail('not_ready');
+      this.checkRuleset(r);
       if (r.players.size < 2 && !r.config.bots) fail('not_enough_players');
       // Slots are contiguous for the shared match runtime; peer IDs stay stable.
       [...r.players.values()].forEach((p, slot) => { p.slot = slot; p.loaded = false; p.sequence = -1; });
@@ -240,7 +258,12 @@ export class Rooms {
   }
 
   host(c) { if (c.player.id !== c.room.host) fail('host_only'); }
+  rulesetFields(r) { return this.protocol === 2 ? {ruleset: r.ruleset} : {}; }
+  checkRuleset(r) {
+    if ([...r.players.values()].some(p => p.ruleset !== r.ruleset || p.connection?.ruleset !== r.ruleset)) fail('version_mismatch');
+  }
   beginRound(r) {
+    this.checkRuleset(r);
     const seed = this.nextSeed();
     r.state = 'loading'; r.loadingAt = this.now(); r.epoch++; r.seed = seed;
     r.snapshot = null; r.result = null;
@@ -250,27 +273,30 @@ export class Rooms {
     this.broadcastRoom(r); this.broadcast(r, {op: 'start', ...this.match(r)});
   }
   match(r) { return {epoch: r.epoch, seed: r.seed, config: r.matchConfig, players: r.roster,
-    tournament: r.tournament?.view() ?? null}; }
+    tournament: r.tournament?.view() ?? null, ...this.rulesetFields(r)}; }
   join(c, r, name) {
+    if (c.ruleset !== r.ruleset) fail('room_unavailable');
     const usedSlots = new Set([...r.players.values()].map(p => p.slot));
     let slot = 0;
     while (usedSlots.has(slot)) slot++;
     const p = {id: r.next++, slot, name: cleanName(name) || 'Player', character: 0,
       ready: false, loaded: false, sequence: -1, connection: c, token: randomBytes(32).toString('base64url'), expires: 0};
+    Object.defineProperty(p, 'ruleset', {value: r.ruleset, enumerable: true});
     c.retiredMatch = null;
     c.room = r; c.player = p; r.players.set(p.id, p); this.sessions.set(p.token, {r, p});
-    c.send({op: 'welcome', id: p.id, token: p.token}); this.broadcastRoom(r);
+    c.send({op: 'welcome', id: p.id, token: p.token, ...this.rulesetFields(r)}); this.broadcastRoom(r);
   }
   resume(c, token) {
     if (c.room || typeof token !== 'string') fail('invalid_request');
     const session = this.sessions.get(token);
-    if (!session) fail('session_expired');
+    // A different ruleset must not learn whether a token exists or is active.
+    if (!session || session.r.ruleset !== c.ruleset || session.p.ruleset !== c.ruleset) fail('session_expired');
     if (session.p.connection) fail('session_active');
     if (session.p.expires <= this.now()) fail('session_expired');
     const {r, p} = session; p.connection = c; p.expires = 0; c.room = r; c.player = p;
     c.retiredMatch = null;
     if (p.id === r.host && r.state === 'playing') r.authoritySeen = this.now();
-    c.send({op: 'welcome', id: p.id, token: p.token}); this.broadcastRoom(r);
+    c.send({op: 'welcome', id: p.id, token: p.token, ...this.rulesetFields(r)}); this.broadcastRoom(r);
     if (r.state !== 'lobby') c.send({op: 'start', ...this.match(r)});
     if (r.state !== 'lobby' && r.snapshot) c.send(r.snapshot);
     if (r.state === 'results' && r.result) c.send(r.result);
@@ -315,6 +341,7 @@ export class Rooms {
   }
   view(r) {
     return {op: 'room', code: r.code, host: r.host, capacity: r.capacity, state: r.state, config: r.config,
+      ...this.rulesetFields(r),
       tournament: r.tournament?.view() ?? null,
       players: [...r.players.values()].map(p => ({id: p.id, slot: p.slot, name: p.name, character: p.character,
         ready: p.ready, connected: !!p.connection}))};

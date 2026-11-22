@@ -4,7 +4,7 @@ const Service = preload("res://src/net/net_service.gd")
 
 
 func _packet() -> Dictionary:
-	return {"op": "start", "epoch": 7, "seed": 51,
+	return {"op": "start", "ruleset": Service.RoomClient.ONLINE_RULESET_ID, "epoch": 7, "seed": 51,
 		"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
 		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0},
 			{"id": 2, "slot": 1, "name": "Guest", "character": 1}]}

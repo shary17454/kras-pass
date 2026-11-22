@@ -298,8 +298,8 @@ func _protocol_policy(t: TestHarness) -> void:
 	t.suite("Network protocol compatibility")
 	var transport = load("res://src/net/room_client.gd").new()
 	t.equal(transport.PROTOCOL_VERSION, 2, "snapshot revision uses protocol two")
-	t.ok(transport.compatible_hello({"op": "hello", "v": 2}), "accept current server")
-	t.ok(transport.compatible_hello(JSON.parse_string('{"op":"hello","v":2}')), "accept JSON numeric version")
+	t.ok(transport.compatible_hello({"op": "hello", "v": 2, "ruleset_version": 1}), "accept current server")
+	t.ok(transport.compatible_hello(JSON.parse_string('{"op":"hello","v":2,"ruleset_version":1}')), "accept JSON numeric version")
 	for version in [null, 0, 1, 3, 2.1, "2", true, false, NAN, INF]:
 		t.ok(not transport.compatible_hello({"op": "hello", "v": version}), "reject incompatible or malformed version")
 	t.ok(not transport.compatible_hello({"op": "welcome", "v": 2}), "require hello operation")
@@ -669,7 +669,7 @@ func _input_buffer_limits(t: TestHarness) -> void:
 	t.test("new round, disconnect and session reset cannot replay old actions")
 	Net._receive(_packet(1, 4, 44))
 	Net._last_input_tick = 50
-	Net._receive({"op": "start", "epoch": 4, "seed": 51,
+	Net._receive({"op": "start", "ruleset": Net.RoomClient.ONLINE_RULESET_ID, "epoch": 4, "seed": 51,
 		"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 1, "difficulty": 1},
 		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0},
 			{"id": 2, "slot": 1, "name": "Guest", "character": 1}]})

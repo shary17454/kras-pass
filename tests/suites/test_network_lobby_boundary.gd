@@ -4,7 +4,7 @@ const Service = preload("res://src/net/net_service.gd")
 
 
 func _room() -> Dictionary:
-	return {"op": "room", "code": "ABCD23", "host": 1, "capacity": 4, "state": "lobby",
+	return {"op": "room", "ruleset": Service.RoomClient.ONLINE_RULESET_ID, "code": "ABCD23", "host": 1, "capacity": 4, "state": "lobby",
 		"config": {"game": "ring_rumble", "arena": "vortex_ring", "rounds": 3, "bots": true, "difficulty": 1},
 		"tournament": null,
 		"players": [{"id": 1, "slot": 0, "name": "Host", "character": 0, "ready": false, "connected": true},
@@ -138,7 +138,7 @@ func _schema(t: TestHarness) -> void:
 	var duplicate := config.duplicate(true)
 	duplicate.tournament.entries.append(duplicate.tournament.entries[0].duplicate(true))
 	t.ok(not service._valid_game_settings(duplicate), "duplicate playlist entry is rejected")
-	var list := [{"code": "ABCD23", "host": "Host", "count": 1, "capacity": 4}]
+	var list := [{"code": "ABCD23", "host": "Host", "count": 1, "capacity": 4, "ruleset": Service.RoomClient.ONLINE_RULESET_ID}]
 	t.ok(service._valid_room_list([]), "empty public room list is legal")
 	t.ok(service._valid_room_list(list), "valid public room is accepted")
 	for value in [null, true, "bad", {}, 1, [null], [list[0], list[0]]]:
@@ -156,7 +156,7 @@ func _schema(t: TestHarness) -> void:
 func _copy_isolation(t: TestHarness) -> void:
 	t.suite("accepted room and browser state do not alias incoming dictionaries")
 	var service := Service.new()
-	service._receive({"op": "welcome", "id": 1.0, "token": "fixture-valid"})
+	service._receive({"op": "welcome", "id": 1.0, "token": "fixture-valid", "ruleset": Service.RoomClient.ONLINE_RULESET_ID})
 	t.equal(service.local_peer_id, 1, "JSON welcome installs identity")
 	t.equal(service._token, "fixture-valid", "valid welcome installs its opaque token")
 	var message := _room()
@@ -170,7 +170,7 @@ func _copy_isolation(t: TestHarness) -> void:
 	t.equal(service.tournament.points[0], 5, "standings are a deep copy")
 	var received: Array = []
 	service.rooms_received.connect(func(rooms): received.append(rooms))
-	var listing := {"op": "rooms", "rooms": [{"code": "ABCD23", "host": "Host", "count": 1, "capacity": 4}]}
+	var listing := {"op": "rooms", "rooms": [{"code": "ABCD23", "host": "Host", "count": 1, "capacity": 4, "ruleset": Service.RoomClient.ONLINE_RULESET_ID}]}
 	service._receive(listing)
 	listing.rooms[0].host = "Changed"
 	t.equal(received[0][0].host, "Host", "browser rows are independent copies")
