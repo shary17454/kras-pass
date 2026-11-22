@@ -179,7 +179,8 @@ func _build() -> void:
 			chip["portrait"].visible = not portrait and not _compact_players()
 			chip["name"].custom_minimum_size.x = 0 if portrait or _compact_players() else 100
 			chip["name"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
-			chip["value"].add_theme_font_size_override("font_size", int((24 if portrait else 32) * text_scale))
+			chip["value_font_size"] = int((24 if portrait else 32) * text_scale)
+			_fit_chip_value(chip)
 			chip["detail"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 			chip["crown"].add_theme_font_size_override("font_size", int((14 if portrait else 22) * text_scale))
 			chip["meter"].custom_minimum_size = Vector2(60 if portrait else METER_WIDTH, 6 if portrait else 16)
@@ -342,12 +343,9 @@ func _make_chip(p: PlayerConfig) -> Control:
 	value.name = "Value"
 	if _compact_players():
 		value.add_theme_font_size_override("font_size", 28)
-	value.clip_text = true
-	var score_row := HBoxContainer.new()
-	score_row.add_theme_constant_override("separation", 6)
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	score_row.add_child(value)
-	box.add_child(score_row)
+	box.add_child(value)
 	var detail := UIKit.label("", UIKit.SIZE_SMALL, UIKit.text_color())
 	detail.name = "Detail"
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -362,10 +360,12 @@ func _make_chip(p: PlayerConfig) -> Control:
 	meter.visible = controller != null and controller.allows_dash()
 	box.add_child(meter)
 
-	var effects := HBoxContainer.new()
+	# Effects must not consume the numeric value's width, even with four chips.
+	var effects := HFlowContainer.new()
 	effects.name = "Effects"
-	effects.add_theme_constant_override("separation", 6)
-	score_row.add_child(effects)
+	effects.add_theme_constant_override("h_separation", 6)
+	effects.add_theme_constant_override("v_separation", 2)
+	box.add_child(effects)
 	var effect_labels := {}
 	for definition in Registry.powerups():
 		var label := UIKit.label(definition.glyph, 22, UIKit.adapt(definition.color), true)
@@ -373,12 +373,49 @@ func _make_chip(p: PlayerConfig) -> Control:
 		effects.add_child(label)
 		effect_labels[definition.id] = label
 
-	_chips.append({"root": card, "value": value, "detail": detail, "effects": effects, "slot": p.slot,
+	var chip := {"root": card, "value": value, "detail": detail, "effects": effects, "slot": p.slot,
 		"effect_labels": effect_labels,
+		"value_font_size": value.get_theme_font_size("font_size"),
 		"color": col, "meter": meter, "charge": -1.0,
-		"crown": crown, "name": name_label, "portrait": portrait})
+		"crown": crown, "name": name_label, "portrait": portrait}
+	_chips.append(chip)
+	value.resized.connect(func(): _fit_chip_value(chip))
 	card.resized.connect(_fit_announcement)
 	return card
+
+
+func _fit_chip_value(chip: Dictionary) -> void:
+	var value: Label = chip["value"]
+	if value.size.x <= 0.0:
+		return
+	var font := value.get_theme_font("font")
+	var preferred: int = chip["value_font_size"]
+	var minimum := mini(preferred, int(ceilf(14.0 * UIKit.scale())))
+	var current_size := value.get_theme_font_size("font_size")
+	var cached: Dictionary = chip.get("value_fit_cache", {})
+	if cached.get("text") == value.text and cached.get("width") == value.size.x \
+		and cached.get("preferred") == preferred and cached.get("minimum") == minimum \
+		and cached.get("font") == font and cached.get("fitted") == current_size:
+		return
+	# One subscription per font/HUD, not per chip. In-place resource edits are
+	# rare and invalidate all four caches; Godot disconnects the freed HUD.
+	if not font.changed.is_connected(_invalidate_chip_values):
+		font.changed.connect(_invalidate_chip_values)
+	var fitted := preferred
+	# Keep stock and percentage intact; wrap between them instead of shrinking
+	# the entire line. Only fit an individual token when the actual font needs it.
+	for token in value.text.replace("\n", " ").split(" ", false):
+		while fitted > minimum and font.get_string_size(token, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted).x > value.size.x:
+			fitted -= 1
+	if current_size != fitted:
+		value.add_theme_font_size_override("font_size", fitted)
+	chip["value_fit_cache"] = {"text": value.text, "width": value.size.x,
+		"preferred": preferred, "minimum": minimum, "font": font, "fitted": fitted}
+
+
+func _invalidate_chip_values() -> void:
+	for chip in _chips:
+		chip.erase("value_fit_cache")
 
 
 func _compact_players() -> bool:
@@ -739,6 +776,7 @@ func _refresh_chips() -> void:
 		# Keep numbers prominent while allowing localized secondary status to wrap.
 		var parts := text.split("\n", true, 1)
 		chip["value"].text = parts[0]
+		_fit_chip_value(chip)
 		chip["detail"].text = parts[1] if parts.size() > 1 else ""
 		chip["detail"].visible = not chip["detail"].text.is_empty()
 		var alive: bool = ctx.is_alive(slot)
@@ -770,7 +808,7 @@ func _refresh_meter(chip: Dictionary, slot: int) -> void:
 
 
 func _refresh_effects(chip: Dictionary, slot: int) -> void:
-	var box: HBoxContainer = chip["effects"]
+	var box: HFlowContainer = chip["effects"]
 	var effects: Array = ctx.powerups.active_effects_for(slot) if ctx.powerups != null else []
 	var active := {}
 	var index := 0
