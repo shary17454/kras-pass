@@ -17,7 +17,7 @@ extends RefCounted
 ## excluding events, hashes, container overhead and JSON/base64 encoding.
 
 const VERSION := 6
-const COMBAT_REVISION := 2
+const COMBAT_REVISION := 3
 const HASH_INTERVAL := 30    # ticks between state checkpoints
 const KEYFRAME_INTERVAL := 6 # ticks between position corrections (10 Hz)
 ## Position, liveness, score — and velocity, which is the half that was
@@ -27,12 +27,15 @@ const KEYFRAME_INTERVAL := 6 # ticks between position corrections (10 Hz)
 ## invisible while bodies only walked; a shove that differs by a few metres per
 ## second re-opens metres of gap inside the six ticks between corrections.
 const KEYFRAME_BYTES_PER_PLAYER := 15
+const MAX_DUEL_REPLAY_DAMAGE := 1000000000.0
+const EVENT_LIMIT := 30000
+const EVENT_BYTE_LIMIT := 4 * 1024 * 1024
 
 var id := ""
 var version := VERSION
 var created_at := 0
 var engine_build := ""
-## 0: ordered fighters; 1: simultaneous melee; 2: atomic game action batches too.
+## 0: ordered; 1: simultaneous melee; 2: atomic bases; 3: Duel contact budget.
 var combat_revision := COMBAT_REVISION
 
 # --- what to replay --------------------------------------------------------
@@ -456,6 +459,58 @@ static func _valid_schema(d: Dictionary) -> bool:
 			return false
 		if not _integer_value(highlight.get("tick")) or int(highlight["tick"]) < 0:
 			return false
+	return _valid_event_budget(d.get("events", {})) and _valid_duel_damage_events(d)
+
+
+static func _valid_event_budget(events: Dictionary) -> bool:
+	if events.size() > EVENT_LIMIT:
+		return false
+	var count := 0
+	var bytes := 0
+	for list in events.values():
+		count += list.size()
+		if count > EVENT_LIMIT:
+			return false
+		for event in list:
+			if not event is Dictionary:
+				return false
+			bytes += JSON.stringify(event).to_utf8_buffer().size()
+			if bytes > EVENT_BYTE_LIMIT:
+				return false
+	return true
+
+
+static func valid_duel_damage_values(value: Variant, count: int) -> bool:
+	if not value is Array or count < 1 or count > 4 or value.size() != count:
+		return false
+	for damage in value:
+		if not _finite_number(damage) or float(damage) < 0.0 or float(damage) > MAX_DUEL_REPLAY_DAMAGE:
+			return false
+	return true
+
+
+static func _valid_duel_damage_events(d: Dictionary) -> bool:
+	var current_duel: bool = d.get("minigame_id") == "duel_pit" and int(d.get("combat_revision", 0)) >= 3
+	var corrections := {}
+	for tick in d.get("keyframe_ticks", []):
+		corrections[str(int(tick))] = true
+	var recorded := {}
+	for tick in d.get("events", {}):
+		for event in d.events[tick]:
+			if not event is Dictionary or event.get("kind") != "duel_damage":
+				continue
+			if not current_duel or event.size() != 2 or not tick is String \
+					or tick != str(int(tick)) or int(tick) <= 0 \
+					or int(tick) > int(d.get("tick_count", 0)) \
+					or int(tick) % KEYFRAME_INTERVAL != 0 \
+					or not corrections.has(tick) or recorded.has(tick) \
+					or not valid_duel_damage_values(event.get("damage"), d.get("players", []).size()):
+				return false
+			recorded[tick] = true
+	if current_duel:
+		for tick in corrections:
+			if not recorded.has(tick):
+				return false
 	return true
 
 

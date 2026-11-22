@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "evidenceRoot": "/Users/shrybnhshymbnmrzwqbnhwyd/Documents/Codex/2026-08-14/new-chat/qualification-quickplay-20261122/duel-compound-integrated",
+  "pathPolicy": "All evidence paths below resolve against evidenceRoot; originals remain external to Git, unchanged.",
+  "combatRevision": 3,
+  "replayVersion": 6,
+  "simulationFingerprint": "65aa9aa6ca22c34061834839a9ca09a498ca68c790f31d6ae65bbea4c9634aa4",
+  "fullSource": {"files": 2745, "tests": 525, "sparseAbsentS": 60, "stable": true, "beforeAndAfterSHA256": "1bdea23254c097049ad40659d182a461160df986c70451a1fe58bd111afb1f1d", "before": "full-01/source-before.json", "after": "full-01/source-after.json"},
+  "evidence": [
+    {"path": "duel-e2e-117-01/result.json", "sha256": "0d4abc01837d386a8a042303021db65809f5f56777f7290a54f4f5e46466b9e7", "passed": 184, "failed": 2, "exit": 1, "retainedRED": true},
+    {"path": "duel-e2e-117-02/result.json", "sha256": "ba4825182c89adb2f3937c589a6caabd6f8546886d2dbd2e5e47e0be41a140a7", "assertions": 1873, "exit": 0, "guards": [0, 0]},
+    {"path": "full-01/result-original.json", "sha256": "cab47febca6552348ccea5250ebbf4928b1c2ce0cc616c76f49a3cd5d7414061", "assertions": 531084, "seconds": 542.3, "exit": 0, "guards": [0, 0]},
+    {"path": "compile-01/result.json", "sha256": "cb36ad83c6f9ffdda66cc93a6c2e13cd57a4e5ade9f9e7c1331854258fe871f3", "scripts": 487, "exit": 0, "guards": [0, 0]},
+    {"path": "replay-revisions-01/result.json", "sha256": "497fba503175f208700bbd18d7c85da41b598e46f9ecc3d5c6cee920805f5ae7", "assertions": 81, "exit": 0},
+    {"path": "routing-03/result.json", "sha256": "32fd49c9d35bcc81874e1497147953bb09231c9e770a210aa0e533d75c675841", "assertions": 661, "exit": 0},
+    {"path": "contacts-01/result.json", "sha256": "435969bfd14ff5ac995109670bde10d20fb43baefacff408afa85f0b3039f996", "assertions": 2750, "exit": 0},
+    {"path": "damage-reset-boundaries-01/result.json", "sha256": "1fa00f27283519fadc0e2e2b982c1f7f808bbe43447d57741d1e615f2ecdada2", "assertions": 109, "exit": 0},
+    {"path": "full-01/expected-fault-policy.json", "sha256": "d823cbe6fe4a71ae4055cbec08c631332690aff9ad9be84dddbf2c70d0ce0947"},
+    {"path": "full-01/fault-audit-original.json", "sha256": "589fe9417cfef4d7ebeb6f3eef2d3b6727cd937c4161aaaa100d8fbd714101c1"},
+    {"path": "full-01/stdout.log", "sha256": "78ca55ea41519b033410e9ed032d02bf36b9e6013f97de0e4c0d431e43b5420c"},
+    {"path": "full-01/engine.log", "sha256": "bdf38fe45c9518c102e9eb7bd8afa0cd75afecf9a7849f085503ecce529f3d6d"}
+  ],
+  "sourceProof": {
+    "redSnapshot": "duel-e2e-117-01/source-before.json",
+    "greenSnapshot": "duel-e2e-117-02/source-before.json",
+    "redMatchSceneSHA256": "b204a75aa235fbc4108e3cdbe18a3a2ffd1aae0f966f3e4bf7a2bbc46fd600ca",
+    "greenMatchSceneSHA256": "99af13b8b4124d8870e60a47d78d61a171d386cbe2b65ad971350cf51dcbc0be",
+    "redReplayDataSHA256": "5466e46204d6f4f06cdda5495e33b1d131da95bda8e845a3993cb075389efaae",
+    "greenReplayDataSHA256": "8fa7fed5b745b4d2ae0de6058fbd38eb61bf9d2ec4efc541a49dee36e73e6c7b",
+    "redTestSHA256": "94d7b6fbede55b9d5d776ab1bd12e89764212a6afff023c338cd2cc91a7caaa6",
+    "greenTestSHA256": "74f76e556c8d1b22bbfe4ad5233ba702e30385632907dac61db08e75038ff6e3"
+  },
+  "e2e": {"seed": 117, "keyframes": 421, "exactDamageEvents": 421, "offKeyframeEvents": 0, "originalAssertions": 186, "addedProofAssertions": 1687, "playbackDriftM": 0.529297232627869, "seekDriftM": 0.683754146099091, "driftLimitM": 2, "desync": [-1, -1], "replaySHA256": "c164541eb0bbc96f087502ba8c11b4e9a4193cbd43bc558d5dd3fc82d3cee7a5"},
+  "expectedFaultsPerLog": {"save84": 1, "router17_25_36": 3, "innerZeroAssertionProbes": 2, "unmatchedErrors": 0, "sameSourceSHA": true, "exactStackSuiteAndCounts": true},
+  "limits": {"balanceEstablished": false, "plan270Started": false, "ready": false, "nativeValidated": false, "generalDeterminismClaim": false, "commitPushMergeByWorker": false, "workerGodotLive": false}
+}

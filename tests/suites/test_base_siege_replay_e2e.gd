@@ -11,7 +11,7 @@ var report := {"seed": SEED, "duration": 105, "guard_seconds": 180, "ai_count": 
 
 
 func run(t: TestHarness, host: Node) -> void:
-	t.suite("BaseSiege revision two natural record disk playback seek E2E")
+	t.suite("BaseSiege atomic natural record disk playback seek E2E")
 	while Replays._recovery_running:
 		await host.get_tree().process_frame
 	var root: String = SaveSystem.storage_root
@@ -99,7 +99,7 @@ func _exercise(t: TestHarness, host: Node) -> void:
 	report["ticks"] = data.tick_count()
 	report["keyframes"] = data.keyframes.size()
 	report["checkpoints"] = data.hashes.size()
-	t.equal(data.combat_revision, 2, "real saved recording routes atomic BaseSiege")
+	t.equal(data.combat_revision, ReplayData.COMBAT_REVISION, "real saved recording identifies current atomic BaseSiege")
 	t.equal(data.tick_count(), live.tick_count, "all actual live ticks were captured")
 	t.ok(data.correctable() and data.verifiable(), "only genuine recorded corrections and hashes used")
 	t.equal(data.scores, live.result.scores, "disk result scores equal real live result")

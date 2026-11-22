@@ -34,6 +34,14 @@ var knock_resist := 1.0
 var turn_rate := 12.0
 var air_control := 0.45
 
+# Duel's versioned contact profile; other games retain the authored stats.
+var _duel_compound_budget_enabled := false
+var _duel_budget_has_base := false
+var _duel_budget_base_power := 1.0
+var _duel_budget_base_resist := 1.0
+var _duel_budget_neutral_power := 1.0
+var _duel_budget_neutral_resist := 1.0
+
 # --- runtime ---------------------------------------------------------------
 var facing := Vector3.FORWARD
 var control_enabled := true
@@ -155,6 +163,7 @@ func setup(player_slot: int, character: CharacterData, mode: Locomotion = Locomo
 	_visual_theme = visual_theme
 	_mount_intact = _visual_theme == "arctic" and locomotion == Locomotion.WALK
 	_apply_character()
+	health = max_health
 	if _visual_theme == "arctic" and locomotion == Locomotion.WALK:
 		friction *= 0.58
 		acceleration *= 0.9
@@ -205,6 +214,12 @@ func _apply_character() -> void:
 	turn_rate *= d.perk_factor("turn")
 	air_control *= d.perk_factor("air_control")
 	knock_resist *= d.perk_factor("resistance")
+	_duel_budget_base_power = knock_power
+	_duel_budget_base_resist = knock_resist
+	_duel_budget_neutral_power = float(t.get("power_base", 0.72)) + float(t.get("power_range", 0.7)) * 0.5
+	_duel_budget_neutral_resist = float(t.get("resist_base", 0.7)) + float(t.get("resist_range", 0.75)) * 0.5
+	_duel_budget_has_base = true
+	reapply_duel_compound_budget_profile()
 	if locomotion == Locomotion.DRIVE:
 		# Preserve neutral pace while leaving handling and weapon counters room
 		# to matter over several laps; all input sources use the same budget.
@@ -213,7 +228,29 @@ func _apply_character() -> void:
 		top_speed *= float(t.get("drive_speed_mult", 1.5))
 		acceleration *= float(t.get("drive_accel_mult", 0.55))
 	max_health = float(t.get("base_health", 100.0))
-	health = max_health
+	if not _duel_compound_budget_enabled:
+		health = max_health
+
+
+func set_duel_compound_budget_enabled(enabled: bool) -> void:
+	_duel_compound_budget_enabled = enabled
+	reapply_duel_compound_budget_profile()
+
+
+## Recompute from post-perk stats, never from the previously scaled profile.
+## Temporary pickups/mutators and all live combat state remain untouched.
+func reapply_duel_compound_budget_profile() -> void:
+	if not _duel_budget_has_base:
+		return
+	knock_power = _duel_budget_base_power
+	knock_resist = _duel_budget_base_resist
+	if not _duel_compound_budget_enabled:
+		return
+	var relative_budget := (knock_power / _duel_budget_neutral_power) \
+		* pow(knock_resist / _duel_budget_neutral_resist, 3.0)
+	var factor := pow(clampf(relative_budget, 0.85, 1.15) / relative_budget, 0.25)
+	knock_power *= factor
+	knock_resist *= factor
 
 
 func _build_visual() -> void:

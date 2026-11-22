@@ -39,7 +39,7 @@ func run(t: TestHarness, host: Node) -> void:
 	t.not_null(restored_legacy, "explicit legacy combat remains supported")
 	if restored_legacy != null:
 		t.equal(restored_legacy.to_dict().get("combat_revision", -1), 0, "explicit legacy revision is retained")
-	for revision in [0, 1]:
+	for revision in [0, 1, 2]:
 		var previous := current.duplicate(true)
 		previous["combat_revision"] = revision
 		var restored := ReplayData.from_dict(previous)
@@ -48,7 +48,7 @@ func run(t: TestHarness, host: Node) -> void:
 			var resaved := ReplayData.from_dict(restored.to_dict())
 			t.not_null(resaved, "previous combat can be saved and loaded again")
 			if resaved != null:
-				t.equal(resaved.combat_revision, revision, "resave never upgrades revision zero or one")
+				t.equal(resaved.combat_revision, revision, "resave never upgrades historical combat")
 	var missing_current := current.duplicate(true)
 	missing_current.erase("combat_revision")
 	t.ok(ReplayData.from_dict(missing_current) == null, "new format cannot silently guess a missing combat revision")
@@ -95,23 +95,24 @@ func _disk_roundtrip(t: TestHarness, host: Node, recorded: ReplayData,
 		if stored != null:
 			t.equal(stored.to_dict().get("combat_revision", -1), 0, "disk does not silently upgrade legacy combat")
 		Replays.erase(legacy.id)
-	var revision_one := current.duplicate(true)
-	revision_one["combat_revision"] = 1
-	var melee_only := ReplayData.from_dict(revision_one)
-	t.not_null(melee_only, "revision one remains supported after revision two bump")
-	if melee_only != null:
-		melee_only.id = "combat_revision_one_fixture"
-		t.ok(Replays.save(melee_only), "revision one saves to isolated disk")
-		stored = Replays.load_replay(melee_only.id)
-		t.not_null(stored, "revision one reloads from disk")
-		if stored != null:
-			t.equal(stored.combat_revision, 1, "disk never upgrades melee-only combat to base atomic")
-			t.ok(Replays.save(stored), "loaded revision one can be re-saved")
-			var again := Replays.load_replay(stored.id)
-			t.not_null(again, "re-saved revision one reloads")
-			if again != null:
-				t.equal(again.combat_revision, 1, "revision one survives another disk resave")
-		Replays.erase(melee_only.id)
+	for revision in [1, 2]:
+		var previous := current.duplicate(true)
+		previous["combat_revision"] = revision
+		var historical_combat := ReplayData.from_dict(previous)
+		t.not_null(historical_combat, "historical combat remains supported")
+		if historical_combat != null:
+			historical_combat.id = "combat_revision_%d_fixture" % revision
+			t.ok(Replays.save(historical_combat), "historical revision saves to isolated disk")
+			stored = Replays.load_replay(historical_combat.id)
+			t.not_null(stored, "historical revision reloads from disk")
+			if stored != null:
+				t.equal(stored.combat_revision, revision, "disk cannot upgrade historical combat")
+				t.ok(Replays.save(stored), "loaded historical revision can be re-saved")
+				var again := Replays.load_replay(stored.id)
+				t.not_null(again, "re-saved historical revision reloads")
+				if again != null:
+					t.equal(again.combat_revision, revision, "historical revision survives another disk resave")
+			Replays.erase(historical_combat.id)
 	var historical := current.duplicate(true)
 	historical["version"] = 5
 	historical["id"] = "combat_revision_v5_fixture"

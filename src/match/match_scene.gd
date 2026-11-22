@@ -65,8 +65,8 @@ var _next_match_config: MatchConfig
 var _tuning := {}
 const REPLAY_MAX_TICKS := 60 * 60 * 30
 const REPLAY_INPUT_BYTE_LIMIT := 8 * 1024 * 1024
-const REPLAY_EVENT_BYTE_LIMIT := 4 * 1024 * 1024
-const REPLAY_EVENT_LIMIT := 30000
+const REPLAY_EVENT_BYTE_LIMIT := ReplayData.EVENT_BYTE_LIMIT
+const REPLAY_EVENT_LIMIT := ReplayData.EVENT_LIMIT
 var _replay := ReplayInputBuffer.new()
 var _replay_event_bytes := 0
 var _replay_event_count := 0
@@ -304,6 +304,8 @@ func _spawn_fighters(def: MiniGameDef) -> void:
 		if character == null:
 			character = Registry.characters()[p.slot % maxi(1, Registry.characters().size())]
 		f.setup(p.slot, character, mode, "atv" if config.minigame_id in ["tank_arena", "sabaq_sawarikh"] else arena.def.theme)
+		var combat_revision := playback.combat_revision if playback != null else ReplayData.COMBAT_REVISION
+		f.set_duel_compound_budget_enabled(config.minigame_id == "duel_pit" and combat_revision >= 3)
 		f.can_jump = controller.allows_jump()
 		f.can_attack = controller.allows_attack()
 		f.can_dash = controller.allows_dash()
@@ -718,6 +720,7 @@ func _tick_live(delta: float) -> void:
 	# 5. bounds
 	_check_out_of_bounds()
 	_check_water_line()
+	_record_or_apply_duel_damage()
 	# 6. clock
 	if not (DevTools.available() and DevTools.freeze_timer):
 		if controller.uses_round_clock():
@@ -787,6 +790,35 @@ func _record_world_event(kind: String, data: Dictionary) -> void:
 	_world_events[key].append(data.duplicate(true))
 
 
+## Contact drift also changes accumulated damage, which changes the next shove.
+## Snapshot after respawn, world hazards and fall resets, before the round ends.
+func _record_or_apply_duel_damage() -> void:
+	if config.minigame_id != "duel_pit" or _tick_index % ReplayData.KEYFRAME_INTERVAL != 0:
+		return
+	if playback != null:
+		if playback.combat_revision < 3:
+			return
+		for event in playback.events_at(_tick_index):
+			if event is Dictionary and event.get("kind") == "duel_damage" \
+					and ReplayData.valid_duel_damage_values(event.get("damage"), _fighters.size()):
+				for slot in _fighters.size():
+					if is_instance_valid(_fighters[slot]):
+						_fighters[slot].damage_percent = float(event.damage[slot])
+		return
+	if not _replay_enabled or ReplayData.COMBAT_REVISION < 3:
+		return
+	var damage: Array = []
+	for fighter in _fighters:
+		if not is_instance_valid(fighter):
+			_discard_replay("invalid fighter during combat-state capture")
+			return
+		damage.append(fighter.damage_percent)
+	if not ReplayData.valid_duel_damage_values(damage, _fighters.size()):
+		_discard_replay("invalid accumulated damage during capture")
+		return
+	_record_world_event("duel_damage", {"damage": damage})
+
+
 ## Hands this tick's recorded decisions back to whoever made them. Inputs and
 ## keyframes reproduce a body; only this reproduces a choice.
 func _apply_world_events() -> void:
@@ -796,6 +828,9 @@ func _apply_world_events() -> void:
 	if list.is_empty():
 		return
 	for e in list:
+		if e is Dictionary and e.get("kind") == "duel_damage":
+			# This is a post-bounds snapshot, not a pre-rules world decision.
+			continue
 		if machine != null and is_instance_valid(machine):
 			machine.apply_event(e)
 
