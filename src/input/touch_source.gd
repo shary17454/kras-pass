@@ -547,12 +547,12 @@ func _draw() -> void:
 	var fill := Color(UIKit.PANEL, maxf(0.65, a * 0.85))
 	if touch_count > 1:
 		draw_line(Vector2.ZERO, Vector2(size.x, 0), ink, 2.0)
-		_label("P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[slot]], Vector2(size.x * 0.5, 24), ink, 24)
 
 	if ControlProfile.full_screen_tap(profile) != 0:
 		var active := _bits != 0
 		draw_rect(Rect2(Vector2.ZERO, size), Color(UIKit.PANEL, a * (0.32 if active else 0.15)))
 		_label(Loc.t("touch.tap_anywhere"), size * 0.5, ink, 42, size.x - 24)
+		_draw_party_identity()
 		return
 
 	if ControlProfile.shows_steering(profile):
@@ -601,6 +601,64 @@ func _draw() -> void:
 		_label(_action_name(buttons[i]), c + Vector2(0, br * 0.43), Color.WHITE, mini(34, int(br * 0.65)), br * 1.65)
 		if down:
 			draw_arc(c, br - 6.0, 0.0, TAU, 36, tint, 5.0, true)
+	_draw_party_identity()
+
+
+## Identity is not a faded control: opaque theme tokens isolate its contrast
+## from arbitrary world pixels, even at the lowest touch-opacity setting.
+func party_identity_draw_data() -> Dictionary:
+	if touch_count <= 1 or _font == null or size.x <= 16.0 or size.y < 20.0:
+		return {}
+	var text := "P%d %s" % [slot + 1, PlayerConfig.SYMBOLS[clampi(slot, 0, 3)]]
+	var font_size := 22
+	var available := size.x - 16.0
+	var height := minf(44.0, size.y - 4.0)
+	while font_size > 14 and (_font.get_height(font_size) > height - 4.0 \
+			or _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 24.0 > available):
+		font_size -= 1
+	var text_size := Vector2(_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x,
+		_font.get_height(font_size))
+	if text_size.x + 24.0 > available or text_size.y > height - 4.0:
+		return {}
+	var bounds := Rect2(Vector2((size.x - text_size.x - 24.0) * 0.5, 2.0), Vector2(text_size.x + 24.0, height))
+	for control in control_rects():
+		if bounds.intersects(Rect2(control.position - global_position, control.size)):
+			return {}
+	if ControlProfile.shows_move_stick(profile) and _owners_has("move"):
+		if _identity_overlaps_stick(bounds, _move_origin, _move_knob,
+				STICK_RADIUS * _scale * ControlProfile.stick_scale(profile)):
+			return {}
+	if ControlProfile.shows_aim_stick(profile) and _owners_has("aim"):
+		if _identity_overlaps_stick(bounds, _aim_origin, _aim_knob, STICK_RADIUS * _scale):
+			return {}
+	var text_rect := Rect2(bounds.position + Vector2(12.0, (bounds.size.y - text_size.y) * 0.5), text_size)
+	var background := Color(UIKit.PANEL, 1.0)
+	var foreground := Color(UIKit.text_color(), 1.0)
+	var border := Color(UIKit.dim_color(), 1.0)
+	return {"text": text, "font_size": font_size, "bounds": bounds, "text_bounds": text_rect,
+		"baseline": text_rect.position + Vector2(0.0, _font.get_ascent(font_size)),
+		"foreground": foreground, "background": background, "border": border,
+		"style": UIKit.stylebox(background, 6, 2, border)}
+
+
+## The active stick is drawn at the finger origin, not the static input target.
+## Include the protruding clamped knob and the existing strokes as well.
+func _identity_overlaps_stick(bounds: Rect2, origin: Vector2, knob: Vector2, radius: float) -> bool:
+	var outer := Vector2.ONE * (radius + 2.0)
+	if bounds.intersects(Rect2(origin - outer, outer * 2.0)):
+		return true
+	var clamped := origin + (knob - origin).limit_length(radius)
+	var knob_extent := Vector2.ONE * (radius * 0.42 + 2.0)
+	return bounds.intersects(Rect2(clamped - knob_extent, knob_extent * 2.0))
+
+
+func _draw_party_identity() -> void:
+	var identity := party_identity_draw_data()
+	if identity.is_empty():
+		return
+	draw_style_box(identity.style, identity.bounds)
+	draw_string(_font, identity.baseline, identity.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		int(identity.font_size), identity.foreground)
 
 
 func _draw_stick(origin: Vector2, knob: Vector2, ink: Color, fill: Color, r: float) -> void:
