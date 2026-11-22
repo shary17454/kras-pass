@@ -1,0 +1,126 @@
+{
+  "evidenceRoot": "/private/tmp/kras-base-siege-fix-20261122/.godot/base-siege-atomic-evidence",
+  "evidenceDelivery": "Local ignored root only. Raw logs/saves/source snapshots are not selected Git files.",
+  "baseCommit": "ff0f9aaa6b2d5bb0c8dd91508fc28fbb3bc443c7",
+  "codeCommitAfterVerification": "c95b84030ab6587465d6fbee1353d00fbeb0b73f",
+  "branch": "fix/base-siege-simultaneous-20261122",
+  "simulationFingerprint": "dd9919031675fadb5fa8b075e0cf3c56f312533bac6100fe7d658f1173fb809d",
+  "full": {
+    "assertions": 525685,
+    "elapsedSeconds": 263,
+    "godotExit": 0,
+    "testsGuards": {
+      "stdout": 0,
+      "engine": 0
+    },
+    "comprehensiveBeforeSHA256": "8d0a347fc6197d294f8dc479619183c05b0ea330b8bdf3351f2d7669d09623e9",
+    "comprehensiveAfterSHA256": "8d0a347fc6197d294f8dc479619183c05b0ea330b8bdf3351f2d7669d09623e9",
+    "fileCount": 1387,
+    "testsFiles": 515,
+    "captureExclusions": [
+      ".git",
+      ".godot",
+      "docs",
+      "build",
+      "exports",
+      "node_modules",
+      "__pycache__",
+      ".DS_Store"
+    ],
+    "originalResult": {
+      "path": "full-01/result.json",
+      "sha256": "ddcf49dbab85492cd031fb75f4e29b71e9463e1ba0478da27b24922caba2d43c",
+      "green": false,
+      "originalWrapperExit": 2
+    },
+    "originalFaultAudit": {
+      "path": "full-01/fault-audit.json",
+      "sha256": "8357ea19f6d686ec3b6dfd3bb6913da715f03d61ae0a85e90a3a50c83d8f1293",
+      "initialUnclassifiedRouterPerLog": 3
+    },
+    "postRunReview": {
+      "path": "full-01/post-run-fault-review.json",
+      "sha256": "95e09e71c63bc2ebd311270d0649b450ab24575702dd485a09f421d40c8225a6",
+      "status": "PASS_WITH_DOCUMENTED_EXPECTED_FAULT_INJECTIONS",
+      "expectedErrorsPerLog": 4,
+      "expectedHarnessProbeLinesPerLog": 2,
+      "unexpectedErrorsAfterSourceReview": 0,
+      "routerFrames": [
+        17,
+        25,
+        36
+      ],
+      "proof": "exact fault text, source stack, suite boundaries and counts; no raw result replacement"
+    },
+    "stdout": {
+      "path": "full-01/stdout.log",
+      "sha256": "33897e3c892932568460f907496649ea50834af71efdfb59a2b7a90c3e8ea7a4"
+    },
+    "engine": {
+      "path": "full-01/engine.log",
+      "sha256": "b4cfad2e2d7c803fe5ee34c1b917ae1c280958060f13ff56fd0057af6811a5af"
+    },
+    "before": {
+      "path": "full-01/before-source.json",
+      "sha256": "f196a2c66c37a7323cb9c5e7942deeb3eeeb110ac29952900ab6ed2586b26854"
+    },
+    "after": {
+      "path": "full-01/after-source.json",
+      "sha256": "16cd35864df08dbe9c41247ff7ca1eec2906e228630df0e34c85d37873650a77"
+    }
+  },
+  "e2e": {
+    "seed": 117,
+    "assertions": 121,
+    "liveTicks": 1193,
+    "seconds": 19.8833333333335,
+    "baseHits": 25,
+    "basesDestroyed": 3,
+    "scores": [
+      0,
+      0,
+      29,
+      14
+    ],
+    "places": [
+      3,
+      3,
+      1,
+      2
+    ],
+    "liveness": [
+      false,
+      false,
+      true,
+      false
+    ],
+    "baseHealth": [
+      0,
+      0,
+      100,
+      0
+    ],
+    "desync": -1,
+    "playbackDrift": 0.626117408275604,
+    "seekDrift": 0.266726762056351,
+    "seekTicks": [
+      153,
+      174
+    ],
+    "initialSpawnsAndHealthAuthored": true,
+    "fabricatedKeyframes": false,
+    "outerStateRestored": true,
+    "result": {
+      "path": "replay-e2e-117-01/result.json",
+      "sha256": "dc3ae8fc456b7327a617be6011220d31e76a552ab82b7666ad3de91c27c8ba18"
+    },
+    "actualReplay": {
+      "path": "replay-e2e-117-01/save/base_siege_e2e_6c496328bb4fd9445b39a10a27250d90/replays/1795324563_2736cee9aaab0ffcf67c9c65e1620e33.json",
+      "sha256": "b7f54a76d77425a51fe5efe37b6ddf50e06bb8c290943045f3e161287103ffa9"
+    }
+  },
+  "compileScriptsAfterE2E": 483,
+  "noLiveGodotForWorker": true,
+  "workerDidNotCommitOrPush": true,
+  "releaseReady": false
+}
