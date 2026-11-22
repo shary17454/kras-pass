@@ -28,6 +28,7 @@ const SUITES := [
 	"res://tests/suites/test_balance_pair_schedule.gd",
 	"res://tests/suites/test_duel_damage_lives.gd",
 	"res://tests/suites/test_simultaneous_melee.gd",
+	"res://tests/suites/test_duel_visibility.gd",
 	"res://tests/suites/test_replay_combat_revision.gd",
 	"res://tests/suites/test_arena_spawn_clearance.gd",
 	"res://tests/suites/test_racer_pad_perception.gd",

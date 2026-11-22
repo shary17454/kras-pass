@@ -934,11 +934,22 @@ func _build_pit() -> void:
 				Vector3(cos(ang) * r, y, sin(ang) * r),
 				def.floor_color.lightened(0.06 * tier))
 			body.rotation.y = -ang
+			_tag_camera_occluder(body)
 	var top := _add_static_cylinder(2.2, 0.5, Vector3(0, float(tiers) * step_height + summit_gap, 0), def.accent_color.darkened(0.2))
 	top.name = "Summit"
+	_tag_camera_occluder(top)
 	var rim := MeshFactory.torus(def.radius - 0.35, def.radius + 0.1, def.accent_color, 0.7)
 	rim.position = Vector3(0, 0.06, 0)
 	_static_root.add_child(rim)
+
+
+func _tag_camera_occluder(body: StaticBody3D) -> void:
+	# Runtime-only default: changing the JSON also changes saved playlist IDs.
+	if def.param("camera_occluder_alpha", 0.12 if def.id == "duel_pit" else 0.0) <= 0.0:
+		return
+	var mesh := body.get_child(0) as MeshInstance3D
+	if mesh != null:
+		body.set_meta(&"camera_occlusion_mesh", body.get_path_to(mesh))
 
 
 func _build_islands() -> void:

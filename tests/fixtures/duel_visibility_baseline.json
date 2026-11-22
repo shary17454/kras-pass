@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "provenance": {
+    "sourceCommit": "ff0f9aaa6b2d5bb0c8dd91508fc28fbb3bc443c7",
+    "purpose": "Verified original function fingerprints; provenance only, no runtime Git requirement",
+    "canonicalization": "Normalize CRLF; function signature plus indented body; omit following top-level declarations/comments and trailing blank lines; one final LF. Strip exactly the two approved ledge/summit tag calls from _build_pit before hashing."
+  },
+  "files": {
+    "src/arenas/arena.gd": {
+      "_build_pit": "442f47811e8c5a2eb7fcd46e28644a680280cb5062cc3aaf510c6363722cae6f",
+      "_add_static_box": "63859f72336ec8b19752d0411ca8d505b1fc62131df812f18068ab7979db7446",
+      "_add_static_cylinder": "5d95085110e1743824bdcfc7fa183a8d48c4838b9915ceca7a72863b2820694f"
+    },
+    "src/camera/arena_camera.gd": {
+      "_process": "06ae0748a59663790ace3d0d2eba55a4ce42bf7c3ff933b8102183a8a398da4b",
+      "_update_camera": "0a765e34132da46173f714915b4dba64e49185b40b65a5fc54e4212ae26542fe",
+      "_apply": "e42b86edba32d1303d4875e772f9f78c631eeddb7d9515cfb78a2892f3b2193d",
+      "_live_targets": "37903b642e0278f8b24fe6daf3e2e4700a486061a00e8d068f9afae29c0fa1b3",
+      "_update_focus_and_zoom": "eef9bf2eabe34ecac4f338e4acb6ac7c8f73d9b6951fd2b6a9a3ec2a4a763757",
+      "_wanted_focus": "e1428fe474c8b3292cf7de48a296bef407a7366edeec1513bdf5558149615a9f",
+      "_fit_arena_region": "ea2f6b6f17874a27fbcc108dabbadc9d8677023b7355af5ba8c677d48b230fda",
+      "_frame_shared_world": "2c907f0c07cdff106365c2e9911cefeed6dad619d7de66e7129e5f6d0ffc8d6a",
+      "_world_obstruction": "8e4fbb33371e5c8f644449f3890862b570f963dd633b59767e4a317a812eae37"
+    }
+  }
+}
