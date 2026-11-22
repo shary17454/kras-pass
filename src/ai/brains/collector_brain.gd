@@ -104,7 +104,7 @@ func _preferred_loot() -> Node3D:
 		# Use delayed perception, not the rival's current velocity or intent.
 		if strategy > 0.5:
 			for rival in ctx.player_count():
-				if rival == slot or not ctx.is_alive(rival) or not can_observe(ctx.fighter(rival)) or not has_observed(rival):
+				if rival == slot or not can_target(rival) or not has_observed(rival):
 					continue
 				var reach := perceive(rival).distance_to(position)
 				if reach < distance * 0.75 and _contests_loot(rival, position, reach):

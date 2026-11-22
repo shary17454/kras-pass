@@ -51,6 +51,12 @@ class PlatformAttackProbe extends "res://src/ai/brains/platform_brain.gd":
 	func maybe_attack(_target_slot: int, _range: float = 2.4) -> void:
 		attack_requests += 1
 
+class CourierReacquisitionProbe extends "res://src/ai/brains/courier_brain.gd":
+	var predicted_slots: Array[int] = []
+	func predict(target_slot: int, lead: float = 0.35) -> Vector3:
+		predicted_slots.append(target_slot)
+		return super.predict(target_slot, lead)
+
 class DuellistReacquisitionProbe extends "res://src/ai/brains/duellist_brain.gd":
 	var predicted_slots: Array[int] = []
 	func predict(target_slot: int, lead: float = 0.35) -> Vector3:
@@ -211,6 +217,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duellist_reacquisition(t, scene)
 	_test_ball(t, scene)
 	_test_courier(t, scene)
+	_test_courier_reacquisition(t, scene)
 	_test_platform(t, scene)
 	_test_remaining_rivals(t, scene)
 	_test_race_visible_alternative(t, scene)
@@ -955,6 +962,83 @@ func _test_courier(t: TestHarness, scene: Node) -> void:
 	t.equal(brain._richest_carrier(), 2, "courier still falls back to a visible nearest rival")
 	scene.ctx.fighter(1).show()
 	t.equal(brain._richest_carrier(), 1, "courier can target a visible loaded carrier again")
+
+
+func _test_courier_reacquisition(t: TestHarness, scene: Node) -> void:
+	var saved := []
+	for fighter in scene.ctx.fighters:
+		saved.append({"position": fighter.global_position, "velocity": fighter.velocity,
+			"carrying": fighter.carrying, "visible": fighter.visible})
+	var game = load("res://src/minigames/star_rush.gd").new()
+	game.ctx = scene.ctx
+	scene.add_child(game)
+	var me: Fighter = scene.ctx.fighter(0)
+	var rival: Fighter = scene.ctx.fighter(1)
+	for difficulty in 4:
+		var brain := CourierReacquisitionProbe.new()
+		brain.configure(0, scene.ctx, difficulty, 119)
+		brain.controller = game
+		# No loose stars: exercise the carrier-harassment branch of decide().
+		brain._tree = null
+		brain.aggression = 1.0
+		brain.edge_awareness = 0.0
+		brain.on_round_start()
+		me.show()
+		me.global_position = Vector3(0, 1, 0)
+		me.carrying = 0
+		for index in [2, 3]:
+			scene.ctx.fighter(index).hide()
+		rival.show()
+		rival.global_position = Vector3(3, 1, 0)
+		rival.velocity = Vector3.ZERO
+		rival.carrying = 3
+		brain._time = 10.0
+		brain._record_history()
+		t.ok(brain.reaction_time > 0.0, "courier tier %d uses positive reaction delay" % difficulty)
+		brain._time += brain.reaction_time
+		brain._record_history()
+		t.ok(brain.can_target(1), "courier tier %d initial carrier is targetable" % difficulty)
+		t.equal(brain._richest_carrier(), 1, "courier tier %d initially selects loaded rival" % difficulty)
+		var samples := brain._history_count
+		var cargo_samples: int = brain._cargo_history[1].size()
+		# _threatened() can observe occlusion between the 20 Hz cargo samples.
+		brain._time += 0.01
+		rival.hide()
+		t.ok(not brain._threatened(), "courier tier %d hidden carrier clears targeting credit" % difficulty)
+		t.equal(brain._visible_since_times[1], INF, "courier tier %d unsampled occlusion resets visibility" % difficulty)
+		t.equal(brain._history_count, samples, "courier tier %d occlusion occurs between history samples" % difficulty)
+		t.equal(brain._cargo_history[1].size(), cargo_samples, "courier tier %d cargo memory survives unsampled occlusion" % difficulty)
+		brain._time += 0.04
+		var reappeared := brain._time
+		rival.show()
+		rival.global_position = Vector3(5, 1, 0)
+		rival.carrying = 8
+		brain._record_history()
+		t.ok(brain.has_observed(1), "courier tier %d retains first-seen memory" % difficulty)
+		t.equal(brain.perceive(1), Vector3(3, 1, 0), "courier tier %d retains delayed location" % difficulty)
+		for instant in [reappeared, reappeared + brain.reaction_time - 0.0001]:
+			brain._time = instant
+			t.ok(not brain.can_target(1), "courier tier %d reacquisition is not yet targetable" % difficulty)
+			t.equal(brain._perceived_cargo(1), 3, "courier tier %d cargo stays delayed before threshold" % difficulty)
+			t.equal(brain._richest_carrier(), -1, "courier tier %d cannot select carrier before can_target" % difficulty)
+			brain.predicted_slots.clear()
+			brain.decide(0.0)
+			t.ok(brain.predicted_slots.is_empty(), "courier tier %d cannot begin pursuit before can_target" % difficulty)
+		brain._time = reappeared + brain.reaction_time
+		brain._record_history()
+		t.ok(brain.can_target(1), "courier tier %d carrier is targetable at threshold" % difficulty)
+		t.equal(brain._perceived_cargo(1), 8, "courier tier %d updated cargo matures at threshold" % difficulty)
+		t.equal(brain._richest_carrier(), 1, "courier tier %d selects carrier at threshold" % difficulty)
+		brain.predicted_slots.clear()
+		brain.decide(0.0)
+		t.ok(brain.predicted_slots.has(1), "courier tier %d resumes pursuit at threshold" % difficulty)
+	for index in scene.ctx.fighters.size():
+		var fighter: Fighter = scene.ctx.fighter(index)
+		fighter.global_position = saved[index].position
+		fighter.velocity = saved[index].velocity
+		fighter.carrying = saved[index].carrying
+		fighter.visible = saved[index].visible
+	game.queue_free()
 
 
 func _test_platform(t: TestHarness, scene: Node) -> void:

@@ -100,7 +100,7 @@ func _richest_carrier() -> int:
 	var best := -1
 	var best_n := 0
 	for i in ctx.fighters.size():
-		if i == slot or not ctx.is_alive(i):
+		if i == slot or not can_target(i):
 			continue
 		var carried := _perceived_cargo(i)
 		if carried > best_n:
