@@ -218,15 +218,21 @@ test('public room lists and room codes are scoped to the endpoint', async t => {
 
 test('protocol two over real WebSockets isolates rulesets and retains legacy token reconnect', async t => {
   const f = await fixture(t);
-  const host = await f.connect(2, {ruleset: 'atomic-v2'});
+  const host = await f.connect(2, {ruleset: 'atomic-v3'});
   const legacy = await f.connect(2);
   assert.equal(host.hello.ruleset_version, 1);
   assert.equal(legacy.hello.v, 2); // An old decoder only needs the unchanged protocol.
-  const modern = await create(host, true), historical = await create(legacy, true);
-  assert.equal(modern.room.ruleset, 'atomic-v2'); assert.equal(historical.room.ruleset, 'legacy');
-  const guest = await f.connect(2, {ruleset: 'atomic-v2'}), oldGuest = await f.connect(2);
+  const priorHost = await f.connect(2, {ruleset: 'atomic-v2'});
+  const modern = await create(host, true), historical = await create(legacy, true), prior = await create(priorHost, true);
+  assert.equal(modern.room.ruleset, 'atomic-v3'); assert.equal(historical.room.ruleset, 'legacy');
+  assert.equal(prior.room.ruleset, 'atomic-v2');
+  const guest = await f.connect(2, {ruleset: 'atomic-v3'}), oldGuest = await f.connect(2);
+  const priorGuest = await f.connect(2, {ruleset: 'atomic-v2'});
   assert.deepEqual((await guest.request({op: 'list'}, 'rooms')).rooms.map(r => r.code), [modern.room.code]);
   assert.deepEqual((await oldGuest.request({op: 'list'}, 'rooms')).rooms.map(r => r.code), [historical.room.code]);
+  assert.deepEqual((await priorGuest.request({op: 'list'}, 'rooms')).rooms.map(r => r.code), [prior.room.code]);
+  assert.deepEqual(await priorGuest.request({op: 'join', code: modern.room.code}, 'error'), {op: 'error', code: 'room_unavailable'});
+  assert.deepEqual(await guest.request({op: 'join', code: prior.room.code}, 'error'), {op: 'error', code: 'room_unavailable'});
   assert.deepEqual(await oldGuest.request({op: 'join', code: modern.room.code}, 'error'), {op: 'error', code: 'room_unavailable'});
   assert.deepEqual(await guest.request({op: 'join', code: historical.room.code}, 'error'), {op: 'error', code: 'room_unavailable'});
   const joined = await guest.request({op: 'join', code: modern.room.code}, 'welcome');
@@ -236,7 +242,7 @@ test('protocol two over real WebSockets isolates rulesets and retains legacy tok
   await host.request({op: 'ready', ready: true}, 'room'); await guest.next('room');
   await guest.request({op: 'ready', ready: true}, 'room'); await host.next('room');
   const started = await host.request({op: 'start'}, 'start');
-  assert.equal(started.ruleset, 'atomic-v2'); assert.deepEqual(await guest.next('start'), started);
+  assert.equal(started.ruleset, 'atomic-v3'); assert.deepEqual(await guest.next('start'), started);
   await host.next('room'); await guest.next('room');
   host.send({op: 'loaded', epoch: started.epoch});
   await guest.request({op: 'loaded', epoch: started.epoch}, 'go'); await host.next('go');
@@ -245,15 +251,16 @@ test('protocol two over real WebSockets isolates rulesets and retains legacy tok
   const incompatible = await f.connect(2);
   for (const token of [joined.token, 'unknown-token-canary']) {
     assert.deepEqual(await incompatible.request({op: 'resume', token}, 'error'), {op: 'error', code: 'session_expired'});
+    assert.deepEqual(await priorGuest.request({op: 'resume', token}, 'error'), {op: 'error', code: 'session_expired'});
   }
-  const restored = await f.connect(2, {ruleset: 'atomic-v2'});
+  const restored = await f.connect(2, {ruleset: 'atomic-v3'});
   assert.deepEqual(await restored.request({op: 'resume', token: joined.token}, 'welcome'), joined);
   assert.deepEqual(await restored.next('start'), started);
   await oldGuest.disconnect(); await legacy.next('room');
   const oldRestored = await f.connect(2);
   assert.deepEqual(await oldRestored.request({op: 'resume', token: oldJoined.token}, 'welcome'), oldJoined);
   assert.equal((await oldRestored.next('room')).ruleset, 'legacy');
-  assert.deepEqual(await restored.request({op: 'list', ruleset: 'future-3'}, 'error'), {op: 'error', code: 'version_mismatch'});
+  assert.deepEqual(await restored.request({op: 'list', ruleset: 'future-4'}, 'error'), {op: 'error', code: 'version_mismatch'});
 });
 
 test('both routes preserve exact path, enabled flag and Origin policies', async t => {

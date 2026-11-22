@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 import {Rooms, LEGACY_RULESET_ID} from './rooms.js';
 
-const CURRENT = 'atomic-v2';
+const CURRENT = 'atomic-v3';
 function fixture(protocol = 2) {
   let time = 0;
   let seedCalls = 0;
@@ -53,7 +53,7 @@ test('missing is explicit legacy; connection, room and player identities are imm
   assert.throws(() => host.send({op: 'list', ruleset: CURRENT}), /^Error: version_mismatch$/);
   const current = f.client(CURRENT); f.create(current);
   for (const op of ['create', 'join', 'resume', 'start', 'configure', 'ping', 'list', 'leave']) {
-    assert.throws(() => current.send({op, ruleset: 'future-3'}), /^Error: version_mismatch$/);
+    assert.throws(() => current.send({op, ruleset: 'future-4'}), /^Error: version_mismatch$/);
     const missing = {v: 2, op};
     assert.throws(() => f.rooms.handle(current.c, missing), /^Error: version_mismatch$/);
   }
@@ -62,9 +62,10 @@ test('missing is explicit legacy; connection, room and player identities are imm
 
 test('public lists partition legacy, atomic and future labels; private mismatch reveals no membership', () => {
   const f = fixture();
-  const hosts = [undefined, CURRENT, 'future-3'].map(id => { const host = f.client(id); f.create(host); return host; });
+  const identities = [undefined, 'atomic-v2', CURRENT, 'future-4'];
+  const hosts = identities.map(id => { const host = f.client(id); f.create(host); return host; });
   for (let i = 0; i < hosts.length; i++) {
-    const guest = f.client([undefined, CURRENT, 'future-3'][i]);
+    const guest = f.client(identities[i]);
     guest.send({op: 'list'});
     assert.deepEqual(guest.last('rooms').rooms.map(room => room.code), [hosts[i].c.room.code]);
     assert.equal(guest.last('rooms').rooms[0].ruleset, hosts[i].c.ruleset);
@@ -79,7 +80,7 @@ test('public lists partition legacy, atomic and future labels; private mismatch 
   }
 });
 
-for (const ruleset of [undefined, 'legacy', CURRENT, 'future-3']) {
+for (const ruleset of [undefined, 'legacy', 'atomic-v2', CURRENT, 'future-4']) {
   test(`${ruleset ?? 'missing legacy'}: start, reconnect, authority and resuming an old token preserve ruleset`, () => {
     const f = fixture(), host = f.client(ruleset), guest = f.client(ruleset);
     f.create(host); guest.send({op: 'join', code: host.c.room.code});
@@ -128,7 +129,7 @@ test('start refuses an incompatible connection before consuming seed or changing
   const f = fixture(), host = f.client(CURRENT), guest = f.client(CURRENT);
   f.create(host); guest.send({op: 'join', code: host.c.room.code});
   host.send({op: 'ready', ready: true}); guest.send({op: 'ready', ready: true});
-  const foreign = f.client('future-3'); foreign.send({op: 'ping'});
+  const foreign = f.client('future-4'); foreign.send({op: 'ping'});
   guest.c.player.connection = foreign.c;
   assert.throws(() => host.send({op: 'start'}), /^Error: version_mismatch$/);
   assert.equal(host.c.room.epoch, 0); assert.equal(host.c.room.state, 'lobby');
@@ -149,7 +150,7 @@ test('host expiry closes the room, never migrates authority or loses ruleset iso
 });
 
 test('protocol one ignores optional declarations and retains its original wire envelopes', () => {
-  const f = fixture(1), host = f.client(CURRENT), guest = f.client('future-3');
+  const f = fixture(1), host = f.client(CURRENT), guest = f.client('future-4');
   f.create(host); guest.send({op: 'join', code: host.c.room.code}); f.start(host, guest);
   for (const operation of ['welcome', 'room', 'start']) assert.equal(Object.hasOwn(host.last(operation), 'ruleset'), false);
   assert.equal(host.c.room.ruleset, 'legacy');
@@ -158,7 +159,7 @@ test('protocol one ignores optional declarations and retains its original wire e
 test('Node source contracts: client cannot override session identity or simulate guest combat (not an engine test)', () => {
   const source = file => fs.readFileSync(new URL('../' + file, import.meta.url), 'utf8');
   const transport = source('src/net/room_client.gd');
-  assert.match(transport, /const ONLINE_RULESET_ID := "atomic-v2"/);
+  assert.match(transport, /const ONLINE_RULESET_ID := "atomic-v3"/);
   assert.match(transport, /packet\["ruleset"\] = ONLINE_RULESET_ID/);
   assert.match(transport, /version == PROTOCOL_VERSION and compatible_ruleset_server\(message\)/);
   const scene = source('src/match/match_scene.gd');

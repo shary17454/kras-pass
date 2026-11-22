@@ -7,14 +7,14 @@ const Client = preload("res://src/net/room_client.gd")
 func run(t: TestHarness) -> void:
 	t.suite("network ruleset identity is independent of replay revision")
 	t.equal(Client.PROTOCOL_VERSION, 2, "wire protocol is not bumped")
-	t.equal(Client.ONLINE_RULESET_ID, "atomic-v2", "integrated target has a fixed session identity")
+	t.equal(Client.ONLINE_RULESET_ID, "atomic-v3", "integrated target has a fixed session identity")
 	for version in [null, true, "1", 0, 2, 1.5, NAN, INF]:
 		t.ok(not Client.compatible_hello({"op": "hello", "v": 2, "ruleset_version": version}),
 			"old or malformed server cannot silently ignore ruleset")
 	t.ok(not Client.compatible_hello({"op": "hello", "v": 2}), "old server without capability fails closed")
 	t.ok(Client.compatible_hello({"op": "hello", "v": 2.0, "ruleset_version": 1.0}), "JSON integers remain legal")
 	for operation in ["welcome", "room", "start"]:
-		for ruleset in [null, "legacy", "future-3", 2, true, [], {}]:
+		for ruleset in [null, "legacy", "atomic-v2", "future-4", 2, true, [], {}]:
 			var service := Service.new()
 			service._token = "old-opaque-fixture"
 			service.match_running = true

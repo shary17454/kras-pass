@@ -5,7 +5,7 @@ signal transport_lost(reason: String)
 
 const PROTOCOL_VERSION := 2
 ## Session compatibility identity, independent of replay/container revisions.
-const ONLINE_RULESET_ID := "atomic-v2"
+const ONLINE_RULESET_ID := "atomic-v3"
 const RULESET_VERSION := 1
 
 var socket: WebSocketPeer
