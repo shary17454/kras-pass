@@ -1,5 +1,5 @@
 import {WebSocketServer, WebSocket} from 'ws';
-import {Rooms, PROTOCOL, ONLINE_GAMES} from './rooms.js';
+import {Rooms, PROTOCOL, ONLINE_GAMES, RULESET_VERSION} from './rooms.js';
 
 export function attachMultiplayer(server, {rooms = new Rooms(), enabled = false, origins = [],
   legacyEnabled = false} = {}) {
@@ -37,7 +37,8 @@ export function attachMultiplayer(server, {rooms = new Rooms(), enabled = false,
       if (ws.bufferedAmount > 256000) { ws.close(1013, 'slow_client'); return; }
       ws.send(JSON.stringify(message));
     });
-    c.send({op: 'hello', v: rooms.protocol, games: ONLINE_GAMES, reconnect_ms: rooms.grace});
+    c.send({op: 'hello', v: rooms.protocol, games: ONLINE_GAMES, reconnect_ms: rooms.grace,
+      ...(rooms.protocol === 2 ? {ruleset_version: RULESET_VERSION} : {})});
     ws.on('pong', () => { lastPong = rooms.now(); });
     ws.on('error', () => {});
     ws.on('message', (data, binary) => {

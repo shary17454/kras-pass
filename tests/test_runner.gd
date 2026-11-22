@@ -16,6 +16,7 @@ const SUITES := [
 	"res://tests/suites/test_network_match_boundary.gd",
 	"res://tests/suites/test_network_lobby_boundary.gd",
 	"res://tests/suites/test_network_start_boundary.gd",
+	"res://tests/suites/test_network_ruleset.gd",
 	"res://tests/suites/test_tank_stationary_aim.gd",
 	"res://tests/suites/test_tank_approach_routes.gd",
 	"res://tests/suites/test_tank_edge_braking.gd",

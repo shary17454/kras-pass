@@ -35,7 +35,7 @@ async function fixture(t, options = {}) {
       ws.terminate();
       assert.equal(response.statusCode, 403);
     },
-    async connect(v, {path = paths[v], origin} = {}) {
+    async connect(v, {path = paths[v], origin, ruleset} = {}) {
       const ws = socket(path, origin);
       // Queue before the handshake so bursts of welcome/room/start cannot race readers.
       const messages = [];
@@ -62,7 +62,7 @@ async function fixture(t, options = {}) {
       assert.equal(hello.v, v);
       return {
         ws, hello, next,
-        send(message) { ws.send(JSON.stringify({v, ...message})); },
+        send(message) { ws.send(JSON.stringify({v, ...(ruleset === undefined ? {} : {ruleset}), ...message})); },
         async request(message, op) { this.send(message); return next(op); },
         async disconnect() {
           const closed = once(ws, 'close');
@@ -214,6 +214,46 @@ test('public room lists and room codes are scoped to the endpoint', async t => {
     assert.equal((await guest.next('room')).players.length, 2);
   }
   assert.notEqual(f.multiplayer.legacyRooms.rooms.get(a.room.code), currentRoom);
+});
+
+test('protocol two over real WebSockets isolates rulesets and retains legacy token reconnect', async t => {
+  const f = await fixture(t);
+  const host = await f.connect(2, {ruleset: 'atomic-v2'});
+  const legacy = await f.connect(2);
+  assert.equal(host.hello.ruleset_version, 1);
+  assert.equal(legacy.hello.v, 2); // An old decoder only needs the unchanged protocol.
+  const modern = await create(host, true), historical = await create(legacy, true);
+  assert.equal(modern.room.ruleset, 'atomic-v2'); assert.equal(historical.room.ruleset, 'legacy');
+  const guest = await f.connect(2, {ruleset: 'atomic-v2'}), oldGuest = await f.connect(2);
+  assert.deepEqual((await guest.request({op: 'list'}, 'rooms')).rooms.map(r => r.code), [modern.room.code]);
+  assert.deepEqual((await oldGuest.request({op: 'list'}, 'rooms')).rooms.map(r => r.code), [historical.room.code]);
+  assert.deepEqual(await oldGuest.request({op: 'join', code: modern.room.code}, 'error'), {op: 'error', code: 'room_unavailable'});
+  assert.deepEqual(await guest.request({op: 'join', code: historical.room.code}, 'error'), {op: 'error', code: 'room_unavailable'});
+  const joined = await guest.request({op: 'join', code: modern.room.code}, 'welcome');
+  await guest.next('room'); await host.next('room');
+  const oldJoined = await oldGuest.request({op: 'join', code: historical.room.code}, 'welcome');
+  await oldGuest.next('room'); await legacy.next('room');
+  await host.request({op: 'ready', ready: true}, 'room'); await guest.next('room');
+  await guest.request({op: 'ready', ready: true}, 'room'); await host.next('room');
+  const started = await host.request({op: 'start'}, 'start');
+  assert.equal(started.ruleset, 'atomic-v2'); assert.deepEqual(await guest.next('start'), started);
+  await host.next('room'); await guest.next('room');
+  host.send({op: 'loaded', epoch: started.epoch});
+  await guest.request({op: 'loaded', epoch: started.epoch}, 'go'); await host.next('go');
+  await guest.next('room'); await host.next('room');
+  await guest.disconnect(); await host.next('room');
+  const incompatible = await f.connect(2);
+  for (const token of [joined.token, 'unknown-token-canary']) {
+    assert.deepEqual(await incompatible.request({op: 'resume', token}, 'error'), {op: 'error', code: 'session_expired'});
+  }
+  const restored = await f.connect(2, {ruleset: 'atomic-v2'});
+  assert.deepEqual(await restored.request({op: 'resume', token: joined.token}, 'welcome'), joined);
+  assert.deepEqual(await restored.next('start'), started);
+  await oldGuest.disconnect(); await legacy.next('room');
+  const oldRestored = await f.connect(2);
+  assert.deepEqual(await oldRestored.request({op: 'resume', token: oldJoined.token}, 'welcome'), oldJoined);
+  assert.equal((await oldRestored.next('room')).ruleset, 'legacy');
+  assert.deepEqual(await restored.request({op: 'list', ruleset: 'future-3'}, 'error'), {op: 'error', code: 'version_mismatch'});
 });
 
 test('both routes preserve exact path, enabled flag and Origin policies', async t => {
