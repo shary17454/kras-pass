@@ -64,8 +64,7 @@ func _best_target() -> int:
 	for i in ctx.fighters.size():
 		if i == slot or not ctx.is_alive(i):
 			continue
-		var f := ctx.fighter(i)
-		if not can_observe(f) or not has_observed(i):
+		if not can_target(i) or not has_observed(i):
 			continue
 		var dist := me.global_position.distance_to(perceive(i))
 		var score: float = perceived_damage(i) * lerp(0.2, 1.0, strategy) - dist * 2.0

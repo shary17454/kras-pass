@@ -51,6 +51,12 @@ class PlatformAttackProbe extends "res://src/ai/brains/platform_brain.gd":
 	func maybe_attack(_target_slot: int, _range: float = 2.4) -> void:
 		attack_requests += 1
 
+class DuellistReacquisitionProbe extends "res://src/ai/brains/duellist_brain.gd":
+	var predicted_slots: Array[int] = []
+	func predict(target_slot: int, lead: float = 0.35) -> Vector3:
+		predicted_slots.append(target_slot)
+		return super.predict(target_slot, lead)
+
 
 func _test_rival_reacquisition(t: TestHarness, scene: Node) -> void:
 	var rival: Fighter = scene.ctx.fighter(1)
@@ -202,6 +208,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_test_duellist_initialization(t, scene)
 	_test_duellist_ties(t, scene)
 	_test_duellist_delay(t, scene)
+	_test_duellist_reacquisition(t, scene)
 	_test_ball(t, scene)
 	_test_courier(t, scene)
 	_test_platform(t, scene)
@@ -813,6 +820,57 @@ func _test_duellist_delay(t: TestHarness, scene: Node) -> void:
 	duellist.on_round_start()
 	t.equal(duellist._history_damage.size(), 0, "new round clears retained damage observations")
 	t.equal(duellist._best_target(), -1, "new round cannot use old damage or a live unsampled fallback")
+
+
+func _test_duellist_reacquisition(t: TestHarness, scene: Node) -> void:
+	var originals: Array[Vector3] = []
+	for fighter in scene.ctx.fighters:
+		originals.append(fighter.global_position)
+		fighter.hide()
+	var me: Fighter = scene.ctx.fighter(0)
+	var rival: Fighter = scene.ctx.fighter(1)
+	me.show()
+	me.global_position = Vector3(0, 1, 0)
+	rival.global_position = Vector3(4, 1, 0)
+	for difficulty in 4:
+		var duellist := DuellistReacquisitionProbe.new()
+		duellist.configure(0, scene.ctx, difficulty, 791)
+		duellist._time = 10.0
+		rival.show()
+		duellist._record_history()
+		t.equal(duellist._best_target(), -1, "duellist tier %d waits for first acquisition" % difficulty)
+		duellist._time += duellist.reaction_time
+		duellist._record_history()
+		t.equal(duellist._best_target(), 1, "duellist tier %d can select an acquired rival" % difficulty)
+		rival.hide()
+		duellist._time += 0.05
+		duellist._record_history()
+		t.equal(duellist._best_target(), -1, "duellist tier %d drops an occluded rival" % difficulty)
+		t.ok(duellist.has_observed(1), "duellist tier %d retains last-seen memory" % difficulty)
+		rival.show()
+		duellist._time += 1.0
+		var reappeared: float = duellist._time
+		duellist._record_history()
+		t.equal(duellist._best_target(), -1, "duellist tier %d reappearance starts a fresh reaction delay" % difficulty)
+		duellist._time = reappeared + duellist.reaction_time - 0.001
+		t.equal(duellist._best_target(), -1, "duellist tier %d cannot reacquire before the threshold" % difficulty)
+		duellist.predicted_slots.clear()
+		duellist.decide(0.016)
+		t.ok(duellist.predicted_slots.is_empty(), "duellist tier %d cannot chase a reappeared rival early" % difficulty)
+		duellist._time = reappeared + duellist.reaction_time
+		duellist._record_history()
+		t.equal(duellist._best_target(), 1, "duellist tier %d can reacquire at the reaction threshold" % difficulty)
+		duellist.predicted_slots.clear()
+		duellist.decide(0.016)
+		t.ok(duellist.predicted_slots.has(1), "duellist tier %d can chase an acquired rival" % difficulty)
+		rival.hide()
+		t.equal(duellist._best_target(), -1, "duellist tier %d detects occlusion between observations" % difficulty)
+		rival.show()
+		t.equal(duellist._best_target(), -1, "duellist tier %d unsampled reappearance cannot reuse sight credit" % difficulty)
+		rival.hide()
+	for slot in scene.ctx.fighters.size():
+		scene.ctx.fighter(slot).global_position = originals[slot]
+		scene.ctx.fighter(slot).show()
 
 
 func _test_ball(t: TestHarness, scene: Node) -> void:
