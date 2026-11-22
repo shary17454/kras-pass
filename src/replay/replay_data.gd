@@ -17,7 +17,7 @@ extends RefCounted
 ## excluding events, hashes, container overhead and JSON/base64 encoding.
 
 const VERSION := 6
-const COMBAT_REVISION := 1
+const COMBAT_REVISION := 2
 const HASH_INTERVAL := 30    # ticks between state checkpoints
 const KEYFRAME_INTERVAL := 6 # ticks between position corrections (10 Hz)
 ## Position, liveness, score — and velocity, which is the half that was
@@ -32,7 +32,7 @@ var id := ""
 var version := VERSION
 var created_at := 0
 var engine_build := ""
-## Independent of the container schema: old recordings retain ordered combat.
+## 0: ordered fighters; 1: simultaneous melee; 2: atomic game action batches too.
 var combat_revision := COMBAT_REVISION
 
 # --- what to replay --------------------------------------------------------

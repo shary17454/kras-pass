@@ -21,6 +21,64 @@ const HIT_COOLDOWN := 0.3
 
 var _bases: Array = []      # {slot, node, body, health, crystal, ring, cooldown}
 var presentation_only := false
+var _action_batch := false
+var _pending_hits := {}
+var _pending_eliminations := {}
+
+
+func begin_action_batch() -> void:
+	_reset_action_batch()
+	_action_batch = not presentation_only
+
+
+func resolve_action_batch() -> void:
+	if not _action_batch:
+		return
+	var slots: Array = _pending_hits.keys()
+	slots.sort()
+	for slot in slots:
+		var command: Dictionary = _pending_hits[slot]
+		var base: Dictionary = command.base
+		if float(base.health) <= 0.0 or float(base.cooldown) > 0.0:
+			continue
+		# Accepted commands survive another base's destruction, not input guards.
+		_damage(base, int(command.attacker), float(command.amount))
+		base.cooldown = maxf(0.0, HIT_COOLDOWN - float(command.elapsed))
+		var fighter := ctx.fighter(int(command.attacker))
+		if is_instance_valid(fighter) and command.impulse != Vector3.ZERO:
+			fighter.apply_impulse(command.impulse)
+	var eliminated: Array = _pending_eliminations.keys()
+	eliminated.sort()
+	_reset_action_batch()
+	for slot in eliminated:
+		if ctx.is_alive(int(slot)):
+			ctx.eliminate(int(slot))
+
+
+func _reset_action_batch() -> void:
+	_action_batch = false
+	_pending_hits.clear()
+	_pending_eliminations.clear()
+
+
+func _request_damage(base: Dictionary, attacker: int, amount: float, impulse := Vector3.ZERO) -> void:
+	if not _action_batch:
+		_damage(base, attacker, amount)
+		if impulse != Vector3.ZERO:
+			ctx.fighter(attacker).apply_impulse(impulse)
+		return
+	var to: Vector3 = base.node.global_position - ctx.fighter(attacker).global_position
+	to.y = 0.0
+	var command := {"base": base, "attacker": attacker, "amount": amount,
+		"distance": to.length_squared(), "impulse": impulse, "elapsed": 0.0}
+	var slot := int(base.slot)
+	# One cooldown-protected hit per base, nearest then stable slot for a tie.
+	if _pending_hits.has(slot):
+		var previous: Dictionary = _pending_hits[slot]
+		if float(previous.distance) < float(command.distance) or \
+				(float(previous.distance) == float(command.distance) and int(previous.attacker) <= attacker):
+			return
+	_pending_hits[slot] = command
 
 
 func configure() -> void:
@@ -41,6 +99,7 @@ func build() -> void:
 
 
 func on_round_start() -> void:
+	_reset_action_batch()
 	if presentation_only:
 		return
 	var contenders: Array = ctx.config.rule("online_contenders", []) \
@@ -112,6 +171,9 @@ func tick(delta: float) -> void:
 		return
 	for base in _bases:
 		base["cooldown"] = maxf(0.0, float(base["cooldown"]) - delta)
+		# Swings preceded this clock; rams originate after it. Preserve that age.
+		if _action_batch and _pending_hits.has(int(base.slot)):
+			_pending_hits[int(base.slot)].elapsed += delta
 		if float(base["health"]) <= 0.0:
 			continue
 		var crystal: Node3D = base["crystal"]
@@ -127,6 +189,9 @@ func tick(delta: float) -> void:
 func _check_rams(base: Dictionary) -> void:
 	if presentation_only or float(base["health"]) <= 0.0 or float(base["cooldown"]) > 0.0:
 		return
+	# Swings run before rams, retaining their authored one-hit cooldown priority.
+	if _action_batch and _pending_hits.has(int(base["slot"])):
+		return
 	var node: Node3D = base["node"]
 	if not is_instance_valid(node):
 		return
@@ -140,9 +205,9 @@ func _check_rams(base: Dictionary) -> void:
 		to.y = 0.0
 		if to.length() > RAM_REACH + 1.1:
 			continue
-		_damage(base, i, RAM_DAMAGE)
-		f.apply_impulse(-to.normalized() * 4.0)
-		return
+		_request_damage(base, i, RAM_DAMAGE, -to.normalized() * 4.0)
+		if not _action_batch:
+			return
 
 
 func _on_attacked(slot: int) -> void:
@@ -166,7 +231,7 @@ func _on_attacked(slot: int) -> void:
 			continue
 		if f.facing.normalized().dot(to / dist) < 0.2:
 			continue
-		_damage(base, slot, HIT_DAMAGE)
+		_request_damage(base, slot, HIT_DAMAGE)
 		return
 
 
@@ -224,7 +289,10 @@ func _destroy(base: Dictionary, attacker: int) -> void:
 	EventBus.shake(0.5, 0.35)
 	EventBus.notify(Loc.t("siege.broken", {"name": player_name(slot)}), "✖")
 	if ctx.is_alive(slot):
-		ctx.eliminate(slot)
+		if _action_batch:
+			_pending_eliminations[slot] = true
+		else:
+			ctx.eliminate(slot)
 
 
 # --- shared-layer answers --------------------------------------------------
@@ -294,6 +362,7 @@ func detail_rows() -> Array:
 
 
 func cleanup() -> void:
+	_reset_action_batch()
 	for fighter in ctx.fighters:
 		if is_instance_valid(fighter) and fighter.attacked.is_connected(_on_attacked):
 			fighter.attacked.disconnect(_on_attacked)

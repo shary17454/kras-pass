@@ -18,9 +18,9 @@ func run(t: TestHarness, host: Node) -> void:
 			for tied in [false, true]:
 				await _multi_contender(t, host, reverse, shield, tied)
 		await _legacy_tick(t, host, reverse)
-		for revision in [0, 1]:
+		for revision in [0, 1, 2]:
 			await _playback_routing(t, host, reverse, revision)
-		await _siege_callback_elimination(t, host, reverse)
+			await _siege_callback_elimination(t, host, reverse, revision)
 	t.equal(Log.error_count(), errors_before, "focused regression logs no runtime errors")
 
 
@@ -303,7 +303,7 @@ func _playback_routing(t: TestHarness, host: Node, reverse: bool, revision: int)
 	else:
 		var swings: Array = fixture.swings.duplicate()
 		swings.sort()
-		t.equal(swings, [0, 1], "revision one uses simultaneous combat")
+		t.equal(swings, [0, 1], "revision one and two use simultaneous melee")
 		t.equal(fixture.hits.size(), 2, "new playback resolves both attacks in one tick")
 		for body in scene.ctx.fighters:
 			t.near(body.damage_percent, float(body._tuning["attack_damage"]), EPS,
@@ -312,8 +312,8 @@ func _playback_routing(t: TestHarness, host: Node, reverse: bool, revision: int)
 	await _dispose(fixture, host)
 
 
-func _siege_callback_elimination(t: TestHarness, host: Node, reverse: bool) -> void:
-	t.test("crystal callback cannot emit a stale prepared swing; reverse=%s" % reverse)
+func _siege_callback_elimination(t: TestHarness, host: Node, reverse: bool, revision: int) -> void:
+	t.test("crystal callbacks route revision=%d reverse=%s" % [revision, reverse])
 	var cfg := MatchConfig.build("base_siege", ["nabta", "nabta"], 2, 2, 117)
 	cfg.allow_powerups = false
 	var scene: Node = load("res://src/match/match_scene.gd").new()
@@ -348,12 +348,28 @@ func _siege_callback_elimination(t: TestHarness, host: Node, reverse: bool) -> v
 	if reverse:
 		scene._fighters.reverse()
 	var first := 1 if reverse else 0
-	_step(scene, [ATTACK, ATTACK])
-	t.equal(swings, [first], "game-rule elimination cancels the later owner's signal")
-	t.ok(not scene.ctx.is_alive(1 - first), "destroying the rival crystal actually eliminates its owner")
-	t.ok(scene.ctx.is_alive(first), "stale prepared callback cannot destroy the survivor's crystal")
-	t.near(scene.controller.base_health(1 - first), 0.0, EPS, "first real callback destroys its target")
-	t.near(scene.controller.base_health(first), 13.0, EPS, "inactive owner's prepared command cannot score")
+	var packet := PackedByteArray()
+	for slot in 2:
+		var frame := InputFrame.new()
+		frame.bits = ATTACK
+		packet.append_array(frame.encode())
+	scene.playback = ReplayData.from_match(cfg, [packet], {}, {}, null)
+	scene.playback.combat_revision = revision
+	scene._playback_frames.assign([InputFrame.new(), InputFrame.new()])
+	scene._tick_live(DT)
+	if revision < 2:
+		t.equal(swings, [first], "historical game-rule elimination cancels later signal")
+		t.ok(not scene.ctx.is_alive(1 - first), "historical destruction eliminates owner immediately")
+		t.ok(scene.ctx.is_alive(first), "revision zero and one preserve historical survivor")
+		t.near(scene.controller.base_health(1 - first), 0.0, EPS, "historical first callback destroys target")
+		t.near(scene.controller.base_health(first), 13.0, EPS, "historical later command cannot score")
+	else:
+		swings.sort()
+		t.equal(swings, [0, 1], "revision two emits both ready base attacks")
+		t.equal(Array(scene.ctx.alive), [false, false], "revision two commits both eliminations")
+		t.equal(Array(scene.ctx.scores), [7, 7], "revision two retains both destruction credits")
+		for slot in 2:
+			t.near(scene.controller.base_health(slot), 0.0, EPS, "revision two destroys both bases")
 	scene.teardown()
 	scene.queue_free()
 	await host.get_tree().process_frame

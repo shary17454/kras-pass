@@ -78,6 +78,15 @@ func tick(_delta: float) -> void:
 	pass
 
 
+## Revision-two game actions may commit together after the fighter/rules phase.
+func begin_action_batch() -> void:
+	pass
+
+
+func resolve_action_batch() -> void:
+	pass
+
+
 func on_round_start() -> void:
 	pass
 

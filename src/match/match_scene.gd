@@ -670,8 +670,11 @@ func _tick_live(delta: float) -> void:
 				b.tick(delta)
 	DevTools.operations.finish("match.ai", operation_started)
 	operation_started = DevTools.operations.begin()
+	var combat_revision := playback.combat_revision if playback != null else ReplayData.COMBAT_REVISION
+	if combat_revision >= 2:
+		controller.begin_action_batch()
 	# 2. Preserve recorded combat semantics; new matches resolve melee before movement.
-	if playback != null and playback.combat_revision == 0:
+	if combat_revision == 0:
 		for f in _fighters:
 			if is_instance_valid(f):
 				f.tick(InputRouter.frame(f.slot), delta)
@@ -704,6 +707,8 @@ func _tick_live(delta: float) -> void:
 	# 4. rules
 	controller.process_respawns(delta)
 	controller.tick(delta)
+	if combat_revision >= 2:
+		controller.resolve_action_batch()
 	powerups.tick(delta)
 	if machine != null and is_instance_valid(machine):
 		machine.tick(delta)
