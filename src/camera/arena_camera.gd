@@ -9,6 +9,8 @@ extends Camera3D
 ## view to a useless extreme.
 
 enum Mode { ARENA, TOP_DOWN, ISOMETRIC, THIRD_PERSON, RACE, WORLD, CHASE, COURT }
+const OcclusionFader = preload("res://src/camera/arena_occlusion_fader.gd")
+var _occlusion_fader := OcclusionFader.new()
 var local_target: Node3D
 var shared_world := false
 var shared_touch_count := 0
@@ -68,6 +70,7 @@ func _ready() -> void:
 
 
 func configure(m: Mode, a: Arena) -> void:
+	_occlusion_fader.clear()
 	mode = m
 	arena = a
 	if a != null:
@@ -120,6 +123,14 @@ func _process(delta: float) -> void:
 	var started := DevTools.operations.begin()
 	_update_camera(delta)
 	DevTools.operations.finish("camera.update", started)
+
+
+func _physics_process(delta: float) -> void:
+	_occlusion_fader.update(self, arena, targets, delta)
+
+
+func _exit_tree() -> void:
+	_occlusion_fader.clear()
 
 
 func _update_camera(delta: float) -> void:
