@@ -21,6 +21,7 @@ func run(t: TestHarness, host: Node) -> void:
 	_check_safe_area(t, host)
 	_check_pane_geometry(t)
 	_check_metrics_delivery(t, host)
+	_check_accepted_metrics_resize(t, host)
 	var clock := UIKit.centered("0:00")
 	t.equal(clock.autowrap_mode, TextServer.AUTOWRAP_OFF, "shared centered clock must not wrap")
 	clock.free()
@@ -215,6 +216,104 @@ func _check_metrics_delivery(t: TestHarness, host: Node) -> void:
 	t.equal(platform._native_pane, Rect2(), "unavailable bridge restores DisplayServer fallback")
 	bridge.viewport_metrics_received.emit(metrics)
 	t.equal(platform._native_pane, Rect2(), "late timed-out callback cannot overwrite fallback")
+	platform.free()
+
+
+func _check_accepted_metrics_resize(t: TestHarness, host: Node) -> void:
+	var window := host.get_window()
+	var original_size := window.size
+	var original_scale := window.content_scale_size
+	for sizes in [[Vector2i(540, 960), Vector2i(1280, 720)], [Vector2i(1280, 720), Vector2i(540, 960)]]:
+		for outstanding in [false, true]:
+			for centered in [false, true]:
+				for reply in ["valid", "invalid", "timeout"]:
+					_check_accepted_metrics_resize_case(t, host, sizes, outstanding, centered, reply)
+	window.size = original_size
+	window.content_scale_size = original_scale
+	t.equal(window.size, original_size, "accepted-pane resize fixture restores root dimensions")
+	t.equal(window.content_scale_size, original_scale, "accepted-pane resize fixture restores content scale")
+
+
+func _check_accepted_metrics_resize_case(t: TestHarness, host: Node, sizes: Array, outstanding: bool, centered: bool, reply: String) -> void:
+	t.test("accepted pane resize %s pending=%s centered=%s reply=%s" % [sizes, outstanding, centered, reply])
+	var window := host.get_window()
+	window.size = sizes[0]
+	var platform = load("res://src/core/platform_service.gd").new()
+	host.add_child(platform)
+	platform.set_process(false)
+	platform.is_mobile = true
+	platform._refresh_safe_area()
+	var bridge := MetricsBridge.new()
+	platform._metrics_bridge = bridge
+	bridge.viewport_metrics_received.connect(platform._on_viewport_metrics)
+	var old_cut := Rect2(0.35, 0.3, 0.3, 0.4) if centered else Rect2(0.04, 0.08, 0.12, 0.84)
+	var old_metrics := {"valid": true, "safe_rect": Rect2(0.04, 0.08, 0.92, 0.84),
+		"occlusions": [old_cut], "divisions": [Rect2(0.49, 0, 0.02, 1)]}
+	platform._request_viewport_metrics()
+	bridge.viewport_metrics_received.emit(old_metrics)
+	t.equal(window.size, sizes[0], "fixture starts at requested root size")
+	t.ok(platform._native_pane.has_area(), "fixture begins with accepted native pane")
+	t.ok(not platform._native_pane.intersects(old_cut), "accepted old pane excludes nonempty side or center occlusion")
+	t.ok(not platform._native_pane.intersects(old_metrics.divisions[0]), "accepted old pane excludes vertical division")
+	t.equal(platform.safe_area, Platform.normalized_pane_pixels(platform._native_pane, window.size), "accepted pane applied before rotation")
+	if outstanding:
+		platform._request_viewport_metrics()
+	window.size = sizes[1]
+	platform._refresh_safe_area()
+	t.equal(window.size, sizes[1], "fixture root actually resizes before callback")
+	var full := Rect2i(Vector2i.ZERO, window.size)
+	var reported := DisplayServer.get_display_safe_area()
+	var clipped := reported.intersection(full) if reported.has_area() and full.has_area() else Rect2i()
+	var fallback := clipped if clipped.has_area() else full
+	t.equal(platform._native_pane, Rect2(), "accepted pane cannot be reprojected into a resized root")
+	t.equal(platform.safe_area, fallback, "resized root uses current DisplayServer fallback before callback")
+	t.equal(bridge.requests, 2, "resize never overlaps an outstanding request")
+	t.ok(platform._metrics_pending, "resize leaves exactly one response pending")
+	if outstanding:
+		bridge.viewport_metrics_received.emit(old_metrics)
+		t.equal(platform._native_pane, Rect2(), "pre-resize callback cannot restore an invalidated accepted pane")
+		t.equal(platform.safe_area, fallback, "discarded response preserves current fallback")
+		platform._request_viewport_metrics()
+		t.equal(bridge.requests, 3, "fresh request starts only after stale response is drained")
+	var fresh_cut := Rect2(0.25, 0.35, 0.5, 0.3) if centered else Rect2(0.8, 0.04, 0.12, 0.92)
+	var fresh_metrics := {"valid": true, "safe_rect": Rect2(0.08, 0.04, 0.84, 0.92),
+		"occlusions": [fresh_cut], "divisions": [Rect2(0, 0.49, 1, 0.02)]}
+	if reply == "valid":
+		bridge.viewport_metrics_received.emit(fresh_metrics)
+		var gap := Vector2(8, 8) / host.get_viewport().get_visible_rect().size.max(Vector2.ONE)
+		var expected := Platform.pane_for_metrics(fresh_metrics, Rect2(), gap)
+		t.ok(expected.has_area(), "fresh resized fixture has a usable pane")
+		t.equal(platform._native_pane, expected, "fresh callback replaces fallback with current native geometry")
+		t.ok(not platform._native_pane.intersects(fresh_cut), "fresh pane excludes changed nonempty occlusion")
+		t.ok(not platform._native_pane.intersects(fresh_metrics.divisions[0]), "fresh pane excludes horizontal division")
+		t.equal(platform.safe_area, Platform.normalized_pane_pixels(expected, window.size), "fresh pane uses resized root coordinates")
+		t.ok(not platform._metrics_pending, "fresh callback drains request")
+	elif reply == "invalid":
+		bridge.viewport_metrics_received.emit({"valid": false})
+		t.ok(not platform._metrics_pending, "invalid fresh callback drains request")
+		t.equal(platform._native_pane, Rect2(), "invalid fresh callback cannot restore pre-resize pane")
+		t.equal(platform.safe_area, fallback, "invalid fresh callback preserves current fallback")
+		bridge.viewport_metrics_received.emit(old_metrics)
+		t.equal(platform._native_pane, Rect2(), "unsolicited old callback after invalid reply remains ignored")
+		platform._refresh_safe_area()
+		t.equal(platform.safe_area, fallback, "same-size refresh after invalid reply preserves fallback")
+		t.ok(platform._metrics_pending, "invalid reply still allows a later serialized request")
+		bridge.viewport_metrics_received.emit({"valid": false})
+		t.equal(platform._native_pane, Rect2(), "repeated invalid reply leaves accepted pane invalidated")
+		t.equal(platform.safe_area, fallback, "repeated invalid reply never reapplies old safe rectangle")
+	else:
+		var requests := bridge.requests
+		platform._process(1.01)
+		t.equal(platform._metrics_bridge, null, "existing one-second timeout policy remains unchanged")
+		t.ok(not platform._metrics_pending, "post-resize timeout drains pending request")
+		t.equal(bridge.requests, requests, "timeout does not overlap or retry a request")
+		t.equal(platform._native_pane, Rect2(), "post-resize timeout cannot restore old pane")
+		t.equal(platform.safe_area, fallback, "post-resize timeout preserves current fallback")
+		bridge.viewport_metrics_received.emit(old_metrics)
+		bridge.viewport_metrics_received.emit(fresh_metrics)
+		platform._refresh_safe_area()
+		t.equal(platform._native_pane, Rect2(), "late callbacks after post-resize timeout remain ignored")
+		t.equal(platform.safe_area, fallback, "late callbacks cannot replace fallback after timeout")
 	platform.free()
 
 

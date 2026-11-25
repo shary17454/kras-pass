@@ -110,6 +110,8 @@ func _refresh_safe_area() -> void:
 	var full := Rect2i(Vector2i.ZERO, get_tree().root.size)
 	if _observed_size != full.size:
 		_observed_size = full.size
+		# Native geometry belongs to the old root size until a fresh reply arrives.
+		_native_pane = Rect2()
 		if _metrics_pending:
 			_metrics_discard = true
 	if is_mobile:
